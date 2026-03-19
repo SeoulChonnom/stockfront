@@ -1,0 +1,538 @@
+<!DOCTYPE html><html class="light" lang="ko"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Market Daily Brief - Latest Market</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "on-tertiary-fixed-variant": "#006544",
+              "inverse-primary": "#6a89ff",
+              "error-container": "#ff8b9a",
+              "on-primary-container": "#0041d0",
+              "surface-container-high": "#dce9ff",
+              "inverse-surface": "#000f21",
+              "error": "#9e3f4e",
+              "inverse-on-surface": "#8e9eb7",
+              "error-dim": "#4f0116",
+              "secondary-fixed": "#dae2fd",
+              "surface-bright": "#f8f9ff",
+              "secondary-fixed-dim": "#ccd4ee",
+              "primary": "#004ced",
+              "on-secondary": "#f9f8ff",
+              "surface-container-low": "#eff4ff",
+              "on-secondary-fixed": "#373f54",
+              "surface-container-lowest": "#ffffff",
+              "surface-container": "#e5eeff",
+              "on-primary": "#f8f7ff",
+              "primary-fixed-dim": "#cad2ff",
+              "on-secondary-fixed-variant": "#535b71",
+              "on-tertiary": "#e6ffee",
+              "surface-container-highest": "#d2e4ff",
+              "on-tertiary-fixed": "#00452d",
+              "tertiary-fixed-dim": "#58e7ab",
+              "tertiary-fixed": "#69f6b8",
+              "secondary-dim": "#4b5369",
+              "on-tertiary-container": "#005a3c",
+              "on-error-container": "#782232",
+              "on-surface": "#00345e",
+              "background": "#f8f9ff",
+              "outline": "#477dbb",
+              "primary-container": "#dde1ff",
+              "surface-dim": "#c4dcff",
+              "tertiary": "#006d4a",
+              "secondary-container": "#dae2fd",
+              "on-surface-variant": "#26619d",
+              "on-background": "#00345e",
+              "tertiary-dim": "#005f40",
+              "surface-variant": "#d2e4ff",
+              "on-primary-fixed-variant": "#0049e6",
+              "primary-fixed": "#dde1ff",
+              "primary-dim": "#0042d1",
+              "tertiary-container": "#69f6b8",
+              "on-secondary-container": "#4a5167",
+              "surface": "#f8f9ff",
+              "on-primary-fixed": "#0032a5",
+              "secondary": "#575f75",
+              "surface-tint": "#004ced",
+              "outline-variant": "#81b5f6",
+              "on-error": "#fff7f7"
+            },
+            fontFamily: {
+              "headline": ["Manrope"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+          },
+        },
+      }
+    </script>
+<style>
+        .tabular-nums { font-variant-numeric: tabular-nums; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body antialiased">
+<header class="fixed top-0 right-0 left-64 h-16 flex items-center justify-between px-8 z-40 bg-white/90 backdrop-blur-md border-b border-[#d2e4ff] font-['Manrope'] text-sm font-medium">
+<div class="flex items-center gap-8">
+<div class="relative hidden md:flex items-center">
+<span class="material-symbols-outlined absolute left-3 text-[#477dbb] text-lg">search</span>
+<input aria-label="Search archive briefs" class="bg-[#eff4ff] border border-[#d2e4ff] rounded-lg py-1.5 pl-10 pr-4 text-xs w-64 focus:ring-1 focus:ring-primary focus:border-primary outline-none text-on-surface placeholder:text-on-surface-variant" placeholder="Search archive..." type="text"/>
+ </div>
+<nav class="flex gap-6">
+<a class="text-on-surface-variant hover:text-primary transition-colors" href="#">Latest Market</a>
+<a class="text-primary border-b-2 border-primary pb-1 font-bold" href="#">Archive</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors" href="#">Ops Admin</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<button aria-label="Switch to dark mode" class="p-2 hover:bg-[#eff4ff] rounded-full transition-colors cursor-pointer">
+<span class="material-symbols-outlined text-on-surface-variant">dark_mode</span>
+</button>
+<div class="flex items-center gap-3 pl-4 border-l border-[#d2e4ff] cursor-pointer opacity-90 hover:opacity-100">
+<span class="text-xs font-semibold text-on-surface">Admin.Ops</span>
+<div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20">
+<span class="material-symbols-outlined text-primary text-xl">account_circle</span>
+</div>
+</div>
+</div>
+</header>
+<aside class="fixed left-0 top-0 h-screen w-64 flex flex-col p-4 bg-[#f8f9ff] border-r border-[#d2e4ff] font-['Manrope'] antialiased z-50">
+<div class="px-2 mb-10 mt-2">
+<div class="text-2xl font-black text-primary tracking-tight">Market Brief</div>
+<div class="text-xs text-on-surface-variant font-medium">Financial Insights</div>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-on-surface hover:bg-[#eff4ff] rounded-lg transition-colors duration-150 active:scale-95" href="#">
+<span class="material-symbols-outlined">trending_up</span>
+<span>Latest Market</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 bg-primary/10 text-primary font-bold rounded-lg transition-colors duration-150 active:scale-95" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">inventory_2</span>
+<span>Archive</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-on-surface hover:bg-[#eff4ff] rounded-lg transition-colors duration-150 active:scale-95" href="#">
+<span class="material-symbols-outlined">analytics</span>
+<span>Batch Status</span>
+</a>
+</nav>
+<div class="mt-auto space-y-1 border-t border-[#d2e4ff] pt-6">
+<a class="flex items-center gap-3 px-4 py-2.5 text-on-surface-variant hover:text-on-surface hover:bg-[#eff4ff] rounded-lg transition-colors duration-150 active:scale-95" href="#">
+<span class="material-symbols-outlined">help_outline</span>
+<span>Support</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-2.5 text-on-surface-variant hover:text-on-surface hover:bg-[#eff4ff] rounded-lg transition-colors duration-150 active:scale-95" href="#">
+<span class="material-symbols-outlined">description</span>
+<span>Documentation</span>
+</a>
+</div>
+</aside>
+<main class="ml-64 mt-16 p-8 pb-20 max-w-[1600px] mx-auto space-y-12">
+<!-- Dashboard Header -->
+<section class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+<div class="space-y-2">
+<div class="flex items-center gap-3">
+<h1 class="text-3xl font-headline font-extrabold tracking-tight text-on-surface" style="">2026-03-16 글로벌 시장 요약</h1>
+<span class="px-2 py-0.5 bg-tertiary-container text-on-tertiary-container text-xs font-bold rounded uppercase" style="">READY</span>
+</div>
+<div class="flex items-center gap-4 text-sm text-on-surface-variant">
+<span class="flex items-center gap-1.5" style=""><span class="material-symbols-outlined text-base" style="">calendar_today</span>Business Date: <b class="text-on-surface">2026-03-16</b></span>
+<span class="w-px h-3 bg-outline-variant/30"></span>
+<span class="flex items-center gap-1.5" style=""><span class="material-symbols-outlined text-base" style="">schedule</span>Generated: <b class="text-on-surface">2026-03-17 06:12</b></span>
+</div>
+</div>
+</section>
+<!-- Global Headline Banner -->
+<div class="bg-surface-container-lowest p-8 rounded-xl relative overflow-hidden group">
+<div class="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent"></div>
+<div class="relative z-10 flex items-start gap-6">
+<div class="bg-primary-container p-3 rounded-lg text-primary">
+<span class="material-symbols-outlined text-3xl" style="font-variation-settings: &quot;FILL&quot; 1;">bolt</span>
+</div>
+<div class="space-y-2">
+<p class="text-xs font-bold text-primary tracking-widest uppercase" style="">Global Market Insight</p>
+<h2 class="text-3xl font-headline font-bold text-on-surface leading-tight" style="">기술주 강세와 외국인 매수세 회복으로 미·한 증시 모두 강세</h2>
+</div>
+</div>
+</div>
+<!-- US Market Section -->
+<section class="space-y-6">
+<div class="flex items-center gap-4">
+<h3 class="text-xl font-headline font-bold text-on-surface" style="">미국 증시 일간 요약</h3>
+<div class="h-px flex-1 bg-surface-container-high"></div>
+</div>
+<!-- Index Cards Grid -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<!-- NASDAQ -->
+<div class="bg-surface-container-lowest p-6 rounded-xl space-y-4">
+<div class="flex justify-between items-start">
+<div>
+<p class="text-xs font-bold text-on-surface-variant uppercase tracking-wider" style="">NASDAQ Composite</p>
+<h4 class="text-2xl font-headline font-black tabular-nums" style="">16,274.94</h4>
+</div>
+<div class="text-right">
+<p class="text-tertiary font-bold tabular-nums" style="">+120.33</p>
+<p class="text-xs bg-tertiary-container text-on-tertiary-container px-1.5 py-0.5 rounded font-bold" style="">+0.74%</p>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-4 pt-4 border-t border-surface-container-low text-xs">
+<div>
+<p class="text-on-surface-variant mb-1" style="">High</p>
+<p class="font-bold text-on-surface tabular-nums" style="">16,302.11</p>
+</div>
+<div>
+<p class="text-on-surface-variant mb-1" style="">Low</p>
+<p class="font-bold text-on-surface tabular-nums" style="">16,180.45</p>
+</div>
+</div>
+</div>
+<!-- S&P 500 -->
+<div class="bg-surface-container-lowest p-6 rounded-xl space-y-4">
+<div class="flex justify-between items-start">
+<div>
+<p class="text-xs font-bold text-on-surface-variant uppercase tracking-wider" style="">S&amp;P 500</p>
+<h4 class="text-2xl font-headline font-black tabular-nums" style="">5,117.09</h4>
+</div>
+<div class="text-right">
+<p class="text-tertiary font-bold tabular-nums" style="">+32.55</p>
+<p class="text-xs bg-tertiary-container text-on-tertiary-container px-1.5 py-0.5 rounded font-bold" style="">+0.64%</p>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-4 pt-4 border-t border-surface-container-low text-xs">
+<div>
+<p class="text-on-surface-variant mb-1" style="">High</p>
+<p class="font-bold text-on-surface tabular-nums" style="">5,130.42</p>
+</div>
+<div>
+<p class="text-on-surface-variant mb-1" style="">Low</p>
+<p class="font-bold text-on-surface tabular-nums" style="">5,098.22</p>
+</div>
+</div>
+</div>
+<!-- DOW -->
+<div class="bg-surface-container-lowest p-6 rounded-xl space-y-4">
+<div class="flex justify-between items-start">
+<div>
+<p class="text-xs font-bold text-on-surface-variant uppercase tracking-wider" style="">DOW JONES</p>
+<h4 class="text-2xl font-headline font-black tabular-nums" style="">38,790.43</h4>
+</div>
+<div class="text-right">
+<p class="text-error font-bold tabular-nums" style="">-15.62</p>
+<p class="text-xs bg-error-container text-on-error-container px-1.5 py-0.5 rounded font-bold" style="">-0.04%</p>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-4 pt-4 border-t border-surface-container-low text-xs">
+<div>
+<p class="text-on-surface-variant mb-1" style="">High</p>
+<p class="font-bold text-on-surface tabular-nums" style="">38,920.15</p>
+</div>
+<div>
+<p class="text-on-surface-variant mb-1" style="">Low</p>
+<p class="font-bold text-on-surface tabular-nums" style="">38,710.88</p>
+</div>
+</div>
+</div>
+</div>
+<!-- News Clusters Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div class="bg-surface-container-lowest p-6 rounded-xl flex flex-col justify-between hover:shadow-lg transition-all border border-transparent hover:border-outline-variant/20">
+<div class="space-y-4">
+<div class="flex justify-between items-start">
+<h5 class="text-lg font-headline font-bold text-on-surface leading-snug" style="">엔비디아 GTC 2026 기대감에 반도체주 동반 랠리</h5>
+<span class="text-xs bg-surface-container-high px-2 py-1 rounded-full font-medium text-on-surface-variant" style="">6건</span>
+</div>
+<p class="text-sm text-on-surface-variant leading-relaxed" style="">엔비디아가 차세대 AI 칩을 발표할 것이라는 기대감이 시장을 주도하며 마이크론, AMD 등 주요 반도체 기업들의 주가가 큰 폭으로 상승했습니다. AI 인프라 투자 지속 전망이 투자 심리를 개선시켰습니다.</p>
+<div class="flex flex-wrap gap-2">
+<span class="text-[10px] font-bold px-2 py-0.5 bg-primary/5 text-primary border border-primary/20 rounded" style="">#NVIDIA</span>
+<span class="text-[10px] font-bold px-2 py-0.5 bg-primary/5 text-primary border border-primary/20 rounded" style="">#SEMICONDUCTOR</span>
+<span class="text-[10px] font-bold px-2 py-0.5 bg-primary/5 text-primary border border-primary/20 rounded" style="">#AI_BOOM</span>
+</div>
+</div>
+<div class="flex gap-2 mt-6">
+<button class="flex-1 py-2 text-xs font-bold border border-outline-variant text-on-surface hover:bg-surface-container transition-colors rounded" style="">Source View</button>
+<button class="flex-1 py-2 text-xs font-bold bg-primary text-on-primary hover:bg-primary-dim transition-colors rounded" style="">Detail View</button>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-6 rounded-xl flex flex-col justify-between hover:shadow-lg transition-all border border-transparent hover:border-outline-variant/20">
+<div class="space-y-4">
+<div class="flex justify-between items-start">
+<h5 class="text-lg font-headline font-bold text-on-surface leading-snug" style="">미국 연준 금리 동결 가능성 확대 및 국채 금리 안정화</h5>
+<span class="text-xs bg-surface-container-high px-2 py-1 rounded-full font-medium text-on-surface-variant" style="">4건</span>
+</div>
+<p class="text-sm text-on-surface-variant leading-relaxed" style="">최근 발표된 경제 지표들이 혼조세를 보이면서 연준이 당분간 금리를 동결할 것이라는 관측이 우세해졌습니다. 이에 따라 10년물 국채 금리가 하락하며 기술주 위주의 매수세가 유입되었습니다.</p>
+<div class="flex flex-wrap gap-2">
+<span class="text-[10px] font-bold px-2 py-0.5 bg-primary/5 text-primary border border-primary/20 rounded" style="">#FED</span>
+<span class="text-[10px] font-bold px-2 py-0.5 bg-primary/5 text-primary border border-primary/20 rounded" style="">#INTEREST_RATES</span>
+<span class="text-[10px] font-bold px-2 py-0.5 bg-primary/5 text-primary border border-primary/20 rounded" style="">#TREASURY</span>
+</div>
+</div>
+<div class="flex gap-2 mt-6">
+<button class="flex-1 py-2 text-xs font-bold border border-outline-variant text-on-surface hover:bg-surface-container transition-colors rounded" style="">Source View</button>
+<button class="flex-1 py-2 text-xs font-bold bg-primary text-on-primary hover:bg-primary-dim transition-colors rounded" style="">Detail View</button>
+</div>
+</div>
+</div>
+<!-- HOM-US-04 Market Analysis Section -->
+<div class="bg-surface-container-lowest rounded-xl border border-outline-variant/10 overflow-hidden">
+<div class="bg-surface-container-low px-6 py-4 border-b border-surface-container flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-xl" style="">analytics</span>
+<h4 class="text-sm font-bold text-on-surface uppercase tracking-wider" style="">US Market Analysis</h4>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-surface-container">
+<div class="p-6 space-y-3">
+<div class="flex items-center gap-2 text-primary">
+<span class="material-symbols-outlined text-lg" style="">trending_up</span>
+<h5 class="text-xs font-bold uppercase" style="">Rise/Fall Background</h5>
+</div>
+<p class="text-sm text-on-surface-variant leading-relaxed" style="">GTC 2026 기대로 인한 반도체 업종 전반의 투심 회복 및 고용 지표 둔화에 따른 국채 수익률 하향 안정이 지수 상승의 주된 동력으로 작용.</p>
+</div>
+<div class="p-6 space-y-3">
+<div class="flex items-center gap-2 text-primary">
+<span class="material-symbols-outlined text-lg" style="">category</span>
+<h5 class="text-xs font-bold uppercase" style="">Major Themes</h5>
+</div>
+<ul class="text-sm text-on-surface-variant space-y-2">
+<li class="flex items-start gap-2" style=""><span class="w-1 h-1 rounded-full bg-primary mt-2"></span>AI 인프라 및 차세대 칩셋 밸류체인</li>
+<li class="flex items-start gap-2" style=""><span class="w-1 h-1 rounded-full bg-primary mt-2"></span>중소형 기술주 중심의 숏커버링 매수세</li>
+</ul>
+</div>
+<div class="p-6 space-y-3">
+<div class="flex items-center gap-2 text-primary">
+<span class="material-symbols-outlined text-lg" style="">visibility</span>
+<h5 class="text-xs font-bold uppercase" style="">Next Watch Points</h5>
+</div>
+<p class="text-sm text-on-surface-variant leading-relaxed" style="">내일 예정된 FOMC 의사록 공개를 통한 연준의 금리 경로 재확인 및 마이크론 실적 발표를 통한 반도체 업황 피크아웃 여부 점검 필요.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- KR Market Section -->
+<section class="space-y-6 pt-12">
+<div class="flex items-center gap-4">
+<h3 class="text-xl font-headline font-bold text-on-surface" style="">한국 증시 일간 요약</h3>
+<div class="h-px flex-1 bg-surface-container-high"></div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<!-- KOSPI -->
+<div class="bg-surface-container-lowest p-6 rounded-xl space-y-4">
+<div class="flex justify-between items-start">
+<div>
+<p class="text-xs font-bold text-on-surface-variant uppercase tracking-wider" style="">KOSPI</p>
+<h4 class="text-2xl font-headline font-black tabular-nums" style="">2,685.84</h4>
+</div>
+<div class="text-right">
+<p class="text-tertiary font-bold tabular-nums" style="">+42.15</p>
+<p class="text-xs bg-tertiary-container text-on-tertiary-container px-1.5 py-0.5 rounded font-bold" style="">+1.59%</p>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-4 pt-4 border-t border-surface-container-low text-xs">
+<div>
+<p class="text-on-surface-variant mb-1" style="">High</p>
+<p class="font-bold text-on-surface tabular-nums" style="">2,692.10</p>
+</div>
+<div>
+<p class="text-on-surface-variant mb-1" style="">Low</p>
+<p class="font-bold text-on-surface tabular-nums" style="">2,650.33</p>
+</div>
+</div>
+</div>
+<!-- KOSDAQ -->
+<div class="bg-surface-container-lowest p-6 rounded-xl space-y-4">
+<div class="flex justify-between items-start">
+<div>
+<p class="text-xs font-bold text-on-surface-variant uppercase tracking-wider" style="">KOSDAQ</p>
+<h4 class="text-2xl font-headline font-black tabular-nums" style="">894.48</h4>
+</div>
+<div class="text-right">
+<p class="text-tertiary font-bold tabular-nums" style="">+13.22</p>
+<p class="text-xs bg-tertiary-container text-on-tertiary-container px-1.5 py-0.5 rounded font-bold" style="">+1.50%</p>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-4 pt-4 border-t border-surface-container-low text-xs">
+<div>
+<p class="text-on-surface-variant mb-1" style="">High</p>
+<p class="font-bold text-on-surface tabular-nums" style="">898.15</p>
+</div>
+<div>
+<p class="text-on-surface-variant mb-1" style="">Low</p>
+<p class="font-bold text-on-surface tabular-nums" style="">885.60</p>
+</div>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div class="bg-surface-container-lowest p-6 rounded-xl flex flex-col justify-between hover:shadow-lg transition-all border border-transparent hover:border-outline-variant/20">
+<div class="space-y-4">
+<div class="flex justify-between items-start">
+<h5 class="text-lg font-headline font-bold text-on-surface leading-snug" style="">반도체 대장주 삼성전자·SK하이닉스 외국인 '사자'</h5>
+<span class="text-xs bg-surface-container-high px-2 py-1 rounded-full font-medium text-on-surface-variant" style="">8건</span>
+</div>
+<p class="text-sm text-on-surface-variant leading-relaxed" style="">미국 필라델피아 반도체 지수 강세의 영향으로 국내 반도체 대형주에 외국인 자금이 대거 유입되었습니다. 삼성전자는 3% 이상 급등하며 지수 상승을 견인했습니다.</p>
+<div class="flex flex-wrap gap-2">
+<span class="text-[10px] font-bold px-2 py-0.5 bg-tertiary/5 text-tertiary border border-tertiary/20 rounded" style="">#SAMSUNG</span>
+<span class="text-[10px] font-bold px-2 py-0.5 bg-tertiary/5 text-tertiary border border-tertiary/20 rounded" style="">#SK_HYNIX</span>
+<span class="text-[10px] font-bold px-2 py-0.5 bg-tertiary/5 text-tertiary border border-tertiary/20 rounded" style="">#FOREIGN_BUY</span>
+</div>
+</div>
+<div class="flex gap-2 mt-6">
+<button class="flex-1 py-2 text-xs font-bold border border-outline-variant text-on-surface hover:bg-surface-container transition-colors rounded" style="">Source View</button>
+<button class="flex-1 py-2 text-xs font-bold bg-primary text-on-primary hover:bg-primary-dim transition-colors rounded" style="">Detail View</button>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-6 rounded-xl flex flex-col justify-between hover:shadow-lg transition-all border border-transparent hover:border-outline-variant/20">
+<div class="space-y-4">
+<div class="flex justify-between items-start">
+<h5 class="text-lg font-headline font-bold text-on-surface leading-snug" style="">2차전지 반등 성공, 저점 매수세 유입에 코스닥 강세</h5>
+<span class="text-xs bg-surface-container-high px-2 py-1 rounded-full font-medium text-on-surface-variant" style="">5건</span>
+</div>
+<p class="text-sm text-on-surface-variant leading-relaxed" style="">과도한 낙폭에 따른 기술적 반등과 함께 에코프로 등 주요 2차전지 종목들에 저가 매수세가 유입되며 코스닥 지수가 890선을 회복했습니다.</p>
+<div class="flex flex-wrap gap-2">
+<span class="text-[10px] font-bold px-2 py-0.5 bg-tertiary/5 text-tertiary border border-tertiary/20 rounded" style="">#BATTERY</span>
+<span class="text-[10px] font-bold px-2 py-0.5 bg-tertiary/5 text-tertiary border border-tertiary/20 rounded" style="">#ECOPRO</span>
+<span class="text-[10px] font-bold px-2 py-0.5 bg-tertiary/5 text-tertiary border border-tertiary/20 rounded" style="">#KOSDAQ</span>
+</div>
+</div>
+<div class="flex gap-2 mt-6">
+<button class="flex-1 py-2 text-xs font-bold border border-outline-variant text-on-surface hover:bg-surface-container transition-colors rounded" style="">Source View</button>
+<button class="flex-1 py-2 text-xs font-bold bg-primary text-on-primary hover:bg-primary-dim transition-colors rounded" style="">Detail View</button>
+</div>
+</div>
+</div>
+<!-- HOM-KR-04 Market Analysis Section -->
+<div class="bg-surface-container-lowest rounded-xl border border-outline-variant/10 overflow-hidden">
+<div class="bg-surface-container-low px-6 py-4 border-b border-surface-container flex items-center gap-2">
+<span class="material-symbols-outlined text-tertiary text-xl" style="">analytics</span>
+<h4 class="text-sm font-bold text-on-surface uppercase tracking-wider" style="">KR Market Analysis</h4>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-surface-container">
+<div class="p-6 space-y-3">
+<div class="flex items-center gap-2 text-tertiary">
+<span class="material-symbols-outlined text-lg" style="">trending_up</span>
+<h5 class="text-xs font-bold uppercase" style="">Rise/Fall Background</h5>
+</div>
+<p class="text-sm text-on-surface-variant leading-relaxed" style="">글로벌 반도체 훈풍에 따른 외국인 대규모 순매수 유입 및 밸류업 프로그램에 대한 기대감이 재부각되며 대형주 중심의 강한 반등 시현.</p>
+</div>
+<div class="p-6 space-y-3">
+<div class="flex items-center gap-2 text-tertiary">
+<span class="material-symbols-outlined text-lg" style="">category</span>
+<h5 class="text-xs font-bold uppercase" style="">Major Themes</h5>
+</div>
+<ul class="text-sm text-on-surface-variant space-y-2">
+<li class="flex items-start gap-2" style=""><span class="w-1 h-1 rounded-full bg-tertiary mt-2"></span>HBM 수혜주 및 메모리 가격 반등 수혜주</li>
+<li class="flex items-start gap-2" style=""><span class="w-1 h-1 rounded-full bg-tertiary mt-2"></span>저PBR 금융·지주사 2차 랠리 가능성</li>
+</ul>
+</div>
+<div class="p-6 space-y-3">
+<div class="flex items-center gap-2 text-tertiary">
+<span class="material-symbols-outlined text-lg" style="">visibility</span>
+<h5 class="text-xs font-bold uppercase" style="">Next Watch Points</h5>
+</div>
+<p class="text-sm text-on-surface-variant leading-relaxed" style="">외국인 자금 이탈 여부 및 환율 변동성 주시. 정부의 기업 밸류업 가이드라인 세부안 발표 시점에 따른 업종별 순환매 장세 대비 필요.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Bottom Content -->
+<section class="grid grid-cols-1 lg:grid-cols-3 gap-8 pt-12">
+<!-- Article List -->
+<div class="lg:col-span-2 space-y-6">
+<div class="flex items-center justify-between">
+<h3 class="text-lg font-headline font-bold text-on-surface" style="">통합 원문 기사 링크</h3>
+<button class="text-xs font-bold text-primary flex items-center gap-1" style="">View All <span class="material-symbols-outlined text-sm" style="">chevron_right</span></button>
+</div>
+<div class="bg-surface-container-lowest rounded-xl overflow-hidden">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-high border-b border-surface-container text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">
+<th class="px-6 py-3" style="">Market</th>
+<th class="px-6 py-3" style="">Issue Name</th>
+<th class="px-6 py-3" style="">Title</th>
+<th class="px-6 py-3" style="">Publisher</th>
+<th class="px-6 py-3 text-right" style="">Time</th>
+<th class="px-6 py-3 text-right" style="">Link</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-container-low text-xs">
+<tr class="hover:bg-surface-container-highest transition-colors group">
+<td class="px-6 py-4" style=""><span class="px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full font-bold" style="">US</span></td>
+<td class="px-6 py-4 font-medium text-on-surface truncate max-w-[120px]" style="">NVIDIA GTC</td>
+<td class="px-6 py-4 text-on-surface-variant truncate max-w-[200px]" style="">엔비디아 시총 1위 넘보나... GTC 2026 개막</td>
+<td class="px-6 py-4" style="">Bloomberg</td>
+<td class="px-6 py-4 text-right tabular-nums text-on-surface-variant" style="">05:45</td>
+<td class="px-6 py-4 text-right" style=""><span class="material-symbols-outlined text-primary text-lg cursor-pointer" style="">open_in_new</span></td>
+</tr>
+<tr class="hover:bg-surface-container-highest transition-colors group">
+<td class="px-6 py-4" style=""><span class="px-2 py-0.5 bg-red-100 text-red-700 rounded-full font-bold" style="">KR</span></td>
+<td class="px-6 py-4 font-medium text-on-surface truncate max-w-[120px]" style="">Samsung Earnings</td>
+<td class="px-6 py-4 text-on-surface-variant truncate max-w-[200px]" style="">삼성전자, 반도체 흑자 전환 본격화</td>
+<td class="px-6 py-4" style="">Naver News</td>
+<td class="px-6 py-4 text-right tabular-nums text-on-surface-variant" style="">08:12</td>
+<td class="px-6 py-4 text-right" style=""><span class="material-symbols-outlined text-primary text-lg cursor-pointer" style="">link</span></td>
+</tr>
+<tr class="hover:bg-surface-container-highest transition-colors group">
+<td class="px-6 py-4" style=""><span class="px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full font-bold" style="">US</span></td>
+<td class="px-6 py-4 font-medium text-on-surface truncate max-w-[120px]" style="">Fed Interest</td>
+<td class="px-6 py-4 text-on-surface-variant truncate max-w-[200px]" style="">연준 위원들 "금리 인하 서두를 필요 없어"</td>
+<td class="px-6 py-4" style="">Reuters</td>
+<td class="px-6 py-4 text-right tabular-nums text-on-surface-variant" style="">04:30</td>
+<td class="px-6 py-4 text-right" style=""><span class="material-symbols-outlined text-primary text-lg cursor-pointer" style="">open_in_new</span></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Meta Info Card -->
+<div class="space-y-6">
+<h3 class="text-lg font-headline font-bold text-on-surface" style="">Data Statistics</h3>
+<div class="bg-surface-container p-8 rounded-xl space-y-8 relative overflow-hidden">
+<div class="absolute top-0 right-0 p-4 opacity-10">
+<span class="material-symbols-outlined text-6xl" style="font-variation-settings: &quot;FILL&quot; 1;">analytics</span>
+</div>
+<div class="grid grid-cols-2 gap-6 relative z-10">
+<div class="space-y-1">
+<p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-tighter" style="">Scraped Items</p>
+<p class="text-2xl font-black tabular-nums" style="">1,248</p>
+</div>
+<div class="space-y-1">
+<p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-tighter" style="">Refined Data</p>
+<p class="text-2xl font-black tabular-nums" style="">432</p>
+</div>
+<div class="space-y-1">
+<p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-tighter" style="">Identified Issues</p>
+<p class="text-2xl font-black tabular-nums" style="">14</p>
+</div>
+<div class="space-y-1">
+<p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-tighter" style="">Success Rate</p>
+<p class="text-2xl font-black tabular-nums" style="">99.8%</p>
+</div>
+</div>
+<div class="pt-6 border-t border-outline-variant/20 relative z-10">
+<div class="flex items-center justify-between text-xs">
+<span class="text-on-surface-variant" style="">Last Updated</span>
+<span class="font-bold tabular-nums" style="">2026-03-18 06:12:44</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+  </main>
+<footer class="ml-64 mt-20 py-12 px-8 border-t border-surface-container-high bg-surface-container-low/50">
+<div class="max-w-[1920px] mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
+<div class="flex flex-col gap-2">
+<span class="text-lg font-black text-[#00345e]" style="">Market Daily Brief</span>
+<p class="text-sm text-on-surface-variant" style="">© 2026 Financial Intelligence Team. All rights reserved.</p>
+</div>
+<div class="flex gap-8 text-sm font-medium text-on-surface-variant">
+<a class="hover:text-primary transition-colors" href="#" style="">Documentation</a>
+<a class="hover:text-primary transition-colors" href="#" style="">Privacy Policy</a>
+<a class="hover:text-primary transition-colors" href="#" style="">Support</a>
+</div>
+</div>
+</footer>
+</body></html>
