@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Ops Admin - Batch Status | Market Daily Brief</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "on-tertiary-fixed-variant": "#006544",
+                        "inverse-primary": "#6a89ff",
+                        "error-container": "#ff8b9a",
+                        "on-primary-container": "#0041d0",
+                        "surface-container-high": "#dce9ff",
+                        "inverse-surface": "#000f21",
+                        "error": "#9e3f4e",
+                        "inverse-on-surface": "#8e9eb7",
+                        "error-dim": "#4f0116",
+                        "secondary-fixed": "#dae2fd",
+                        "surface-bright": "#f8f9ff",
+                        "secondary-fixed-dim": "#ccd4ee",
+                        "primary": "#004ced",
+                        "on-secondary": "#f9f8ff",
+                        "surface-container-low": "#eff4ff",
+                        "on-secondary-fixed": "#373f54",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container": "#e5eeff",
+                        "on-primary": "#f8f7ff",
+                        "primary-fixed-dim": "#cad2ff",
+                        "on-secondary-fixed-variant": "#535b71",
+                        "on-tertiary": "#e6ffee",
+                        "surface-container-highest": "#d2e4ff",
+                        "on-tertiary-fixed": "#00452d",
+                        "tertiary-fixed-dim": "#58e7ab",
+                        "tertiary-fixed": "#69f6b8",
+                        "secondary-dim": "#4b5369",
+                        "on-tertiary-container": "#005a3c",
+                        "on-error-container": "#782232",
+                        "on-surface": "#00345e",
+                        "background": "#f8f9ff",
+                        "outline": "#477dbb",
+                        "primary-container": "#dde1ff",
+                        "surface-dim": "#c4dcff",
+                        "tertiary": "#006d4a",
+                        "secondary-container": "#dae2fd",
+                        "on-surface-variant": "#26619d",
+                        "on-background": "#00345e",
+                        "tertiary-dim": "#005f40",
+                        "surface-variant": "#d2e4ff",
+                        "on-primary-fixed-variant": "#0049e6",
+                        "primary-fixed": "#dde1ff",
+                        "primary-dim": "#0042d1",
+                        "tertiary-container": "#69f6b8",
+                        "on-secondary-container": "#4a5167",
+                        "surface": "#f8f9ff",
+                        "on-primary-fixed": "#0032a5",
+                        "secondary": "#575f75",
+                        "surface-tint": "#004ced",
+                        "outline-variant": "#81b5f6",
+                        "on-error": "#fff7f7"
+                    },
+                    fontFamily: {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    },
+                    borderRadius: { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" },
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3, .font-headline { font-family: 'Manrope', sans-serif; }
+        .tabular-nums { font-variant-numeric: tabular-nums; }
+    </style>
+</head>
+<body class="bg-background text-on-surface min-h-screen antialiased">
+<header class="fixed top-0 right-0 left-64 h-16 flex items-center justify-between px-8 z-40 bg-white/90 backdrop-blur-md border-b border-[#d2e4ff] font-['Manrope'] text-sm font-medium">
+<div class="flex items-center gap-8">
+<div class="relative hidden md:flex items-center">
+<span class="material-symbols-outlined absolute left-3 text-[#477dbb] text-lg">search</span>
+<input aria-label="Search operations" class="bg-[#eff4ff] border border-[#d2e4ff] rounded-lg py-1.5 pl-10 pr-4 text-xs w-64 focus:ring-1 focus:ring-primary focus:border-primary outline-none text-on-surface placeholder:text-on-surface-variant" placeholder="Search operations..." type="text"/>
+</div>
+<nav class="flex gap-6">
+<a class="text-on-surface-variant hover:text-primary transition-colors" href="#">Latest Market</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors" href="#">Archive</a>
+<a class="text-primary border-b-2 border-primary pb-1 font-bold" href="#">Ops Admin</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<button aria-label="Switch to dark mode" class="p-2 hover:bg-[#eff4ff] rounded-full transition-colors cursor-pointer">
+<span class="material-symbols-outlined text-on-surface-variant">dark_mode</span>
+</button>
+<div class="flex items-center gap-3 pl-4 border-l border-[#d2e4ff] cursor-pointer opacity-90 hover:opacity-100">
+<span class="text-xs font-semibold text-on-surface">Admin.Ops</span>
+<div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20">
+<span class="material-symbols-outlined text-primary text-xl">account_circle</span>
+</div>
+</div>
+</div>
+</header>
+<aside class="fixed left-0 top-0 h-screen w-64 flex flex-col p-4 bg-[#f8f9ff] border-r border-[#d2e4ff] font-['Manrope'] antialiased z-50">
+<div class="px-2 mb-10 mt-2">
+<div class="text-2xl font-black text-primary tracking-tight">Market Brief</div>
+<div class="text-xs text-on-surface-variant font-medium">Financial Insights</div>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-on-surface hover:bg-[#eff4ff] rounded-lg transition-colors duration-150 active:scale-95" href="#">
+<span class="material-symbols-outlined">trending_up</span>
+<span>Latest Market</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-on-surface hover:bg-[#eff4ff] rounded-lg transition-colors duration-150 active:scale-95" href="#">
+<span class="material-symbols-outlined">inventory_2</span>
+<span>Archive</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 bg-primary/10 text-primary font-bold rounded-lg transition-colors duration-150 active:scale-95" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">analytics</span>
+<span>Batch Status</span>
+</a>
+</nav>
+<div class="mt-auto space-y-1 border-t border-[#d2e4ff] pt-6">
+<a class="flex items-center gap-3 px-4 py-2.5 text-on-surface-variant hover:text-on-surface hover:bg-[#eff4ff] rounded-lg transition-colors duration-150 active:scale-95" href="#">
+<span class="material-symbols-outlined">help_outline</span>
+<span>Support</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-2.5 text-on-surface-variant hover:text-on-surface hover:bg-[#eff4ff] rounded-lg transition-colors duration-150 active:scale-95" href="#">
+<span class="material-symbols-outlined">description</span>
+<span>Documentation</span>
+</a>
+</div>
+</aside>
+<main class="ml-64 mt-16 flex-1 p-8 pb-20">
+<!-- Header Section -->
+<div class="flex justify-between items-end mb-10">
+<div>
+<h2 class="text-3xl font-extrabold text-on-surface tracking-tight mb-1">Batch Operations</h2>
+<p class="text-on-surface-variant font-medium">Monitoring pipeline integrity and market data synchronicity.</p>
+</div>
+<button class="bg-primary hover:bg-primary-dim text-on-primary px-6 py-2.5 rounded-lg flex items-center gap-2 font-semibold shadow-lg shadow-primary/20 transition-all active:scale-95">
+<span class="material-symbols-outlined text-[20px]">play_arrow</span>
+                    Manual Trigger
+                </button>
+</div>
+<!-- Summary Bento Grid -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+<div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm border-l-4 border-tertiary">
+<div class="flex justify-between items-start mb-4">
+<span class="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Recent Success Rate</span>
+<span class="material-symbols-outlined text-tertiary">check_circle</span>
+</div>
+<div class="text-4xl font-black tabular-nums text-on-surface">99.4%</div>
+<div class="mt-2 text-sm text-tertiary font-semibold flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">trending_up</span>
+                        +0.2% vs last 24h
+                    </div>
+</div>
+<div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm border-l-4 border-primary">
+<div class="flex justify-between items-start mb-4">
+<span class="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Avg Processing Time</span>
+<span class="material-symbols-outlined text-primary">timer</span>
+</div>
+<div class="text-4xl font-black tabular-nums text-on-surface">14m 22s</div>
+<div class="mt-2 text-sm text-on-surface-variant font-medium">Target: &lt; 20m per batch</div>
+</div>
+<div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm border-l-4 border-outline-variant">
+<div class="flex justify-between items-start mb-4">
+<span class="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Market Sync Quality</span>
+<span class="material-symbols-outlined text-outline">database</span>
+</div>
+<div class="text-4xl font-black tabular-nums text-on-surface">Tier-1</div>
+<div class="mt-2 text-sm text-on-surface-variant font-medium">No drift detected in 7 days</div>
+</div>
+</div>
+<!-- Table Section -->
+<div class="flex gap-8 items-start">
+<div class="flex-1 bg-surface-container-lowest rounded-xl overflow-hidden shadow-sm">
+<div class="px-6 py-5 bg-surface-container-low border-b border-outline-variant/10 flex justify-between items-center">
+<h3 class="font-headline font-bold text-lg">Batch Execution History</h3>
+<div class="flex gap-2">
+<span class="px-3 py-1 bg-white text-[11px] font-bold text-on-surface-variant rounded-full border border-outline-variant/20 uppercase tracking-tighter">US Market</span>
+<span class="px-3 py-1 bg-white text-[11px] font-bold text-on-surface-variant rounded-full border border-outline-variant/20 uppercase tracking-tighter">KR Market</span>
+</div>
+</div><div class="px-6 py-4 border-b border-outline-variant/10 bg-white flex flex-wrap gap-4 items-center">
+<div class="flex flex-col gap-1.5 min-w-[180px]">
+<label class="text-[10px] font-black uppercase tracking-widest text-on-surface-variant">Status Filter</label>
+<div class="relative flex items-center">
+<select class="w-full appearance-none bg-surface-container-low border border-outline-variant/20 rounded-lg px-3 py-2 text-xs font-semibold text-on-surface focus:ring-1 focus:ring-primary outline-none cursor-pointer">
+<option>ALL STATUSES</option>
+<option>SUCCESS</option>
+<option>PARTIAL</option>
+<option>FAILED</option>
+</select>
+<span class="material-symbols-outlined absolute right-2 pointer-events-none text-on-surface-variant text-[18px]">expand_more</span>
+</div>
+</div>
+<div class="flex flex-col gap-1.5 flex-1 max-w-sm">
+<label class="text-[10px] font-black uppercase tracking-widest text-on-surface-variant">Date Range Filter</label>
+<div class="flex items-center gap-2 bg-surface-container-low border border-outline-variant/20 rounded-lg px-3 py-2">
+<span class="material-symbols-outlined text-on-surface-variant text-[18px]">calendar_today</span>
+<input class="bg-transparent border-none p-0 text-xs font-semibold text-on-surface focus:ring-0 w-full cursor-pointer" readonly="" type="text" value="Oct 20, 2023 - Oct 27, 2023"/>
+</div>
+</div>
+<div class="flex items-end h-full mt-5">
+<button class="px-4 py-2 bg-surface-container-high hover:bg-surface-container-highest text-on-surface-variant text-[11px] font-bold rounded-lg uppercase tracking-widest transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]">filter_list</span>
+            Apply Filters
+        </button>
+</div>
+</div>
+<table class="w-full border-collapse">
+<thead>
+<tr class="bg-surface-container-high/50 text-left">
+<th class="px-6 py-4 text-[11px] font-bold text-on-surface-variant uppercase tracking-widest">Market</th>
+<th class="px-6 py-4 text-[11px] font-bold text-on-surface-variant uppercase tracking-widest">Bus. Date</th>
+<th class="px-6 py-4 text-[11px] font-bold text-on-surface-variant uppercase tracking-widest">Status</th>
+<th class="px-6 py-4 text-[11px] font-bold text-on-surface-variant uppercase tracking-widest">Timeline</th>
+<th class="px-6 py-4 text-[11px] font-bold text-on-surface-variant uppercase tracking-widest">Counts (S/R/C)</th>
+<th class="px-6 py-4 text-[11px] font-bold text-on-surface-variant uppercase tracking-widest"></th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-container">
+<!-- Row 1 Success -->
+<tr class="hover:bg-surface-container-highest/30 transition-colors group">
+<td class="px-6 py-5">
+<div class="flex items-center gap-2 font-bold text-sm">
+<div class="w-1.5 h-6 bg-primary rounded-full"></div>
+                                        US Market
+                                    </div>
+</td>
+<td class="px-6 py-5 font-medium tabular-nums text-sm">2023-10-27</td>
+<td class="px-6 py-5">
+<span class="px-2.5 py-1 bg-tertiary-container text-on-tertiary-container text-[10px] font-black rounded uppercase tracking-tighter">Success</span>
+</td>
+<td class="px-6 py-5">
+<div class="text-xs text-on-surface-variant">08:00:01 → 08:14:12</div>
+<div class="text-[10px] text-outline mt-0.5">Duration: 14m 11s</div>
+</td>
+<td class="px-6 py-5 font-bold tabular-nums text-sm text-on-surface-variant">
+                                    77 / 32 / 9
+                                </td>
+<td class="px-6 py-5 text-right">
+<button class="text-primary opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+</td>
+</tr>
+<!-- Row 2 Partial -->
+<tr class="hover:bg-surface-container-highest/30 transition-colors group">
+<td class="px-6 py-5">
+<div class="flex items-center gap-2 font-bold text-sm text-on-surface">
+<div class="w-1.5 h-6 bg-outline-variant rounded-full"></div>
+                                        KR Market
+                                    </div>
+</td>
+<td class="px-6 py-5 font-medium tabular-nums text-sm">2023-10-27</td>
+<td class="px-6 py-5">
+<span class="px-2.5 py-1 bg-secondary-container text-on-secondary-container text-[10px] font-black rounded uppercase tracking-tighter">Partial</span>
+</td>
+<td class="px-6 py-5">
+<div class="text-xs text-on-surface-variant">16:30:05 → 16:51:20</div>
+<div class="text-[10px] text-outline mt-0.5">Duration: 21m 15s</div>
+</td>
+<td class="px-6 py-5 font-bold tabular-nums text-sm text-on-surface-variant">
+                                    112 / 88 / 14
+                                </td>
+<td class="px-6 py-5 text-right">
+<button class="text-primary opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+</td>
+</tr>
+<!-- Row 3 Failed -->
+<tr class="bg-error/5 hover:bg-error/10 transition-colors group">
+<td class="px-6 py-5">
+<div class="flex items-center gap-2 font-bold text-sm">
+<div class="w-1.5 h-6 bg-primary rounded-full"></div>
+                                        US Market
+                                    </div>
+</td>
+<td class="px-6 py-5 font-medium tabular-nums text-sm">2023-10-26</td>
+<td class="px-6 py-5">
+<span class="px-2.5 py-1 bg-error text-on-error text-[10px] font-black rounded uppercase tracking-tighter">Failed</span>
+</td>
+<td class="px-6 py-5">
+<div class="text-xs text-on-surface-variant">08:00:02 → 08:02:14</div>
+<div class="text-[10px] text-error mt-0.5 font-bold">Terminated (Error)</div>
+</td>
+<td class="px-6 py-5 font-bold tabular-nums text-sm text-error">
+                                    12 / 0 / 0
+                                </td>
+<td class="px-6 py-5 text-right">
+<button class="text-primary">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+</td>
+</tr>
+<!-- Row 4 Success -->
+<tr class="hover:bg-surface-container-highest/30 transition-colors group">
+<td class="px-6 py-5">
+<div class="flex items-center gap-2 font-bold text-sm text-on-surface">
+<div class="w-1.5 h-6 bg-outline-variant rounded-full"></div>
+                                        KR Market
+                                    </div>
+</td>
+<td class="px-6 py-5 font-medium tabular-nums text-sm">2023-10-26</td>
+<td class="px-6 py-5">
+<span class="px-2.5 py-1 bg-tertiary-container text-on-tertiary-container text-[10px] font-black rounded uppercase tracking-tighter">Success</span>
+</td>
+<td class="px-6 py-5">
+<div class="text-xs text-on-surface-variant">16:30:01 → 16:44:55</div>
+<div class="text-[10px] text-outline mt-0.5">Duration: 14m 54s</div>
+</td>
+<td class="px-6 py-5 font-bold tabular-nums text-sm text-on-surface-variant">
+                                    108 / 108 / 15
+                                </td>
+<td class="px-6 py-5 text-right">
+<button class="text-primary opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Detail Drawer (Simulated Sidebar Detail) -->
+<div class="w-80 flex flex-col gap-6 sticky top-24">
+<div class="bg-surface-container-highest/50 backdrop-blur-md p-6 rounded-xl border border-white/50">
+<div class="flex items-center gap-3 mb-6">
+<span class="material-symbols-outlined text-error" style="font-variation-settings: 'FILL' 1;">error</span>
+<h4 class="font-headline font-extrabold text-on-surface leading-tight">Last Failure Detail</h4>
+</div>
+<div class="mb-4">
+<label class="text-[10px] font-black uppercase tracking-widest text-on-surface-variant mb-1 block">Error Message</label>
+<div class="bg-white/40 p-3 rounded text-xs font-mono text-error leading-relaxed">
+                                CRITICAL: WebSocket timeout during NYSE scrape. Peer disconnected after 3000ms.
+                            </div>
+</div>
+<div class="grid grid-cols-2 gap-4 mb-4">
+<div>
+<label class="text-[10px] font-black uppercase tracking-widest text-on-surface-variant mb-1 block">Page Version</label>
+<div class="text-sm font-bold text-on-surface">v2.11.4-LTS</div>
+</div>
+<div>
+<label class="text-[10px] font-black uppercase tracking-widest text-on-surface-variant mb-1 block">Job ID</label>
+<div class="text-sm font-bold text-on-surface">#99281-B</div>
+</div>
+</div>
+<div class="border-t border-outline-variant/10 pt-4">
+<label class="text-[10px] font-black uppercase tracking-widest text-on-surface-variant mb-3 block">Log Summary</label>
+<ul class="space-y-2 text-[11px] font-medium text-on-surface-variant">
+<li class="flex items-start gap-2">
+<div class="w-1.5 h-1.5 rounded-full bg-tertiary mt-1"></div>
+<span>Initialized US-Market environment</span>
+</li>
+<li class="flex items-start gap-2">
+<div class="w-1.5 h-1.5 rounded-full bg-tertiary mt-1"></div>
+<span>Auth handshake successful</span>
+</li>
+<li class="flex items-start gap-2">
+<div class="w-1.5 h-1.5 rounded-full bg-error mt-1"></div>
+<span class="text-error">Scraper module crashed at item #13</span>
+</li>
+</ul>
+</div>
+<button class="w-full mt-6 py-2 border border-primary text-primary hover:bg-primary hover:text-on-primary transition-all text-xs font-bold rounded-lg uppercase tracking-widest">
+                            View Full Logs
+                        </button>
+</div>
+<!-- Market Data Integrity Status -->
+<div class="bg-surface-container p-6 rounded-xl">
+<h4 class="font-headline font-bold text-sm mb-4">Integrity Monitor</h4>
+<div class="space-y-4">
+<div class="flex justify-between items-center text-xs">
+<span class="text-on-surface-variant font-medium">Data Freshness</span>
+<span class="font-bold text-tertiary">Real-time</span>
+</div>
+<div class="w-full bg-white h-1.5 rounded-full overflow-hidden">
+<div class="bg-tertiary h-full w-[95%]"></div>
+</div>
+<div class="flex justify-between items-center text-xs">
+<span class="text-on-surface-variant font-medium">Refinement Quality</span>
+<span class="font-bold text-on-surface">98% Verified</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

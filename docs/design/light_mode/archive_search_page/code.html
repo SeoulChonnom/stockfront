@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+
+<html class="light" lang="ko"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "on-tertiary-fixed-variant": "#006544",
+              "inverse-primary": "#6a89ff",
+              "error-container": "#ff8b9a",
+              "on-primary-container": "#0041d0",
+              "surface-container-high": "#dce9ff",
+              "inverse-surface": "#000f21",
+              "error": "#9e3f4e",
+              "inverse-on-surface": "#8e9eb7",
+              "error-dim": "#4f0116",
+              "secondary-fixed": "#dae2fd",
+              "surface-bright": "#f8f9ff",
+              "secondary-fixed-dim": "#ccd4ee",
+              "primary": "#004ced",
+              "on-secondary": "#f9f8ff",
+              "surface-container-low": "#eff4ff",
+              "on-secondary-fixed": "#373f54",
+              "surface-container-lowest": "#ffffff",
+              "surface-container": "#e5eeff",
+              "on-primary": "#f8f7ff",
+              "primary-fixed-dim": "#cad2ff",
+              "on-secondary-fixed-variant": "#535b71",
+              "on-tertiary": "#e6ffee",
+              "surface-container-highest": "#d2e4ff",
+              "on-tertiary-fixed": "#00452d",
+              "tertiary-fixed-dim": "#58e7ab",
+              "tertiary-fixed": "#69f6b8",
+              "secondary-dim": "#4b5369",
+              "on-tertiary-container": "#005a3c",
+              "on-error-container": "#782232",
+              "on-surface": "#00345e",
+              "background": "#f8f9ff",
+              "outline": "#477dbb",
+              "primary-container": "#dde1ff",
+              "surface-dim": "#c4dcff",
+              "tertiary": "#006d4a",
+              "secondary-container": "#dae2fd",
+              "on-surface-variant": "#26619d",
+              "on-background": "#00345e",
+              "tertiary-dim": "#005f40",
+              "surface-variant": "#d2e4ff",
+              "on-primary-fixed-variant": "#0049e6",
+              "primary-fixed": "#dde1ff",
+              "primary-dim": "#0042d1",
+              "tertiary-container": "#69f6b8",
+              "on-secondary-container": "#4a5167",
+              "surface": "#f8f9ff",
+              "on-primary-fixed": "#0032a5",
+              "secondary": "#575f75",
+              "surface-tint": "#004ced",
+              "outline-variant": "#81b5f6",
+              "on-error": "#fff7f7"
+            },
+            fontFamily: {
+              "headline": ["Manrope"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .tabular-nums { font-variant-numeric: tabular-nums; }
+    </style>
+</head>
+<body class="bg-background font-body text-on-surface antialiased">
+<header class="fixed top-0 right-0 left-64 h-16 flex items-center justify-between px-8 z-40 bg-white/90 backdrop-blur-md border-b border-[#d2e4ff] font-['Manrope'] text-sm font-medium">
+<div class="flex items-center gap-8">
+<div class="relative hidden md:flex items-center">
+<span class="material-symbols-outlined absolute left-3 text-[#477dbb] text-lg">search</span>
+<input aria-label="Search archive records" class="bg-[#eff4ff] border border-[#d2e4ff] rounded-lg py-1.5 pl-10 pr-4 text-xs w-64 focus:ring-1 focus:ring-primary focus:border-primary outline-none text-on-surface placeholder:text-on-surface-variant" placeholder="Search archive records..." type="text"/>
+</div>
+<nav class="flex gap-6">
+<a class="text-on-surface-variant hover:text-primary transition-colors" href="#">Latest Market</a>
+<a class="text-primary border-b-2 border-primary pb-1 font-bold" href="#">Archive</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors" href="#">Ops Admin</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<button aria-label="Switch to dark mode" class="p-2 rounded-full hover:bg-[#eff4ff] transition-colors cursor-pointer">
+<span class="material-symbols-outlined text-on-surface-variant">dark_mode</span>
+</button>
+<div class="flex items-center gap-3 pl-4 border-l border-[#d2e4ff] cursor-pointer opacity-90 hover:opacity-100">
+<span class="text-xs font-semibold text-on-surface">Admin.Ops</span>
+<div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20">
+<span class="material-symbols-outlined text-primary text-xl">account_circle</span>
+</div>
+</div>
+</div>
+</header>
+<aside class="fixed left-0 top-0 h-screen w-64 flex flex-col p-4 bg-[#f8f9ff] border-r border-[#d2e4ff] z-50 font-['Manrope'] antialiased">
+<div class="px-2 mb-10 mt-2">
+<h1 class="text-2xl font-black text-primary tracking-tight">Market Brief</h1>
+<p class="text-xs text-on-surface-variant font-medium">Financial Insights</p>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-on-surface hover:bg-[#eff4ff] rounded-lg transition-colors duration-150 active:scale-95" href="#">
+<span class="material-symbols-outlined">trending_up</span>
+<span>Latest Market</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 bg-primary/10 text-primary font-bold rounded-lg transition-colors duration-150 active:scale-95" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">inventory_2</span>
+<span>Archive</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-on-surface hover:bg-[#eff4ff] rounded-lg transition-colors duration-150 active:scale-95" href="#">
+<span class="material-symbols-outlined">analytics</span>
+<span>Batch Status</span>
+</a>
+</nav>
+<div class="mt-auto space-y-1 border-t border-[#d2e4ff] pt-6">
+<a class="flex items-center gap-3 px-4 py-2.5 text-on-surface-variant hover:text-on-surface hover:bg-[#eff4ff] rounded-lg transition-colors duration-150 active:scale-95" href="#">
+<span class="material-symbols-outlined">help_outline</span>
+<span>Support</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-2.5 text-on-surface-variant hover:text-on-surface hover:bg-[#eff4ff] rounded-lg transition-colors duration-150 active:scale-95" href="#">
+<span class="material-symbols-outlined">description</span>
+<span>Documentation</span>
+</a>
+</div>
+</aside>
+<main class="flex-1 ml-64 mt-16 p-8 pb-20 min-h-screen">
+<!-- Header Section -->
+<div class="mb-10">
+<h2 class="font-headline text-3xl font-extrabold text-on-surface tracking-tight mb-2">과거 시장 기록 탐색</h2>
+<p class="text-on-surface-variant text-sm">히스토리 데이터를 통해 시장의 흐름과 과거 분석 결과를 확인하세요.</p>
+</div>
+<!-- Filter Bar: Surface Layering Principle -->
+<section class="bg-surface-container-lowest rounded-xl p-6 mb-8 border border-outline-variant/15 shadow-sm">
+<div class="flex flex-wrap items-end gap-6">
+<!-- Quick Range -->
+<div class="flex flex-col gap-2">
+<label class="text-xs font-semibold text-on-surface-variant uppercase tracking-wider">Date Range</label>
+<div class="flex bg-surface-container-low p-1 rounded-lg">
+<button class="px-4 py-1.5 text-sm font-medium text-primary bg-surface-container-lowest rounded-md shadow-sm">Last 7 days</button>
+<button class="px-4 py-1.5 text-sm font-medium text-on-surface-variant hover:text-on-surface">Last 30 days</button>
+</div>
+</div>
+<!-- Status Filter -->
+<div class="flex flex-col gap-2">
+<label class="text-xs font-semibold text-on-surface-variant uppercase tracking-wider">Status</label>
+<select class="form-select bg-surface-container-low border-none rounded-lg text-sm focus:ring-2 focus:ring-primary min-w-[140px] py-2">
+<option>All Status</option>
+<option>READY</option>
+<option>PARTIAL</option>
+<option>FAILED</option>
+</select>
+</div>
+<!-- Direct Date Input -->
+<div class="flex flex-col gap-2">
+<label class="text-xs font-semibold text-on-surface-variant uppercase tracking-wider">Direct Selection</label>
+<div class="flex items-center gap-2">
+<input class="form-input bg-surface-container-low border-none rounded-lg text-sm focus:ring-2 focus:ring-primary py-2 px-3" type="date"/>
+<span class="text-on-surface-variant font-medium">~</span>
+<input class="form-input bg-surface-container-low border-none rounded-lg text-sm focus:ring-2 focus:ring-primary py-2 px-3" type="date"/>
+</div>
+</div>
+<!-- Search Button -->
+<button class="bg-primary hover:bg-primary-dim text-on-primary px-8 py-2 rounded-lg font-semibold text-sm transition-all flex items-center gap-2 h-[40px] ml-auto">
+<span class="material-symbols-outlined text-lg">search</span>
+                        Search
+                    </button>
+</div>
+</section>
+<!-- Search Result Table -->
+<section class="bg-surface-container-lowest rounded-xl overflow-hidden border border-outline-variant/15 shadow-sm">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead class="bg-surface-container-high border-b border-outline-variant/20">
+<tr>
+<th class="px-6 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-widest">Date</th>
+<th class="px-6 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-widest">Global Headline Preview</th>
+<th class="px-6 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-widest text-center">Status</th>
+<th class="px-6 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-widest text-right">Generation Time</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/10">
+<!-- Row 1 -->
+<tr class="group hover:bg-surface-container-low transition-colors cursor-pointer" onclick="window.location.href='/daily-market/2023-11-24'">
+<td class="px-6 py-5">
+<div class="flex items-center gap-3">
+<div class="w-2 h-2 rounded-full bg-primary"></div>
+<span class="font-headline font-bold text-on-surface tabular-nums tracking-tight">2023. 11. 24</span>
+</div>
+</td>
+<td class="px-6 py-5">
+<p class="text-sm font-medium text-on-surface max-w-md truncate">엔비디아 실적 발표 후 기술주 중심의 강력한 랠리 지속, 금리 동결 기대감 확산</p>
+</td>
+<td class="px-6 py-5 text-center">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-tertiary-container text-on-tertiary-container">
+                                        READY
+                                    </span>
+</td>
+<td class="px-6 py-5 text-right font-label text-on-surface-variant text-xs tabular-nums">
+                                    06:15:22 AM
+                                </td>
+</tr>
+<!-- Row 2 -->
+<tr class="group hover:bg-surface-container-low transition-colors cursor-pointer">
+<td class="px-6 py-5">
+<div class="flex items-center gap-3">
+<div class="w-2 h-2 rounded-full bg-primary"></div>
+<span class="font-headline font-bold text-on-surface tabular-nums tracking-tight">2023. 11. 23</span>
+</div>
+</td>
+<td class="px-6 py-5">
+<p class="text-sm font-medium text-on-surface max-w-md truncate">고용 지표 둔화 신호에 국채 금리 급락, 뉴욕 증시 혼조세 마감</p>
+</td>
+<td class="px-6 py-5 text-center">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-tertiary-container text-on-tertiary-container">
+                                        READY
+                                    </span>
+</td>
+<td class="px-6 py-5 text-right font-label text-on-surface-variant text-xs tabular-nums">
+                                    06:12:45 AM
+                                </td>
+</tr>
+<!-- Row 3 -->
+<tr class="group hover:bg-surface-container-low transition-colors cursor-pointer">
+<td class="px-6 py-5">
+<div class="flex items-center gap-3">
+<div class="w-2 h-2 rounded-full bg-surface-variant"></div>
+<span class="font-headline font-bold text-on-surface tabular-nums tracking-tight">2023. 11. 22</span>
+</div>
+</td>
+<td class="px-6 py-5">
+<p class="text-sm font-medium text-on-surface max-w-md truncate">데이터 수집 지연으로 인한 일부 섹터 분석 누락 발생</p>
+</td>
+<td class="px-6 py-5 text-center">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-secondary-container text-on-secondary-container">
+                                        PARTIAL
+                                    </span>
+</td>
+<td class="px-6 py-5 text-right font-label text-on-surface-variant text-xs tabular-nums">
+                                    07:45:10 AM
+                                </td>
+</tr>
+<!-- Row 4 -->
+<tr class="group hover:bg-surface-container-low transition-colors cursor-pointer">
+<td class="px-6 py-5">
+<div class="flex items-center gap-3">
+<div class="w-2 h-2 rounded-full bg-primary"></div>
+<span class="font-headline font-bold text-on-surface tabular-nums tracking-tight">2023. 11. 21</span>
+</div>
+</td>
+<td class="px-6 py-5">
+<p class="text-sm font-medium text-on-surface max-w-md truncate">소매 판매 지표 예상치 상회, 연착륙 가능성 제기에 금융주 강세</p>
+</td>
+<td class="px-6 py-5 text-center">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-tertiary-container text-on-tertiary-container">
+                                        READY
+                                    </span>
+</td>
+<td class="px-6 py-5 text-right font-label text-on-surface-variant text-xs tabular-nums">
+                                    06:08:59 AM
+                                </td>
+</tr>
+<!-- Row 5 (Failure Case) -->
+<tr class="group hover:bg-surface-container-low transition-colors cursor-pointer">
+<td class="px-6 py-5">
+<div class="flex items-center gap-3">
+<div class="w-2 h-2 rounded-full bg-error"></div>
+<span class="font-headline font-bold text-on-surface tabular-nums tracking-tight">2023. 11. 20</span>
+</div>
+</td>
+<td class="px-6 py-5">
+<p class="text-sm font-medium text-error italic max-w-md truncate">시스템 점검 및 API 서버 오류로 인한 생성 실패</p>
+</td>
+<td class="px-6 py-5 text-center">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-error-container text-on-error-container">
+                                        FAILED
+                                    </span>
+</td>
+<td class="px-6 py-5 text-right font-label text-on-surface-variant text-xs tabular-nums">
+                                    -
+                                </td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Table Footer (Pagination/Meta) -->
+<div class="px-6 py-4 bg-surface-container-low flex justify-between items-center border-t border-outline-variant/10">
+<span class="text-xs text-on-surface-variant font-medium">Showing 5 of 1,240 results</span>
+<div class="flex gap-2">
+<button class="p-1 rounded hover:bg-surface-container-high transition-colors"><span class="material-symbols-outlined text-sm">chevron_left</span></button>
+<button class="px-3 py-1 text-xs font-bold bg-primary text-on-primary rounded">1</button>
+<button class="px-3 py-1 text-xs font-medium hover:bg-surface-container-high rounded">2</button>
+<button class="px-3 py-1 text-xs font-medium hover:bg-surface-container-high rounded">3</button>
+<button class="p-1 rounded hover:bg-surface-container-high transition-colors"><span class="material-symbols-outlined text-sm">chevron_right</span></button>
+</div>
+</div>
+</section>
+<!-- Final Footer Information -->
+<footer class="mt-16 pt-8 border-t border-outline-variant/20 flex flex-col md:flex-row justify-between items-center text-on-surface-variant gap-6">
+<div class="flex items-center gap-6">
+<div class="flex flex-col">
+<span class="text-[10px] uppercase font-bold tracking-widest text-outline">Archive Data Reliability</span>
+<div class="flex items-center gap-2">
+<span class="text-sm font-bold text-tertiary">99.8%</span>
+<div class="h-1 w-24 bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-tertiary w-[99.8%]"></div>
+</div>
+</div>
+</div>
+<div class="h-8 w-px bg-outline-variant/30"></div>
+<div class="flex flex-col">
+<span class="text-[10px] uppercase font-bold tracking-widest text-outline">Total Archive Size</span>
+<span class="text-sm font-bold text-on-surface tabular-nums">2.4 TB</span>
+</div>
+</div>
+<p class="text-xs font-medium opacity-60">© 2023 Market Daily Brief. Professional Editorial Dashboard System.</p>
+</footer>
+</main>
+</body></html>
