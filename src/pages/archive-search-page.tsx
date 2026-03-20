@@ -4,21 +4,8 @@ import type { FormEvent } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 import {
   createNavigateHandler,
@@ -31,11 +18,7 @@ import {
 import { buildUrl, navigate } from '../lib/router';
 import { archiveRecords } from '../mock-data';
 
-export function ArchiveSearchPage({
-  searchParams,
-}: {
-  searchParams: URLSearchParams;
-}) {
+export function ArchiveSearchPage({ searchParams }: { searchParams: URLSearchParams }) {
   const defaults = {
     from: getTodayIso(),
     to: getRelativeIso(14),
@@ -56,19 +39,14 @@ export function ArchiveSearchPage({
         return false;
       }
 
-      return (
-        record.businessDate <= applied.from && record.businessDate >= applied.to
-      );
+      return record.businessDate <= applied.from && record.businessDate >= applied.to;
     });
   }, [applied.from, applied.status, applied.to]);
 
   const pageSize = 4;
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const currentPage = Math.min(applied.page, totalPages);
-  const rows = filtered.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize,
-  );
+  const rows = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   return (
     <ArchiveSearchContent
@@ -116,7 +94,7 @@ function ArchiveSearchContent({
           to: draft.to,
           status: draft.status,
           page: 1,
-        }),
+        })
       );
     });
   }
@@ -130,9 +108,8 @@ function ArchiveSearchContent({
             과거 시장 기록 탐색
           </h1>
           <p>
-            날짜 범위와 상태 기준으로 과거 요약 생성 결과를 검색합니다. 테이블
-            결과는 상세 페이지 이동을 제목 셀 링크에만 부여해 접근성과 의미를
-            분리했습니다.
+            날짜 범위와 상태 기준으로 과거 요약 생성 결과를 검색합니다. 테이블 결과는 상세 페이지 이동을 제목 셀
+            링크에만 부여해 접근성과 의미를 분리했습니다.
           </p>
         </div>
       </section>
@@ -170,10 +147,7 @@ function ArchiveSearchContent({
                 />
               </div>
               <div className="field">
-                <label
-                  htmlFor="archive-status-trigger"
-                  id="archive-status-label"
-                >
+                <label htmlFor="archive-status-trigger" id="archive-status-label">
                   Status
                 </label>
                 <Select
@@ -185,10 +159,7 @@ function ArchiveSearchContent({
                   }
                   value={draft.status || undefined}
                 >
-                  <SelectTrigger
-                    aria-labelledby="archive-status-label"
-                    id="archive-status-trigger"
-                  >
+                  <SelectTrigger aria-labelledby="archive-status-label" id="archive-status-trigger">
                     <SelectValue placeholder="All Status" />
                   </SelectTrigger>
                   <SelectContent>
@@ -222,39 +193,26 @@ function ArchiveSearchContent({
               </TableHeader>
               <TableBody>
                 {rows.map((record) => (
-                  <TableRow key={record.clusterId}>
+                  <TableRow key={record.businessDate}>
                     <TableCell>
                       <div className="date-cell">
-                        <CircleDot
-                          className={
-                            record.status === 'FAILED'
-                              ? 'trend-down'
-                              : 'trend-up'
-                          }
-                          size={14}
-                        />
+                        <CircleDot className={record.status === 'FAILED' ? 'trend-down' : 'trend-up'} size={14} />
                         <span>{formatDateDots(record.businessDate)}</span>
                       </div>
                     </TableCell>
                     <TableCell>
                       <a
                         className="headline-link"
-                        href={`/market/cluster/${record.clusterId}`}
-                        onClick={createNavigateHandler(
-                          `/market/cluster/${record.clusterId}`,
-                        )}
+                        href={`/market/archive/${record.businessDate}`}
+                        onClick={createNavigateHandler(`/market/archive/${record.businessDate}`)}
                       >
                         {record.headline}
                       </a>
                     </TableCell>
                     <TableCell>
-                      <span className={getStatusClass(record.status)}>
-                        {record.status}
-                      </span>
+                      <span className={getStatusClass(record.status)}>{record.status}</span>
                     </TableCell>
-                    <TableCell className="numeric">
-                      {record.generatedAt}
-                    </TableCell>
+                    <TableCell className="numeric">{record.generatedAt}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -263,8 +221,7 @@ function ArchiveSearchContent({
 
           <div className="table-footer">
             <p>
-              Showing <strong>{rows.length}</strong> of{' '}
-              <strong>{filteredCount}</strong> archive runs
+              Showing <strong>{rows.length}</strong> of <strong>{filteredCount}</strong> archive runs
             </p>
             <div className="pagination">
               <Button
@@ -276,7 +233,7 @@ function ArchiveSearchContent({
                       to: applied.to,
                       status: applied.status,
                       page: currentPage - 1,
-                    }),
+                    })
                   )
                 }
                 type="button"
@@ -297,7 +254,7 @@ function ArchiveSearchContent({
                       to: applied.to,
                       status: applied.status,
                       page: currentPage + 1,
-                    }),
+                    })
                   )
                 }
                 type="button"
