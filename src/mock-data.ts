@@ -34,7 +34,6 @@ export type MarketSnapshot = {
 
 export type ArchiveRecord = {
   businessDate: string;
-  clusterId: string;
   headline: string;
   status: 'READY' | 'PARTIAL' | 'FAILED';
   generatedAt: string;
@@ -174,8 +173,7 @@ export const latestMarketSnapshot: MarketSnapshot = {
           id: '338e20f0-8d76-4a20-9e8f-7ad6105f61bf',
           articleCount: 5,
           title: '삼성전자·SK하이닉스 강세에 코스피 2,780선 회복',
-          summary:
-            'HBM 수요 기대와 미국 반도체 강세가 국내 대형 메모리주로 전이되면서 지수 상단을 끌어올렸습니다.',
+          summary: 'HBM 수요 기대와 미국 반도체 강세가 국내 대형 메모리주로 전이되면서 지수 상단을 끌어올렸습니다.',
           tags: ['KOSPI', 'HBM', 'FOREIGNERS'],
         },
         {
@@ -204,35 +202,30 @@ export const archiveMarketSnapshots: Record<string, MarketSnapshot> = {
 export const archiveRecords: ArchiveRecord[] = [
   {
     businessDate: '2026-03-17',
-    clusterId: 'a8d5d5f8-fec5-4caa-b5ef-91a1c0b5d678',
     headline: '엔비디아 실적 기대가 반도체와 AI 인프라 종목 전반으로 확산',
     status: 'READY',
     generatedAt: '06:15:22',
   },
   {
     businessDate: '2026-03-16',
-    clusterId: '75a01ab2-3d5c-4bd3-a76a-2780d87e0f65',
     headline: '금리 동결 기대와 소비 둔화 신호가 혼재하며 증시 혼조 마감',
     status: 'READY',
     generatedAt: '06:12:45',
   },
   {
     businessDate: '2026-03-15',
-    clusterId: '1d3991cb-9cc5-4636-a3d7-2e8c376be8df',
     headline: '데이터 수집 지연으로 일부 섹터 뉴스 클러스터가 누락된 상태',
     status: 'PARTIAL',
     generatedAt: '07:45:10',
   },
   {
     businessDate: '2026-03-14',
-    clusterId: 'e8f71156-c4fe-4fd7-8d5a-6aa6bf40b598',
     headline: '에너지 가격 급등이 인플레이션 우려를 키우며 성장주 변동성 확대',
     status: 'FAILED',
     generatedAt: '05:58:09',
   },
   {
     businessDate: '2026-03-13',
-    clusterId: '338e20f0-8d76-4a20-9e8f-7ad6105f61bf',
     headline: '외국인 순매수 확대와 메모리 업황 개선이 코스피를 지지',
     status: 'READY',
     generatedAt: '06:08:59',
@@ -290,8 +283,7 @@ export const clusterDetails: Record<string, ClusterDetail> = {
         id: 'ft-1',
         source: '파이낸셜 타임즈',
         publishedAt: '01:45 PM',
-        title:
-          '연준 위원들의 비둘기파적 발언, 시장은 6월 인하 가능성 80%로 반영',
+        title: '연준 위원들의 비둘기파적 발언, 시장은 6월 인하 가능성 80%로 반영',
         originalUrl: 'https://example.com/original-ft',
         mirrorUrl: 'https://example.com/naver-ft',
       },
@@ -311,8 +303,7 @@ export const batchRuns: BatchRun[] = [
     finishedAt: '08:14:12',
     duration: '14m 11s',
     counts: '77 / 32 / 9',
-    detail:
-      '정상 처리. 시장 데이터, 기사 수집, 클러스터링이 모두 SLA 안에서 종료됐습니다.',
+    detail: '정상 처리. 시장 데이터, 기사 수집, 클러스터링이 모두 SLA 안에서 종료됐습니다.',
   },
   {
     id: 'job-99282-a',
@@ -334,8 +325,7 @@ export const batchRuns: BatchRun[] = [
     finishedAt: '08:02:14',
     duration: '2m 12s',
     counts: '12 / 0 / 0',
-    detail:
-      'CRITICAL: WebSocket timeout during NYSE scrape. Peer disconnected after 3000ms.',
+    detail: 'CRITICAL: WebSocket timeout during NYSE scrape. Peer disconnected after 3000ms.',
   },
   {
     id: 'job-99270-z',
@@ -346,7 +336,6 @@ export const batchRuns: BatchRun[] = [
     finishedAt: '16:44:55',
     duration: '14m 54s',
     counts: '108 / 108 / 15',
-    detail:
-      '정상 처리. 한국 기사군 동기화와 클러스터 생성이 모두 완료됐습니다.',
+    detail: '정상 처리. 한국 기사군 동기화와 클러스터 생성이 모두 완료됐습니다.',
   },
 ];
