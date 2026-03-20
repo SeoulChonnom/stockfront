@@ -26,7 +26,7 @@ export function MarketOverviewPage({
               {snapshot.status}
             </span>
           </div>
-          <h1>
+          <h1 id="page-title" tabIndex={-1}>
             {mode === 'latest'
               ? `${snapshot.businessDate} 글로벌 시장 요약`
               : `${snapshot.businessDate} 아카이브 시장 요약`}

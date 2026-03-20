@@ -31,7 +31,9 @@ export function ClusterDetailPage({ clusterId }: { clusterId: string }) {
             <ChevronRight size={14} />
             <span className="current">뉴스 클러스터 상세</span>
           </nav>
-          <h1>{detail.title}</h1>
+          <h1 id="page-title" tabIndex={-1}>
+            {detail.title}
+          </h1>
           <div className="tag-row">
             {detail.tags.map((tag) => (
               <span className="soft-chip" key={tag}>

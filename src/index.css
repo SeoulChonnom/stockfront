@@ -1,5 +1,5 @@
-@import "tailwindcss";
-@import "tw-animate-css";
+@import 'tailwindcss';
+@import 'tw-animate-css';
 
 :root {
   color-scheme: light;
@@ -124,6 +124,24 @@ img {
   min-height: 100vh;
 }
 
+.skip-link {
+  position: absolute;
+  top: 12px;
+  left: 16px;
+  z-index: 60;
+  transform: translateY(-200%);
+  padding: 12px 16px;
+  border: 1px solid var(--line-strong);
+  border-radius: 14px;
+  background: var(--surface-strong);
+  color: var(--text);
+  box-shadow: var(--shadow-md);
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}
+
 .sidebar {
   position: fixed;
   inset: 0 auto 0 0;
@@ -186,6 +204,13 @@ img {
   color: var(--text);
 }
 
+.nav-link:focus-visible,
+.top-links a:focus-visible,
+.headline-link:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 3px;
+}
+
 .nav-link-active {
   background: linear-gradient(135deg, var(--primary-soft), transparent);
   color: var(--primary);
@@ -195,6 +220,10 @@ img {
 
 .nav-link-muted {
   color: var(--text-faint);
+}
+
+.nav-link-static {
+  cursor: default;
 }
 
 .nav-icon {
@@ -574,6 +603,7 @@ img {
   color: var(--primary);
   background: var(--primary-soft);
   text-transform: none;
+  margin: 0 4px;
   letter-spacing: 0.02em;
 }
 
@@ -1105,6 +1135,11 @@ img {
 
 .site-footer-links a:hover {
   color: var(--primary);
+}
+
+.site-footer-links span {
+  color: var(--text-soft);
+  font-size: 0.92rem;
 }
 
 .empty-state {
