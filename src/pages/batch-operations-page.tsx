@@ -118,7 +118,9 @@ function BatchOperationsContent({
       <section className="page-intro split-intro">
         <div>
           <span className="eyebrow">Operations</span>
-          <h1>Batch Operations</h1>
+          <h1 id="page-title" tabIndex={-1}>
+            Batch Operations
+          </h1>
           <p>
             파이프라인 상태, 실행 시간, 실패 로그를 한 화면에서 확인하는 운영용
             모니터링 보드입니다. 1차 구현에서는 API 없이 목업 데이터와 필터
@@ -171,7 +173,9 @@ function BatchOperationsContent({
 
             <form className="ops-filter-bar" onSubmit={handleSubmit}>
               <div className="field">
-                <label htmlFor="ops-status">Status</label>
+                <label htmlFor="ops-status-trigger" id="ops-status-label">
+                  Status
+                </label>
                 <Select
                   onValueChange={(value) =>
                     setDraft((current) => ({
@@ -181,7 +185,10 @@ function BatchOperationsContent({
                   }
                   value={draft.status || undefined}
                 >
-                  <SelectTrigger aria-label="Batch status">
+                  <SelectTrigger
+                    aria-labelledby="ops-status-label"
+                    id="ops-status-trigger"
+                  >
                     <SelectValue placeholder="ALL STATUSES" />
                   </SelectTrigger>
                   <SelectContent>
@@ -235,7 +242,9 @@ function BatchOperationsContent({
                     <TableHead>Status</TableHead>
                     <TableHead>Timeline</TableHead>
                     <TableHead>Counts (S/R/C)</TableHead>
-                    <TableHead />
+                    <TableHead>
+                      <span className="sr-only">Detail indicator</span>
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

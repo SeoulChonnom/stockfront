@@ -126,7 +126,9 @@ function ArchiveSearchContent({
       <section className="page-intro">
         <div>
           <span className="eyebrow">Archive Search</span>
-          <h1>과거 시장 기록 탐색</h1>
+          <h1 id="page-title" tabIndex={-1}>
+            과거 시장 기록 탐색
+          </h1>
           <p>
             날짜 범위와 상태 기준으로 과거 요약 생성 결과를 검색합니다. 테이블
             결과는 상세 페이지 이동을 제목 셀 링크에만 부여해 접근성과 의미를
@@ -168,7 +170,12 @@ function ArchiveSearchContent({
                 />
               </div>
               <div className="field">
-                <label htmlFor="archive-status">Status</label>
+                <label
+                  htmlFor="archive-status-trigger"
+                  id="archive-status-label"
+                >
+                  Status
+                </label>
                 <Select
                   onValueChange={(value) =>
                     setDraft((current) => ({
@@ -178,7 +185,10 @@ function ArchiveSearchContent({
                   }
                   value={draft.status || undefined}
                 >
-                  <SelectTrigger aria-label="Archive status">
+                  <SelectTrigger
+                    aria-labelledby="archive-status-label"
+                    id="archive-status-trigger"
+                  >
                     <SelectValue placeholder="All Status" />
                   </SelectTrigger>
                   <SelectContent>

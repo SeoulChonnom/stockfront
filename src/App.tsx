@@ -72,6 +72,14 @@ function App() {
     document.title = pageMeta.title;
   }, [pageMeta.title]);
 
+  useEffect(() => {
+    const focusTarget =
+      document.getElementById('page-title') ??
+      document.getElementById('main-content');
+
+    focusTarget?.focus();
+  }, [url.pathname, url.searchParams]);
+
   return (
     <AppShell
       onToggleTheme={() =>

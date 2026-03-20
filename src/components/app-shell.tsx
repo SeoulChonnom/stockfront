@@ -61,6 +61,9 @@ export function AppShell({
 }) {
   return (
     <div className="app-shell">
+      <a className="skip-link" href="#main-content">
+        본문으로 바로가기
+      </a>
       <aside className="sidebar">
         <div className="brand">
           <div className="brand-mark">Market Brief</div>
@@ -74,6 +77,7 @@ export function AppShell({
             return (
               <a
                 className={`nav-link${active ? ' nav-link-active' : ''}`}
+                aria-current={active ? 'page' : undefined}
                 href={item.href}
                 key={item.href}
                 onClick={createNavigateHandler(item.href)}
@@ -86,14 +90,14 @@ export function AppShell({
         </nav>
 
         <div className="sidebar-support">
-          <a className="nav-link nav-link-muted" href="#support">
+          <span className="nav-link nav-link-muted nav-link-static">
             <CircleHelp className="nav-icon" size={18} />
-            <span>Support</span>
-          </a>
-          <a className="nav-link nav-link-muted" href="#docs">
+            <span>Support · Coming soon</span>
+          </span>
+          <span className="nav-link nav-link-muted nav-link-static">
             <BookText className="nav-icon" size={18} />
-            <span>Documentation</span>
-          </a>
+            <span>Documentation · Coming soon</span>
+          </span>
         </div>
       </aside>
 
@@ -113,6 +117,7 @@ export function AppShell({
                 className={
                   pathname === '/market/latest' ? 'top-link-active' : ''
                 }
+                aria-current={pathname === '/market/latest' ? 'page' : undefined}
                 href="/market/latest"
                 onClick={createNavigateHandler('/market/latest')}
               >
@@ -124,6 +129,9 @@ export function AppShell({
                     ? 'top-link-active'
                     : ''
                 }
+                aria-current={
+                  pathname.startsWith('/market/archive') ? 'page' : undefined
+                }
                 href="/market/archive/search"
                 onClick={createNavigateHandler('/market/archive/search')}
               >
@@ -132,6 +140,9 @@ export function AppShell({
               <a
                 className={
                   pathname.startsWith('/ops/batches') ? 'top-link-active' : ''
+                }
+                aria-current={
+                  pathname.startsWith('/ops/batches') ? 'page' : undefined
                 }
                 href="/ops/batches"
                 onClick={createNavigateHandler('/ops/batches')}
@@ -169,16 +180,18 @@ export function AppShell({
           </div>
         </header>
 
-        <main className="content">{children}</main>
+        <main className="content" id="main-content" tabIndex={-1}>
+          {children}
+        </main>
         <footer className="site-footer">
           <div>
             <strong>Market Daily Brief</strong>
             <p>PoC UI for market intelligence workflow and ops monitoring.</p>
           </div>
           <div className="site-footer-links">
-            <a href="#docs">Documentation</a>
-            <a href="#system">System Status</a>
-            <a href="#policies">Usage Policy</a>
+            <span>Documentation · Coming soon</span>
+            <span>System Status · Coming soon</span>
+            <span>Usage Policy · Coming soon</span>
           </div>
         </footer>
       </div>
