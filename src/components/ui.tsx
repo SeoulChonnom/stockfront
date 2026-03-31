@@ -15,3 +15,18 @@ export function InfoRow({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
+
+export function PageMessage({
+  title,
+  description,
+}: {
+  title: string;
+  description: string;
+}) {
+  return (
+    <section className="empty-state">
+      <h1>{title}</h1>
+      <p>{description}</p>
+    </section>
+  );
+}

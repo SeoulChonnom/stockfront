@@ -4,7 +4,11 @@ import { Card, CardContent } from '@/components/ui/card';
 
 import { createNavigateHandler, getStatusClass } from '../lib/app-state';
 import { buildUrl } from '../lib/router';
-import type { ClusterCard, MarketIndex, MarketSnapshot } from '../mock-data';
+import type {
+  ClusterCard,
+  MarketIndex,
+  MarketSnapshot,
+} from '../lib/view-models';
 import { InfoBadge } from '../components/ui';
 
 export function MarketOverviewPage({
@@ -32,9 +36,8 @@ export function MarketOverviewPage({
               : `${snapshot.businessDate} 아카이브 시장 요약`}
           </h1>
           <p>
-            {title} 화면은 PoC용 목업 데이터를 사용합니다. 추후 API 연동 시
-            페이지 조합은 유지하고 데이터 패칭 레이어만 교체할 수 있게
-            분리했습니다.
+            {title} 화면은 API 응답 기반으로 렌더링됩니다. 데이터 패칭과
+            화면 상태 관리는 React query 계층으로 분리했습니다.
           </p>
           <div className="meta-row">
             <span>

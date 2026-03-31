@@ -1,5 +1,5 @@
 import { ArrowLeft, ArrowRight, CircleDot, Search } from 'lucide-react';
-import { startTransition, useMemo, useState } from 'react';
+import { startTransition, useState } from 'react';
 import type { FormEvent } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
+import { PageMessage } from '../components/ui';
 import {
   createNavigateHandler,
   formatDateDots,
@@ -15,8 +16,9 @@ import {
   getTodayIso,
   normalizeDateParam,
 } from '../lib/app-state';
+import { useArchiveList } from '../lib/query-hooks';
 import { buildUrl, navigate } from '../lib/router';
-import { archiveRecords } from '../mock-data';
+import type { ArchiveRecord } from '../lib/view-models';
 
 export function ArchiveSearchPage({ searchParams }: { searchParams: URLSearchParams }) {
   const defaults = {
@@ -32,30 +34,40 @@ export function ArchiveSearchPage({ searchParams }: { searchParams: URLSearchPar
     status: searchParams.get('status') ?? defaults.status,
     page: Number(searchParams.get('page') ?? defaults.page) || 1,
   };
+  const archiveQuery = useArchiveList({
+    fromDate: applied.from,
+    toDate: applied.to,
+    status: applied.status || undefined,
+    page: applied.page,
+    size: 4,
+  });
 
-  const filtered = useMemo(() => {
-    return archiveRecords.filter((record) => {
-      if (applied.status && record.status !== applied.status) {
-        return false;
-      }
+  if (archiveQuery.isLoading) {
+    return (
+      <PageMessage
+        description="아카이브 목록을 불러오는 중입니다."
+        title="Loading Archive Data"
+      />
+    );
+  }
 
-      return record.businessDate <= applied.from && record.businessDate >= applied.to;
-    });
-  }, [applied.from, applied.status, applied.to]);
-
-  const pageSize = 4;
-  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
-  const currentPage = Math.min(applied.page, totalPages);
-  const rows = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  if (archiveQuery.error) {
+    return (
+      <PageMessage
+        description={archiveQuery.error.message}
+        title="Archive Data Unavailable"
+      />
+    );
+  }
 
   return (
     <ArchiveSearchContent
       key={`${applied.from}:${applied.to}:${applied.status}:${applied.page}`}
       applied={applied}
-      currentPage={currentPage}
-      filteredCount={filtered.length}
-      rows={rows}
-      totalPages={totalPages}
+      currentPage={archiveQuery.data?.page ?? applied.page}
+      filteredCount={archiveQuery.data?.totalCount ?? 0}
+      rows={archiveQuery.data?.rows ?? []}
+      totalPages={archiveQuery.data?.totalPages ?? 1}
     />
   );
 }
@@ -75,7 +87,7 @@ function ArchiveSearchContent({
   };
   currentPage: number;
   filteredCount: number;
-  rows: typeof archiveRecords;
+  rows: ArchiveRecord[];
   totalPages: number;
 }) {
   const [draft, setDraft] = useState({
@@ -192,8 +204,15 @@ function ArchiveSearchContent({
                 </TableRow>
               </TableHeader>
               <TableBody>
+                {rows.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={4}>
+                      조회 조건에 맞는 아카이브 결과가 없습니다.
+                    </TableCell>
+                  </TableRow>
+                )}
                 {rows.map((record) => (
-                  <TableRow key={record.businessDate}>
+                  <TableRow key={record.pageId}>
                     <TableCell>
                       <div className="date-cell">
                         <CircleDot className={record.status === 'FAILED' ? 'trend-down' : 'trend-up'} size={14} />
