@@ -7,7 +7,7 @@ import {
   Timer,
   TriangleAlert,
 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import type { FormEvent, ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -28,15 +28,20 @@ import {
   TableRow,
 } from '@/components/ui/table';
 
-import { InfoRow } from '../components/ui';
+import { InfoRow, PageMessage } from '../components/ui';
 import {
   getRelativeIso,
   getStatusClass,
   getTodayIso,
   normalizeDateParam,
 } from '../lib/app-state';
+import {
+  useBatchJobDetail,
+  useBatchJobs,
+  useStartBatchRunMutation,
+} from '../lib/query-hooks';
 import { buildUrl, navigate } from '../lib/router';
-import { batchRuns, type BatchRun } from '../mock-data';
+import type { BatchRun, BatchSummaryView } from '../lib/view-models';
 
 export function BatchOperationsPage({
   searchParams,
@@ -57,27 +62,53 @@ export function BatchOperationsPage({
     page: Number(searchParams.get('page') ?? defaults.page) || 1,
   };
 
-  const filtered = useMemo(() => {
-    return batchRuns.filter((run) => {
-      if (applied.status && run.status !== applied.status) {
-        return false;
-      }
+  const jobsQuery = useBatchJobs({
+    fromDate: applied.from,
+    toDate: applied.to,
+    status: applied.status || undefined,
+    page: applied.page,
+    size: 20,
+  });
+  const [manualSelectedJobId, setManualSelectedJobId] = useState<number | null>(
+    null,
+  );
+  const defaultSelectedJobId =
+    jobsQuery.data?.rows.find((run) => run.status === 'FAILED')?.id ??
+    jobsQuery.data?.rows[0]?.id ??
+    null;
+  const selectedJobId = manualSelectedJobId ?? defaultSelectedJobId;
+  const detailQuery = useBatchJobDetail(selectedJobId);
+  const startBatchMutation = useStartBatchRunMutation();
 
-      return run.businessDate <= applied.from && run.businessDate >= applied.to;
-    });
-  }, [applied.from, applied.status, applied.to]);
+  if (jobsQuery.isLoading) {
+    return (
+      <PageMessage
+        description="배치 실행 이력을 불러오는 중입니다."
+        title="Loading Batch Jobs"
+      />
+    );
+  }
 
-  const selectedRun =
-    filtered.find((run) => run.status === 'FAILED') ??
-    filtered[0] ??
-    batchRuns[0];
+  if (jobsQuery.error) {
+    return (
+      <PageMessage
+        description={jobsQuery.error.message}
+        title="Batch Jobs Unavailable"
+      />
+    );
+  }
 
   return (
     <BatchOperationsContent
       key={`${applied.from}:${applied.to}:${applied.status}:${applied.page}`}
       applied={applied}
-      filtered={filtered}
-      selectedRun={selectedRun}
+      filtered={jobsQuery.data?.rows ?? []}
+      onSelectJob={setManualSelectedJobId}
+      selectedJobId={selectedJobId}
+      selectedRun={detailQuery.data ?? null}
+      startBatchMutation={startBatchMutation}
+      summary={jobsQuery.data?.summary ?? null}
+      totalCount={jobsQuery.data?.totalCount ?? 0}
     />
   );
 }
@@ -85,7 +116,12 @@ export function BatchOperationsPage({
 function BatchOperationsContent({
   applied,
   filtered,
+  onSelectJob,
+  selectedJobId,
   selectedRun,
+  startBatchMutation,
+  summary,
+  totalCount,
 }: {
   applied: {
     from: string;
@@ -93,7 +129,12 @@ function BatchOperationsContent({
     status: string;
   };
   filtered: BatchRun[];
-  selectedRun: BatchRun;
+  onSelectJob: (jobId: number) => void;
+  selectedJobId: number | null;
+  selectedRun: BatchRun | null;
+  startBatchMutation: ReturnType<typeof useStartBatchRunMutation>;
+  summary: BatchSummaryView | null;
+  totalCount: number;
 }) {
   const [draft, setDraft] = useState({
     from: applied.from,
@@ -123,13 +164,17 @@ function BatchOperationsContent({
           </h1>
           <p>
             파이프라인 상태, 실행 시간, 실패 로그를 한 화면에서 확인하는 운영용
-            모니터링 보드입니다. 1차 구현에서는 API 없이 목업 데이터와 필터
-            상태만 URL query에 반영합니다.
+            모니터링 보드입니다. 목록과 상세는 API 응답을 분리 조회합니다.
           </p>
         </div>
-        <Button type="button" variant="primary">
+        <Button
+          disabled={startBatchMutation.isPending}
+          onClick={() => startBatchMutation.mutate()}
+          type="button"
+          variant="primary"
+        >
           <Play size={16} />
-          Manual Trigger
+          {startBatchMutation.isPending ? 'Triggering...' : 'Manual Trigger'}
         </Button>
       </section>
 
@@ -138,22 +183,22 @@ function BatchOperationsContent({
           icon={<CheckCircle2 size={18} />}
           label="Recent Success Rate"
           tone="success"
-          value="99.4%"
-          supporting="+0.2% vs last 24h"
+          value={summary?.successRate ?? '0.0%'}
+          supporting={summary?.successSupporting ?? 'No data'}
         />
         <StatCard
           icon={<Timer size={18} />}
           label="Avg Processing Time"
           tone="primary"
-          value="14m 22s"
-          supporting="Target: < 20m per batch"
+          value={summary?.avgProcessingTime ?? '-'}
+          supporting={summary?.durationSupporting ?? 'No data'}
         />
         <StatCard
           icon={<Database size={18} />}
           label="Market Sync Quality"
           tone="neutral"
-          value="Tier-1"
-          supporting="No drift detected in 7 days"
+          value={summary?.marketSyncQuality ?? '-'}
+          supporting={summary?.qualitySupporting ?? 'No data'}
         />
       </section>
 
@@ -248,8 +293,20 @@ function BatchOperationsContent({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
+                  {filtered.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={6}>
+                        조회 조건에 맞는 배치 이력이 없습니다.
+                      </TableCell>
+                    </TableRow>
+                  )}
                   {filtered.map((run) => (
-                    <BatchRow key={run.id} run={run} />
+                    <BatchRow
+                      isSelected={selectedJobId === run.id}
+                      key={run.id}
+                      onSelect={onSelectJob}
+                      run={run}
+                    />
                   ))}
                 </TableBody>
               </Table>
@@ -262,29 +319,60 @@ function BatchOperationsContent({
             <div className="panel-header">
               <TriangleAlert
                 className={
-                  selectedRun.status === 'FAILED' ? 'trend-down' : 'trend-up'
+                  selectedRun?.status === 'FAILED' ? 'trend-down' : 'trend-up'
                 }
                 size={18}
               />
               <h2>Selected Run Detail</h2>
             </div>
-            <div className="log-box">{selectedRun.detail}</div>
+            <div className="log-box">
+              {selectedRun?.detail ?? '선택된 배치가 없습니다.'}
+            </div>
             <div className="metric-list">
-              <InfoRow label="Job ID" value={selectedRun.id} />
-              <InfoRow label="Page Version" value="v0.1.0-poc" />
-              <InfoRow label="Date" value={selectedRun.businessDate} />
-              <InfoRow label="Duration" value={selectedRun.duration} />
+              <InfoRow
+                label="Job ID"
+                value={selectedRun ? String(selectedRun.id) : '-'}
+              />
+              <InfoRow
+                label="Page Version"
+                value={selectedRun?.pageVersion ?? '-'}
+              />
+              <InfoRow label="Date" value={selectedRun?.businessDate ?? '-'} />
+              <InfoRow label="Duration" value={selectedRun?.duration ?? '-'} />
             </div>
           </CardContent>
         </Card>
       </div>
+
+      <footer className="page-intro">
+        <p>
+          Showing <strong>{filtered.length}</strong> of{' '}
+          <strong>{totalCount}</strong> batch jobs
+        </p>
+        {startBatchMutation.isError && (
+          <p>배치 실행 요청에 실패했습니다. 다시 시도해 주세요.</p>
+        )}
+      </footer>
     </div>
   );
 }
 
-function BatchRow({ run }: { run: BatchRun }) {
+function BatchRow({
+  isSelected,
+  onSelect,
+  run,
+}: {
+  isSelected: boolean;
+  onSelect: (jobId: number) => void;
+  run: BatchRun;
+}) {
   return (
-    <TableRow className={run.status === 'FAILED' ? 'row-alert' : ''}>
+    <TableRow
+      aria-selected={isSelected}
+      className={run.status === 'FAILED' ? 'row-alert' : ''}
+      onClick={() => onSelect(run.id)}
+      style={{ cursor: 'pointer' }}
+    >
       <TableCell>
         <div className="market-cell">
           <span

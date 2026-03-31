@@ -1,9 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 
 import { AppShell } from './components/app-shell';
+import { PageMessage } from './components/ui';
 import { parseRoute, type ThemeMode } from './lib/app-state';
+import {
+  useArchiveMarketPage,
+  useLatestMarketPage,
+} from './lib/query-hooks';
 import { navigate, useUrlState } from './lib/router';
-import { archiveMarketSnapshots, latestMarketSnapshot } from './mock-data';
 import { ArchiveSearchPage } from './pages/archive-search-page';
 import { BatchOperationsPage } from './pages/batch-operations-page';
 import { ClusterDetailPage } from './pages/cluster-detail-page';
@@ -13,6 +17,11 @@ import { NotFoundPage } from './pages/not-found-page';
 function App() {
   const url = useUrlState();
   const route = parseRoute(url.pathname);
+  const latestMarketQuery = useLatestMarketPage(route.page === 'latest');
+  const archiveMarketQuery = useArchiveMarketPage(
+    route.page === 'archive-market' ? route.businessDate : '',
+    route.page === 'archive-market',
+  );
   const [theme, setTheme] = useState<ThemeMode>(() => {
     if (typeof window === 'undefined') {
       return 'dark';
@@ -90,19 +99,20 @@ function App() {
       theme={theme}
     >
       {route.page === 'latest' && (
-        <MarketOverviewPage
+        <MarketOverviewContent
+          error={latestMarketQuery.error}
+          isLoading={latestMarketQuery.isLoading}
           mode="latest"
-          snapshot={latestMarketSnapshot}
+          snapshot={latestMarketQuery.data}
           title="Latest Market"
         />
       )}
       {route.page === 'archive-market' && (
-        <MarketOverviewPage
+        <MarketOverviewContent
+          error={archiveMarketQuery.error}
+          isLoading={archiveMarketQuery.isLoading}
           mode="archive"
-          snapshot={
-            archiveMarketSnapshots[route.businessDate] ??
-            archiveMarketSnapshots[latestMarketSnapshot.businessDate]
-          }
+          snapshot={archiveMarketQuery.data}
           title="Archive Market"
         />
       )}
@@ -118,6 +128,49 @@ function App() {
       {route.page === 'not-found' && <NotFoundPage />}
     </AppShell>
   );
+}
+
+function MarketOverviewContent({
+  error,
+  isLoading,
+  mode,
+  snapshot,
+  title,
+}: {
+  error: Error | null;
+  isLoading: boolean;
+  mode: 'latest' | 'archive';
+  snapshot: Parameters<typeof MarketOverviewPage>[0]['snapshot'] | undefined;
+  title: string;
+}) {
+  if (isLoading) {
+    return (
+      <PageMessage
+        description="시장 요약 데이터를 불러오는 중입니다."
+        title="Loading Market Data"
+      />
+    );
+  }
+
+  if (error) {
+    return (
+      <PageMessage
+        description={error.message}
+        title="Market Data Unavailable"
+      />
+    );
+  }
+
+  if (!snapshot) {
+    return (
+      <PageMessage
+        description="표시할 시장 요약 데이터가 없습니다."
+        title="No Market Data"
+      />
+    );
+  }
+
+  return <MarketOverviewPage mode={mode} snapshot={snapshot} title={title} />;
 }
 
 export default App;

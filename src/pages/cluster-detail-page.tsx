@@ -10,15 +10,42 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 
-import { InfoRow } from '../components/ui';
+import { InfoRow, PageMessage } from '../components/ui';
 import { createNavigateHandler } from '../lib/app-state';
+import { useClusterDetail } from '../lib/query-hooks';
 import { navigate } from '../lib/router';
-import { clusterDetails } from '../mock-data';
 
 export function ClusterDetailPage({ clusterId }: { clusterId: string }) {
-  const detail =
-    clusterDetails[clusterId] ??
-    clusterDetails['a8d5d5f8-fec5-4caa-b5ef-91a1c0b5d678'];
+  const clusterQuery = useClusterDetail(clusterId);
+
+  if (clusterQuery.isLoading) {
+    return (
+      <PageMessage
+        description="뉴스 클러스터 상세를 불러오는 중입니다."
+        title="Loading Cluster Detail"
+      />
+    );
+  }
+
+  if (clusterQuery.error) {
+    return (
+      <PageMessage
+        description={clusterQuery.error.message}
+        title="Cluster Detail Unavailable"
+      />
+    );
+  }
+
+  if (!clusterQuery.data) {
+    return (
+      <PageMessage
+        description="표시할 클러스터 데이터가 없습니다."
+        title="No Cluster Data"
+      />
+    );
+  }
+
+  const detail = clusterQuery.data;
 
   return (
     <div className="page-stack">
