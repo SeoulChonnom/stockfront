@@ -55,14 +55,17 @@ export async function apiRequest<T>(
   path: string,
   options: ApiRequestOptions = {},
 ): Promise<T> {
+  const headers = new Headers(options.headers);
+
+  if (options.body !== undefined && !headers.has('Content-Type')) {
+    headers.set('Content-Type', 'application/json');
+  }
+
   const response = await fetch(
     `${getApiHost()}${path}${buildQueryString(options.query)}`,
     {
       method: options.method ?? 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
+      headers,
       body:
         options.body === undefined ? undefined : JSON.stringify(options.body),
       signal: options.signal,
