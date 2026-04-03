@@ -24,6 +24,46 @@ function getApiHost() {
   return host.replace(/\/+$/, '');
 }
 
+function getAuthToken() {
+  const apiToken = import.meta.env.VITE_API_BEARER_TOKEN;
+
+  if (typeof apiToken === 'string' && apiToken.trim().length > 0) {
+    return apiToken.trim();
+  }
+
+  const devToken = import.meta.env.VITE_DEV_BEARER_TOKEN;
+  if (typeof devToken === 'string' && devToken.trim().length > 0) {
+    return devToken.trim();
+  }
+
+  if (import.meta.env.DEV || import.meta.env.MODE === 'test') {
+    return 'dev-token';
+  }
+
+  return null;
+}
+
+function getResponseErrorMessage(status: number, body: unknown) {
+  if (status === 401) {
+    return 'Unauthorized (401). Check the Bearer token used by the frontend.';
+  }
+
+  const detail =
+    body && typeof body === 'object' && 'detail' in body
+      ? String((body as { detail?: unknown }).detail ?? '')
+      : '';
+
+  if (detail.length > 0) {
+    return `API request failed with status ${status}. ${detail}`;
+  }
+
+  return `API request failed with status ${status}.`;
+}
+
+function getNetworkErrorMessage() {
+  return 'Network request failed. Check that the backend is running, VITE_API_HOST is correct, and CORS allows the frontend origin.';
+}
+
 function buildQueryString(query?: Record<string, QueryValue>) {
   if (!query) {
     return '';
@@ -57,20 +97,30 @@ export async function apiRequest<T>(
 ): Promise<T> {
   const headers = new Headers(options.headers);
 
+  const authToken = getAuthToken();
+  if (authToken && !headers.has('Authorization')) {
+    headers.set('Authorization', `Bearer ${authToken}`);
+  }
+
   if (options.body !== undefined && !headers.has('Content-Type')) {
     headers.set('Content-Type', 'application/json');
   }
 
-  const response = await fetch(
-    `${getApiHost()}${path}${buildQueryString(options.query)}`,
-    {
-      method: options.method ?? 'GET',
-      headers,
-      body:
-        options.body === undefined ? undefined : JSON.stringify(options.body),
-      signal: options.signal,
-    },
-  );
+  let response: Response;
+  try {
+    response = await fetch(
+      `${getApiHost()}${path}${buildQueryString(options.query)}`,
+      {
+        method: options.method ?? 'GET',
+        headers,
+        body:
+          options.body === undefined ? undefined : JSON.stringify(options.body),
+        signal: options.signal,
+      },
+    );
+  } catch {
+    throw new ApiError(getNetworkErrorMessage(), 0, null);
+  }
 
   let parsedBody: unknown = null;
 
@@ -82,7 +132,7 @@ export async function apiRequest<T>(
 
   if (!response.ok) {
     throw new ApiError(
-      `API request failed with status ${response.status}.`,
+      getResponseErrorMessage(response.status, parsedBody),
       response.status,
       parsedBody,
     );
