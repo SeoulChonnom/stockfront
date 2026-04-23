@@ -4,6 +4,13 @@ import { navigate } from './router';
 
 export type ThemeMode = 'light' | 'dark';
 
+export type ListFilters = {
+  from: string;
+  to: string;
+  status: string;
+  page: number;
+};
+
 export type AppRoute =
   | { page: 'latest' }
   | { page: 'archive-market'; businessDate: string }
@@ -14,6 +21,13 @@ export type AppRoute =
 
 const defaultBusinessDate = '2026-03-17';
 const defaultClusterId = 'a8d5d5f8-fec5-4caa-b5ef-91a1c0b5d678';
+const archiveMarketRoutePattern = /^\/market\/archive\/(\d{4}-\d{2}-\d{2})$/;
+const clusterDetailRoutePattern =
+  /^\/market\/cluster\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/;
+
+function matchRouteParam(pathname: string, pattern: RegExp, fallback: string) {
+  return pathname.match(pattern)?.[1] ?? fallback;
+}
 
 export function formatDateDots(value: string) {
   return value.replaceAll('-', '. ');
@@ -35,6 +49,22 @@ export function getRelativeIso(days: number) {
   const date = new Date();
   date.setDate(date.getDate() - days);
   return date.toISOString().slice(0, 10);
+}
+
+export function parseListFilters(searchParams: URLSearchParams): ListFilters {
+  const defaults = {
+    from: getTodayIso(),
+    to: getRelativeIso(14),
+    status: '',
+    page: 1,
+  };
+
+  return {
+    from: normalizeDateParam(searchParams.get('from'), defaults.from),
+    to: normalizeDateParam(searchParams.get('to'), defaults.to),
+    status: searchParams.get('status') ?? defaults.status,
+    page: Number(searchParams.get('page') ?? defaults.page) || 1,
+  };
 }
 
 export function getStatusClass(status: string) {
@@ -63,19 +93,22 @@ export function parseRoute(pathname: string): AppRoute {
   if (pathname.startsWith('/market/archive/')) {
     return {
       page: 'archive-market',
-      businessDate:
-        pathname.match(/^\/market\/archive\/(\d{4}-\d{2}-\d{2})$/)?.[1] ??
-        defaultBusinessDate,
+      businessDate: matchRouteParam(
+        pathname,
+        archiveMarketRoutePattern,
+        defaultBusinessDate
+      ),
     };
   }
 
   if (pathname.startsWith('/market/cluster/')) {
     return {
       page: 'cluster-detail',
-      clusterId:
-        pathname.match(
-          /^\/market\/cluster\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/,
-        )?.[1] ?? defaultClusterId,
+      clusterId: matchRouteParam(
+        pathname,
+        clusterDetailRoutePattern,
+        defaultClusterId
+      ),
     };
   }
 
