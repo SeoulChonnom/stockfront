@@ -2,6 +2,12 @@ import type { ApiEnvelope } from './types';
 
 type QueryValue = string | number | boolean | null | undefined;
 
+function readEnvString(name: string) {
+  const value = (import.meta.env as Record<string, unknown>)[name];
+
+  return typeof value === 'string' ? value : undefined;
+}
+
 export class ApiError extends Error {
   status: number;
   body: unknown;
@@ -15,7 +21,7 @@ export class ApiError extends Error {
 }
 
 function getApiHost() {
-  const host = import.meta.env.VITE_API_HOST;
+  const host = readEnvString('VITE_API_HOST');
 
   if (typeof host !== 'string' || host.trim().length === 0) {
     throw new Error('VITE_API_HOST is not configured.');
@@ -25,13 +31,13 @@ function getApiHost() {
 }
 
 function getAuthToken() {
-  const apiToken = import.meta.env.VITE_API_BEARER_TOKEN;
+  const apiToken = readEnvString('VITE_API_BEARER_TOKEN');
 
   if (typeof apiToken === 'string' && apiToken.trim().length > 0) {
     return apiToken.trim();
   }
 
-  const devToken = import.meta.env.VITE_DEV_BEARER_TOKEN;
+  const devToken = readEnvString('VITE_DEV_BEARER_TOKEN');
   if (typeof devToken === 'string' && devToken.trim().length > 0) {
     return devToken.trim();
   }
@@ -49,8 +55,11 @@ function getResponseErrorMessage(status: number, body: unknown) {
   }
 
   const detail =
-    body && typeof body === 'object' && 'detail' in body
-      ? String((body as { detail?: unknown }).detail ?? '')
+    body &&
+    typeof body === 'object' &&
+    'detail' in body &&
+    typeof body.detail === 'string'
+      ? body.detail
       : '';
 
   if (detail.length > 0) {
@@ -93,7 +102,7 @@ type ApiRequestOptions = {
 
 export async function apiRequest<T>(
   path: string,
-  options: ApiRequestOptions = {},
+  options: ApiRequestOptions = {}
 ): Promise<T> {
   const headers = new Headers(options.headers);
 
@@ -116,7 +125,7 @@ export async function apiRequest<T>(
         body:
           options.body === undefined ? undefined : JSON.stringify(options.body),
         signal: options.signal,
-      },
+      }
     );
   } catch {
     throw new ApiError(getNetworkErrorMessage(), 0, null);
@@ -134,7 +143,7 @@ export async function apiRequest<T>(
     throw new ApiError(
       getResponseErrorMessage(response.status, parsedBody),
       response.status,
-      parsedBody,
+      parsedBody
     );
   }
 
@@ -144,7 +153,7 @@ export async function apiRequest<T>(
     throw new ApiError(
       'API response does not contain a data payload.',
       200,
-      parsedBody,
+      parsedBody
     );
   }
 

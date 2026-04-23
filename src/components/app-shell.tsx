@@ -104,20 +104,24 @@ export function AppShell({
       <div className="shell-main">
         <header className="topbar">
           <div className="topbar-left">
-            <label className="search-field">
+            <div className="search-field">
               <Search size={16} />
               <Input
-                aria-label={placeholder}
+                aria-label={`${placeholder} (coming soon)`}
                 className="min-h-0 border-0 bg-transparent px-0 py-0 shadow-none focus:border-0 focus:shadow-none"
-                placeholder={`${placeholder}...`}
+                disabled
+                placeholder={`${placeholder} (coming soon)`}
+                readOnly
               />
-            </label>
+            </div>
             <nav className="top-links" aria-label="Section">
               <a
                 className={
                   pathname === '/market/latest' ? 'top-link-active' : ''
                 }
-                aria-current={pathname === '/market/latest' ? 'page' : undefined}
+                aria-current={
+                  pathname === '/market/latest' ? 'page' : undefined
+                }
                 href="/market/latest"
                 onClick={createNavigateHandler('/market/latest')}
               >
