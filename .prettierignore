@@ -1,0 +1,17 @@
+# 의존성 패키지 제외
+node_modules
+
+# 빌드 결과물 제외
+dist
+build
+
+# 특정 파일 형식 제외
+*.min.js
+*.map
+
+# 특정 폴더 내 파일 제외
+/src/assets/*
+/.agent/*
+/.agents/*
+/.claude/*
+
