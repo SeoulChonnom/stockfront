@@ -1,4 +1,5 @@
 import type { ApiEnvelope } from './types';
+import { getAccessToken } from '../auth-bootstrap';
 
 type QueryValue = string | number | boolean | null | undefined;
 
@@ -31,22 +32,14 @@ function getApiHost() {
 }
 
 function getAuthToken() {
-  const apiToken = readEnvString('VITE_API_BEARER_TOKEN');
+  const accessToken = getAccessToken();
 
-  if (typeof apiToken === 'string' && apiToken.trim().length > 0) {
-    return apiToken.trim();
+  if (typeof accessToken !== 'string') {
+    return null;
   }
 
-  const devToken = readEnvString('VITE_DEV_BEARER_TOKEN');
-  if (typeof devToken === 'string' && devToken.trim().length > 0) {
-    return devToken.trim();
-  }
-
-  if (import.meta.env.DEV || import.meta.env.MODE === 'test') {
-    return 'dev-token';
-  }
-
-  return null;
+  const normalizedAccessToken = accessToken.trim();
+  return normalizedAccessToken.length > 0 ? normalizedAccessToken : null;
 }
 
 function getResponseErrorMessage(status: number, body: unknown) {
