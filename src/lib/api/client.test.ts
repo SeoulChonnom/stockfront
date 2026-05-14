@@ -1,7 +1,6 @@
-import { describe, expect, it, vi, afterEach } from 'vitest';
-
-import { ApiError, apiRequest } from './client';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { bootstrapAuth, resetAuthBootstrapForTesting } from '../auth-bootstrap';
+import { ApiError, apiRequest } from './client';
 
 function createJsonResponse(body: unknown, init?: ResponseInit) {
   return new Response(JSON.stringify(body), {
@@ -23,15 +22,19 @@ describe('apiRequest', () => {
     vi.stubEnv('VITE_API_HOST', 'http://localhost:8000/');
     const fetchMock = vi
       .fn<(input: RequestInfo | URL, init?: RequestInit) => Promise<Response>>()
-      .mockImplementation(async (input) => {
+      .mockImplementation((input) => {
         if (input === 'http://localhost:8000/api/user/token') {
-          return createJsonResponse({ accessToken: 'issued-token' });
+          return Promise.resolve(
+            createJsonResponse({ accessToken: 'issued-token' })
+          );
         }
 
-        return createJsonResponse({
-          success: true,
-          data: { id: 1, title: 'ok' },
-        });
+        return Promise.resolve(
+          createJsonResponse({
+            success: true,
+            data: { id: 1, title: 'ok' },
+          })
+        );
       });
     vi.stubGlobal('fetch', fetchMock);
 
@@ -55,9 +58,9 @@ describe('apiRequest', () => {
     );
     const [, apiInit] = fetchMock.mock.calls[1] ?? [];
     expect(apiInit?.headers).toBeInstanceOf(Headers);
-    expect((apiInit?.headers as Headers | undefined)?.get('Authorization')).toBe(
-      'Bearer issued-token'
-    );
+    expect(
+      (apiInit?.headers as Headers | undefined)?.get('Authorization')
+    ).toBe('Bearer issued-token');
   });
 
   it('does not fall back to env or implicit dev tokens when runtime bootstrap has no token', async () => {
@@ -67,15 +70,17 @@ describe('apiRequest', () => {
     vi.stubEnv('VITE_APP_ENV', 'development');
     const fetchMock = vi
       .fn<(input: RequestInfo | URL, init?: RequestInit) => Promise<Response>>()
-      .mockImplementation(async (input) => {
+      .mockImplementation((input) => {
         if (input === 'http://localhost:8000/api/user/token') {
-          return createJsonResponse({ accessToken: '   ' });
+          return Promise.resolve(createJsonResponse({ accessToken: '   ' }));
         }
 
-        return createJsonResponse({
-          success: true,
-          data: { id: 1, title: 'ok' },
-        });
+        return Promise.resolve(
+          createJsonResponse({
+            success: true,
+            data: { id: 1, title: 'ok' },
+          })
+        );
       });
     vi.stubGlobal('fetch', fetchMock);
 
@@ -96,15 +101,19 @@ describe('apiRequest', () => {
     vi.stubEnv('VITE_API_HOST', 'http://localhost:8000');
     const fetchMock = vi
       .fn<(input: RequestInfo | URL, init?: RequestInit) => Promise<Response>>()
-      .mockImplementation(async (input) => {
+      .mockImplementation((input) => {
         if (input === 'http://localhost:8000/api/user/token') {
-          return createJsonResponse({ accessToken: 'issued-token' });
+          return Promise.resolve(
+            createJsonResponse({ accessToken: 'issued-token' })
+          );
         }
 
-        return createJsonResponse({
-          success: true,
-          data: { id: 1, title: 'ok' },
-        });
+        return Promise.resolve(
+          createJsonResponse({
+            success: true,
+            data: { id: 1, title: 'ok' },
+          })
+        );
       });
     vi.stubGlobal('fetch', fetchMock);
 

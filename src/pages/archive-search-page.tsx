@@ -4,8 +4,8 @@ import { useArchiveList } from '../lib/query-hooks';
 import { buildUrl, navigate } from '../lib/router';
 import type { ArchiveRecord } from '../lib/view-models';
 import { ArchivePagination } from './archive-search/archive-pagination';
-import { ArchiveSearchFilters } from './archive-search/archive-search-filters';
 import { ArchiveResultsTable } from './archive-search/archive-results-table';
+import { ArchiveSearchFilters } from './archive-search/archive-search-filters';
 
 function buildArchiveSearchUrl(filters: {
   from: string;
@@ -33,8 +33,8 @@ export function ArchiveSearchPage({
   if (archiveQuery.isLoading) {
     return (
       <PageMessage
-        description="아카이브 목록을 불러오는 중입니다."
-        title="Loading Archive Data"
+        description='아카이브 목록을 불러오는 중입니다.'
+        title='Loading Archive Data'
       />
     );
   }
@@ -43,7 +43,7 @@ export function ArchiveSearchPage({
     return (
       <PageMessage
         description={archiveQuery.error.message}
-        title="Archive Data Unavailable"
+        title='Archive Data Unavailable'
       />
     );
   }
@@ -79,11 +79,11 @@ function ArchiveSearchContent({
   totalPages: number;
 }) {
   return (
-    <div className="page-stack">
-      <section className="page-intro">
+    <div className='page-stack'>
+      <section className='page-intro'>
         <div>
-          <span className="eyebrow">Archive Search</span>
-          <h1 id="page-title" tabIndex={-1}>
+          <span className='eyebrow'>Archive Search</span>
+          <h1 id='page-title' tabIndex={-1}>
             과거 시장 기록 탐색
           </h1>
           <p>

@@ -1,21 +1,14 @@
-import {
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { getArchiveList, type ArchiveListParams } from './api/archive';
+import { type ArchiveListParams, getArchiveList } from './api/archive';
 import {
+  type BatchJobsParams,
   getBatchJobDetail,
   getBatchJobs,
   startBatchRun,
-  type BatchJobsParams,
 } from './api/batch';
 import { getClusterDetail } from './api/news';
-import {
-  getDailyPageByBusinessDate,
-  getLatestDailyPage,
-} from './api/pages';
+import { getDailyPageByBusinessDate, getLatestDailyPage } from './api/pages';
 import {
   mapArchiveListToView,
   mapBatchDetailToRun,
@@ -33,10 +26,7 @@ export function useLatestMarketPage(enabled = true) {
   });
 }
 
-export function useArchiveMarketPage(
-  businessDate: string,
-  enabled = true,
-) {
+export function useArchiveMarketPage(businessDate: string, enabled = true) {
   return useQuery({
     queryKey: ['daily-page', businessDate],
     queryFn: ({ signal }) => getDailyPageByBusinessDate(businessDate, signal),

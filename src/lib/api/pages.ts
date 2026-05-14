@@ -9,7 +9,7 @@ export function getLatestDailyPage(signal?: AbortSignal) {
 
 export function getDailyPageByBusinessDate(
   businessDate: string,
-  signal?: AbortSignal,
+  signal?: AbortSignal
 ) {
   return apiRequest<DailyPageResponse>('/stock/api/pages/daily', {
     query: { businessDate },

@@ -17,8 +17,8 @@ export function MarketOverviewRouteContent({
   if (isLoading) {
     return (
       <PageMessage
-        description="시장 요약 데이터를 불러오는 중입니다."
-        title="Loading Market Data"
+        description='시장 요약 데이터를 불러오는 중입니다.'
+        title='Loading Market Data'
       />
     );
   }
@@ -27,7 +27,7 @@ export function MarketOverviewRouteContent({
     return (
       <PageMessage
         description={error.message}
-        title="Market Data Unavailable"
+        title='Market Data Unavailable'
       />
     );
   }
@@ -35,8 +35,8 @@ export function MarketOverviewRouteContent({
   if (!snapshot) {
     return (
       <PageMessage
-        description="표시할 시장 요약 데이터가 없습니다."
-        title="No Market Data"
+        description='표시할 시장 요약 데이터가 없습니다.'
+        title='No Market Data'
       />
     );
   }

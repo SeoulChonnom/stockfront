@@ -496,8 +496,7 @@
   background: color-mix(in srgb, var(--bg) 70%, var(--surface-muted));
   border: 1px solid color-mix(in srgb, var(--danger) 18%, var(--line));
   font-family:
-    "SFMono-Regular", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
-    monospace;
+    "SFMono-Regular", ui-monospace, Menlo, Monaco, Consolas, monospace;
   font-size: 0.85rem;
 }
 

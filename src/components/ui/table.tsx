@@ -27,7 +27,7 @@ export function TableHeader({
     <thead
       className={cn(
         '[&_tr]:border-b [&_tr]:border-[color:var(--line)]',
-        className,
+        className
       )}
       {...props}
     />
@@ -42,7 +42,7 @@ export function TableBody({
     <tbody
       className={cn(
         '[&_tr:last-child]:border-0 [&_tr:hover]:bg-[color:color-mix(in_srgb,var(--surface-muted)_72%,transparent)]',
-        className,
+        className
       )}
       {...props}
     />
@@ -57,7 +57,7 @@ export function TableRow({
     <tr
       className={cn(
         'border-b border-[color:var(--line)] transition-colors',
-        className,
+        className
       )}
       {...props}
     />
@@ -72,7 +72,7 @@ export function TableHead({
     <th
       className={cn(
         'h-12 px-0 text-left align-middle text-[0.74rem] uppercase tracking-[0.16em] text-[color:var(--text-faint)] font-semibold',
-        className,
+        className
       )}
       {...props}
     />

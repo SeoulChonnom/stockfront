@@ -50,7 +50,9 @@ describe('auth bootstrap', () => {
     vi.stubGlobal(
       'fetch',
       vi
-        .fn<(input: RequestInfo | URL, init?: RequestInit) => Promise<Response>>()
+        .fn<
+          (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>
+        >()
         .mockResolvedValue(createJsonResponse({ accessToken: 'issued-token' }))
     );
 
@@ -72,7 +74,9 @@ describe('auth bootstrap', () => {
     vi.stubGlobal(
       'fetch',
       vi
-        .fn<(input: RequestInfo | URL, init?: RequestInit) => Promise<Response>>()
+        .fn<
+          (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>
+        >()
         .mockResolvedValue(createJsonResponse({ accessToken: 'issued-token' }))
     );
 
@@ -95,14 +99,17 @@ describe('auth bootstrap', () => {
     vi.stubGlobal(
       'fetch',
       vi
-        .fn<(input: RequestInfo | URL, init?: RequestInit) => Promise<Response>>()
+        .fn<
+          (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>
+        >()
         .mockResolvedValue(createJsonResponse({ accessToken: '   ' }))
     );
 
     await expect(bootstrapAuth()).resolves.toEqual({
       status: 'redirecting',
       accessToken: null,
-      error: 'Token bootstrap response must include a non-empty accessToken string.',
+      error:
+        'Token bootstrap response must include a non-empty accessToken string.',
     });
     expect(assignMock).toHaveBeenCalledWith('http://localhost:8000/login');
     expect(getAccessToken()).toBeNull();
@@ -115,14 +122,17 @@ describe('auth bootstrap', () => {
     vi.stubGlobal(
       'fetch',
       vi
-        .fn<(input: RequestInfo | URL, init?: RequestInit) => Promise<Response>>()
+        .fn<
+          (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>
+        >()
         .mockResolvedValue(createJsonResponse({ accessToken: '' }))
     );
 
     await expect(bootstrapAuth()).resolves.toEqual({
       status: 'bypassed',
       accessToken: null,
-      error: 'Token bootstrap response must include a non-empty accessToken string.',
+      error:
+        'Token bootstrap response must include a non-empty accessToken string.',
     });
     expect(assignMock).not.toHaveBeenCalled();
   });
@@ -130,8 +140,10 @@ describe('auth bootstrap', () => {
   it('bypasses in development when host config is invalid before fetch starts', async () => {
     vi.stubEnv('VITE_API_HOST', '');
     vi.stubEnv('VITE_APP_ENV', 'development');
-    const fetchMock = vi
-      .fn<(input: RequestInfo | URL, init?: RequestInit) => Promise<Response>>();
+    const fetchMock =
+      vi.fn<
+        (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>
+      >();
     const assignMock = vi.spyOn(authBootstrapNavigation, 'redirectToLogin');
     vi.stubGlobal('fetch', fetchMock);
 
@@ -146,8 +158,10 @@ describe('auth bootstrap', () => {
 
   it('fails cleanly in non-development when host config is invalid before fetch starts', async () => {
     vi.stubEnv('VITE_API_HOST', '');
-    const fetchMock = vi
-      .fn<(input: RequestInfo | URL, init?: RequestInit) => Promise<Response>>();
+    const fetchMock =
+      vi.fn<
+        (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>
+      >();
     const assignMock = vi.spyOn(authBootstrapNavigation, 'redirectToLogin');
     vi.stubGlobal('fetch', fetchMock);
 
@@ -162,13 +176,17 @@ describe('auth bootstrap', () => {
 
   it('falls back to a failed state when login redirect throws', async () => {
     vi.stubEnv('VITE_API_HOST', 'http://localhost:8000');
-    vi.spyOn(authBootstrapNavigation, 'redirectToLogin').mockImplementation(() => {
-      throw new Error('navigation blocked');
-    });
+    vi.spyOn(authBootstrapNavigation, 'redirectToLogin').mockImplementation(
+      () => {
+        throw new Error('navigation blocked');
+      }
+    );
     vi.stubGlobal(
       'fetch',
       vi
-        .fn<(input: RequestInfo | URL, init?: RequestInit) => Promise<Response>>()
+        .fn<
+          (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>
+        >()
         .mockResolvedValue(createJsonResponse({ accessToken: '' }))
     );
 
