@@ -40,7 +40,7 @@ export function formatTime(value: string | null | undefined) {
 
 export function formatSignedNumber(
   value: string | number | null | undefined,
-  digits = 2,
+  digits = 2
 ) {
   if (value === null || value === undefined || value === '') {
     return '-';

@@ -8,7 +8,7 @@ export function BatchOperationsFooter({
   totalCount: number;
 }) {
   return (
-    <footer className="page-intro">
+    <footer className='page-intro'>
       <p>
         Showing <strong>{filteredCount}</strong> of{' '}
         <strong>{totalCount}</strong> batch jobs

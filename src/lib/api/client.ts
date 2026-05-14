@@ -1,5 +1,5 @@
-import type { ApiEnvelope } from './types';
 import { getAccessToken } from '../auth-bootstrap';
+import type { ApiEnvelope } from './types';
 
 type QueryValue = string | number | boolean | null | undefined;
 

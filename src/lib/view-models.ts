@@ -1,4 +1,4 @@
-export type StatusTone = 'ready' | 'partial' | 'failed' | 'success';
+type StatusTone = 'ready' | 'partial' | 'failed' | 'success';
 
 export type MarketIndex = {
   label: string;

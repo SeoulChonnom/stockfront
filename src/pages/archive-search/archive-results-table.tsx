@@ -19,10 +19,10 @@ import type { ArchiveRecord } from '../../lib/view-models';
 
 export function ArchiveResultsTable({ rows }: { rows: ArchiveRecord[] }) {
   return (
-    <Card className="panel table-panel">
-      <CardContent className="p-6">
-        <div className="table-wrap">
-          <Table className="data-table">
+    <Card className='panel table-panel'>
+      <CardContent className='p-6'>
+        <div className='table-wrap'>
+          <Table className='data-table'>
             <TableHeader>
               <TableRow>
                 <TableHead>Date</TableHead>
@@ -42,7 +42,7 @@ export function ArchiveResultsTable({ rows }: { rows: ArchiveRecord[] }) {
               {rows.map((record) => (
                 <TableRow key={record.pageId}>
                   <TableCell>
-                    <div className="date-cell">
+                    <div className='date-cell'>
                       <CircleDot
                         className={
                           record.status === 'FAILED' ? 'trend-down' : 'trend-up'
@@ -54,7 +54,7 @@ export function ArchiveResultsTable({ rows }: { rows: ArchiveRecord[] }) {
                   </TableCell>
                   <TableCell>
                     <a
-                      className="headline-link"
+                      className='headline-link'
                       href={`/market/archive/${record.businessDate}`}
                       onClick={createNavigateHandler(
                         `/market/archive/${record.businessDate}`
@@ -68,7 +68,7 @@ export function ArchiveResultsTable({ rows }: { rows: ArchiveRecord[] }) {
                       {record.status}
                     </span>
                   </TableCell>
-                  <TableCell className="numeric">
+                  <TableCell className='numeric'>
                     {record.generatedAt}
                   </TableCell>
                 </TableRow>

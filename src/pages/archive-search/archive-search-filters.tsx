@@ -1,6 +1,6 @@
 import { Search } from 'lucide-react';
-import { startTransition, useState } from 'react';
 import type { FormEvent } from 'react';
+import { startTransition, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -35,40 +35,40 @@ export function ArchiveSearchFilters({
   }
 
   return (
-    <Card className="panel filter-card">
-      <CardContent className="p-6">
+    <Card className='panel filter-card'>
+      <CardContent className='p-6'>
         <form onSubmit={handleSubmit}>
-          <div className="filter-grid">
-            <div className="field">
-              <label htmlFor="archive-from">From</label>
+          <div className='filter-grid'>
+            <div className='field'>
+              <label htmlFor='archive-from'>From</label>
               <Input
-                id="archive-from"
+                id='archive-from'
                 onChange={(event) =>
                   setDraft((current) => ({
                     ...current,
                     from: event.target.value,
                   }))
                 }
-                type="date"
+                type='date'
                 value={draft.from}
               />
             </div>
-            <div className="field">
-              <label htmlFor="archive-to">To</label>
+            <div className='field'>
+              <label htmlFor='archive-to'>To</label>
               <Input
-                id="archive-to"
+                id='archive-to'
                 onChange={(event) =>
                   setDraft((current) => ({
                     ...current,
                     to: event.target.value,
                   }))
                 }
-                type="date"
+                type='date'
                 value={draft.to}
               />
             </div>
-            <div className="field">
-              <label htmlFor="archive-status-trigger" id="archive-status-label">
+            <div className='field'>
+              <label htmlFor='archive-status-trigger' id='archive-status-label'>
                 Status
               </label>
               <Select
@@ -81,20 +81,20 @@ export function ArchiveSearchFilters({
                 value={draft.status || undefined}
               >
                 <SelectTrigger
-                  aria-labelledby="archive-status-label"
-                  id="archive-status-trigger"
+                  aria-labelledby='archive-status-label'
+                  id='archive-status-trigger'
                 >
-                  <SelectValue placeholder="All Status" />
+                  <SelectValue placeholder='All Status' />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="READY">READY</SelectItem>
-                  <SelectItem value="PARTIAL">PARTIAL</SelectItem>
-                  <SelectItem value="FAILED">FAILED</SelectItem>
+                  <SelectItem value='all'>All Status</SelectItem>
+                  <SelectItem value='READY'>READY</SelectItem>
+                  <SelectItem value='PARTIAL'>PARTIAL</SelectItem>
+                  <SelectItem value='FAILED'>FAILED</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-            <Button className="filter-submit" type="submit" variant="primary">
+            <Button className='filter-submit' type='submit' variant='primary'>
               <Search size={16} />
               Search
             </Button>

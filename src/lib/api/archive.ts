@@ -11,7 +11,7 @@ export type ArchiveListParams = {
 
 export function getArchiveList(
   params: ArchiveListParams,
-  signal?: AbortSignal,
+  signal?: AbortSignal
 ) {
   return apiRequest<ArchiveListResponse>('/stock/api/pages/archive', {
     query: params,

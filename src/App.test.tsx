@@ -152,7 +152,9 @@ describe('App routing', () => {
     vi.stubGlobal(
       'fetch',
       vi
-        .fn<(input: RequestInfo | URL, init?: RequestInit) => Promise<Response>>()
+        .fn<
+          (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>
+        >()
         .mockReturnValue(deferredResponse.promise)
     );
     window.history.replaceState(null, '', '/');
@@ -164,8 +166,10 @@ describe('App routing', () => {
     expectProtectedShellToBeHidden();
     expect(screen.queryByText('No Market Data')).not.toBeInTheDocument();
 
-    await act(async () => {
-      deferredResponse.resolve(createJsonResponse({ accessToken: 'issued-token' }));
+    act(() => {
+      deferredResponse.resolve(
+        createJsonResponse({ accessToken: 'issued-token' })
+      );
     });
 
     await waitFor(() => {
@@ -190,7 +194,9 @@ describe('App routing', () => {
     vi.stubGlobal(
       'fetch',
       vi
-        .fn<(input: RequestInfo | URL, init?: RequestInit) => Promise<Response>>()
+        .fn<
+          (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>
+        >()
         .mockResolvedValue(createJsonResponse({ accessToken: '   ' }))
     );
     window.history.replaceState(null, '', '/');
@@ -201,7 +207,9 @@ describe('App routing', () => {
     });
 
     await waitFor(() => {
-      expect(redirectToLogin).toHaveBeenCalledWith('http://localhost:8000/login');
+      expect(redirectToLogin).toHaveBeenCalledWith(
+        'http://localhost:8000/login'
+      );
     });
 
     expect(window.location.pathname).toBe('/');
@@ -218,7 +226,9 @@ describe('App routing', () => {
     vi.stubGlobal(
       'fetch',
       vi
-        .fn<(input: RequestInfo | URL, init?: RequestInit) => Promise<Response>>()
+        .fn<
+          (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>
+        >()
         .mockResolvedValue(createJsonResponse({}))
     );
     window.history.replaceState(null, '', '/');
@@ -229,7 +239,9 @@ describe('App routing', () => {
     });
 
     await waitFor(() => {
-      expect(redirectToLogin).toHaveBeenCalledWith('http://localhost:8000/login');
+      expect(redirectToLogin).toHaveBeenCalledWith(
+        'http://localhost:8000/login'
+      );
     });
 
     expect(window.location.pathname).toBe('/');
@@ -245,7 +257,9 @@ describe('App routing', () => {
     vi.stubGlobal(
       'fetch',
       vi
-        .fn<(input: RequestInfo | URL, init?: RequestInit) => Promise<Response>>()
+        .fn<
+          (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>
+        >()
         .mockRejectedValue(new TypeError('Failed to fetch'))
     );
     window.history.replaceState(null, '', '/');
@@ -256,7 +270,9 @@ describe('App routing', () => {
     });
 
     await waitFor(() => {
-      expect(redirectToLogin).toHaveBeenCalledWith('http://localhost:8000/login');
+      expect(redirectToLogin).toHaveBeenCalledWith(
+        'http://localhost:8000/login'
+      );
     });
 
     expect(window.location.pathname).toBe('/');
@@ -286,8 +302,10 @@ describe('App routing', () => {
     expect(window.location.pathname).toBe('/');
     expectProtectedShellToBeHidden();
 
-    await act(async () => {
-      deferredResponse.resolve(createJsonResponse({ accessToken: 'issued-token' }));
+    act(() => {
+      deferredResponse.resolve(
+        createJsonResponse({ accessToken: 'issued-token' })
+      );
     });
 
     await waitFor(() => {
@@ -302,11 +320,16 @@ describe('App routing', () => {
   it('allows development bypass and resumes normal route rendering', async () => {
     vi.stubEnv('VITE_API_HOST', 'http://localhost:8000');
     vi.stubEnv('VITE_APP_ENV', 'development');
-    const redirectToLogin = vi.spyOn(authBootstrapNavigation, 'redirectToLogin');
+    const redirectToLogin = vi.spyOn(
+      authBootstrapNavigation,
+      'redirectToLogin'
+    );
     vi.stubGlobal(
       'fetch',
       vi
-        .fn<(input: RequestInfo | URL, init?: RequestInit) => Promise<Response>>()
+        .fn<
+          (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>
+        >()
         .mockResolvedValue(createJsonResponse({ accessToken: '' }))
     );
     window.history.replaceState(
@@ -337,7 +360,9 @@ describe('App routing', () => {
     vi.stubGlobal(
       'fetch',
       vi
-        .fn<(input: RequestInfo | URL, init?: RequestInit) => Promise<Response>>()
+        .fn<
+          (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>
+        >()
         .mockReturnValue(deferredResponse.promise)
     );
     window.history.replaceState(null, '', '/ops/batches');
@@ -350,8 +375,10 @@ describe('App routing', () => {
       screen.queryByRole('heading', { name: 'Batch Operations' })
     ).not.toBeInTheDocument();
 
-    await act(async () => {
-      deferredResponse.resolve(createJsonResponse({ accessToken: 'issued-token' }));
+    act(() => {
+      deferredResponse.resolve(
+        createJsonResponse({ accessToken: 'issued-token' })
+      );
     });
 
     await waitFor(() => {

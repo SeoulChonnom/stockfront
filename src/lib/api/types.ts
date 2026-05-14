@@ -7,7 +7,7 @@ export type ApiEnvelope<T> = {
   };
 };
 
-export type PaginationResponse = {
+type PaginationResponse = {
   page: number;
   size: number;
   totalCount: number;
@@ -31,7 +31,7 @@ export type DailyPageResponse = {
   };
 };
 
-export type MarketSectionResponse = {
+type MarketSectionResponse = {
   marketType: string;
   marketLabel: string;
   summaryTitle: string | null;
@@ -63,7 +63,7 @@ export type IndexCardResponse = {
   lowPrice: string | null;
 };
 
-export type ClusterCardResponse = {
+type ClusterCardResponse = {
   clusterId: string;
   title: string;
   summary: string | null;
@@ -72,7 +72,7 @@ export type ClusterCardResponse = {
   representativeArticle: RepresentativeArticleResponse;
 };
 
-export type RepresentativeArticleResponse = {
+type RepresentativeArticleResponse = {
   title?: string | null;
   publisherName?: string | null;
   publishedAt?: string | null;
@@ -80,7 +80,7 @@ export type RepresentativeArticleResponse = {
   naverLink?: string | null;
 };
 
-export type ArticleLinkResponse = {
+type ArticleLinkResponse = {
   processedArticleId?: number | null;
   clusterId?: string | null;
   clusterTitle?: string | null;
@@ -91,7 +91,7 @@ export type ArticleLinkResponse = {
   naverLink?: string | null;
 };
 
-export type ArchiveItemResponse = {
+type ArchiveItemResponse = {
   pageId: number;
   businessDate: string;
   pageTitle: string;

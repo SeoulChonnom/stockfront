@@ -16,10 +16,10 @@ export function BatchOperationsSummary({
 }) {
   return (
     <>
-      <section className="page-intro split-intro">
+      <section className='page-intro split-intro'>
         <div>
-          <span className="eyebrow">Operations</span>
-          <h1 id="page-title" tabIndex={-1}>
+          <span className='eyebrow'>Operations</span>
+          <h1 id='page-title' tabIndex={-1}>
             Batch Operations
           </h1>
           <p>
@@ -30,33 +30,33 @@ export function BatchOperationsSummary({
         <Button
           disabled={isPending}
           onClick={onTrigger}
-          type="button"
-          variant="primary"
+          type='button'
+          variant='primary'
         >
           <Play size={16} />
           {isPending ? 'Triggering...' : 'Manual Trigger'}
         </Button>
       </section>
 
-      <section className="stats-grid">
+      <section className='stats-grid'>
         <StatCard
           icon={<CheckCircle2 size={18} />}
-          label="Recent Success Rate"
-          tone="success"
+          label='Recent Success Rate'
+          tone='success'
           value={summary?.successRate ?? '0.0%'}
           supporting={summary?.successSupporting ?? 'No data'}
         />
         <StatCard
           icon={<Timer size={18} />}
-          label="Avg Processing Time"
-          tone="primary"
+          label='Avg Processing Time'
+          tone='primary'
           value={summary?.avgProcessingTime ?? '-'}
           supporting={summary?.durationSupporting ?? 'No data'}
         />
         <StatCard
           icon={<Database size={18} />}
-          label="Market Sync Quality"
-          tone="neutral"
+          label='Market Sync Quality'
+          tone='neutral'
           value={summary?.marketSyncQuality ?? '-'}
           supporting={summary?.qualitySupporting ?? 'No data'}
         />
@@ -80,8 +80,8 @@ function StatCard({
 }) {
   return (
     <article className={`panel stat-card stat-card-${tone}`}>
-      <div className="stat-card-head">
-        <span className="muted-label">{label}</span>
+      <div className='stat-card-head'>
+        <span className='muted-label'>{label}</span>
         <span>{icon}</span>
       </div>
       <h3>{value}</h3>

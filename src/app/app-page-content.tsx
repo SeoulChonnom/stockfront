@@ -35,9 +35,9 @@ export function AppPageContent({
         <MarketOverviewRouteContent
           error={latestMarketQuery.error}
           isLoading={latestMarketQuery.isLoading}
-          mode="latest"
+          mode='latest'
           snapshot={latestMarketQuery.data}
-          title="Latest Market"
+          title='Latest Market'
         />
       );
     case 'archive-market':
@@ -45,9 +45,9 @@ export function AppPageContent({
         <MarketOverviewRouteContent
           error={archiveMarketQuery.error}
           isLoading={archiveMarketQuery.isLoading}
-          mode="archive"
+          mode='archive'
           snapshot={archiveMarketQuery.data}
-          title="Archive Market"
+          title='Archive Market'
         />
       );
     case 'archive-search':

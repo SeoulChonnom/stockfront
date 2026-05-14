@@ -12,13 +12,16 @@ import {
 import { useArchiveMarketPage, useLatestMarketPage } from './lib/query-hooks';
 import { navigate, useUrlState } from './lib/router';
 
-function isAuthResolved(status: ReturnType<typeof getAuthBootstrapState>['status']) {
+function isAuthResolved(
+  status: ReturnType<typeof getAuthBootstrapState>['status']
+) {
   return status === 'authenticated' || status === 'bypassed';
 }
 
 function App() {
   const url = useUrlState();
   const route = parseRoute(url.pathname);
+  const pageFocusKey = url.pathname;
   const authBootstrapState = useSyncExternalStore(
     subscribeToAuthBootstrap,
     getAuthBootstrapState,
@@ -67,7 +70,7 @@ function App() {
   }, [pageMeta.title]);
 
   useEffect(() => {
-    if (!authResolved) {
+    if (!authResolved || pageFocusKey.length === 0) {
       return;
     }
 
@@ -76,7 +79,7 @@ function App() {
       document.getElementById('main-content');
 
     focusTarget?.focus();
-  }, [authResolved, url.pathname, url.searchParams]);
+  }, [authResolved, pageFocusKey]);
 
   if (!authResolved) {
     return null;

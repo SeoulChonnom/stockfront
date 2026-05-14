@@ -37,16 +37,16 @@ export function BatchOperationsHistoryTable({
   selectedJobId: number | null;
 }) {
   return (
-    <Card className="panel table-panel">
-      <CardContent className="p-6">
-        <div className="table-panel-head">
+    <Card className='panel table-panel'>
+      <CardContent className='p-6'>
+        <div className='table-panel-head'>
           <div>
             <h2>Batch Execution History</h2>
             <p>US / KR pipeline health and execution timelines</p>
           </div>
-          <div className="tag-row">
-            <span className="soft-chip">US Market</span>
-            <span className="soft-chip">KR Market</span>
+          <div className='tag-row'>
+            <span className='soft-chip'>US Market</span>
+            <span className='soft-chip'>KR Market</span>
           </div>
         </div>
 
@@ -55,8 +55,8 @@ export function BatchOperationsHistoryTable({
           onApply={onApplyFilters}
         />
 
-        <div className="table-wrap">
-          <Table className="data-table">
+        <div className='table-wrap'>
+          <Table className='data-table'>
             <TableHeader>
               <TableRow>
                 <TableHead>Market</TableHead>
@@ -65,7 +65,7 @@ export function BatchOperationsHistoryTable({
                 <TableHead>Timeline</TableHead>
                 <TableHead>Counts (S/R/C)</TableHead>
                 <TableHead>
-                  <span className="sr-only">Detail indicator</span>
+                  <span className='sr-only'>Detail indicator</span>
                 </TableHead>
               </TableRow>
             </TableHeader>
@@ -108,33 +108,33 @@ function BatchRow({
       className={run.status === 'FAILED' ? 'row-alert' : ''}
     >
       <TableCell>
-        <div className="market-cell">
+        <div className='market-cell'>
           <span
             className={`market-bar ${run.market === 'US Market' ? 'market-bar-us' : 'market-bar-kr'}`}
           />
           <strong>{run.market}</strong>
         </div>
       </TableCell>
-      <TableCell className="numeric">{run.businessDate}</TableCell>
+      <TableCell className='numeric'>{run.businessDate}</TableCell>
       <TableCell>
         <span className={getStatusClass(run.status)}>{run.status}</span>
       </TableCell>
       <TableCell>
-        <div className="timeline-cell">
+        <div className='timeline-cell'>
           <span>
             {run.startedAt} → {run.finishedAt}
           </span>
           <small>Duration: {run.duration}</small>
         </div>
       </TableCell>
-      <TableCell className="numeric">{run.counts}</TableCell>
-      <TableCell className="table-end-icon">
+      <TableCell className='numeric'>{run.counts}</TableCell>
+      <TableCell className='table-end-icon'>
         <Button
           aria-label={`Select batch job ${run.id}`}
           onClick={() => onSelect(run.id)}
-          size="icon"
-          type="button"
-          variant="ghost"
+          size='icon'
+          type='button'
+          variant='ghost'
         >
           <ChevronRight size={16} />
         </Button>

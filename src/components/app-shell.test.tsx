@@ -8,9 +8,9 @@ describe('AppShell', () => {
     render(
       <AppShell
         onToggleTheme={() => undefined}
-        pathname="/market/latest"
-        placeholder="Search market briefs"
-        theme="dark"
+        pathname='/market/latest'
+        placeholder='Search market briefs'
+        theme='dark'
       >
         <div>Page content</div>
       </AppShell>

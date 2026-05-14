@@ -14,10 +14,7 @@ export type BatchJobsParams = {
   size?: number;
 };
 
-export function getBatchJobs(
-  params: BatchJobsParams,
-  signal?: AbortSignal,
-) {
+export function getBatchJobs(params: BatchJobsParams, signal?: AbortSignal) {
   return apiRequest<BatchJobListResponse>('/stock/api/batch/jobs', {
     query: params,
     signal,
@@ -32,7 +29,7 @@ export function getBatchJobDetail(jobId: number, signal?: AbortSignal) {
 
 export function startBatchRun(
   payload: BatchRunRequest = {},
-  signal?: AbortSignal,
+  signal?: AbortSignal
 ) {
   return apiRequest<BatchRunResponse>('/stock/api/batch/market-daily', {
     method: 'POST',

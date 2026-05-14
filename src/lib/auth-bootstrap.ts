@@ -51,7 +51,9 @@ function createState(
 
 function publishState(nextState: AuthBootstrapState) {
   currentState = nextState;
-  listeners.forEach((listener) => listener());
+  listeners.forEach((listener) => {
+    listener();
+  });
   return currentState;
 }
 
@@ -160,7 +162,9 @@ export async function requestAccessTokenBootstrap() {
       credentials: 'include',
     });
   } catch {
-    throw new Error('Token bootstrap request failed before a response was received.');
+    throw new Error(
+      'Token bootstrap request failed before a response was received.'
+    );
   }
 
   let parsedBody: unknown = null;
@@ -172,9 +176,7 @@ export async function requestAccessTokenBootstrap() {
   }
 
   if (!response.ok) {
-    throw new Error(
-      `Token bootstrap failed with status ${response.status}.`
-    );
+    throw new Error(`Token bootstrap failed with status ${response.status}.`);
   }
 
   return readAccessToken(parsedBody);

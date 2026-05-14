@@ -18,29 +18,29 @@ export function ArchivePagination({
   visibleCount: number;
 }) {
   return (
-    <div className="table-footer">
+    <div className='table-footer'>
       <p>
         Showing <strong>{visibleCount}</strong> of{' '}
         <strong>{filteredCount}</strong> archive runs
       </p>
-      <div className="pagination">
+      <div className='pagination'>
         <Button
           disabled={currentPage <= 1}
           onClick={onPrev}
-          type="button"
-          variant="ghost"
+          type='button'
+          variant='ghost'
         >
           <ArrowLeft size={16} />
           Prev
         </Button>
-        <span className="pagination-label">
+        <span className='pagination-label'>
           Page {currentPage} / {totalPages}
         </span>
         <Button
           disabled={currentPage >= totalPages}
           onClick={onNext}
-          type="button"
-          variant="ghost"
+          type='button'
+          variant='ghost'
         >
           Next
           <ArrowRight size={16} />

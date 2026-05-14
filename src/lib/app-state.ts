@@ -33,7 +33,7 @@ export function formatDateDots(value: string) {
   return value.replaceAll('-', '. ');
 }
 
-export function normalizeDateParam(value: string | null, fallback: string) {
+function normalizeDateParam(value: string | null, fallback: string) {
   if (!value) {
     return fallback;
   }
@@ -41,11 +41,11 @@ export function normalizeDateParam(value: string | null, fallback: string) {
   return /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : fallback;
 }
 
-export function getTodayIso() {
+function getTodayIso() {
   return new Date().toISOString().slice(0, 10);
 }
 
-export function getRelativeIso(days: number) {
+function getRelativeIso(days: number) {
   const date = new Date();
   date.setDate(date.getDate() - days);
   return date.toISOString().slice(0, 10);

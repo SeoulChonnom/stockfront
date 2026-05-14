@@ -51,8 +51,8 @@ export function BatchOperationsPage({
   if (jobsQuery.isLoading) {
     return (
       <PageMessage
-        description="배치 실행 이력을 불러오는 중입니다."
-        title="Loading Batch Jobs"
+        description='배치 실행 이력을 불러오는 중입니다.'
+        title='Loading Batch Jobs'
       />
     );
   }
@@ -61,7 +61,7 @@ export function BatchOperationsPage({
     return (
       <PageMessage
         description={jobsQuery.error.message}
-        title="Batch Jobs Unavailable"
+        title='Batch Jobs Unavailable'
       />
     );
   }
@@ -105,14 +105,14 @@ function BatchOperationsContent({
   totalCount: number;
 }) {
   return (
-    <div className="page-stack">
+    <div className='page-stack'>
       <BatchOperationsSummary
         isPending={startBatchMutation.isPending}
         onTrigger={() => startBatchMutation.mutate()}
         summary={summary}
       />
 
-      <div className="ops-grid">
+      <div className='ops-grid'>
         <BatchOperationsHistoryTable
           filtered={filtered}
           initialFilters={applied}

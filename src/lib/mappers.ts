@@ -1,8 +1,8 @@
 import type {
   ArchiveListResponse,
   BatchJobDetailResponse,
-  BatchJobListResponse,
   BatchJobListItemResponse,
+  BatchJobListResponse,
   ClusterArticleResponse,
   ClusterDetailResponse,
   DailyPageResponse,
@@ -41,7 +41,7 @@ function mapIndex(item: IndexCardResponse): MarketIndex {
 }
 
 export function mapDailyPageToSnapshot(
-  response: DailyPageResponse,
+  response: DailyPageResponse
 ): MarketSnapshot {
   return {
     pageId: response.pageId,
@@ -50,16 +50,18 @@ export function mapDailyPageToSnapshot(
     generatedAt: formatDateTime(response.generatedAt),
     status: toStatusTone(response.status),
     globalHeadline:
-      response.globalHeadline ?? response.pageTitle ?? '글로벌 시장 헤드라인이 없습니다.',
+      response.globalHeadline ??
+      response.pageTitle ??
+      '글로벌 시장 헤드라인이 없습니다.',
     markets: response.markets.map((market) => ({
       label: market.marketLabel,
       summaryTitle:
         market.summaryTitle ??
         market.analysis.keyThemes[0] ??
         `${market.marketLabel} 요약`,
-      summaryBody: (
-        market.summaryBody ?? market.analysis.background.join(' ')
-      ) || '시장 요약 데이터가 아직 생성되지 않았습니다.',
+      summaryBody:
+        (market.summaryBody ?? market.analysis.background.join(' ')) ||
+        '시장 요약 데이터가 아직 생성되지 않았습니다.',
       indices: market.indices.map(mapIndex),
       clusters: market.topClusters.map((cluster) => ({
         id: cluster.clusterId,
@@ -76,7 +78,7 @@ export function mapDailyPageToSnapshot(
 }
 
 export function mapArchiveListToView(
-  response: ArchiveListResponse,
+  response: ArchiveListResponse
 ): ArchiveListView {
   return {
     rows: response.items.map((item) => ({
@@ -86,7 +88,7 @@ export function mapArchiveListToView(
         item.headlineSummary ??
         item.pageTitle ??
         '헤드라인 요약이 아직 생성되지 않았습니다.',
-      status: (item.status.toUpperCase() as 'READY' | 'PARTIAL' | 'FAILED'),
+      status: item.status.toUpperCase() as 'READY' | 'PARTIAL' | 'FAILED',
       generatedAt: formatTime(item.generatedAt),
       detail: item.partialMessage,
     })),
@@ -95,14 +97,14 @@ export function mapArchiveListToView(
     totalCount: response.pagination.totalCount,
     totalPages: Math.max(
       1,
-      Math.ceil(response.pagination.totalCount / response.pagination.size),
+      Math.ceil(response.pagination.totalCount / response.pagination.size)
     ),
   };
 }
 
 function mapClusterArticle(
   article: ClusterArticleResponse,
-  fallbackId: string,
+  fallbackId: string
 ): ClusterArticle {
   return {
     id: String(article.processedArticleId ?? fallbackId),
@@ -115,11 +117,11 @@ function mapClusterArticle(
 }
 
 export function mapClusterDetailToView(
-  response: ClusterDetailResponse,
+  response: ClusterDetailResponse
 ): ClusterDetail {
   const representative = mapClusterArticle(
     response.representativeArticle,
-    `representative-${response.clusterId}`,
+    `representative-${response.clusterId}`
   );
 
   return {
@@ -130,7 +132,7 @@ export function mapClusterDetailToView(
     tags: response.tags,
     analysis: response.summary.analysis,
     articles: response.articles.map((article, index) =>
-      mapClusterArticle(article, `${response.clusterId}-${index}`),
+      mapClusterArticle(article, `${response.clusterId}-${index}`)
     ),
     representative: {
       ...representative,
@@ -156,14 +158,13 @@ function mapBatchListItemToRun(item: BatchJobListItemResponse): BatchRun {
     duration: formatDurationSeconds(item.durationSeconds),
     counts: `${item.rawNewsCount} / ${item.processedNewsCount} / ${item.clusterCount}`,
     detail:
-      item.partialMessage ?? `${item.jobName} 배치가 ${item.status} 상태로 기록되었습니다.`,
+      item.partialMessage ??
+      `${item.jobName} 배치가 ${item.status} 상태로 기록되었습니다.`,
     pageVersion: item.pageVersionNo === null ? '-' : `v${item.pageVersionNo}`,
   };
 }
 
-function mapBatchSummary(
-  response: BatchJobListResponse,
-): BatchSummaryView {
+function mapBatchSummary(response: BatchJobListResponse): BatchSummaryView {
   const totalRuns =
     response.summary.successCount +
     response.summary.partialCount +
@@ -175,7 +176,9 @@ function mapBatchSummary(
 
   return {
     successRate,
-    avgProcessingTime: formatDurationSeconds(response.summary.avgDurationSeconds),
+    avgProcessingTime: formatDurationSeconds(
+      response.summary.avgDurationSeconds
+    ),
     marketSyncQuality:
       response.summary.failedCount === 0 ? 'Stable' : 'Attention',
     successSupporting: `${response.summary.successCount} success / ${response.summary.failedCount} failed`,
@@ -188,7 +191,7 @@ function mapBatchSummary(
 }
 
 export function mapBatchJobsToView(
-  response: BatchJobListResponse,
+  response: BatchJobListResponse
 ): BatchJobsView {
   return {
     rows: response.items.map(mapBatchListItemToRun),
@@ -197,14 +200,14 @@ export function mapBatchJobsToView(
     totalCount: response.pagination.totalCount,
     totalPages: Math.max(
       1,
-      Math.ceil(response.pagination.totalCount / response.pagination.size),
+      Math.ceil(response.pagination.totalCount / response.pagination.size)
     ),
     summary: mapBatchSummary(response),
   };
 }
 
 export function mapBatchDetailToRun(
-  response: BatchJobDetailResponse,
+  response: BatchJobDetailResponse
 ): BatchRun {
   return {
     id: response.jobId,

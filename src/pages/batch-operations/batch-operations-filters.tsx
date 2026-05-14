@@ -1,6 +1,6 @@
 import { Filter } from 'lucide-react';
-import { useState } from 'react';
 import type { FormEvent } from 'react';
+import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -31,9 +31,9 @@ export function BatchOperationsFilters({
   }
 
   return (
-    <form className="ops-filter-bar" onSubmit={handleSubmit}>
-      <div className="field">
-        <label htmlFor="ops-status-trigger" id="ops-status-label">
+    <form className='ops-filter-bar' onSubmit={handleSubmit}>
+      <div className='field'>
+        <label htmlFor='ops-status-trigger' id='ops-status-label'>
           Status
         </label>
         <Select
@@ -46,48 +46,48 @@ export function BatchOperationsFilters({
           value={draft.status || undefined}
         >
           <SelectTrigger
-            aria-labelledby="ops-status-label"
-            id="ops-status-trigger"
+            aria-labelledby='ops-status-label'
+            id='ops-status-trigger'
           >
-            <SelectValue placeholder="ALL STATUSES" />
+            <SelectValue placeholder='ALL STATUSES' />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">ALL STATUSES</SelectItem>
-            <SelectItem value="SUCCESS">SUCCESS</SelectItem>
-            <SelectItem value="PARTIAL">PARTIAL</SelectItem>
-            <SelectItem value="FAILED">FAILED</SelectItem>
+            <SelectItem value='all'>ALL STATUSES</SelectItem>
+            <SelectItem value='SUCCESS'>SUCCESS</SelectItem>
+            <SelectItem value='PARTIAL'>PARTIAL</SelectItem>
+            <SelectItem value='FAILED'>FAILED</SelectItem>
           </SelectContent>
         </Select>
       </div>
-      <div className="field">
-        <label htmlFor="ops-from">From</label>
+      <div className='field'>
+        <label htmlFor='ops-from'>From</label>
         <Input
-          id="ops-from"
+          id='ops-from'
           onChange={(event) =>
             setDraft((current) => ({
               ...current,
               from: event.target.value,
             }))
           }
-          type="date"
+          type='date'
           value={draft.from}
         />
       </div>
-      <div className="field">
-        <label htmlFor="ops-to">To</label>
+      <div className='field'>
+        <label htmlFor='ops-to'>To</label>
         <Input
-          id="ops-to"
+          id='ops-to'
           onChange={(event) =>
             setDraft((current) => ({
               ...current,
               to: event.target.value,
             }))
           }
-          type="date"
+          type='date'
           value={draft.to}
         />
       </div>
-      <Button className="ops-apply" type="submit" variant="ghost">
+      <Button className='ops-apply' type='submit' variant='ghost'>
         <Filter size={15} />
         Apply Filters
       </Button>

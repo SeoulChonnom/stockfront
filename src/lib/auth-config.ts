@@ -24,7 +24,9 @@ function normalizeHost(host: string) {
   }
 
   if (url.pathname !== '/' || url.search.length > 0 || url.hash.length > 0) {
-    throw new Error('VITE_API_HOST must be an origin without path, query, or hash.');
+    throw new Error(
+      'VITE_API_HOST must be an origin without path, query, or hash.'
+    );
   }
 
   return url.origin;
