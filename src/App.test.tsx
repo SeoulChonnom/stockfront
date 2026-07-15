@@ -164,6 +164,9 @@ describe('App routing', () => {
     expect(window.location.pathname).toBe('/');
     expect(mockUseLatestMarketPage).toHaveBeenCalledWith(false);
     expectProtectedShellToBeHidden();
+    expect(screen.getByRole('status')).toHaveTextContent(
+      '로그인 상태를 확인하고 있습니다'
+    );
     expect(screen.queryByText('No Market Data')).not.toBeInTheDocument();
 
     act(() => {
@@ -214,6 +217,37 @@ describe('App routing', () => {
 
     expect(window.location.pathname).toBe('/');
     expect(mockUseLatestMarketPage.mock.calls).not.toContainEqual([true]);
+    expectProtectedShellToBeHidden();
+    expect(screen.getByRole('status')).toHaveTextContent(
+      '로그인 페이지로 이동 중입니다'
+    );
+    expect(screen.queryByText('No Market Data')).not.toBeInTheDocument();
+  });
+
+  it('renders a safe accessible failure state when bootstrap cannot redirect', async () => {
+    vi.stubEnv('VITE_API_HOST', '');
+    const fetchMock =
+      vi.fn<
+        (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>
+      >();
+    vi.stubGlobal('fetch', fetchMock);
+    window.history.replaceState(null, '', '/');
+
+    await act(async () => {
+      render(<App />);
+      await Promise.resolve();
+    });
+
+    const failureMessage = await screen.findByRole('alert');
+    expect(failureMessage).toHaveTextContent(
+      '로그인 상태를 확인할 수 없습니다'
+    );
+    expect(failureMessage).toHaveTextContent(
+      '잠시 후 다시 시도하거나 로그인 페이지에서 다시 접속해 주세요.'
+    );
+    expect(failureMessage).not.toHaveTextContent('VITE_API_HOST');
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(window.location.pathname).toBe('/');
     expectProtectedShellToBeHidden();
     expect(screen.queryByText('No Market Data')).not.toBeInTheDocument();
   });
@@ -301,6 +335,9 @@ describe('App routing', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(window.location.pathname).toBe('/');
     expectProtectedShellToBeHidden();
+    expect(screen.getByRole('status')).toHaveTextContent(
+      '로그인 상태를 확인하고 있습니다'
+    );
 
     act(() => {
       deferredResponse.resolve(
@@ -371,6 +408,9 @@ describe('App routing', () => {
 
     expect(mockUseBatchJobs).not.toHaveBeenCalled();
     expectProtectedShellToBeHidden();
+    expect(screen.getByRole('status')).toHaveTextContent(
+      '로그인 상태를 확인하고 있습니다'
+    );
     expect(
       screen.queryByRole('heading', { name: 'Batch Operations' })
     ).not.toBeInTheDocument();
@@ -389,5 +429,35 @@ describe('App routing', () => {
       screen.getByRole('heading', { name: 'Batch Operations' })
     ).toBeInTheDocument();
     expect(screen.getByText('Selected Run Detail')).toBeInTheDocument();
+  });
+
+  it('passes archive pageId from the URL into the archive page query identity', async () => {
+    vi.stubEnv('VITE_API_HOST', 'http://localhost:8000');
+    vi.stubEnv('VITE_APP_ENV', 'development');
+    vi.stubGlobal(
+      'fetch',
+      vi
+        .fn<
+          (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>
+        >()
+        .mockResolvedValue(createJsonResponse({ accessToken: '' }))
+    );
+    window.history.replaceState(
+      null,
+      '',
+      '/market/archive/2026-03-31?pageId=42'
+    );
+
+    await act(async () => {
+      render(<App />);
+      await Promise.resolve();
+    });
+
+    await waitFor(() => {
+      expect(mockUseArchiveMarketPage).toHaveBeenCalledWith(
+        { businessDate: '2026-03-31', pageId: 42 },
+        true
+      );
+    });
   });
 });
