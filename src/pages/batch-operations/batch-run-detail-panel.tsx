@@ -6,10 +6,23 @@ import { InfoRow } from '../../components/ui';
 import type { BatchRun } from '../../lib/view-models';
 
 export function BatchRunDetailPanel({
+  errorMessage,
+  isError,
+  isLoading,
   selectedRun,
 }: {
+  errorMessage: string;
+  isError: boolean;
+  isLoading: boolean;
   selectedRun: BatchRun | null;
 }) {
+  const detailContent = getDetailContent({
+    errorMessage,
+    isError,
+    isLoading,
+    selectedRun,
+  });
+
   return (
     <Card className='panel ops-detail'>
       <CardContent className='grid gap-6 p-6'>
@@ -22,8 +35,8 @@ export function BatchRunDetailPanel({
           />
           <h2>Selected Run Detail</h2>
         </div>
-        <div className='log-box'>
-          {selectedRun?.detail ?? '선택된 배치가 없습니다.'}
+        <div className='log-box' role={detailContent.role}>
+          {detailContent.message}
         </div>
         <div className='metric-list'>
           <InfoRow
@@ -40,4 +53,35 @@ export function BatchRunDetailPanel({
       </CardContent>
     </Card>
   );
+}
+
+function getDetailContent({
+  errorMessage,
+  isError,
+  isLoading,
+  selectedRun,
+}: {
+  errorMessage: string;
+  isError: boolean;
+  isLoading: boolean;
+  selectedRun: BatchRun | null;
+}) {
+  if (isLoading) {
+    return {
+      message: '선택한 배치 상세 정보를 불러오는 중입니다.',
+      role: 'status',
+    };
+  }
+
+  if (isError) {
+    return {
+      message: errorMessage,
+      role: 'alert',
+    };
+  }
+
+  return {
+    message: selectedRun?.detail ?? '선택된 배치가 없습니다.',
+    role: undefined,
+  };
 }
