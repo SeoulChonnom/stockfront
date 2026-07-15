@@ -111,12 +111,19 @@ function firstString(values: unknown[], fallback: string): string {
 }
 
 function mapIndex(item: IndexCardResponse): MarketIndex {
+  const changeValue =
+    typeof item.changeValue === 'number'
+      ? item.changeValue
+      : typeof item.changeValue === 'string' && item.changeValue.length > 0
+        ? Number(item.changeValue)
+        : null;
+
   return {
-    label: item.indexName,
+    label: asString(item.indexName, '-'),
     value: formatNumericText(item.closePrice),
     change: formatSignedNumber(item.changeValue),
     changeRate: formatPercent(item.changePercent),
-    direction: Number(item.changeValue) >= 0 ? 'up' : 'down',
+    direction: changeValue !== null && changeValue >= 0 ? 'up' : 'down',
     high: formatNumericText(item.highPrice),
     low: formatNumericText(item.lowPrice),
   };
