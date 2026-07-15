@@ -105,7 +105,11 @@ export function formatDurationSeconds(value: number | null | undefined) {
   return `${minutes}m ${seconds}s`;
 }
 
-export function toStatusTone(value: string) {
+export function toStatusTone(value: string | null | undefined) {
+  if (typeof value !== 'string') {
+    return 'failed';
+  }
+
   const normalized = value.toLowerCase();
 
   if (normalized === 'success') {

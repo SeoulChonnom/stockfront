@@ -75,6 +75,31 @@ describe('mappers', () => {
     expect(snapshot.markets[0].clusters[0].id).toBe('cluster-1');
   });
 
+  it.each([null, undefined, 123, { state: 'READY' }])(
+    'falls back to a conservative status tone when daily page status is malformed (%p)',
+    (status) => {
+      const snapshot = mapDailyPageToSnapshot({
+        pageId: 1,
+        businessDate: '2026-03-31',
+        versionNo: 2,
+        pageTitle: 'Latest',
+        status,
+        globalHeadline: 'headline',
+        generatedAt: '2026-03-31T06:12:00Z',
+        partialMessage: null,
+        metadata: {
+          rawNewsCount: 1,
+          processedNewsCount: 1,
+          clusterCount: 1,
+          lastUpdatedAt: '2026-03-31T06:12:00Z',
+        },
+        markets: [],
+      } as unknown as DailyPageResponse);
+
+      expect(snapshot.status).toBe('failed');
+    }
+  );
+
   it('defensively maps missing daily page market arrays from external DTOs', () => {
     const malformedResponse = {
       pageId: 1,
