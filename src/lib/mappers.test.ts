@@ -71,8 +71,13 @@ describe('mappers', () => {
     });
 
     expect(snapshot.status).toBe('ready');
+    expect(snapshot.globalHeadline).toBe('headline');
+    expect(snapshot.markets[0].summaryTitle).toBe('요약 제목');
+    expect(snapshot.markets[0].summaryBody).toBe('요약 본문');
     expect(snapshot.markets[0].indices[0].direction).toBe('up');
     expect(snapshot.markets[0].clusters[0].id).toBe('cluster-1');
+    expect(snapshot.markets[0].clusters[0].title).toBe('cluster title');
+    expect(snapshot.markets[0].clusters[0].summary).toBe('cluster summary');
   });
 
   it.each([null, undefined, 123, { state: 'READY' }])(
@@ -198,6 +203,133 @@ describe('mappers', () => {
         tags: [],
       },
     ]);
+  });
+
+  it('falls back to safe strings for non-string daily page text fields', () => {
+    const malformedResponse = {
+      pageId: 1,
+      businessDate: '2026-03-31',
+      versionNo: 2,
+      pageTitle: { text: 'Latest' },
+      status: 'READY',
+      globalHeadline: 123,
+      generatedAt: '2026-03-31T06:12:00Z',
+      partialMessage: null,
+      metadata: {
+        rawNewsCount: 1,
+        processedNewsCount: 1,
+        clusterCount: 1,
+        lastUpdatedAt: '2026-03-31T06:12:00Z',
+      },
+      markets: [
+        {
+          marketType: 'US',
+          marketLabel: '미국 증시',
+          summaryTitle: { text: '요약 제목' },
+          summaryBody: 456,
+          analysis: {
+            background: [{ text: '배경' }, 789, null],
+            keyThemes: [321, { text: 'AI' }],
+            outlook: null,
+          },
+          indices: [],
+          topClusters: [
+            {
+              clusterId: 'cluster-1',
+              title: { text: 'cluster title' },
+              summary: { text: 'cluster summary' },
+              articleCount: 3,
+              tags: ['AI'],
+              representativeArticle: {
+                title: 987,
+              },
+            },
+          ],
+          articleLinks: [],
+          metadata: {
+            rawNewsCount: 1,
+            processedNewsCount: 1,
+            clusterCount: 1,
+            lastUpdatedAt: '2026-03-31T06:12:00Z',
+            partialMessage: null,
+          },
+        },
+      ],
+    } as unknown as DailyPageResponse;
+
+    const snapshot = mapDailyPageToSnapshot(malformedResponse);
+
+    expect(snapshot.globalHeadline).toBe('글로벌 시장 헤드라인이 없습니다.');
+    expect(snapshot.markets[0].summaryTitle).toBe('미국 증시 요약');
+    expect(snapshot.markets[0].summaryBody).toBe(
+      '시장 요약 데이터가 아직 생성되지 않았습니다.'
+    );
+    expect(snapshot.markets[0].clusters[0].title).toBe(
+      '클러스터 제목이 없습니다.'
+    );
+    expect(snapshot.markets[0].clusters[0].summary).toBe(
+      '클러스터 요약이 아직 생성되지 않았습니다.'
+    );
+  });
+
+  it('uses a valid representative article title as the daily cluster summary fallback', () => {
+    const snapshot = mapDailyPageToSnapshot({
+      pageId: 1,
+      businessDate: '2026-03-31',
+      versionNo: 2,
+      pageTitle: 'Latest',
+      status: 'READY',
+      globalHeadline: null,
+      generatedAt: '2026-03-31T06:12:00Z',
+      partialMessage: null,
+      metadata: {
+        rawNewsCount: 1,
+        processedNewsCount: 1,
+        clusterCount: 1,
+        lastUpdatedAt: '2026-03-31T06:12:00Z',
+      },
+      markets: [
+        {
+          marketType: 'US',
+          marketLabel: '미국 증시',
+          summaryTitle: null,
+          summaryBody: null,
+          analysis: {
+            background: ['배경'],
+            keyThemes: ['AI'],
+            outlook: null,
+          },
+          indices: [],
+          topClusters: [
+            {
+              clusterId: 'cluster-1',
+              title: 'cluster title',
+              summary: null,
+              articleCount: 3,
+              tags: ['AI'],
+              representativeArticle: {
+                title: 'representative article title',
+              },
+            },
+          ],
+          articleLinks: [],
+          metadata: {
+            rawNewsCount: 1,
+            processedNewsCount: 1,
+            clusterCount: 1,
+            lastUpdatedAt: '2026-03-31T06:12:00Z',
+            partialMessage: null,
+          },
+        },
+      ],
+    });
+
+    expect(snapshot.globalHeadline).toBe('Latest');
+    expect(snapshot.markets[0].summaryTitle).toBe('AI');
+    expect(snapshot.markets[0].summaryBody).toBe('배경');
+    expect(snapshot.markets[0].clusters[0].summary).toBe(
+      'representative article title'
+    );
   });
 
   it('maps archive pagination into table rows', () => {
