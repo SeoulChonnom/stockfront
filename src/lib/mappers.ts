@@ -69,6 +69,14 @@ function asString(value: unknown, fallback: string): string {
   return typeof value === 'string' ? value : fallback;
 }
 
+function asFiniteNumber(value: unknown, fallback: number): number {
+  return typeof value === 'number' && Number.isFinite(value) ? value : fallback;
+}
+
+function asNullableFiniteNumber(value: unknown): number | null {
+  return typeof value === 'number' && Number.isFinite(value) ? value : null;
+}
+
 function asOptionalString(value: unknown): string | undefined {
   return typeof value === 'string' ? value : undefined;
 }
@@ -120,9 +128,9 @@ export function mapDailyPageToSnapshot(
   const markets = asDailyMarketArray(response.markets);
 
   return {
-    pageId: response.pageId,
-    businessDate: response.businessDate,
-    versionNo: response.versionNo,
+    pageId: asFiniteNumber(response.pageId, 0),
+    businessDate: asString(response.businessDate, '-'),
+    versionNo: asFiniteNumber(response.versionNo, 0),
     generatedAt: formatDateTime(response.generatedAt),
     status: toStatusTone(response.status),
     globalHeadline: firstString(
@@ -176,22 +184,25 @@ export function mapArchiveListToView(
 ): ArchiveListView {
   return {
     rows: response.items.map((item) => ({
-      pageId: item.pageId,
-      businessDate: item.businessDate,
+      pageId: asFiniteNumber(item.pageId, 0),
+      businessDate: asString(item.businessDate, '-'),
       headline:
-        item.headlineSummary ??
-        item.pageTitle ??
+        asOptionalString(item.headlineSummary) ??
+        asOptionalString(item.pageTitle) ??
         '헤드라인 요약이 아직 생성되지 않았습니다.',
       status: toUpperStatus(item.status, ['READY', 'PARTIAL', 'FAILED']),
       generatedAt: formatTime(item.generatedAt),
       detail: asOptionalString(item.partialMessage) ?? null,
     })),
-    page: response.pagination.page,
-    size: response.pagination.size,
-    totalCount: response.pagination.totalCount,
+    page: asFiniteNumber(response.pagination.page, 1),
+    size: asFiniteNumber(response.pagination.size, 1),
+    totalCount: asFiniteNumber(response.pagination.totalCount, 0),
     totalPages: Math.max(
       1,
-      Math.ceil(response.pagination.totalCount / response.pagination.size)
+      Math.ceil(
+        asFiniteNumber(response.pagination.totalCount, 0) /
+          asFiniteNumber(response.pagination.size, 1)
+      )
     ),
   };
 }
@@ -254,46 +265,54 @@ export function mapClusterDetailToView(
 }
 
 function mapBatchListItemToRun(item: BatchJobListItemResponse): BatchRun {
+  const jobName = asString(item.jobName, 'batch');
+  const status = toUpperStatus(item.status, ['SUCCESS', 'PARTIAL', 'FAILED']);
+
   return {
-    id: item.jobId,
-    jobName: item.jobName,
-    market: item.marketScope,
-    businessDate: item.businessDate,
-    status: toUpperStatus(item.status, ['SUCCESS', 'PARTIAL', 'FAILED']),
+    id: asFiniteNumber(item.jobId, 0),
+    jobName,
+    market: asString(item.marketScope, 'N/A'),
+    businessDate: asString(item.businessDate, '-'),
+    status,
     startedAt: formatTime(item.startedAt),
     finishedAt: formatTime(item.endedAt),
-    duration: formatDurationSeconds(item.durationSeconds),
-    counts: `${item.rawNewsCount} / ${item.processedNewsCount} / ${item.clusterCount}`,
+    duration: formatDurationSeconds(asNullableFiniteNumber(item.durationSeconds)),
+    counts: `${asFiniteNumber(item.rawNewsCount, 0)} / ${asFiniteNumber(item.processedNewsCount, 0)} / ${asFiniteNumber(item.clusterCount, 0)}`,
     detail:
-      item.partialMessage ??
-      `${item.jobName} 배치가 ${item.status} 상태로 기록되었습니다.`,
-    pageVersion: item.pageVersionNo === null ? '-' : `v${item.pageVersionNo}`,
+      asOptionalString(item.partialMessage) ??
+      `${jobName} 배치가 ${status} 상태로 기록되었습니다.`,
+    pageVersion:
+      asNullableFiniteNumber(item.pageVersionNo) === null
+        ? '-'
+        : `v${asNullableFiniteNumber(item.pageVersionNo)}`,
   };
 }
 
 function mapBatchSummary(response: BatchJobListResponse): BatchSummaryView {
+  const successCount = asFiniteNumber(response.summary.successCount, 0);
+  const partialCount = asFiniteNumber(response.summary.partialCount, 0);
+  const failedCount = asFiniteNumber(response.summary.failedCount, 0);
   const totalRuns =
-    response.summary.successCount +
-    response.summary.partialCount +
-    response.summary.failedCount;
+    successCount +
+    partialCount +
+    failedCount;
   const successRate =
     totalRuns === 0
       ? '0.0%'
-      : `${((response.summary.successCount / totalRuns) * 100).toFixed(1)}%`;
+      : `${((successCount / totalRuns) * 100).toFixed(1)}%`;
 
   return {
     successRate,
     avgProcessingTime: formatDurationSeconds(
-      response.summary.avgDurationSeconds
+      asNullableFiniteNumber(response.summary.avgDurationSeconds)
     ),
-    marketSyncQuality:
-      response.summary.failedCount === 0 ? 'Stable' : 'Attention',
-    successSupporting: `${response.summary.successCount} success / ${response.summary.failedCount} failed`,
+    marketSyncQuality: failedCount === 0 ? 'Stable' : 'Attention',
+    successSupporting: `${successCount} success / ${failedCount} failed`,
     durationSupporting: `Average across ${totalRuns} runs`,
     qualitySupporting:
-      response.summary.failedCount === 0
+      failedCount === 0
         ? 'No failed jobs in current result set'
-        : `${response.summary.failedCount} failed job(s) detected`,
+        : `${failedCount} failed job(s) detected`,
   };
 }
 
@@ -302,12 +321,15 @@ export function mapBatchJobsToView(
 ): BatchJobsView {
   return {
     rows: response.items.map(mapBatchListItemToRun),
-    page: response.pagination.page,
-    size: response.pagination.size,
-    totalCount: response.pagination.totalCount,
+    page: asFiniteNumber(response.pagination.page, 1),
+    size: asFiniteNumber(response.pagination.size, 1),
+    totalCount: asFiniteNumber(response.pagination.totalCount, 0),
     totalPages: Math.max(
       1,
-      Math.ceil(response.pagination.totalCount / response.pagination.size)
+      Math.ceil(
+        asFiniteNumber(response.pagination.totalCount, 0) /
+          asFiniteNumber(response.pagination.size, 1)
+      )
     ),
     summary: mapBatchSummary(response),
   };
@@ -316,22 +338,28 @@ export function mapBatchJobsToView(
 export function mapBatchDetailToRun(
   response: BatchJobDetailResponse
 ): BatchRun {
+  const jobName = asString(response.jobName, 'batch');
+
   return {
-    id: response.jobId,
-    jobName: response.jobName,
+    id: asFiniteNumber(response.jobId, 0),
+    jobName,
     market: 'N/A',
-    businessDate: response.businessDate,
+    businessDate: asString(response.businessDate, '-'),
     status: toUpperStatus(response.status, ['SUCCESS', 'PARTIAL', 'FAILED']),
     startedAt: formatTime(response.startedAt),
     finishedAt: formatTime(response.endedAt),
-    duration: formatDurationSeconds(response.durationSeconds),
-    counts: `${response.rawNewsCount} / ${response.processedNewsCount} / ${response.clusterCount}`,
+    duration: formatDurationSeconds(
+      asNullableFiniteNumber(response.durationSeconds)
+    ),
+    counts: `${asFiniteNumber(response.rawNewsCount, 0)} / ${asFiniteNumber(response.processedNewsCount, 0)} / ${asFiniteNumber(response.clusterCount, 0)}`,
     detail:
-      response.logSummary ??
-      response.errorMessage ??
-      response.partialMessage ??
-      `${response.jobName} 배치 상세 메시지가 없습니다.`,
+      asOptionalString(response.logSummary) ??
+      asOptionalString(response.errorMessage) ??
+      asOptionalString(response.partialMessage) ??
+      `${jobName} 배치 상세 메시지가 없습니다.`,
     pageVersion:
-      response.pageVersionNo === null ? '-' : `v${response.pageVersionNo}`,
+      asNullableFiniteNumber(response.pageVersionNo) === null
+        ? '-'
+        : `v${asNullableFiniteNumber(response.pageVersionNo)}`,
   };
 }
