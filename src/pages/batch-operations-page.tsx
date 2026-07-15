@@ -14,6 +14,8 @@ import { BatchOperationsHistoryTable } from './batch-operations/batch-operations
 import { BatchOperationsSummary } from './batch-operations/batch-operations-summary';
 import { BatchRunDetailPanel } from './batch-operations/batch-run-detail-panel';
 
+const batchOperationStatuses = ['SUCCESS', 'PARTIAL', 'FAILED'];
+
 function buildBatchOperationsUrl(filters: {
   from: string;
   to: string;
@@ -28,7 +30,9 @@ export function BatchOperationsPage({
 }: {
   searchParams: URLSearchParams;
 }) {
-  const applied = parseListFilters(searchParams);
+  const applied = parseListFilters(searchParams, {
+    allowedStatuses: batchOperationStatuses,
+  });
 
   const jobsQuery = useBatchJobs({
     fromDate: applied.from,
@@ -40,13 +44,20 @@ export function BatchOperationsPage({
   const [manualSelectedJobId, setManualSelectedJobId] = useState<number | null>(
     null
   );
+  const currentRows = jobsQuery.data?.rows ?? [];
   const defaultSelectedJobId =
-    jobsQuery.data?.rows.find((run) => run.status === 'FAILED')?.id ??
-    jobsQuery.data?.rows[0]?.id ??
+    currentRows.find((run) => run.status === 'FAILED')?.id ??
+    currentRows[0]?.id ??
     null;
-  const selectedJobId = manualSelectedJobId ?? defaultSelectedJobId;
+  const selectedJobId = currentRows.some((run) => run.id === manualSelectedJobId)
+    ? manualSelectedJobId
+    : defaultSelectedJobId;
   const detailQuery = useBatchJobDetail(selectedJobId);
   const startBatchMutation = useStartBatchRunMutation();
+  const detailErrorMessage =
+    detailQuery.error instanceof Error
+      ? detailQuery.error.message
+      : '배치 상세 정보를 불러오지 못했습니다.';
 
   if (jobsQuery.isLoading) {
     return (
@@ -70,7 +81,10 @@ export function BatchOperationsPage({
     <BatchOperationsContent
       key={`${applied.from}:${applied.to}:${applied.status}:${applied.page}`}
       applied={applied}
-      filtered={jobsQuery.data?.rows ?? []}
+      detailErrorMessage={detailErrorMessage}
+      filtered={currentRows}
+      isDetailError={detailQuery.isError}
+      isDetailLoading={detailQuery.isLoading}
       onSelectJob={setManualSelectedJobId}
       selectedJobId={selectedJobId}
       selectedRun={detailQuery.data ?? null}
@@ -83,7 +97,10 @@ export function BatchOperationsPage({
 
 function BatchOperationsContent({
   applied,
+  detailErrorMessage,
   filtered,
+  isDetailError,
+  isDetailLoading,
   onSelectJob,
   selectedJobId,
   selectedRun,
@@ -96,7 +113,10 @@ function BatchOperationsContent({
     to: string;
     status: string;
   };
+  detailErrorMessage: string;
   filtered: BatchRun[];
+  isDetailError: boolean;
+  isDetailLoading: boolean;
   onSelectJob: (jobId: number) => void;
   selectedJobId: number | null;
   selectedRun: BatchRun | null;
@@ -130,7 +150,12 @@ function BatchOperationsContent({
           selectedJobId={selectedJobId}
         />
 
-        <BatchRunDetailPanel selectedRun={selectedRun} />
+        <BatchRunDetailPanel
+          errorMessage={detailErrorMessage}
+          isError={isDetailError}
+          isLoading={isDetailLoading}
+          selectedRun={selectedRun}
+        />
       </div>
 
       <BatchOperationsFooter
