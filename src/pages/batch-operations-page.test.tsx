@@ -46,6 +46,39 @@ describe('BatchOperationsPage', () => {
     });
   });
 
+  it('passes normalized batch date ranges to the batch query', () => {
+    mockUseBatchJobs.mockReturnValue({
+      isLoading: false,
+      error: null,
+      data: {
+        rows: [],
+        summary: createSummary(),
+        totalCount: 0,
+      },
+    });
+
+    mockUseBatchJobDetail.mockReturnValue({
+      data: null,
+      isError: false,
+      isLoading: false,
+      error: null,
+    });
+
+    render(
+      <BatchOperationsPage
+        searchParams={new URLSearchParams('from=2026-03-14&to=2026-03-01')}
+      />
+    );
+
+    expect(mockUseBatchJobs).toHaveBeenLastCalledWith({
+      fromDate: '2026-03-01',
+      toDate: '2026-03-14',
+      status: undefined,
+      page: 1,
+      size: 20,
+    });
+  });
+
   it('uses a real button to select a batch row', async () => {
     const user = userEvent.setup();
 
