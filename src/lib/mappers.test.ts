@@ -272,6 +272,68 @@ describe('mappers', () => {
     );
   });
 
+  it('keeps index labels and numeric fields safe when daily index DTO values are objects', () => {
+    const snapshot = mapDailyPageToSnapshot({
+      pageId: 1,
+      businessDate: '2026-03-31',
+      versionNo: 2,
+      pageTitle: 'Latest',
+      status: 'READY',
+      globalHeadline: 'headline',
+      generatedAt: '2026-03-31T06:12:00Z',
+      partialMessage: null,
+      metadata: {
+        rawNewsCount: 1,
+        processedNewsCount: 1,
+        clusterCount: 1,
+        lastUpdatedAt: '2026-03-31T06:12:00Z',
+      },
+      markets: [
+        {
+          marketType: 'US',
+          marketLabel: '미국 증시',
+          summaryTitle: '요약 제목',
+          summaryBody: '요약 본문',
+          analysis: {
+            background: [],
+            keyThemes: [],
+            outlook: null,
+          },
+          indices: [
+            {
+              indexCode: 'IX',
+              indexName: { text: 'NASDAQ' },
+              closePrice: { value: '16274.94' },
+              changeValue: { value: '120.33' },
+              changePercent: { value: '0.74' },
+              highPrice: { value: '16302.11' },
+              lowPrice: { value: '16180.45' },
+            },
+          ],
+          topClusters: [],
+          articleLinks: [],
+          metadata: {
+            rawNewsCount: 1,
+            processedNewsCount: 1,
+            clusterCount: 1,
+            lastUpdatedAt: '2026-03-31T06:12:00Z',
+            partialMessage: null,
+          },
+        },
+      ],
+    } as unknown as DailyPageResponse);
+
+    expect(snapshot.markets[0].indices[0]).toEqual({
+      label: '-',
+      value: '-',
+      change: '-',
+      changeRate: '-',
+      direction: 'down',
+      high: '-',
+      low: '-',
+    });
+  });
+
   it('falls back to a safe daily business date when the DTO value is not a string', () => {
     const snapshot = mapDailyPageToSnapshot({
       pageId: 1,

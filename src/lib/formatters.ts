@@ -46,10 +46,14 @@ export function formatSignedNumber(
     return '-';
   }
 
+  if (typeof value !== 'string' && typeof value !== 'number') {
+    return '-';
+  }
+
   const numeric = typeof value === 'number' ? value : Number(value);
 
   if (Number.isNaN(numeric)) {
-    return String(value);
+    return typeof value === 'string' ? value : '-';
   }
 
   const formatted = Math.abs(numeric).toLocaleString('en-US', {
@@ -78,10 +82,14 @@ export function formatNumericText(value: string | number | null | undefined) {
     return '-';
   }
 
+  if (typeof value !== 'string' && typeof value !== 'number') {
+    return '-';
+  }
+
   const numeric = typeof value === 'number' ? value : Number(value);
 
   if (Number.isNaN(numeric)) {
-    return String(value);
+    return typeof value === 'string' ? value : '-';
   }
 
   return numeric.toLocaleString('en-US', {
