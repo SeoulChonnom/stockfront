@@ -334,6 +334,8 @@
 * formatter 값처럼 숫자와 날짜 표시를 만드는 필드는 잘못된 입력에서 안전한 fallback을 반환하도록 `src/lib/formatters.ts` 범위에서 방어했다.
 * cluster 값처럼 분류 표시를 만드는 필드는 깨진 DTO 입력이 들어와도 화면 표시값이 안전하게 정규화되도록 `src/lib/mappers.ts` 범위에서 방어했다.
 * daily `businessDate`, archive 텍스트, 날짜, 상태 필드, batch 텍스트, 숫자, 상세 필드의 원시 primitive 입력은 `src/lib/mappers.ts`의 프런트엔드 매퍼 경계에서 안전한 표시값으로 정규화되도록 방어했다.
+* article, market, summary 계열 배열에서 오는 `index` 값은 비정상 primitive 입력이어도 화면 정렬과 표시가 깨지지 않도록 매퍼 경계에서 안전하게 정규화되도록 방어했다.
+* 기사 수량을 표시하는 `articleCount` 계열 값은 문자열, null, 음수, 비정상 숫자 입력에서도 안전한 숫자 표시값으로 정규화되도록 방어했다.
 
 관련 검증:
 
@@ -343,7 +345,8 @@
 * `pnpm lint`와 `pnpm build`는 수정 흐름에서 통과가 확인됐다.
 * formatter 값 malformed 입력 방어는 focused formatter tests로 확인됐고, cluster 값 malformed 입력 방어는 focused mapper tests로 확인됐다.
 * daily, archive, batch primitive field guard는 mapper 테스트로 확인됐다.
-* 최종 전체 검증은 18개 파일, 79개 테스트 통과이며, lint와 build도 통과했다.
+* index와 articleCount guard는 mapper 테스트로 확인됐다.
+* 최종 전체 검증은 18개 파일, 86개 테스트 통과이며, lint와 build도 통과했다.
 
 ### 5.8 인증 부트스트랩 메시지 수정 완료
 
@@ -372,14 +375,16 @@
 * 최종 daily 최상위 `status`와 텍스트 필드 렌더링은 비문자 입력에서도 안전하게 표시되도록 후속 guard가 구현됐다.
 * Oracle이 지적한 formatter 값과 cluster 값의 malformed 입력 hardening은 `src/lib/formatters.ts`와 `src/lib/mappers.ts`의 프런트엔드 표시 경계 범위에서 구현됐다.
 * Oracle 최종 지적에 포함된 raw daily `businessDate`, archive 텍스트, 날짜, 상태 필드, batch 텍스트, count, detail 필드는 `src/lib/mappers.ts`의 프런트엔드 매퍼 경계에서 안전하게 정규화되도록 구현됐다.
+* 최신 Oracle 요구사항에 포함된 index와 articleCount malformed 입력 hardening은 `src/lib/mappers.ts`의 프런트엔드 매퍼 경계 범위에서 구현됐다.
 
 관련 검증:
 
 * 후속 수정에는 날짜 정규화와 일자 기반 페이지 DTO 매핑을 직접 겨냥한 회귀 테스트가 포함됐다.
-* 최종 전체 검증에서 18개 파일, 79개 테스트가 통과했으며, lint와 production build도 통과했다.
+* 최종 전체 검증에서 18개 파일, 86개 테스트가 통과했으며, lint와 production build도 통과했다.
 * 최종 daily 최상위 `status`와 텍스트 필드 비문자 입력 guard는 `src/lib/mappers.ts`와 `mappers.test.ts`에서 완료됐고, 사용자 제공 구현 컨텍스트상 clean diagnostics, focused mapper tests, build, lint로 확인됐다.
 * formatter 값과 cluster 값 hardening은 사용자 제공 구현 컨텍스트상 focused formatter tests, focused mapper tests, 전체 tests, lint, build로 확인됐다.
 * daily, archive, batch primitive field guard는 사용자 제공 구현 컨텍스트상 mapper tests와 최종 전체 검증으로 확인됐다.
+* index와 articleCount guard는 사용자 제공 구현 컨텍스트상 mapper tests와 최종 전체 검증으로 확인됐다.
 
 ### 5.10 명시적 잔여 항목
 
@@ -390,7 +395,7 @@
 * Gemini 생성 결과의 백엔드 스키마 검증, 그라운딩, 재시도와 부분 실패 처리 정책은 이 프런트엔드 수정으로 해결되지 않았다.
 * 배치 실행과 조회 계열 API의 실제 권한 검증, 역할 제한, 감사 로그는 백엔드에서 해결해야 한다.
 * 프런트엔드는 방어적 표시와 입력 정규화를 적용했지만, 서버 측 데이터 무결성과 권한 보장은 여전히 백엔드 책임이다.
-* formatter 값, cluster 값, daily, archive, batch primitive field malformed 입력 hardening은 프런트엔드 표시와 매퍼 경계에서는 완료됐지만, 서버 측 생성 데이터의 원천 무결성 보장은 여전히 백엔드 책임이다.
+* formatter 값, cluster 값, daily, archive, batch primitive field, index, articleCount malformed 입력 hardening은 프런트엔드 표시와 매퍼 경계에서는 완료됐지만, 서버 측 생성 데이터의 원천 무결성 보장은 여전히 백엔드 책임이다.
 
 ## 6. 백엔드 전용 잔여 위험
 
@@ -419,7 +424,7 @@
 
 ## 7. 남은 우선순위
 
-프런트엔드 발견 사항은 Section 5에서 명시한 확인 범위 안에서만 fixed로 기록한다. formatter 값, cluster 값, daily, archive, batch primitive field 추가 malformed 입력 hardening은 프런트엔드 표시와 매퍼 경계에서 fixed로 기록하며, 남은 우선순위는 Section 6의 백엔드 전용 잔여 위험으로 한정한다.
+프런트엔드 발견 사항은 Section 5에서 명시한 확인 범위 안에서만 fixed로 기록한다. formatter 값, cluster 값, daily, archive, batch primitive field, index, articleCount 추가 malformed 입력 hardening은 프런트엔드 표시와 매퍼 경계에서 fixed로 기록하며, 남은 우선순위는 Section 6의 백엔드 전용 잔여 위험으로 한정한다.
 
 1. Gemini 생성 결과의 백엔드 스키마 검증을 강화한다.
 2. 생성된 요약과 분석이 실제 기사 또는 원천 데이터에 근거하는지 추적 가능한 그라운딩 정책을 둔다.
