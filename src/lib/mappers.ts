@@ -266,7 +266,7 @@ export function mapClusterDetailToView(
         (typeof summaryShort === 'string' ? summaryShort : undefined) ??
         '대표 기사 요약이 아직 생성되지 않았습니다.',
     },
-    articleCount: response.articleCount ?? articles.length,
+    articleCount: asFiniteNumber(response.articleCount, articles.length),
     updatedAt: formatDateTime(response.lastUpdatedAt),
   };
 }

@@ -205,6 +205,47 @@ describe('mappers', () => {
     ]);
   });
 
+  it('falls back to articles length when cluster articleCount is malformed', () => {
+    const detail = mapClusterDetailToView({
+      clusterId: 'cluster-1',
+      businessDate: '2026-03-31',
+      marketLabel: '미국',
+      title: 'cluster title',
+      tags: [],
+      analysis: ['analysis paragraph'],
+      articles: [
+        {
+          processedArticleId: 'article-1',
+          publisherName: 'Source 1',
+          publishedAt: '2026-03-31T06:12:00Z',
+          title: 'article 1',
+          originLink: 'https://example.com/1',
+          naverLink: 'https://example.com/1-mirror',
+        },
+        {
+          processedArticleId: 'article-2',
+          publisherName: 'Source 2',
+          publishedAt: '2026-03-31T06:13:00Z',
+          title: 'article 2',
+          originLink: 'https://example.com/2',
+          naverLink: 'https://example.com/2-mirror',
+        },
+      ],
+      representativeArticle: {
+        processedArticleId: 'rep',
+        publisherName: 'Representative Source',
+        publishedAt: '2026-03-31T06:14:00Z',
+        title: 'representative article',
+        originLink: 'https://example.com/rep',
+        naverLink: 'https://example.com/rep-mirror',
+      },
+      articleCount: 'not-a-number',
+      updatedAt: '2026-03-31T06:15:00Z',
+    } as unknown as ClusterDetailResponse);
+
+    expect(detail.articleCount).toBe(2);
+  });
+
   it('falls back to safe strings for non-string daily page text fields', () => {
     const malformedResponse = {
       pageId: 1,
