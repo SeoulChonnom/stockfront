@@ -21,6 +21,42 @@ export class ApiError extends Error {
   }
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === 'object';
+}
+
+function formatValidationLocation(loc: unknown) {
+  if (!Array.isArray(loc)) {
+    return '';
+  }
+
+  return loc
+    .filter((part): part is string | number =>
+      typeof part === 'string' || typeof part === 'number'
+    )
+    .filter((part) => part !== 'body' && part !== 'query' && part !== 'path')
+    .map(String)
+    .join('.');
+}
+
+function formatFastApiValidationDetail(detail: unknown) {
+  if (!Array.isArray(detail)) {
+    return '';
+  }
+
+  return detail
+    .map((item) => {
+      if (!isRecord(item) || typeof item.msg !== 'string') {
+        return '';
+      }
+
+      const location = formatValidationLocation(item.loc);
+      return location ? `${location}: ${item.msg}` : item.msg;
+    })
+    .filter((message) => message.length > 0)
+    .join('; ');
+}
+
 function getApiHost() {
   const host = readEnvString('VITE_API_HOST');
 
@@ -47,13 +83,11 @@ function getResponseErrorMessage(status: number, body: unknown) {
     return 'Unauthorized (401). Check the Bearer token used by the frontend.';
   }
 
+  const rawDetail = isRecord(body) ? body.detail : undefined;
   const detail =
-    body &&
-    typeof body === 'object' &&
-    'detail' in body &&
-    typeof body.detail === 'string'
-      ? body.detail
-      : '';
+    typeof rawDetail === 'string'
+      ? rawDetail
+      : formatFastApiValidationDetail(rawDetail);
 
   if (detail.length > 0) {
     return `API request failed with status ${status}. ${detail}`;

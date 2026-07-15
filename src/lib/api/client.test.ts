@@ -154,6 +154,40 @@ describe('apiRequest', () => {
     ).rejects.toBeInstanceOf(ApiError);
   });
 
+  it('formats FastAPI 422 detail arrays into readable field messages', async () => {
+    vi.stubEnv('VITE_API_HOST', 'http://localhost:8000');
+    vi.stubGlobal(
+      'fetch',
+      vi
+        .fn<
+          (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>
+        >()
+        .mockResolvedValue(
+          createJsonResponse(
+            {
+              detail: [
+                {
+                  loc: ['query', 'business_date'],
+                  msg: 'Input should be a valid date',
+                },
+                {
+                  loc: ['body', 'force'],
+                  msg: 'Input should be a valid boolean',
+                },
+              ],
+            },
+            { status: 422 }
+          )
+        )
+    );
+
+    await expect(apiRequest('/stock/api/pages/daily/latest')).rejects.toMatchObject({
+      message:
+        'API request failed with status 422. business_date: Input should be a valid date; force: Input should be a valid boolean',
+      status: 422,
+    });
+  });
+
   it('uses a more specific message for 401 responses', async () => {
     vi.stubEnv('VITE_API_HOST', 'http://localhost:8000');
     vi.stubGlobal(
