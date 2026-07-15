@@ -8,7 +8,11 @@ import {
   startBatchRun,
 } from './api/batch';
 import { getClusterDetail } from './api/news';
-import { getDailyPageByBusinessDate, getLatestDailyPage } from './api/pages';
+import {
+  getDailyPageByBusinessDate,
+  getDailyPageByPageId,
+  getLatestDailyPage,
+} from './api/pages';
 import {
   mapArchiveListToView,
   mapBatchDetailToRun,
@@ -26,12 +30,33 @@ export function useLatestMarketPage(enabled = true) {
   });
 }
 
-export function useArchiveMarketPage(businessDate: string, enabled = true) {
+export type ArchiveMarketPageIdentity = {
+  businessDate: string;
+  pageId: number | null;
+};
+
+function hasPageId(pageId: number | null): pageId is number {
+  return typeof pageId === 'number' && Number.isSafeInteger(pageId) && pageId > 0;
+}
+
+export function useArchiveMarketPage(
+  identity: ArchiveMarketPageIdentity,
+  enabled = true
+) {
   return useQuery({
-    queryKey: ['daily-page', businessDate],
-    queryFn: ({ signal }) => getDailyPageByBusinessDate(businessDate, signal),
+    queryKey: [
+      'daily-page',
+      'archive',
+      identity.businessDate,
+      identity.pageId,
+    ],
+    queryFn: ({ signal }) =>
+      hasPageId(identity.pageId)
+        ? getDailyPageByPageId(identity.pageId, signal)
+        : getDailyPageByBusinessDate(identity.businessDate, signal),
     select: mapDailyPageToSnapshot,
-    enabled: enabled && businessDate.length > 0,
+    enabled:
+      enabled && (hasPageId(identity.pageId) || identity.businessDate.length > 0),
   });
 }
 

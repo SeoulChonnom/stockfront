@@ -16,3 +16,9 @@ export function getDailyPageByBusinessDate(
     signal,
   });
 }
+
+export function getDailyPageByPageId(pageId: number, signal?: AbortSignal) {
+  return apiRequest<DailyPageResponse>(`/stock/api/pages/${pageId}`, {
+    signal,
+  });
+}

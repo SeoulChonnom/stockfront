@@ -15,7 +15,14 @@ import {
   formatDateDots,
   getStatusClass,
 } from '../../lib/app-state';
+import { buildUrl } from '../../lib/router';
 import type { ArchiveRecord } from '../../lib/view-models';
+
+function getArchiveDetailHref(record: ArchiveRecord) {
+  return buildUrl(`/market/archive/${record.businessDate}`, {
+    pageId: record.pageId,
+  });
+}
 
 export function ArchiveResultsTable({ rows }: { rows: ArchiveRecord[] }) {
   return (
@@ -39,40 +46,44 @@ export function ArchiveResultsTable({ rows }: { rows: ArchiveRecord[] }) {
                   </TableCell>
                 </TableRow>
               )}
-              {rows.map((record) => (
-                <TableRow key={record.pageId}>
-                  <TableCell>
-                    <div className='date-cell'>
-                      <CircleDot
-                        className={
-                          record.status === 'FAILED' ? 'trend-down' : 'trend-up'
-                        }
-                        size={14}
-                      />
-                      <span>{formatDateDots(record.businessDate)}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <a
-                      className='headline-link'
-                      href={`/market/archive/${record.businessDate}`}
-                      onClick={createNavigateHandler(
-                        `/market/archive/${record.businessDate}`
-                      )}
-                    >
-                      {record.headline}
-                    </a>
-                  </TableCell>
-                  <TableCell>
-                    <span className={getStatusClass(record.status)}>
-                      {record.status}
-                    </span>
-                  </TableCell>
-                  <TableCell className='numeric'>
-                    {record.generatedAt}
-                  </TableCell>
-                </TableRow>
-              ))}
+              {rows.map((record) => {
+                const detailHref = getArchiveDetailHref(record);
+
+                return (
+                  <TableRow key={record.pageId}>
+                    <TableCell>
+                      <div className='date-cell'>
+                        <CircleDot
+                          className={
+                            record.status === 'FAILED'
+                              ? 'trend-down'
+                              : 'trend-up'
+                          }
+                          size={14}
+                        />
+                        <span>{formatDateDots(record.businessDate)}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <a
+                        className='headline-link'
+                        href={detailHref}
+                        onClick={createNavigateHandler(detailHref)}
+                      >
+                        {record.headline}
+                      </a>
+                    </TableCell>
+                    <TableCell>
+                      <span className={getStatusClass(record.status)}>
+                        {record.status}
+                      </span>
+                    </TableCell>
+                    <TableCell className='numeric'>
+                      {record.generatedAt}
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </div>
