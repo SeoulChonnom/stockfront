@@ -11,23 +11,21 @@ export type ListFilters = {
   page: number;
 };
 
+type ParseListFiltersOptions = {
+  allowedStatuses?: string[];
+};
+
 export type AppRoute =
   | { page: 'latest' }
-  | { page: 'archive-market'; businessDate: string }
+  | { page: 'archive-market'; businessDate: string; pageId: number | null }
   | { page: 'archive-search' }
   | { page: 'cluster-detail'; clusterId: string }
   | { page: 'batch-ops' }
   | { page: 'not-found' };
 
-const defaultBusinessDate = '2026-03-17';
-const defaultClusterId = 'a8d5d5f8-fec5-4caa-b5ef-91a1c0b5d678';
 const archiveMarketRoutePattern = /^\/market\/archive\/(\d{4}-\d{2}-\d{2})$/;
 const clusterDetailRoutePattern =
   /^\/market\/cluster\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/;
-
-function matchRouteParam(pathname: string, pattern: RegExp, fallback: string) {
-  return pathname.match(pattern)?.[1] ?? fallback;
-}
 
 export function formatDateDots(value: string) {
   return value.replaceAll('-', '. ');
@@ -41,6 +39,34 @@ function normalizeDateParam(value: string | null, fallback: string) {
   return /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : fallback;
 }
 
+function normalizePositiveIntegerParam(value: string | null) {
+  if (!value || !/^\d+$/.test(value)) {
+    return null;
+  }
+
+  const parsed = Number(value);
+  return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : null;
+}
+
+function normalizePageParam(value: string | null, fallback: number) {
+  return normalizePositiveIntegerParam(value) ?? fallback;
+}
+
+function normalizeStatusParam(
+  value: string | null,
+  allowedStatuses?: string[]
+) {
+  if (!value) {
+    return '';
+  }
+
+  if (!allowedStatuses) {
+    return value;
+  }
+
+  return allowedStatuses.includes(value) ? value : '';
+}
+
 function getTodayIso() {
   return new Date().toISOString().slice(0, 10);
 }
@@ -51,10 +77,13 @@ function getRelativeIso(days: number) {
   return date.toISOString().slice(0, 10);
 }
 
-export function parseListFilters(searchParams: URLSearchParams): ListFilters {
+export function parseListFilters(
+  searchParams: URLSearchParams,
+  options: ParseListFiltersOptions = {}
+): ListFilters {
   const defaults = {
-    from: getTodayIso(),
-    to: getRelativeIso(14),
+    from: getRelativeIso(14),
+    to: getTodayIso(),
     status: '',
     page: 1,
   };
@@ -62,8 +91,11 @@ export function parseListFilters(searchParams: URLSearchParams): ListFilters {
   return {
     from: normalizeDateParam(searchParams.get('from'), defaults.from),
     to: normalizeDateParam(searchParams.get('to'), defaults.to),
-    status: searchParams.get('status') ?? defaults.status,
-    page: Number(searchParams.get('page') ?? defaults.page) || 1,
+    status: normalizeStatusParam(
+      searchParams.get('status'),
+      options.allowedStatuses
+    ),
+    page: normalizePageParam(searchParams.get('page'), defaults.page),
   };
 }
 
@@ -81,7 +113,10 @@ export function getStatusClass(status: string) {
   return 'status-chip status-chip-failed';
 }
 
-export function parseRoute(pathname: string): AppRoute {
+export function parseRoute(
+  pathname: string,
+  searchParams = new URLSearchParams()
+): AppRoute {
   if (pathname === '/' || pathname === '/market/latest') {
     return { page: 'latest' };
   }
@@ -91,24 +126,29 @@ export function parseRoute(pathname: string): AppRoute {
   }
 
   if (pathname.startsWith('/market/archive/')) {
+    const businessDate = pathname.match(archiveMarketRoutePattern)?.[1];
+
+    if (!businessDate) {
+      return { page: 'not-found' };
+    }
+
     return {
       page: 'archive-market',
-      businessDate: matchRouteParam(
-        pathname,
-        archiveMarketRoutePattern,
-        defaultBusinessDate
-      ),
+      businessDate,
+      pageId: normalizePositiveIntegerParam(searchParams.get('pageId')),
     };
   }
 
   if (pathname.startsWith('/market/cluster/')) {
+    const clusterId = pathname.match(clusterDetailRoutePattern)?.[1];
+
+    if (!clusterId) {
+      return { page: 'not-found' };
+    }
+
     return {
       page: 'cluster-detail',
-      clusterId: matchRouteParam(
-        pathname,
-        clusterDetailRoutePattern,
-        defaultClusterId
-      ),
+      clusterId,
     };
   }
 
