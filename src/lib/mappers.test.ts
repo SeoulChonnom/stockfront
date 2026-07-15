@@ -272,6 +272,28 @@ describe('mappers', () => {
     );
   });
 
+  it('falls back to a safe daily business date when the DTO value is not a string', () => {
+    const snapshot = mapDailyPageToSnapshot({
+      pageId: 1,
+      businessDate: { date: '2026-03-31' },
+      versionNo: 2,
+      pageTitle: 'Latest',
+      status: 'READY',
+      globalHeadline: 'headline',
+      generatedAt: '2026-03-31T06:12:00Z',
+      partialMessage: null,
+      metadata: {
+        rawNewsCount: 1,
+        processedNewsCount: 1,
+        clusterCount: 1,
+        lastUpdatedAt: '2026-03-31T06:12:00Z',
+      },
+      markets: [],
+    } as unknown as DailyPageResponse);
+
+    expect(snapshot.businessDate).toBe('-');
+  });
+
   it('uses a valid representative article title as the daily cluster summary fallback', () => {
     const snapshot = mapDailyPageToSnapshot({
       pageId: 1,
@@ -355,6 +377,42 @@ describe('mappers', () => {
     expect(view.page).toBe(2);
     expect(view.totalPages).toBe(3);
     expect(view.rows[0].headline).toBe('Title');
+  });
+
+  it('normalizes malformed archive item dates, text, status, and counts', () => {
+    const view = mapArchiveListToView({
+      items: [
+        {
+          pageId: { id: 1 },
+          businessDate: { date: '2026-03-31' },
+          pageTitle: { text: 'Title' },
+          headlineSummary: { text: 'Headline' },
+          status: { value: 'READY' },
+          generatedAt: { iso: '2026-03-31T06:12:00Z' },
+          partialMessage: { text: 'partial' },
+        },
+      ],
+      pagination: {
+        page: { value: 2 },
+        size: { value: 10 },
+        totalCount: { value: 21 },
+      },
+    } as unknown as Parameters<typeof mapArchiveListToView>[0]);
+
+    expect(view).toMatchObject({
+      page: 1,
+      size: 1,
+      totalCount: 0,
+      totalPages: 1,
+    });
+    expect(view.rows[0]).toMatchObject({
+      pageId: 0,
+      businessDate: '-',
+      headline: '헤드라인 요약이 아직 생성되지 않았습니다.',
+      status: 'FAILED',
+      generatedAt: '-',
+      detail: null,
+    });
   });
 
   it('maps cluster detail response', () => {
@@ -595,6 +653,101 @@ describe('mappers', () => {
 
     expect(jobsView.rows[0].status).toBe('FAILED');
     expect(detail.status).toBe('FAILED');
+  });
+
+  it('normalizes malformed batch run text, count, and detail fields', () => {
+    const jobsView = mapBatchJobsToView({
+      items: [
+        {
+          jobId: { id: 1 },
+          jobName: { text: 'daily' },
+          businessDate: { date: '2026-03-31' },
+          status: { value: 'SUCCESS' },
+          startedAt: { iso: '2026-03-31T06:12:00Z' },
+          endedAt: { iso: '2026-03-31T06:26:11Z' },
+          durationSeconds: { seconds: 851 },
+          marketScope: { market: 'US Market' },
+          rawNewsCount: { count: 77 },
+          processedNewsCount: { count: 32 },
+          clusterCount: { count: 9 },
+          pageId: { id: 1 },
+          pageVersionNo: { version: 2 },
+          partialMessage: { text: 'partial' },
+        },
+      ],
+      pagination: {
+        page: { value: 1 },
+        size: { value: 20 },
+        totalCount: { value: 1 },
+      },
+      summary: {
+        successCount: { count: 1 },
+        partialCount: { count: 0 },
+        failedCount: { count: 0 },
+        avgDurationSeconds: { seconds: 851 },
+      },
+    } as unknown as Parameters<typeof mapBatchJobsToView>[0]);
+
+    const detail = mapBatchDetailToRun({
+      jobId: { id: 1 },
+      jobName: { text: 'daily' },
+      businessDate: { date: '2026-03-31' },
+      status: { value: 'FAILED' },
+      forceRun: false,
+      rebuildPageOnly: false,
+      startedAt: { iso: '2026-03-31T06:12:00Z' },
+      endedAt: { iso: '2026-03-31T06:26:11Z' },
+      durationSeconds: { seconds: 851 },
+      rawNewsCount: { count: 77 },
+      processedNewsCount: { count: 32 },
+      clusterCount: { count: 9 },
+      pageId: { id: 1 },
+      pageVersionNo: { version: 2 },
+      partialMessage: { text: 'partial' },
+      errorCode: { code: 'X' },
+      errorMessage: { text: 'failure' },
+      logSummary: { text: 'log' },
+    } as unknown as Parameters<typeof mapBatchDetailToRun>[0]);
+
+    expect(jobsView).toMatchObject({
+      page: 1,
+      size: 1,
+      totalCount: 0,
+      totalPages: 1,
+      summary: {
+        successRate: '0.0%',
+        avgProcessingTime: '-',
+        marketSyncQuality: 'Stable',
+        successSupporting: '0 success / 0 failed',
+        durationSupporting: 'Average across 0 runs',
+      },
+    });
+    expect(jobsView.rows[0]).toMatchObject({
+      id: 0,
+      jobName: 'batch',
+      market: 'N/A',
+      businessDate: '-',
+      status: 'FAILED',
+      startedAt: '-',
+      finishedAt: '-',
+      duration: '-',
+      counts: '0 / 0 / 0',
+      detail: 'batch 배치가 FAILED 상태로 기록되었습니다.',
+      pageVersion: '-',
+    });
+    expect(detail).toMatchObject({
+      id: 0,
+      jobName: 'batch',
+      market: 'N/A',
+      businessDate: '-',
+      status: 'FAILED',
+      startedAt: '-',
+      finishedAt: '-',
+      duration: '-',
+      counts: '0 / 0 / 0',
+      detail: 'batch 배치 상세 메시지가 없습니다.',
+      pageVersion: '-',
+    });
   });
 
   it('maps batch list and detail responses', () => {
