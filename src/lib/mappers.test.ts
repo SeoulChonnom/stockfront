@@ -205,6 +205,62 @@ describe('mappers', () => {
     ]);
   });
 
+  it.each([Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY])(
+    'falls back to zero when daily cluster articleCount is non-finite (%p)',
+    (articleCount) => {
+      const snapshot = mapDailyPageToSnapshot({
+        pageId: 1,
+        businessDate: '2026-03-31',
+        versionNo: 2,
+        pageTitle: 'Latest',
+        status: 'READY',
+        globalHeadline: 'headline',
+        generatedAt: '2026-03-31T06:12:00Z',
+        partialMessage: null,
+        metadata: {
+          rawNewsCount: 1,
+          processedNewsCount: 1,
+          clusterCount: 1,
+          lastUpdatedAt: '2026-03-31T06:12:00Z',
+        },
+        markets: [
+          {
+            marketType: 'US',
+            marketLabel: '미국 증시',
+            summaryTitle: '요약 제목',
+            summaryBody: '요약 본문',
+            analysis: {
+              background: [],
+              keyThemes: [],
+              outlook: null,
+            },
+            indices: [],
+            topClusters: [
+              {
+                clusterId: 'cluster-1',
+                title: 'cluster title',
+                summary: 'cluster summary',
+                articleCount,
+                tags: [],
+                representativeArticle: {},
+              },
+            ],
+            articleLinks: [],
+            metadata: {
+              rawNewsCount: 1,
+              processedNewsCount: 1,
+              clusterCount: 1,
+              lastUpdatedAt: '2026-03-31T06:12:00Z',
+              partialMessage: null,
+            },
+          },
+        ],
+      } as unknown as DailyPageResponse);
+
+      expect(snapshot.markets[0].clusters[0].articleCount).toBe(0);
+    }
+  );
+
   it('falls back to articles length when cluster articleCount is malformed', () => {
     const detail = mapClusterDetailToView({
       clusterId: 'cluster-1',

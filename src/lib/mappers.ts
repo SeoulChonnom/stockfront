@@ -171,8 +171,7 @@ export function mapDailyPageToSnapshot(
 
           return {
             id: asString(cluster.clusterId, 'unknown-cluster'),
-            articleCount:
-              typeof cluster.articleCount === 'number' ? cluster.articleCount : 0,
+            articleCount: asFiniteNumber(cluster.articleCount, 0),
             title: asString(cluster.title, '클러스터 제목이 없습니다.'),
             summary: firstString(
               [cluster.summary, representativeArticle.title],
