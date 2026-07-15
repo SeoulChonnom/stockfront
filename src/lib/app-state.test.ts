@@ -19,6 +19,22 @@ describe('parseListFilters', () => {
     });
   });
 
+  it('normalizes reversed valid date ranges before returning filters', () => {
+    const searchParams = new URLSearchParams({
+      from: '2026-03-14',
+      to: '2026-03-01',
+      status: 'READY',
+      page: '2',
+    });
+
+    expect(parseListFilters(searchParams)).toEqual({
+      from: '2026-03-01',
+      to: '2026-03-14',
+      status: 'READY',
+      page: 2,
+    });
+  });
+
   it('falls back for invalid dates and page values', () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-04-22T00:00:00Z'));

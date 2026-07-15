@@ -88,9 +88,12 @@ export function parseListFilters(
     page: 1,
   };
 
+  const from = normalizeDateParam(searchParams.get('from'), defaults.from);
+  const to = normalizeDateParam(searchParams.get('to'), defaults.to);
+
   return {
-    from: normalizeDateParam(searchParams.get('from'), defaults.from),
-    to: normalizeDateParam(searchParams.get('to'), defaults.to),
+    from: from <= to ? from : to,
+    to: from <= to ? to : from,
     status: normalizeStatusParam(
       searchParams.get('status'),
       options.allowedStatuses

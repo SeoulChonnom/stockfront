@@ -26,6 +26,33 @@ vi.mock('../lib/query-hooks', () => ({
 }));
 
 describe('ArchiveSearchPage', () => {
+  it('passes normalized archive date ranges to the archive query', () => {
+    mockUseArchiveList.mockReturnValue({
+      data: {
+        page: 1,
+        rows: [],
+        totalCount: 0,
+        totalPages: 1,
+      },
+      error: null,
+      isLoading: false,
+    });
+
+    render(
+      <ArchiveSearchPage
+        searchParams={new URLSearchParams('from=2026-03-14&to=2026-03-01')}
+      />
+    );
+
+    expect(mockUseArchiveList).toHaveBeenLastCalledWith({
+      fromDate: '2026-03-01',
+      toDate: '2026-03-14',
+      status: undefined,
+      page: 1,
+      size: 4,
+    });
+  });
+
   it('removes statuses unsupported by archive search before querying', () => {
     mockUseArchiveList.mockReturnValue({
       data: {
