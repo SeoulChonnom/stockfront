@@ -28,6 +28,9 @@ import type {
   MarketSnapshot,
 } from './view-models';
 
+type DailyMarketResponse = DailyPageResponse['markets'][number];
+type DailyClusterResponse = DailyMarketResponse['topClusters'][number];
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object';
 }
@@ -42,6 +45,28 @@ function asArticleArray(value: unknown): ClusterArticleResponse[] {
   return Array.isArray(value)
     ? value.filter((item): item is ClusterArticleResponse => isRecord(item))
     : [];
+}
+
+function asDailyMarketArray(value: unknown): DailyMarketResponse[] {
+  return Array.isArray(value)
+    ? value.filter((item): item is DailyMarketResponse => isRecord(item))
+    : [];
+}
+
+function asIndexArray(value: unknown): IndexCardResponse[] {
+  return Array.isArray(value)
+    ? value.filter((item): item is IndexCardResponse => isRecord(item))
+    : [];
+}
+
+function asDailyClusterArray(value: unknown): DailyClusterResponse[] {
+  return Array.isArray(value)
+    ? value.filter((item): item is DailyClusterResponse => isRecord(item))
+    : [];
+}
+
+function asString(value: unknown, fallback: string): string {
+  return typeof value === 'string' ? value : fallback;
 }
 
 function mapIndex(item: IndexCardResponse): MarketIndex {
@@ -59,6 +84,8 @@ function mapIndex(item: IndexCardResponse): MarketIndex {
 export function mapDailyPageToSnapshot(
   response: DailyPageResponse
 ): MarketSnapshot {
+  const markets = asDailyMarketArray(response.markets);
+
   return {
     pageId: response.pageId,
     businessDate: response.businessDate,
@@ -69,27 +96,42 @@ export function mapDailyPageToSnapshot(
       response.globalHeadline ??
       response.pageTitle ??
       '글로벌 시장 헤드라인이 없습니다.',
-    markets: response.markets.map((market) => ({
-      label: market.marketLabel,
-      summaryTitle:
-        market.summaryTitle ??
-        market.analysis.keyThemes[0] ??
-        `${market.marketLabel} 요약`,
-      summaryBody:
-        (market.summaryBody ?? market.analysis.background.join(' ')) ||
-        '시장 요약 데이터가 아직 생성되지 않았습니다.',
-      indices: market.indices.map(mapIndex),
-      clusters: market.topClusters.map((cluster) => ({
-        id: cluster.clusterId,
-        articleCount: cluster.articleCount,
-        title: cluster.title,
-        summary:
-          cluster.summary ??
-          cluster.representativeArticle.title ??
-          '클러스터 요약이 아직 생성되지 않았습니다.',
-        tags: cluster.tags,
-      })),
-    })),
+    markets: markets.map((market) => {
+      const label = asString(market.marketLabel, '시장');
+      const analysis: Record<string, unknown> = isRecord(market.analysis)
+        ? market.analysis
+        : {};
+      const keyThemes = asStringArray(analysis.keyThemes);
+      const background = asStringArray(analysis.background);
+      const indices = asIndexArray(market.indices);
+      const clusters = asDailyClusterArray(market.topClusters);
+
+      return {
+        label,
+        summaryTitle: market.summaryTitle ?? keyThemes[0] ?? `${label} 요약`,
+        summaryBody:
+          (market.summaryBody ?? background.join(' ')) ||
+          '시장 요약 데이터가 아직 생성되지 않았습니다.',
+        indices: indices.map(mapIndex),
+        clusters: clusters.map((cluster) => {
+          const representativeArticle = isRecord(cluster.representativeArticle)
+            ? cluster.representativeArticle
+            : {};
+
+          return {
+            id: asString(cluster.clusterId, 'unknown-cluster'),
+            articleCount:
+              typeof cluster.articleCount === 'number' ? cluster.articleCount : 0,
+            title: asString(cluster.title, '클러스터 제목이 없습니다.'),
+            summary:
+              cluster.summary ??
+              representativeArticle.title ??
+              '클러스터 요약이 아직 생성되지 않았습니다.',
+            tags: asStringArray(cluster.tags),
+          };
+        }),
+      };
+    }),
   };
 }
 

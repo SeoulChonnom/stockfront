@@ -7,7 +7,7 @@ import {
   mapClusterDetailToView,
   mapDailyPageToSnapshot,
 } from './mappers';
-import type { ClusterDetailResponse } from './api/types';
+import type { ClusterDetailResponse, DailyPageResponse } from './api/types';
 
 describe('mappers', () => {
   it('maps a daily page response into the market snapshot view model', () => {
@@ -73,6 +73,106 @@ describe('mappers', () => {
     expect(snapshot.status).toBe('ready');
     expect(snapshot.markets[0].indices[0].direction).toBe('up');
     expect(snapshot.markets[0].clusters[0].id).toBe('cluster-1');
+  });
+
+  it('defensively maps missing daily page market arrays from external DTOs', () => {
+    const malformedResponse = {
+      pageId: 1,
+      businessDate: '2026-03-31',
+      versionNo: 2,
+      pageTitle: 'Latest',
+      status: 'READY',
+      globalHeadline: null,
+      generatedAt: '2026-03-31T06:12:00Z',
+      partialMessage: null,
+      metadata: {
+        rawNewsCount: 1,
+        processedNewsCount: 1,
+        clusterCount: 1,
+        lastUpdatedAt: '2026-03-31T06:12:00Z',
+      },
+    } as unknown as DailyPageResponse;
+
+    expect(() => mapDailyPageToSnapshot(malformedResponse)).not.toThrow();
+
+    const snapshot = mapDailyPageToSnapshot(malformedResponse);
+
+    expect(snapshot.globalHeadline).toBe('Latest');
+    expect(snapshot.markets).toEqual([]);
+  });
+
+  it('defensively maps malformed daily page nested generated DTOs', () => {
+    const malformedResponse = {
+      pageId: 1,
+      businessDate: '2026-03-31',
+      versionNo: 2,
+      pageTitle: null,
+      status: 'READY',
+      globalHeadline: null,
+      generatedAt: '2026-03-31T06:12:00Z',
+      partialMessage: null,
+      metadata: {
+        rawNewsCount: 1,
+        processedNewsCount: 1,
+        clusterCount: 1,
+        lastUpdatedAt: '2026-03-31T06:12:00Z',
+      },
+      markets: [
+        {
+          marketType: 'US',
+          marketLabel: '미국 증시',
+          summaryTitle: null,
+          summaryBody: null,
+          analysis: {
+            background: 'not an array',
+            keyThemes: { theme: 'AI' },
+            outlook: null,
+          },
+          indices: { indexName: 'NASDAQ' },
+          topClusters: [
+            {
+              clusterId: 'cluster-1',
+              title: 'cluster title',
+              summary: null,
+              articleCount: 3,
+              tags: 'AI',
+              representativeArticle: 'not an object',
+            },
+            'not a cluster',
+          ],
+          articleLinks: [],
+          metadata: {
+            rawNewsCount: 1,
+            processedNewsCount: 1,
+            clusterCount: 1,
+            lastUpdatedAt: '2026-03-31T06:12:00Z',
+            partialMessage: null,
+          },
+        },
+        'not a market',
+      ],
+    } as unknown as DailyPageResponse;
+
+    expect(() => mapDailyPageToSnapshot(malformedResponse)).not.toThrow();
+
+    const snapshot = mapDailyPageToSnapshot(malformedResponse);
+
+    expect(snapshot.globalHeadline).toBe('글로벌 시장 헤드라인이 없습니다.');
+    expect(snapshot.markets).toHaveLength(1);
+    expect(snapshot.markets[0].summaryTitle).toBe('미국 증시 요약');
+    expect(snapshot.markets[0].summaryBody).toBe(
+      '시장 요약 데이터가 아직 생성되지 않았습니다.'
+    );
+    expect(snapshot.markets[0].indices).toEqual([]);
+    expect(snapshot.markets[0].clusters).toEqual([
+      {
+        id: 'cluster-1',
+        articleCount: 3,
+        title: 'cluster title',
+        summary: '클러스터 요약이 아직 생성되지 않았습니다.',
+        tags: [],
+      },
+    ]);
   });
 
   it('maps archive pagination into table rows', () => {
