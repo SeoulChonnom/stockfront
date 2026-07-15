@@ -73,6 +73,12 @@ function asFiniteNumber(value: unknown, fallback: number): number {
   return typeof value === 'number' && Number.isFinite(value) ? value : fallback;
 }
 
+function asNonNegativeSafeInteger(value: unknown, fallback: number): number {
+  return typeof value === 'number' && Number.isSafeInteger(value) && value >= 0
+    ? value
+    : fallback;
+}
+
 function asNullableFiniteNumber(value: unknown): number | null {
   return typeof value === 'number' && Number.isFinite(value) ? value : null;
 }
@@ -171,7 +177,7 @@ export function mapDailyPageToSnapshot(
 
           return {
             id: asString(cluster.clusterId, 'unknown-cluster'),
-            articleCount: asFiniteNumber(cluster.articleCount, 0),
+            articleCount: asNonNegativeSafeInteger(cluster.articleCount, 0),
             title: asString(cluster.title, '클러스터 제목이 없습니다.'),
             summary: firstString(
               [cluster.summary, representativeArticle.title],
@@ -265,7 +271,7 @@ export function mapClusterDetailToView(
         (typeof summaryShort === 'string' ? summaryShort : undefined) ??
         '대표 기사 요약이 아직 생성되지 않았습니다.',
     },
-    articleCount: asFiniteNumber(response.articleCount, articles.length),
+    articleCount: asNonNegativeSafeInteger(response.articleCount, articles.length),
     updatedAt: formatDateTime(response.lastUpdatedAt),
   };
 }
