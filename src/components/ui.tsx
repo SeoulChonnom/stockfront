@@ -1,3 +1,5 @@
+import type { AriaRole } from 'react';
+
 export function InfoBadge({ label, value }: { label: string; value: string }) {
   return (
     <div className='info-badge'>
@@ -19,12 +21,16 @@ export function InfoRow({ label, value }: { label: string; value: string }) {
 export function PageMessage({
   title,
   description,
+  role,
+  ariaLive,
 }: {
   title: string;
   description: string;
+  role?: AriaRole;
+  ariaLive?: 'off' | 'polite' | 'assertive';
 }) {
   return (
-    <section className='empty-state'>
+    <section aria-live={ariaLive} className='empty-state' role={role}>
       <h1>{title}</h1>
       <p>{description}</p>
     </section>
