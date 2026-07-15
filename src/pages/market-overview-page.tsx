@@ -10,6 +10,15 @@ import type {
   MarketSnapshot,
 } from '../lib/view-models';
 
+type SourceViewStatus = 'READY' | 'PARTIAL' | 'FAILED';
+
+const sourceViewStatusBySnapshotStatus = {
+  ready: 'READY',
+  partial: 'PARTIAL',
+  failed: 'FAILED',
+  success: 'READY',
+} satisfies Record<MarketSnapshot['status'], SourceViewStatus>;
+
 export function MarketOverviewPage({
   mode,
   snapshot,
@@ -161,7 +170,7 @@ function ClusterPreviewCard({
   const archiveHref = buildUrl('/market/archive/search', {
     from: snapshot.businessDate,
     to: snapshot.businessDate,
-    status: 'READY',
+    status: sourceViewStatusBySnapshotStatus[snapshot.status],
     page: 1,
   });
   const detailHref = `/market/cluster/${cluster.id}`;
