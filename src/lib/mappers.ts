@@ -28,6 +28,22 @@ import type {
   MarketSnapshot,
 } from './view-models';
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === 'object';
+}
+
+function asStringArray(value: unknown): string[] {
+  return Array.isArray(value)
+    ? value.filter((item): item is string => typeof item === 'string')
+    : [];
+}
+
+function asArticleArray(value: unknown): ClusterArticleResponse[] {
+  return Array.isArray(value)
+    ? value.filter((item): item is ClusterArticleResponse => isRecord(item))
+    : [];
+}
+
 function mapIndex(item: IndexCardResponse): MarketIndex {
   return {
     label: item.indexName,
@@ -119,6 +135,13 @@ function mapClusterArticle(
 export function mapClusterDetailToView(
   response: ClusterDetailResponse
 ): ClusterDetail {
+  const articles = asArticleArray(response.articles);
+  const analysis = isRecord(response.summary)
+    ? asStringArray(response.summary.analysis)
+    : [];
+  const summaryShort = isRecord(response.summary)
+    ? response.summary.short
+    : undefined;
   const representative = mapClusterArticle(
     response.representativeArticle,
     `representative-${response.clusterId}`
@@ -129,19 +152,19 @@ export function mapClusterDetailToView(
     businessDate: response.businessDate,
     marketLabel: response.marketLabel,
     title: response.title,
-    tags: response.tags,
-    analysis: response.summary.analysis,
-    articles: response.articles.map((article, index) =>
+    tags: asStringArray(response.tags),
+    analysis,
+    articles: articles.map((article, index) =>
       mapClusterArticle(article, `${response.clusterId}-${index}`)
     ),
     representative: {
       ...representative,
       sourceSummary:
         response.representativeArticle.sourceSummary ??
-        response.summary.short ??
+        (typeof summaryShort === 'string' ? summaryShort : undefined) ??
         '대표 기사 요약이 아직 생성되지 않았습니다.',
     },
-    articleCount: response.articleCount ?? response.articles.length,
+    articleCount: response.articleCount ?? articles.length,
     updatedAt: formatDateTime(response.lastUpdatedAt),
   };
 }

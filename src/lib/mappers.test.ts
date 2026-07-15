@@ -7,6 +7,7 @@ import {
   mapClusterDetailToView,
   mapDailyPageToSnapshot,
 } from './mappers';
+import type { ClusterDetailResponse } from './api/types';
 
 describe('mappers', () => {
   it('maps a daily page response into the market snapshot view model', () => {
@@ -127,6 +128,37 @@ describe('mappers', () => {
 
     expect(detail.analysis).toEqual(['one']);
     expect(detail.articleCount).toBe(1);
+  });
+
+  it('defensively maps malformed cluster detail arrays from external DTOs', () => {
+    const malformedResponse = {
+      clusterId: 'cluster-1',
+      businessDate: '2026-03-31',
+      marketType: 'US',
+      marketLabel: '미국',
+      title: 'cluster title',
+      tags: 'AI',
+      summary: {
+        short: 'fallback summary',
+        analysis: 'not an array',
+      },
+      representativeArticle: {
+        title: 'rep',
+        originLink: 'https://example.com',
+      },
+      articles: 'not an array',
+      lastUpdatedAt: '2026-03-31T06:12:00Z',
+      articleCount: null,
+    } as unknown as ClusterDetailResponse;
+
+    expect(() => mapClusterDetailToView(malformedResponse)).not.toThrow();
+
+    const detail = mapClusterDetailToView(malformedResponse);
+
+    expect(detail.tags).toEqual([]);
+    expect(detail.analysis).toEqual([]);
+    expect(detail.articles).toEqual([]);
+    expect(detail.articleCount).toBe(0);
   });
 
   it('maps batch list and detail responses', () => {
