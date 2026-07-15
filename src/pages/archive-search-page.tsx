@@ -7,6 +7,8 @@ import { ArchivePagination } from './archive-search/archive-pagination';
 import { ArchiveResultsTable } from './archive-search/archive-results-table';
 import { ArchiveSearchFilters } from './archive-search/archive-search-filters';
 
+const archiveSearchStatuses = ['READY', 'PARTIAL', 'FAILED'];
+
 function buildArchiveSearchUrl(filters: {
   from: string;
   to: string;
@@ -21,7 +23,9 @@ export function ArchiveSearchPage({
 }: {
   searchParams: URLSearchParams;
 }) {
-  const applied = parseListFilters(searchParams);
+  const applied = parseListFilters(searchParams, {
+    allowedStatuses: archiveSearchStatuses,
+  });
   const archiveQuery = useArchiveList({
     fromDate: applied.from,
     toDate: applied.to,

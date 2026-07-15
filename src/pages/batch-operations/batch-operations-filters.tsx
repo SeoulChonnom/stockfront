@@ -43,7 +43,7 @@ export function BatchOperationsFilters({
               status: value === 'all' ? '' : value,
             }))
           }
-          value={draft.status || undefined}
+          value={draft.status || 'all'}
         >
           <SelectTrigger
             aria-labelledby='ops-status-label'
