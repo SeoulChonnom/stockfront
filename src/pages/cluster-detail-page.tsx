@@ -15,6 +15,17 @@ import { createNavigateHandler } from '../lib/app-state';
 import { useClusterDetail } from '../lib/query-hooks';
 import { navigate } from '../lib/router';
 
+function getSafeExternalUrl(url: string) {
+  try {
+    const parsedUrl = new URL(url);
+    return parsedUrl.protocol === 'http:' || parsedUrl.protocol === 'https:'
+      ? url
+      : null;
+  } catch {
+    return null;
+  }
+}
+
 export function ClusterDetailPage({ clusterId }: { clusterId: string }) {
   const clusterQuery = useClusterDetail(clusterId);
 
@@ -46,6 +57,12 @@ export function ClusterDetailPage({ clusterId }: { clusterId: string }) {
   }
 
   const detail = clusterQuery.data;
+  const representativeOriginalUrl = getSafeExternalUrl(
+    detail.representative.originalUrl
+  );
+  const representativeMirrorUrl = getSafeExternalUrl(
+    detail.representative.mirrorUrl
+  );
 
   return (
     <div className='page-stack'>
@@ -96,42 +113,51 @@ export function ClusterDetailPage({ clusterId }: { clusterId: string }) {
               <div className='section-line' />
             </div>
             <div className='timeline-list'>
-              {detail.articles.map((article) => (
-                <Card className='panel timeline-card' key={article.id}>
-                  <CardContent className='grid gap-4 p-6'>
-                    <div className='timeline-card-copy'>
-                      <div className='timeline-meta'>
-                        <strong>{article.source}</strong>
-                        <span />
-                        <time>{article.publishedAt}</time>
+              {detail.articles.map((article) => {
+                const originalUrl = getSafeExternalUrl(article.originalUrl);
+                const mirrorUrl = getSafeExternalUrl(article.mirrorUrl);
+
+                return (
+                  <Card className='panel timeline-card' key={article.id}>
+                    <CardContent className='grid gap-4 p-6'>
+                      <div className='timeline-card-copy'>
+                        <div className='timeline-meta'>
+                          <strong>{article.source}</strong>
+                          <span />
+                          <time>{article.publishedAt}</time>
+                        </div>
+                        <h4>{article.title}</h4>
                       </div>
-                      <h4>{article.title}</h4>
-                    </div>
-                    <div className='action-row'>
-                      <Button asChild variant='secondary'>
-                        <a
-                          href={article.originalUrl}
-                          rel='noreferrer'
-                          target='_blank'
-                        >
-                          <ExternalLink size={15} />
-                          Original Link
-                        </a>
-                      </Button>
-                      <Button asChild variant='ghost'>
-                        <a
-                          href={article.mirrorUrl}
-                          rel='noreferrer'
-                          target='_blank'
-                        >
-                          <FileText size={15} />
-                          Naver Mirror
-                        </a>
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                      <div className='action-row'>
+                        {originalUrl ? (
+                          <Button asChild variant='secondary'>
+                            <a
+                              href={originalUrl}
+                              rel='noopener noreferrer'
+                              target='_blank'
+                            >
+                              <ExternalLink size={15} />
+                              Original Link
+                            </a>
+                          </Button>
+                        ) : null}
+                        {mirrorUrl ? (
+                          <Button asChild variant='ghost'>
+                            <a
+                              href={mirrorUrl}
+                              rel='noopener noreferrer'
+                              target='_blank'
+                            >
+                              <FileText size={15} />
+                              Naver Mirror
+                            </a>
+                          </Button>
+                        ) : null}
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           </section>
         </div>
@@ -153,24 +179,28 @@ export function ClusterDetailPage({ clusterId }: { clusterId: string }) {
                 <h3>{detail.representative.title}</h3>
                 <p>{detail.representative.sourceSummary}</p>
                 <div className='action-column'>
-                  <a
-                    className='button button-primary'
-                    href={detail.representative.originalUrl}
-                    rel='noreferrer'
-                    target='_blank'
-                  >
-                    <ExternalLink size={15} />
-                    Original Link
-                  </a>
-                  <a
-                    className='button button-secondary'
-                    href={detail.representative.mirrorUrl}
-                    rel='noreferrer'
-                    target='_blank'
-                  >
-                    <FileText size={15} />
-                    Naver Mirror
-                  </a>
+                  {representativeOriginalUrl ? (
+                    <a
+                      className='button button-primary'
+                      href={representativeOriginalUrl}
+                      rel='noopener noreferrer'
+                      target='_blank'
+                    >
+                      <ExternalLink size={15} />
+                      Original Link
+                    </a>
+                  ) : null}
+                  {representativeMirrorUrl ? (
+                    <a
+                      className='button button-secondary'
+                      href={representativeMirrorUrl}
+                      rel='noopener noreferrer'
+                      target='_blank'
+                    >
+                      <FileText size={15} />
+                      Naver Mirror
+                    </a>
+                  ) : null}
                 </div>
               </div>
             </section>
