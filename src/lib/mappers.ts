@@ -69,6 +69,10 @@ function asString(value: unknown, fallback: string): string {
   return typeof value === 'string' ? value : fallback;
 }
 
+function firstString(values: unknown[], fallback: string): string {
+  return values.find((value): value is string => typeof value === 'string') ?? fallback;
+}
+
 function mapIndex(item: IndexCardResponse): MarketIndex {
   return {
     label: item.indexName,
@@ -92,10 +96,10 @@ export function mapDailyPageToSnapshot(
     versionNo: response.versionNo,
     generatedAt: formatDateTime(response.generatedAt),
     status: toStatusTone(response.status),
-    globalHeadline:
-      response.globalHeadline ??
-      response.pageTitle ??
-      '글로벌 시장 헤드라인이 없습니다.',
+    globalHeadline: firstString(
+      [response.globalHeadline, response.pageTitle],
+      '글로벌 시장 헤드라인이 없습니다.'
+    ),
     markets: markets.map((market) => {
       const label = asString(market.marketLabel, '시장');
       const analysis: Record<string, unknown> = isRecord(market.analysis)
@@ -108,9 +112,12 @@ export function mapDailyPageToSnapshot(
 
       return {
         label,
-        summaryTitle: market.summaryTitle ?? keyThemes[0] ?? `${label} 요약`,
+        summaryTitle: firstString(
+          [market.summaryTitle, keyThemes[0]],
+          `${label} 요약`
+        ),
         summaryBody:
-          (market.summaryBody ?? background.join(' ')) ||
+          firstString([market.summaryBody, background.join(' ')], '') ||
           '시장 요약 데이터가 아직 생성되지 않았습니다.',
         indices: indices.map(mapIndex),
         clusters: clusters.map((cluster) => {
@@ -123,10 +130,10 @@ export function mapDailyPageToSnapshot(
             articleCount:
               typeof cluster.articleCount === 'number' ? cluster.articleCount : 0,
             title: asString(cluster.title, '클러스터 제목이 없습니다.'),
-            summary:
-              cluster.summary ??
-              representativeArticle.title ??
-              '클러스터 요약이 아직 생성되지 않았습니다.',
+            summary: firstString(
+              [cluster.summary, representativeArticle.title],
+              '클러스터 요약이 아직 생성되지 않았습니다.'
+            ),
             tags: asStringArray(cluster.tags),
           };
         }),
