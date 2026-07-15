@@ -418,6 +418,185 @@ describe('mappers', () => {
     expect(detail.articleCount).toBe(0);
   });
 
+  it('normalizes malformed cluster detail text, dates, and links to safe display values', () => {
+    const malformedResponse = {
+      clusterId: { id: 'cluster-1' },
+      businessDate: { date: '2026-03-31' },
+      marketType: 'US',
+      marketLabel: { label: '미국' },
+      title: { text: 'cluster title' },
+      tags: ['AI', { tag: 'bad' }],
+      summary: {
+        short: { text: 'fallback summary' },
+        analysis: ['one', { paragraph: 'bad' }],
+      },
+      representativeArticle: {
+        processedArticleId: { id: 1 },
+        publisherName: { name: 'publisher' },
+        publishedAt: { iso: '2026-03-31T06:12:00Z' },
+        title: { text: 'rep' },
+        originLink: { href: 'https://example.com' },
+        naverLink: { href: 'https://naver.example.com' },
+        sourceSummary: { text: 'summary' },
+      },
+      articles: [
+        {
+          processedArticleId: 1,
+          publisherName: { name: 'publisher' },
+          publishedAt: 'not a real date',
+          title: { text: 'article' },
+          originLink: { href: 'https://example.com/original' },
+          naverLink: { href: 'https://example.com/mirror' },
+        },
+      ],
+      lastUpdatedAt: { iso: '2026-03-31T06:12:00Z' },
+      articleCount: null,
+    } as unknown as ClusterDetailResponse;
+
+    const detail = mapClusterDetailToView(malformedResponse);
+
+    expect(detail.id).toBe('unknown-cluster');
+    expect(detail.businessDate).toBe('-');
+    expect(detail.marketLabel).toBe('시장');
+    expect(detail.title).toBe('클러스터 제목이 없습니다.');
+    expect(detail.analysis).toEqual(['one']);
+    expect(detail.updatedAt).toBe('-');
+    expect(detail.representative).toMatchObject({
+      id: 'representative-unknown-cluster',
+      source: 'Unknown Source',
+      publishedAt: '-',
+      title: '기사 제목이 없습니다.',
+      originalUrl: '',
+      mirrorUrl: '',
+      sourceSummary: '대표 기사 요약이 아직 생성되지 않았습니다.',
+    });
+    expect(detail.articles[0]).toMatchObject({
+      id: '1',
+      source: 'Unknown Source',
+      publishedAt: '-',
+      title: '기사 제목이 없습니다.',
+      originalUrl: '',
+      mirrorUrl: '',
+    });
+  });
+
+  it('keeps valid cluster detail DTO text, dates, and links unchanged', () => {
+    const detail = mapClusterDetailToView({
+      clusterId: 'cluster-1',
+      businessDate: '2026-03-31',
+      marketType: 'US',
+      marketLabel: '미국',
+      title: 'cluster title',
+      tags: ['AI'],
+      summary: {
+        short: 'summary',
+        analysis: ['one'],
+      },
+      representativeArticle: {
+        processedArticleId: 7,
+        publisherName: 'Publisher',
+        publishedAt: '2026-03-31T06:12:00Z',
+        title: 'rep',
+        originLink: 'https://example.com',
+        naverLink: 'https://naver.example.com',
+        sourceSummary: 'source summary',
+      },
+      articles: [
+        {
+          processedArticleId: 1,
+          publisherName: 'Publisher',
+          publishedAt: '2026-03-31T06:13:00Z',
+          title: 'article',
+          originLink: 'https://example.com/original',
+          naverLink: 'https://example.com/mirror',
+        },
+      ],
+      lastUpdatedAt: '2026-03-31T06:14:00Z',
+      articleCount: 1,
+    });
+
+    expect(detail.id).toBe('cluster-1');
+    expect(detail.businessDate).toBe('2026-03-31');
+    expect(detail.marketLabel).toBe('미국');
+    expect(detail.title).toBe('cluster title');
+    expect(detail.representative).toMatchObject({
+      id: '7',
+      source: 'Publisher',
+      title: 'rep',
+      originalUrl: 'https://example.com',
+      mirrorUrl: 'https://naver.example.com',
+      sourceSummary: 'source summary',
+    });
+    expect(detail.articles[0]).toMatchObject({
+      id: '1',
+      source: 'Publisher',
+      title: 'article',
+      originalUrl: 'https://example.com/original',
+      mirrorUrl: 'https://example.com/mirror',
+    });
+    expect(detail.representative.publishedAt).not.toBe('-');
+    expect(detail.articles[0].publishedAt).not.toBe('-');
+    expect(detail.updatedAt).not.toBe('-');
+  });
+
+  it('falls back instead of calling string methods on malformed status DTO values', () => {
+    const jobsView = mapBatchJobsToView({
+      items: [
+        {
+          jobId: 1,
+          jobName: 'daily',
+          businessDate: '2026-03-31',
+          status: { value: 'SUCCESS' },
+          startedAt: '2026-03-31T06:12:00Z',
+          endedAt: null,
+          durationSeconds: null,
+          marketScope: 'US Market',
+          rawNewsCount: 77,
+          processedNewsCount: 32,
+          clusterCount: 9,
+          pageId: 1,
+          pageVersionNo: null,
+          partialMessage: null,
+        },
+      ],
+      pagination: {
+        page: 1,
+        size: 20,
+        totalCount: 1,
+      },
+      summary: {
+        successCount: 0,
+        partialCount: 0,
+        failedCount: 1,
+        avgDurationSeconds: 0,
+      },
+    } as unknown as Parameters<typeof mapBatchJobsToView>[0]);
+
+    const detail = mapBatchDetailToRun({
+      jobId: 1,
+      jobName: 'daily',
+      businessDate: '2026-03-31',
+      status: { value: 'FAILED' },
+      forceRun: false,
+      rebuildPageOnly: false,
+      startedAt: '2026-03-31T06:12:00Z',
+      endedAt: null,
+      durationSeconds: null,
+      rawNewsCount: 77,
+      processedNewsCount: 32,
+      clusterCount: 9,
+      pageId: 1,
+      pageVersionNo: null,
+      partialMessage: null,
+      errorCode: null,
+      errorMessage: null,
+      logSummary: null,
+    } as unknown as Parameters<typeof mapBatchDetailToRun>[0]);
+
+    expect(jobsView.rows[0].status).toBe('FAILED');
+    expect(detail.status).toBe('FAILED');
+  });
+
   it('maps batch list and detail responses', () => {
     const jobsView = mapBatchJobsToView({
       items: [

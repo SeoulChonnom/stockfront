@@ -69,6 +69,35 @@ function asString(value: unknown, fallback: string): string {
   return typeof value === 'string' ? value : fallback;
 }
 
+function asOptionalString(value: unknown): string | undefined {
+  return typeof value === 'string' ? value : undefined;
+}
+
+function asDisplayId(value: unknown, fallback: string): string {
+  if (typeof value === 'string' && value.length > 0) {
+    return value;
+  }
+
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return String(value);
+  }
+
+  return fallback;
+}
+
+function toUpperStatus<T extends 'READY' | 'PARTIAL' | 'FAILED' | 'SUCCESS'>(
+  value: unknown,
+  allowed: readonly T[]
+): T | 'FAILED' {
+  if (typeof value !== 'string') {
+    return 'FAILED';
+  }
+
+  const normalized = value.toUpperCase();
+
+  return allowed.includes(normalized as T) ? (normalized as T) : 'FAILED';
+}
+
 function firstString(values: unknown[], fallback: string): string {
   return values.find((value): value is string => typeof value === 'string') ?? fallback;
 }
@@ -153,9 +182,9 @@ export function mapArchiveListToView(
         item.headlineSummary ??
         item.pageTitle ??
         '헤드라인 요약이 아직 생성되지 않았습니다.',
-      status: item.status.toUpperCase() as 'READY' | 'PARTIAL' | 'FAILED',
+      status: toUpperStatus(item.status, ['READY', 'PARTIAL', 'FAILED']),
       generatedAt: formatTime(item.generatedAt),
-      detail: item.partialMessage,
+      detail: asOptionalString(item.partialMessage) ?? null,
     })),
     page: response.pagination.page,
     size: response.pagination.size,
@@ -168,16 +197,16 @@ export function mapArchiveListToView(
 }
 
 function mapClusterArticle(
-  article: ClusterArticleResponse,
+  article: ClusterArticleResponse | Record<string, unknown>,
   fallbackId: string
 ): ClusterArticle {
   return {
-    id: String(article.processedArticleId ?? fallbackId),
-    source: article.publisherName ?? 'Unknown Source',
+    id: asDisplayId(article.processedArticleId, fallbackId),
+    source: asString(article.publisherName, 'Unknown Source'),
     publishedAt: formatDateTime(article.publishedAt),
-    title: article.title,
-    originalUrl: article.originLink,
-    mirrorUrl: article.naverLink ?? article.originLink,
+    title: asString(article.title, '기사 제목이 없습니다.'),
+    originalUrl: asString(article.originLink, ''),
+    mirrorUrl: asString(article.naverLink, asString(article.originLink, '')),
   };
 }
 
@@ -191,25 +220,31 @@ export function mapClusterDetailToView(
   const summaryShort = isRecord(response.summary)
     ? response.summary.short
     : undefined;
+  const clusterId = asString(response.clusterId, 'unknown-cluster');
+  const representativeArticle: Record<string, unknown> = isRecord(
+    response.representativeArticle
+  )
+    ? response.representativeArticle
+    : {};
   const representative = mapClusterArticle(
-    response.representativeArticle,
-    `representative-${response.clusterId}`
+    representativeArticle,
+    `representative-${clusterId}`
   );
 
   return {
-    id: response.clusterId,
-    businessDate: response.businessDate,
-    marketLabel: response.marketLabel,
-    title: response.title,
+    id: clusterId,
+    businessDate: asString(response.businessDate, '-'),
+    marketLabel: asString(response.marketLabel, '시장'),
+    title: asString(response.title, '클러스터 제목이 없습니다.'),
     tags: asStringArray(response.tags),
     analysis,
     articles: articles.map((article, index) =>
-      mapClusterArticle(article, `${response.clusterId}-${index}`)
+      mapClusterArticle(article, `${clusterId}-${index}`)
     ),
     representative: {
       ...representative,
       sourceSummary:
-        response.representativeArticle.sourceSummary ??
+        asOptionalString(representativeArticle.sourceSummary) ??
         (typeof summaryShort === 'string' ? summaryShort : undefined) ??
         '대표 기사 요약이 아직 생성되지 않았습니다.',
     },
@@ -224,7 +259,7 @@ function mapBatchListItemToRun(item: BatchJobListItemResponse): BatchRun {
     jobName: item.jobName,
     market: item.marketScope,
     businessDate: item.businessDate,
-    status: item.status.toUpperCase() as 'SUCCESS' | 'PARTIAL' | 'FAILED',
+    status: toUpperStatus(item.status, ['SUCCESS', 'PARTIAL', 'FAILED']),
     startedAt: formatTime(item.startedAt),
     finishedAt: formatTime(item.endedAt),
     duration: formatDurationSeconds(item.durationSeconds),
@@ -286,7 +321,7 @@ export function mapBatchDetailToRun(
     jobName: response.jobName,
     market: 'N/A',
     businessDate: response.businessDate,
-    status: response.status.toUpperCase() as 'SUCCESS' | 'PARTIAL' | 'FAILED',
+    status: toUpperStatus(response.status, ['SUCCESS', 'PARTIAL', 'FAILED']),
     startedAt: formatTime(response.startedAt),
     finishedAt: formatTime(response.endedAt),
     duration: formatDurationSeconds(response.durationSeconds),

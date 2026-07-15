@@ -1,12 +1,12 @@
-export function formatDateTime(value: string | null | undefined) {
-  if (!value) {
+export function formatDateTime(value: unknown) {
+  if (typeof value !== 'string' || value.length === 0) {
     return '-';
   }
 
   const date = new Date(value);
 
   if (Number.isNaN(date.getTime())) {
-    return value;
+    return '-';
   }
 
   return new Intl.DateTimeFormat('ko-KR', {
@@ -19,15 +19,15 @@ export function formatDateTime(value: string | null | undefined) {
   }).format(date);
 }
 
-export function formatTime(value: string | null | undefined) {
-  if (!value) {
+export function formatTime(value: unknown) {
+  if (typeof value !== 'string' || value.length === 0) {
     return '-';
   }
 
   const date = new Date(value);
 
   if (Number.isNaN(date.getTime())) {
-    return value;
+    return '-';
   }
 
   return new Intl.DateTimeFormat('ko-KR', {
