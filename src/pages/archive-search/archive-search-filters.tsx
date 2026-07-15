@@ -78,7 +78,7 @@ export function ArchiveSearchFilters({
                     status: value === 'all' ? '' : value,
                   }))
                 }
-                value={draft.status || undefined}
+                value={draft.status || 'all'}
               >
                 <SelectTrigger
                   aria-labelledby='archive-status-label'
