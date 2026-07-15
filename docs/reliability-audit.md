@@ -321,16 +321,18 @@
 * 이 수정 흐름에서 외부 URL 안전성 관련 회귀 테스트가 전체 테스트 스위트에 포함되어 통과한 것으로 확인됐다.
 * `pnpm lint`와 `pnpm build`는 수정 흐름에서 통과가 확인됐다.
 
-### 5.7 malformed DTO 방어 렌더링 수정 완료
+### 5.7 malformed DTO 방어 렌더링 확인 범위 수정 완료
 
-상태: fixed
+상태: fixed within confirmed guard scope
 
 적용 내용:
 
-* Gemini/API DTO 경계에서 깨진 중첩 객체, null 가능 문자열, 배열 필드, 숫자와 날짜 표시값을 안전하게 다루도록 방어 로직을 추가했다.
+* Gemini/API DTO 경계에서 확인된 깨진 중첩 객체, null 가능 문자열, 누락 가능한 배열 필드, 최상위 daily 상태와 텍스트 표시값을 안전하게 다루도록 방어 로직을 추가했다.
 * 일자 기반 페이지 DTO 매핑도 깨진 중첩 필드와 누락 가능한 배열을 방어적으로 처리하도록 후속 수정했다.
 * 필수 섹션 일부가 깨져도 화면 전체가 런타임 오류로 중단되지 않도록 섹션 단위 fallback을 적용했다.
 * 기사 링크와 요약처럼 외부 수집 또는 생성 콘텐츠가 섞이는 필드는 표시 전 검증 경로를 거치도록 했다.
+* formatter 값처럼 숫자와 날짜 표시를 만드는 필드는 잘못된 입력에서 안전한 fallback을 반환하도록 `src/lib/formatters.ts` 범위에서 방어했다.
+* cluster 값처럼 분류 표시를 만드는 필드는 깨진 DTO 입력이 들어와도 화면 표시값이 안전하게 정규화되도록 `src/lib/mappers.ts` 범위에서 방어했다.
 
 관련 검증:
 
@@ -338,6 +340,8 @@
 * Oracle 후속 지적 뒤 일자 기반 페이지 DTO 매핑의 방어 처리에 대한 직접 회귀 테스트가 추가됐다.
 * 이 수정 흐름에서 malformed DTO 방어 렌더링 관련 회귀 테스트가 전체 테스트 스위트에 포함되어 통과한 것으로 확인됐다.
 * `pnpm lint`와 `pnpm build`는 수정 흐름에서 통과가 확인됐다.
+* formatter 값 malformed 입력 방어는 focused formatter tests로 확인됐고, cluster 값 malformed 입력 방어는 focused mapper tests로 확인됐다.
+* 사용자 제공 구현 컨텍스트상 전체 테스트, lint, build도 통과했다.
 
 ### 5.8 인증 부트스트랩 메시지 수정 완료
 
@@ -356,20 +360,22 @@
 
 ### 5.9 Oracle 후속 보완 기록
 
-상태: fixed, Oracle follow-up recorded
+상태: fixed within confirmed frontend guard scope
 
 적용 내용:
 
 * 최초 완료 주장과 실제 구현 사이의 불일치를 해소했다. 유효한 역전 날짜 입력은 이제 아카이브와 배치 목록 요청 전에 정규화된 날짜 범위로 변환된다.
-* 일자 기반 페이지 DTO 매핑은 Gemini/API 응답의 깨진 중첩 필드, 누락 가능한 배열, null 가능 표시값을 방어적으로 처리한다.
+* 일자 기반 페이지 DTO 매핑은 Gemini/API 응답의 확인된 깨진 중첩 필드, 누락 가능한 배열, null 가능 텍스트 표시값을 방어적으로 처리한다.
 * 이미 해결된 프런트엔드 발견 사항을 pending처럼 보이게 하던 우선순위 목록은 백엔드 전용 잔여 위험 중심으로 바꿨다.
 * 최종 daily 최상위 `status`와 텍스트 필드 렌더링은 비문자 입력에서도 안전하게 표시되도록 후속 guard가 구현됐다.
+* Oracle이 지적한 formatter 값과 cluster 값의 malformed 입력 hardening은 `src/lib/formatters.ts`와 `src/lib/mappers.ts`의 프런트엔드 표시 경계 범위에서 구현됐다.
 
 관련 검증:
 
 * 후속 수정에는 날짜 정규화와 일자 기반 페이지 DTO 매핑을 직접 겨냥한 회귀 테스트가 포함됐다.
 * 최종 전체 검증에서 17개 파일, 69개 테스트가 통과했으며, lint와 production build도 통과했다.
 * 최종 daily 최상위 `status`와 텍스트 필드 비문자 입력 guard는 `src/lib/mappers.ts`와 `mappers.test.ts`에서 완료됐고, 사용자 제공 구현 컨텍스트상 clean diagnostics, focused mapper tests, build, lint로 확인됐다.
+* formatter 값과 cluster 값 hardening은 사용자 제공 구현 컨텍스트상 focused formatter tests, focused mapper tests, 전체 tests, lint, build로 확인됐다.
 
 ### 5.10 명시적 잔여 항목
 
@@ -380,6 +386,7 @@
 * Gemini 생성 결과의 백엔드 스키마 검증, 그라운딩, 재시도와 부분 실패 처리 정책은 이 프런트엔드 수정으로 해결되지 않았다.
 * 배치 실행과 조회 계열 API의 실제 권한 검증, 역할 제한, 감사 로그는 백엔드에서 해결해야 한다.
 * 프런트엔드는 방어적 표시와 입력 정규화를 적용했지만, 서버 측 데이터 무결성과 권한 보장은 여전히 백엔드 책임이다.
+* formatter 값과 cluster 값의 malformed 입력 hardening은 프런트엔드 표시 경계에서는 완료됐지만, 서버 측 생성 데이터의 원천 무결성 보장은 여전히 백엔드 책임이다.
 
 ## 6. 백엔드 전용 잔여 위험
 
@@ -408,7 +415,7 @@
 
 ## 7. 남은 우선순위
 
-프런트엔드 발견 사항은 Section 5의 범위에서 fixed로 기록한다. 남은 우선순위는 Section 6의 백엔드 전용 잔여 위험으로 한정한다.
+프런트엔드 발견 사항은 Section 5에서 명시한 확인 범위 안에서만 fixed로 기록한다. formatter 값과 cluster 값의 추가 malformed 입력 hardening은 프런트엔드 표시 경계에서 fixed로 기록하며, 남은 우선순위는 Section 6의 백엔드 전용 잔여 위험으로 한정한다.
 
 1. Gemini 생성 결과의 백엔드 스키마 검증을 강화한다.
 2. 생성된 요약과 분석이 실제 기사 또는 원천 데이터에 근거하는지 추적 가능한 그라운딩 정책을 둔다.
