@@ -13,7 +13,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { InfoRow, PageMessage } from '../components/ui';
 import { createNavigateHandler } from '../lib/app-state';
 import { useClusterDetail } from '../lib/query-hooks';
-import { navigate } from '../lib/router';
+import { navigate, withBasePath } from '../lib/router';
 
 function getSafeExternalUrl(url: string) {
   try {
@@ -228,7 +228,7 @@ export function ClusterDetailPage({ clusterId }: { clusterId: string }) {
         </Button>
         <Button asChild variant='secondary'>
           <a
-            href={`/market/archive/${detail.businessDate}`}
+            href={withBasePath(`/market/archive/${detail.businessDate}`)}
             onClick={createNavigateHandler(
               `/market/archive/${detail.businessDate}`
             )}

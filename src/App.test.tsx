@@ -7,6 +7,7 @@ import {
   authBootstrapNavigation,
   resetAuthBootstrapForTesting,
 } from './lib/auth-bootstrap';
+import { withBasePath } from './lib/router';
 
 const {
   mockUseArchiveList,
@@ -176,7 +177,7 @@ describe('App routing', () => {
     });
 
     await waitFor(() => {
-      expect(window.location.pathname).toBe('/market/latest');
+      expect(window.location.pathname).toBe(withBasePath('/market/latest'));
     });
 
     await waitFor(() => {
@@ -346,7 +347,7 @@ describe('App routing', () => {
     });
 
     await waitFor(() => {
-      expect(window.location.pathname).toBe('/market/latest');
+      expect(window.location.pathname).toBe(withBasePath('/market/latest'));
     });
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
