@@ -1,8 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-
-import { MarketOverviewPage } from './market-overview-page';
 import type { MarketSnapshot } from '../lib/view-models';
+import { MarketOverviewPage } from './market-overview-page';
 
 const partialSnapshot: MarketSnapshot = {
   pageId: 42,

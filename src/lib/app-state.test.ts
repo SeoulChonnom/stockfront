@@ -131,7 +131,9 @@ describe('parseRoute', () => {
       businessDate: '2026-03-17',
       pageId: null,
     });
-    expect(parseRoute('/market/cluster/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa')).toEqual({
+    expect(
+      parseRoute('/market/cluster/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa')
+    ).toEqual({
       page: 'cluster-detail',
       clusterId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
     });

@@ -49,7 +49,9 @@ export function BatchOperationsPage({
     currentRows.find((run) => run.status === 'FAILED')?.id ??
     currentRows[0]?.id ??
     null;
-  const selectedJobId = currentRows.some((run) => run.id === manualSelectedJobId)
+  const selectedJobId = currentRows.some(
+    (run) => run.id === manualSelectedJobId
+  )
     ? manualSelectedJobId
     : defaultSelectedJobId;
   const detailQuery = useBatchJobDetail(selectedJobId);

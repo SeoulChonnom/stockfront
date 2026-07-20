@@ -65,7 +65,9 @@ describe('ClusterDetailPage', () => {
 
     render(<ClusterDetailPage clusterId='cluster-1' />);
 
-    const originalLinks = screen.getAllByRole('link', { name: /Original Link/i });
+    const originalLinks = screen.getAllByRole('link', {
+      name: /Original Link/i,
+    });
     const mirrorLinks = screen.getAllByRole('link', { name: /Naver Mirror/i });
 
     expect(originalLinks).toHaveLength(1);
@@ -82,6 +84,8 @@ describe('ClusterDetailPage', () => {
     mirrorLinks.forEach((link) => {
       expect(link).toHaveAttribute('rel', 'noopener noreferrer');
     });
-    expect(screen.queryByRole('link', { name: /javascript/i })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('link', { name: /javascript/i })
+    ).not.toBeInTheDocument();
   });
 });
