@@ -7,6 +7,32 @@ type UrlState = {
 
 const ROUTE_CHANGE_EVENT = 'routechange';
 
+const BASE_PATH = (import.meta.env.BASE_URL ?? '/').replace(/\/+$/, '');
+
+function stripBasePath(pathname: string): string {
+  if (BASE_PATH.length === 0) {
+    return pathname;
+  }
+
+  if (pathname === BASE_PATH) {
+    return '/';
+  }
+
+  if (pathname.startsWith(`${BASE_PATH}/`)) {
+    return pathname.slice(BASE_PATH.length);
+  }
+
+  return pathname;
+}
+
+export function withBasePath(pathname: string): string {
+  if (BASE_PATH.length === 0) {
+    return pathname;
+  }
+
+  return pathname === '/' ? BASE_PATH : `${BASE_PATH}${pathname}`;
+}
+
 let lastHref = '';
 let lastSnapshot: UrlState | null = null;
 
@@ -34,14 +60,15 @@ function getCurrentHref({
 }
 
 function getSnapshot(): UrlState {
-  const href = getCurrentHref(window.location);
+  const pathname = stripBasePath(window.location.pathname);
+  const href = getCurrentHref({ pathname, search: window.location.search });
 
   if (lastSnapshot && lastHref === href) {
     return lastSnapshot;
   }
 
   lastHref = href;
-  lastSnapshot = createUrlState(window.location);
+  lastSnapshot = createUrlState({ pathname, search: window.location.search });
 
   return lastSnapshot;
 }
@@ -61,7 +88,7 @@ export function navigate(
   } = {}
 ) {
   const method = options.replace ? 'replaceState' : 'pushState';
-  window.history[method](null, '', to);
+  window.history[method](null, '', withBasePath(to));
   dispatchRouteChange();
 }
 

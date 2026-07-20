@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { InfoBadge } from '../components/ui';
 import { createNavigateHandler, getStatusClass } from '../lib/app-state';
-import { buildUrl } from '../lib/router';
+import { buildUrl, withBasePath } from '../lib/router';
 import type {
   ClusterCard,
   MarketIndex,
@@ -194,12 +194,18 @@ function ClusterPreviewCard({
         </div>
         <div className='action-row'>
           <Button asChild variant='secondary'>
-            <a href={archiveHref} onClick={createNavigateHandler(archiveHref)}>
+            <a
+              href={withBasePath(archiveHref)}
+              onClick={createNavigateHandler(archiveHref)}
+            >
               Source View
             </a>
           </Button>
           <Button asChild variant='primary'>
-            <a href={detailHref} onClick={createNavigateHandler(detailHref)}>
+            <a
+              href={withBasePath(detailHref)}
+              onClick={createNavigateHandler(detailHref)}
+            >
               Detail View
             </a>
           </Button>

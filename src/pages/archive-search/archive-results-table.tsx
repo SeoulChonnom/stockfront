@@ -15,7 +15,7 @@ import {
   formatDateDots,
   getStatusClass,
 } from '../../lib/app-state';
-import { buildUrl } from '../../lib/router';
+import { buildUrl, withBasePath } from '../../lib/router';
 import type { ArchiveRecord } from '../../lib/view-models';
 
 function getArchiveDetailHref(record: ArchiveRecord) {
@@ -67,7 +67,7 @@ export function ArchiveResultsTable({ rows }: { rows: ArchiveRecord[] }) {
                     <TableCell>
                       <a
                         className='headline-link'
-                        href={detailHref}
+                        href={withBasePath(detailHref)}
                         onClick={createNavigateHandler(detailHref)}
                       >
                         {record.headline}

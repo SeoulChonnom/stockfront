@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
 import { createNavigateHandler, type ThemeMode } from '../lib/app-state';
+import { withBasePath } from '../lib/router';
 
 type NavItem = {
   href: string;
@@ -77,7 +78,7 @@ export function AppShell({
               <a
                 className={`nav-link${active ? ' nav-link-active' : ''}`}
                 aria-current={active ? 'page' : undefined}
-                href={item.href}
+                href={withBasePath(item.href)}
                 key={item.href}
                 onClick={createNavigateHandler(item.href)}
               >
@@ -121,7 +122,7 @@ export function AppShell({
                 aria-current={
                   pathname === '/market/latest' ? 'page' : undefined
                 }
-                href='/market/latest'
+                href={withBasePath('/market/latest')}
                 onClick={createNavigateHandler('/market/latest')}
               >
                 Latest Market
@@ -135,7 +136,7 @@ export function AppShell({
                 aria-current={
                   pathname.startsWith('/market/archive') ? 'page' : undefined
                 }
-                href='/market/archive/search'
+                href={withBasePath('/market/archive/search')}
                 onClick={createNavigateHandler('/market/archive/search')}
               >
                 Archive
@@ -147,7 +148,7 @@ export function AppShell({
                 aria-current={
                   pathname.startsWith('/ops/batches') ? 'page' : undefined
                 }
-                href='/ops/batches'
+                href={withBasePath('/ops/batches')}
                 onClick={createNavigateHandler('/ops/batches')}
               >
                 Ops Admin
