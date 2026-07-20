@@ -36,7 +36,9 @@ export type ArchiveMarketPageIdentity = {
 };
 
 function hasPageId(pageId: number | null): pageId is number {
-  return typeof pageId === 'number' && Number.isSafeInteger(pageId) && pageId > 0;
+  return (
+    typeof pageId === 'number' && Number.isSafeInteger(pageId) && pageId > 0
+  );
 }
 
 export function useArchiveMarketPage(
@@ -44,19 +46,15 @@ export function useArchiveMarketPage(
   enabled = true
 ) {
   return useQuery({
-    queryKey: [
-      'daily-page',
-      'archive',
-      identity.businessDate,
-      identity.pageId,
-    ],
+    queryKey: ['daily-page', 'archive', identity.businessDate, identity.pageId],
     queryFn: ({ signal }) =>
       hasPageId(identity.pageId)
         ? getDailyPageByPageId(identity.pageId, signal)
         : getDailyPageByBusinessDate(identity.businessDate, signal),
     select: mapDailyPageToSnapshot,
     enabled:
-      enabled && (hasPageId(identity.pageId) || identity.businessDate.length > 0),
+      enabled &&
+      (hasPageId(identity.pageId) || identity.businessDate.length > 0),
   });
 }
 

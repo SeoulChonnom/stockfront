@@ -181,7 +181,9 @@ describe('apiRequest', () => {
         )
     );
 
-    await expect(apiRequest('/stock/api/pages/daily/latest')).rejects.toMatchObject({
+    await expect(
+      apiRequest('/stock/api/pages/daily/latest')
+    ).rejects.toMatchObject({
       message:
         'API request failed with status 422. business_date: Input should be a valid date; force: Input should be a valid boolean',
       status: 422,

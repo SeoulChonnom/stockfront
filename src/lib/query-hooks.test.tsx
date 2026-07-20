@@ -60,8 +60,7 @@ describe('useArchiveMarketPage', () => {
     });
 
     renderHook(
-      () =>
-        useArchiveMarketPage({ businessDate: '2026-03-31', pageId: 42 }),
+      () => useArchiveMarketPage({ businessDate: '2026-03-31', pageId: 42 }),
       { wrapper: createWrapper(queryClient) }
     );
 

@@ -113,7 +113,10 @@ function toUpperStatus<T extends 'READY' | 'PARTIAL' | 'FAILED' | 'SUCCESS'>(
 }
 
 function firstString(values: unknown[], fallback: string): string {
-  return values.find((value): value is string => typeof value === 'string') ?? fallback;
+  return (
+    values.find((value): value is string => typeof value === 'string') ??
+    fallback
+  );
 }
 
 function mapIndex(item: IndexCardResponse): MarketIndex {
@@ -271,7 +274,10 @@ export function mapClusterDetailToView(
         (typeof summaryShort === 'string' ? summaryShort : undefined) ??
         '대표 기사 요약이 아직 생성되지 않았습니다.',
     },
-    articleCount: asNonNegativeSafeInteger(response.articleCount, articles.length),
+    articleCount: asNonNegativeSafeInteger(
+      response.articleCount,
+      articles.length
+    ),
     updatedAt: formatDateTime(response.lastUpdatedAt),
   };
 }
@@ -288,7 +294,9 @@ function mapBatchListItemToRun(item: BatchJobListItemResponse): BatchRun {
     status,
     startedAt: formatTime(item.startedAt),
     finishedAt: formatTime(item.endedAt),
-    duration: formatDurationSeconds(asNullableFiniteNumber(item.durationSeconds)),
+    duration: formatDurationSeconds(
+      asNullableFiniteNumber(item.durationSeconds)
+    ),
     counts: `${asFiniteNumber(item.rawNewsCount, 0)} / ${asFiniteNumber(item.processedNewsCount, 0)} / ${asFiniteNumber(item.clusterCount, 0)}`,
     detail:
       asOptionalString(item.partialMessage) ??
@@ -304,10 +312,7 @@ function mapBatchSummary(response: BatchJobListResponse): BatchSummaryView {
   const successCount = asFiniteNumber(response.summary.successCount, 0);
   const partialCount = asFiniteNumber(response.summary.partialCount, 0);
   const failedCount = asFiniteNumber(response.summary.failedCount, 0);
-  const totalRuns =
-    successCount +
-    partialCount +
-    failedCount;
+  const totalRuns = successCount + partialCount + failedCount;
   const successRate =
     totalRuns === 0
       ? '0.0%'

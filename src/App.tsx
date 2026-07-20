@@ -35,8 +35,7 @@ function getAuthBootstrapMessage(
   if (status === 'redirecting') {
     return {
       title: '로그인 페이지로 이동 중입니다',
-      description:
-        '자동으로 이동하지 않으면 새로고침 후 다시 시도해 주세요.',
+      description: '자동으로 이동하지 않으면 새로고침 후 다시 시도해 주세요.',
       role: 'status' as const,
       ariaLive: 'polite' as const,
     };

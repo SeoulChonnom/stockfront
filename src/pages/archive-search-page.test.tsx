@@ -16,9 +16,8 @@ type ArchiveListQueryResult = {
 };
 
 const { mockUseArchiveList } = vi.hoisted(() => ({
-  mockUseArchiveList: vi.fn<(
-    params: ArchiveListParams
-  ) => ArchiveListQueryResult>(),
+  mockUseArchiveList:
+    vi.fn<(params: ArchiveListParams) => ArchiveListQueryResult>(),
 }));
 
 vi.mock('../lib/query-hooks', () => ({

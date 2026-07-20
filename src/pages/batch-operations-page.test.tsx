@@ -21,9 +21,7 @@ const {
   mockUseBatchJobDetail,
   mockUseStartBatchRunMutation,
 } = vi.hoisted(() => ({
-  mockUseBatchJobs: vi.fn<(
-    params: BatchJobsParams
-  ) => BatchJobsQueryResult>(),
+  mockUseBatchJobs: vi.fn<(params: BatchJobsParams) => BatchJobsQueryResult>(),
   mockUseBatchJobDetail: vi.fn(),
   mockUseStartBatchRunMutation: vi.fn(),
 }));
@@ -227,7 +225,9 @@ describe('BatchOperationsPage', () => {
     expect(screen.getByRole('status')).toHaveTextContent(
       '선택한 배치 상세 정보를 불러오는 중입니다.'
     );
-    expect(screen.queryByText('선택된 배치가 없습니다.')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('선택된 배치가 없습니다.')
+    ).not.toBeInTheDocument();
   });
 
   it('renders an explicit error state for failed selected batch detail requests', () => {
@@ -253,7 +253,9 @@ describe('BatchOperationsPage', () => {
     expect(screen.getByRole('alert')).toHaveTextContent(
       'Batch detail unavailable'
     );
-    expect(screen.queryByText('선택된 배치가 없습니다.')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('선택된 배치가 없습니다.')
+    ).not.toBeInTheDocument();
   });
 
   it('removes statuses unsupported by batch operations before querying', () => {

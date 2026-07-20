@@ -31,8 +31,9 @@ function formatValidationLocation(loc: unknown) {
   }
 
   return loc
-    .filter((part): part is string | number =>
-      typeof part === 'string' || typeof part === 'number'
+    .filter(
+      (part): part is string | number =>
+        typeof part === 'string' || typeof part === 'number'
     )
     .filter((part) => part !== 'body' && part !== 'query' && part !== 'path')
     .map(String)
