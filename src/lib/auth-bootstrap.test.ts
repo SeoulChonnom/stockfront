@@ -37,7 +37,7 @@ describe('auth bootstrap', () => {
     await expect(requestAccessTokenBootstrap()).resolves.toBe('issued-token');
 
     expect(fetchMock).toHaveBeenCalledWith(
-      'http://localhost:8000/api/user/token',
+      'http://localhost:8000/api/users/token',
       expect.objectContaining({
         method: 'POST',
         credentials: 'include',
@@ -111,7 +111,11 @@ describe('auth bootstrap', () => {
       error:
         'Token bootstrap response must include a non-empty accessToken string.',
     });
-    expect(assignMock).toHaveBeenCalledWith('http://localhost:8000/login');
+    expect(assignMock).toHaveBeenCalledWith(
+      expect.stringMatching(
+        /^http:\/\/localhost:8000\/main\/login\?redirect=/
+      )
+    );
     expect(getAccessToken()).toBeNull();
   });
 
@@ -190,12 +194,13 @@ describe('auth bootstrap', () => {
         .mockResolvedValue(createJsonResponse({ accessToken: '' }))
     );
 
-    await expect(bootstrapAuth()).resolves.toEqual({
-      status: 'failed',
-      accessToken: null,
-      error:
-        'Token bootstrap response must include a non-empty accessToken string. Redirect to http://localhost:8000/login failed.',
-    });
+    const result = await bootstrapAuth();
+
+    expect(result.status).toBe('failed');
+    expect(result.accessToken).toBeNull();
+    expect(result.error).toMatch(
+      /^Token bootstrap response must include a non-empty accessToken string\. Redirect to http:\/\/localhost:8000\/main\/login\?redirect=.+ failed\.$/
+    );
   });
 
   it('reuses the in-flight bootstrap request for duplicate initial calls', async () => {

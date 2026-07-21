@@ -23,7 +23,7 @@ describe('apiRequest', () => {
     const fetchMock = vi
       .fn<(input: RequestInfo | URL, init?: RequestInit) => Promise<Response>>()
       .mockImplementation((input) => {
-        if (input === 'http://localhost:8000/api/user/token') {
+        if (input === 'http://localhost:8000/api/users/token') {
           return Promise.resolve(
             createJsonResponse({ accessToken: 'issued-token' })
           );
@@ -51,7 +51,7 @@ describe('apiRequest', () => {
     });
     expect(fetchMock).toHaveBeenCalledTimes(2);
     expect(fetchMock.mock.calls[0]?.[0]).toBe(
-      'http://localhost:8000/api/user/token'
+      'http://localhost:8000/api/users/token'
     );
     expect(fetchMock.mock.calls[1]?.[0]).toBe(
       'http://localhost:8000/stock/api/pages/daily/latest'
@@ -71,7 +71,7 @@ describe('apiRequest', () => {
     const fetchMock = vi
       .fn<(input: RequestInfo | URL, init?: RequestInit) => Promise<Response>>()
       .mockImplementation((input) => {
-        if (input === 'http://localhost:8000/api/user/token') {
+        if (input === 'http://localhost:8000/api/users/token') {
           return Promise.resolve(createJsonResponse({ accessToken: '   ' }));
         }
 
@@ -102,7 +102,7 @@ describe('apiRequest', () => {
     const fetchMock = vi
       .fn<(input: RequestInfo | URL, init?: RequestInit) => Promise<Response>>()
       .mockImplementation((input) => {
-        if (input === 'http://localhost:8000/api/user/token') {
+        if (input === 'http://localhost:8000/api/users/token') {
           return Promise.resolve(
             createJsonResponse({ accessToken: 'issued-token' })
           );

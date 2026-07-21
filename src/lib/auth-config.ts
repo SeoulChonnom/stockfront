@@ -8,6 +8,21 @@ export function isDevelopmentBypassEnabled() {
   return readEnvString('VITE_APP_ENV') === 'development';
 }
 
+function isMobileUserAgent() {
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+    navigator.userAgent
+  );
+}
+
+function buildLoginUrl(host: string) {
+  const devicePrefix = isMobileUserAgent() ? '/mobile' : '/main';
+  const redirectTarget = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+  const searchParams = new URLSearchParams();
+  searchParams.set('redirect', redirectTarget);
+
+  return `${host}${devicePrefix}/login?${searchParams.toString()}`;
+}
+
 function normalizeHost(host: string) {
   const trimmed = host.trim();
 
@@ -37,8 +52,8 @@ export function getAuthConfig() {
 
   return {
     host,
-    loginUrl: `${host}/login`,
-    tokenUrl: `${host}/api/user/token`,
+    loginUrl: buildLoginUrl(host),
+    tokenUrl: `${host}/api/users/token`,
     isDevelopmentBypassEnabled: isDevelopmentBypassEnabled(),
   };
 }

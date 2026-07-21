@@ -212,7 +212,7 @@ describe('App routing', () => {
 
     await waitFor(() => {
       expect(redirectToLogin).toHaveBeenCalledWith(
-        'http://localhost:8000/login'
+        'http://localhost:8000/main/login?redirect=%2F'
       );
     });
 
@@ -275,7 +275,7 @@ describe('App routing', () => {
 
     await waitFor(() => {
       expect(redirectToLogin).toHaveBeenCalledWith(
-        'http://localhost:8000/login'
+        'http://localhost:8000/main/login?redirect=%2F'
       );
     });
 
@@ -306,7 +306,7 @@ describe('App routing', () => {
 
     await waitFor(() => {
       expect(redirectToLogin).toHaveBeenCalledWith(
-        'http://localhost:8000/login'
+        'http://localhost:8000/main/login?redirect=%2F'
       );
     });
 
