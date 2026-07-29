@@ -17,9 +17,10 @@ import { useAnnounce } from './shell/use-announce';
  * assertion (`placeholder` no longer exists as a prop — the whole topbar
  * search field was deleted per §5's "Won't" list) with coverage for the
  * requirements that actually drive Phase 4: exactly one primary nav, the
- * Operator-only 운영 group is genuinely absent from the DOM for Viewer (not
- * just hidden), the skip link, the mobile drawer's open/close/focus-return
- * behaviour, and the single live region clearing on route change.
+ * admin-only 운영 group is genuinely absent from the DOM for a non-admin
+ * user (not just hidden), the skip link, the mobile drawer's
+ * open/close/focus-return behaviour, and the single live region clearing on
+ * route change.
  */
 
 function renderShell(props: Partial<Parameters<typeof AppShell>[0]> = {}) {
@@ -56,7 +57,7 @@ describe('AppShell', () => {
   });
 
   it('renders exactly one primary nav landmark with the two always-on items', () => {
-    setRoleOverride('viewer');
+    setRoleOverride('user');
     renderShell();
 
     // The drawer is closed by default, so its <nav> copy isn't mounted yet —
@@ -80,8 +81,8 @@ describe('AppShell', () => {
     expect(inactive).not.toHaveAttribute('aria-current');
   });
 
-  it('never renders the 운영 nav group for Viewer — not even hidden (§10, §16-11)', () => {
-    setRoleOverride('viewer');
+  it('never renders the 운영 nav group for a non-admin user — not even hidden (§10, §16-11)', () => {
+    setRoleOverride('user');
     const { container } = renderShell();
 
     expect(
@@ -90,8 +91,8 @@ describe('AppShell', () => {
     expect(container.innerHTML).not.toContain('배치 운영');
   });
 
-  it('renders the 운영 nav group with 배치 운영 for Operator', () => {
-    setRoleOverride('operator');
+  it('renders the 운영 nav group with 배치 운영 for an admin', () => {
+    setRoleOverride('admin');
     renderShell({ pathname: '/ops/batches' });
 
     const opsLinks = screen.getAllByRole('link', { name: '배치 운영' });
@@ -100,7 +101,7 @@ describe('AppShell', () => {
   });
 
   it('does not render a failed-count badge when the batch-jobs query cache is empty', () => {
-    setRoleOverride('operator');
+    setRoleOverride('admin');
     renderShell();
 
     expect(
@@ -109,7 +110,7 @@ describe('AppShell', () => {
   });
 
   it('renders the failed-count badge from an already-cached batch-jobs query, without firing a request', () => {
-    setRoleOverride('operator');
+    setRoleOverride('admin');
     // No queryFn is ever registered on this client — `setQueryData` seeds the
     // cache directly. If the badge required a live query, this render would
     // throw ("Missing queryFn") instead of showing "2".

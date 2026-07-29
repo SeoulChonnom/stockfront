@@ -3,9 +3,9 @@ import { installMockApi } from './fixtures/mock-api';
 
 /**
  * Phase 9 §16-11 — permissions. Drives the role through the REAL
- * integration path: `installMockApi(page, {role: 'viewer'|'operator'})`
- * makes the mocked `POST /api/users/token` response body carry a `role`
- * field, which `auth-bootstrap.ts#readRole()` parses and
+ * integration path: `installMockApi(page, {role: 'user'|'admin'})` makes
+ * the mocked `POST /api/users/token` response body carry a `roleList`
+ * field, which `auth-bootstrap.ts#readRoleList()` parses and
  * `capabilities.ts#getRole()` consumes ahead of its own default — not a
  * test-only override of `capabilities.ts` internals.
  *
@@ -14,11 +14,11 @@ import { installMockApi } from './fixtures/mock-api';
  * throughout for that reason.
  */
 
-test.describe('§16-11 Viewer permissions', () => {
+test.describe('§16-11 non-admin user permissions', () => {
   test('the ops nav item is absent from the DOM (desktop rail and mobile drawer)', async ({
     page,
   }) => {
-    await installMockApi(page, { scenario: 'ready', role: 'viewer' });
+    await installMockApi(page, { scenario: 'ready', role: 'user' });
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto('market/latest');
 
@@ -36,14 +36,14 @@ test.describe('§16-11 Viewer permissions', () => {
   test('direct entry to /ops/batches renders the 403 screen, with trigger/log/detail nodes absent from the DOM', async ({
     page,
   }) => {
-    await installMockApi(page, { scenario: 'ready', role: 'viewer' });
+    await installMockApi(page, { scenario: 'ready', role: 'user' });
     await page.goto('ops/batches');
 
     await expect(page.getByText('403 · FORBIDDEN')).toBeVisible();
     await expect(
       page.getByRole('heading', { name: '이 화면에 접근할 권한이 없습니다' })
     ).toBeVisible();
-    await expect(page.getByText('현재 계정은 Viewer입니다')).toBeVisible();
+    await expect(page.getByText('현재 계정은 일반 사용자입니다')).toBeVisible();
 
     // Absent from the DOM, not merely hidden.
     await expect(page.locator('#trigger-btn')).toHaveCount(0);
@@ -56,11 +56,11 @@ test.describe('§16-11 Viewer permissions', () => {
     await expect(page).toHaveURL(/market\/latest/);
   });
 
-  test('a Viewer never issues a batch-jobs/batch-job-detail request from /ops/batches', async ({
+  test('a non-admin user never issues a batch-jobs/batch-job-detail request from /ops/batches', async ({
     page,
   }) => {
     const requestedPaths: string[] = [];
-    await installMockApi(page, { scenario: 'ready', role: 'viewer' });
+    await installMockApi(page, { scenario: 'ready', role: 'user' });
     page.on('request', (request) => {
       const url = new URL(request.url());
       if (url.pathname.startsWith('/stock/api/batch')) {
@@ -74,11 +74,11 @@ test.describe('§16-11 Viewer permissions', () => {
   });
 });
 
-test.describe('§16-11 Operator permissions (control group)', () => {
-  test('the ops nav item and trigger button ARE present, and /ops/batches renders the Operator screen', async ({
+test.describe('§16-11 admin permissions (control group)', () => {
+  test('the ops nav item and trigger button ARE present, and /ops/batches renders the admin screen', async ({
     page,
   }) => {
-    await installMockApi(page, { scenario: 'ready', role: 'operator' });
+    await installMockApi(page, { scenario: 'ready', role: 'admin' });
     await page.goto('market/latest');
 
     await expect(page.getByRole('link', { name: '배치 운영' })).toBeVisible();

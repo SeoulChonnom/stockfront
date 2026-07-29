@@ -11,7 +11,7 @@ import type { BatchJobListResponse } from '@/lib/api/types';
  * every screen for every user, do NOT do that — render the badge only when
  * the data is already in the React Query cache." So this hook never calls
  * `useQuery`/`useBatchJobs` — it only reads whatever `['batch-jobs', ...]`
- * result(s) already exist in the TanStack Query cache (i.e. an Operator has
+ * result(s) already exist in the TanStack Query cache (i.e. an admin has
  * opened `/ops/batches` at least once this session) via
  * `queryClient.getQueryCache()`, and re-derives the FAILED count from the
  * most recently updated match whenever the cache changes.

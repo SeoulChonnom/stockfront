@@ -14,7 +14,7 @@ import { BatchOperationsPage } from './batch-operations-page';
 
 /**
  * `/ops/batches` (README §7-6/§7-7). Rewritten for Phase 6's full rebuild:
- * viewer 403 gating with NO batch request issued, failure-first summary
+ * non-admin 403 gating with NO batch request issued, failure-first summary
  * tiles, real pagination, `?jobId=` deep link, list/detail INDEPENDENT
  * loading/error, and the ≤1180px column collapse. Trigger dialog lifecycle
  * (idle→pending→success/409/403/422/429/5xx/network, duplicate-submit
@@ -162,9 +162,9 @@ afterEach(() => {
   window.history.replaceState(null, '', '/');
 });
 
-describe('BatchOperationsPage — Viewer (§10, §16-11)', () => {
+describe('BatchOperationsPage — non-admin user (§10, §16-11)', () => {
   beforeEach(() => {
-    setRoleOverride('viewer');
+    setRoleOverride('user');
   });
 
   it('renders only the 403 PermissionState and issues no batch request', () => {
@@ -206,9 +206,9 @@ describe('BatchOperationsPage — Viewer (§10, §16-11)', () => {
   });
 });
 
-describe('BatchOperationsPage — Operator', () => {
+describe('BatchOperationsPage — admin', () => {
   beforeEach(() => {
-    setRoleOverride('operator');
+    setRoleOverride('admin');
   });
 
   it('renders the header, and passes page/status/size through to the batch query', () => {

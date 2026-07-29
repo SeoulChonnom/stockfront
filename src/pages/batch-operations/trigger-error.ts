@@ -96,7 +96,7 @@ export function toTriggerErrorView(
     return {
       httpStatus: 403,
       code: extractCode(error.body, 'FORBIDDEN'),
-      message: '수동 실행 권한이 없습니다. Operator 권한이 필요합니다.',
+      message: '수동 실행 권한이 없습니다. 관리자(ADMIN) 권한이 필요합니다.',
       isFieldError: false,
       existingJobId,
     };

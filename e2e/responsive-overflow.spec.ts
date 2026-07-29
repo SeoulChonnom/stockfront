@@ -125,7 +125,7 @@ const ROUTE_STATES: readonly RouteState[] = [
     mockOptions: { scenario: 'ready', clusterMode: 'heavy' },
   },
 
-  // /ops/batches (Operator — VITE_APP_ENV=development defaults the role to operator)
+  // /ops/batches (admin — VITE_APP_ENV=development defaults the role to admin)
   {
     name: 'batch ops / ready',
     path: 'ops/batches',

@@ -38,7 +38,7 @@ const OUTPUT_DIR = path.join(process.cwd(), 'docs/design_v2/v2-screenshots');
 const NOW_KST_WITH_OFFSET = '2026-07-27T08:24:31+09:00';
 
 type Theme = 'light' | 'dark';
-type Role = 'viewer' | 'operator';
+type Role = 'user' | 'admin';
 
 type ManifestEntry = {
   file: string;
@@ -78,7 +78,7 @@ type CaptureOptions = {
 
 async function capture(page: Page, options: CaptureOptions): Promise<void> {
   const theme = options.theme ?? 'light';
-  const role = options.role ?? 'operator';
+  const role = options.role ?? 'admin';
 
   await freezeClock(page);
   await setTheme(page, theme);
@@ -219,30 +219,30 @@ test.describe
       });
     });
 
-    test('09 batch ops / ready / desktop / light / operator', async ({
+    test('09 batch ops / ready / desktop / light / admin', async ({
       page,
     }) => {
       await capture(page, {
-        file: '09-batch-ops-ready-desktop-light-operator.png',
+        file: '09-batch-ops-ready-desktop-light-admin.png',
         route: 'ops/batches',
         viewport: DESKTOP,
         viewportLabel: '1440',
-        role: 'operator',
+        role: 'admin',
         mock: { scenario: 'ready' },
         fixtureLabel: 'batchListFixture(ready) + batchDetailFixture',
         waitFor: (p) => waitForHeading(p, '배치 운영'),
       });
     });
 
-    test('10 batch ops / ready / mobile / light / operator', async ({
+    test('10 batch ops / ready / mobile / light / admin', async ({
       page,
     }) => {
       await capture(page, {
-        file: '10-batch-ops-ready-mobile-light-operator.png',
+        file: '10-batch-ops-ready-mobile-light-admin.png',
         route: 'ops/batches',
         viewport: MOBILE,
         viewportLabel: '390',
-        role: 'operator',
+        role: 'admin',
         mock: { scenario: 'ready' },
         fixtureLabel: 'batchListFixture(ready) + batchDetailFixture',
         waitFor: (p) => waitForHeading(p, '배치 운영'),
@@ -291,17 +291,17 @@ test.describe
       });
     });
 
-    test('14 batch ops / permission 403 / desktop / viewer', async ({
+    test('14 batch ops / permission 403 / desktop / user', async ({
       page,
     }) => {
       await capture(page, {
-        file: '14-batch-ops-permission403-desktop-viewer.png',
+        file: '14-batch-ops-permission403-desktop-user.png',
         route: 'ops/batches',
         viewport: DESKTOP,
         viewportLabel: '1440',
-        role: 'viewer',
+        role: 'user',
         mock: { scenario: 'ready' },
-        fixtureLabel: 'PermissionState (role=viewer)',
+        fixtureLabel: 'PermissionState (role=user)',
         waitFor: (p) => expect(p.getByText('403 · FORBIDDEN')).toBeVisible(),
       });
     });
@@ -311,7 +311,7 @@ test.describe
       await setTheme(page, 'light');
       await installMockApi(page, {
         scenario: 'ready',
-        role: 'operator',
+        role: 'admin',
         triggerMode: 'success',
       });
       await page.setViewportSize(DESKTOP);
@@ -330,7 +330,7 @@ test.describe
         route: '/ops/batches',
         viewport: '1440',
         theme: 'light',
-        role: 'operator',
+        role: 'admin',
         fixture: 'triggerMode=success (captured mid-flight, 300ms mock delay)',
       });
     });

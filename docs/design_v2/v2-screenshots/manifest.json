@@ -8,7 +8,7 @@
       "route": "/market/latest",
       "viewport": "1440",
       "theme": "light",
-      "role": "operator",
+      "role": "admin",
       "fixture": "pageFixture(ready)"
     },
     {
@@ -16,7 +16,7 @@
       "route": "/market/latest",
       "viewport": "390",
       "theme": "light",
-      "role": "operator",
+      "role": "admin",
       "fixture": "pageFixture(ready)"
     },
     {
@@ -24,7 +24,7 @@
       "route": "/market/archive/search",
       "viewport": "1440",
       "theme": "light",
-      "role": "operator",
+      "role": "admin",
       "fixture": "archiveFixture(ready, page=1)"
     },
     {
@@ -32,7 +32,7 @@
       "route": "/market/archive/search",
       "viewport": "390",
       "theme": "light",
-      "role": "operator",
+      "role": "admin",
       "fixture": "archiveFixture(ready, page=1)"
     },
     {
@@ -40,7 +40,7 @@
       "route": "/market/archive/2026-07-06",
       "viewport": "1440",
       "theme": "light",
-      "role": "operator",
+      "role": "admin",
       "fixture": "pageFixture(ready, 2026-07-06)"
     },
     {
@@ -48,7 +48,7 @@
       "route": "/market/archive/2026-07-06",
       "viewport": "390",
       "theme": "light",
-      "role": "operator",
+      "role": "admin",
       "fixture": "pageFixture(ready, 2026-07-06)"
     },
     {
@@ -56,7 +56,7 @@
       "route": "/market/cluster/51f0d9a0-9fc5-4f15-a4f9-62856f128683?origin=latest",
       "viewport": "1440",
       "theme": "light",
-      "role": "operator",
+      "role": "admin",
       "fixture": "clusterFixture(ready)"
     },
     {
@@ -64,23 +64,23 @@
       "route": "/market/cluster/51f0d9a0-9fc5-4f15-a4f9-62856f128683?origin=latest",
       "viewport": "390",
       "theme": "light",
-      "role": "operator",
+      "role": "admin",
       "fixture": "clusterFixture(ready)"
     },
     {
-      "file": "09-batch-ops-ready-desktop-light-operator.png",
+      "file": "09-batch-ops-ready-desktop-light-admin.png",
       "route": "/ops/batches",
       "viewport": "1440",
       "theme": "light",
-      "role": "operator",
+      "role": "admin",
       "fixture": "batchListFixture(ready) + batchDetailFixture"
     },
     {
-      "file": "10-batch-ops-ready-mobile-light-operator.png",
+      "file": "10-batch-ops-ready-mobile-light-admin.png",
       "route": "/ops/batches",
       "viewport": "390",
       "theme": "light",
-      "role": "operator",
+      "role": "admin",
       "fixture": "batchListFixture(ready) + batchDetailFixture"
     },
     {
@@ -88,7 +88,7 @@
       "route": "/market/latest",
       "viewport": "1440",
       "theme": "light",
-      "role": "operator",
+      "role": "admin",
       "fixture": "scenario=loading (never resolves)"
     },
     {
@@ -96,7 +96,7 @@
       "route": "/market/latest",
       "viewport": "1440",
       "theme": "light",
-      "role": "operator",
+      "role": "admin",
       "fixture": "scenario=error5xx"
     },
     {
@@ -104,23 +104,23 @@
       "route": "/market/latest",
       "viewport": "1440",
       "theme": "light",
-      "role": "operator",
+      "role": "admin",
       "fixture": "pageFixture(partial)"
     },
     {
-      "file": "14-batch-ops-permission403-desktop-viewer.png",
+      "file": "14-batch-ops-permission403-desktop-user.png",
       "route": "/ops/batches",
       "viewport": "1440",
       "theme": "light",
-      "role": "viewer",
-      "fixture": "PermissionState (role=viewer)"
+      "role": "user",
+      "fixture": "PermissionState (role=user)"
     },
     {
       "file": "15-trigger-pending-desktop.png",
       "route": "/ops/batches",
       "viewport": "1440",
       "theme": "light",
-      "role": "operator",
+      "role": "admin",
       "fixture": "triggerMode=success (captured mid-flight, 300ms mock delay)"
     },
     {
@@ -128,7 +128,7 @@
       "route": "/ops/batches",
       "viewport": "1440",
       "theme": "light",
-      "role": "operator",
+      "role": "admin",
       "fixture": "triggerResult(success) -> jobId 1043"
     },
     {
@@ -136,7 +136,7 @@
       "route": "/ops/batches",
       "viewport": "1440",
       "theme": "light",
-      "role": "operator",
+      "role": "admin",
       "fixture": "triggerResult(conflict409) -> existingJobId 1042"
     },
     {
@@ -144,7 +144,7 @@
       "route": "/market/latest",
       "viewport": "1440",
       "theme": "dark",
-      "role": "operator",
+      "role": "admin",
       "fixture": "pageFixture(ready) — same route/fixture as #01, dark theme"
     }
   ]

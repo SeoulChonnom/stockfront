@@ -3,10 +3,11 @@
  *
  * Single source of truth for the nav tree so the desktop rail
  * (`nav-rail.tsx`) and the mobile drawer (`nav-drawer.tsx`) can never drift
- * from each other. The "운영" (Operator-only) leaf is intentionally kept out
+ * from each other. The "운영" (admin-only) leaf is intentionally kept out
  * of this module's exported groups — `nav-list.tsx` renders it from a
  * separate export and gates it with `can('ops.view')` so it can be omitted
- * from the DOM entirely for Viewers (§10, §16-11), not merely hidden.
+ * from the DOM entirely for non-admin users (§10, §16-11), not merely
+ * hidden.
  */
 
 export type NavLeaf = {

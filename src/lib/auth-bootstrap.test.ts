@@ -60,14 +60,14 @@ describe('auth bootstrap', () => {
       status: 'authenticated',
       accessToken: 'issued-token',
       error: null,
-      role: null,
+      roles: [],
     });
     expect(getAccessToken()).toBe('issued-token');
     expect(getAuthBootstrapState()).toEqual({
       status: 'authenticated',
       accessToken: 'issued-token',
       error: null,
-      role: null,
+      roles: [],
     });
   });
 
@@ -112,7 +112,7 @@ describe('auth bootstrap', () => {
       accessToken: null,
       error:
         'Token bootstrap response must include a non-empty accessToken string.',
-      role: null,
+      roles: [],
     });
     expect(assignMock).toHaveBeenCalledWith(
       expect.stringMatching(/^http:\/\/localhost:8000\/main\/login\?redirect=/)
@@ -138,7 +138,7 @@ describe('auth bootstrap', () => {
       accessToken: null,
       error:
         'Token bootstrap response must include a non-empty accessToken string.',
-      role: null,
+      roles: [],
     });
     expect(assignMock).not.toHaveBeenCalled();
   });
@@ -157,7 +157,7 @@ describe('auth bootstrap', () => {
       status: 'bypassed',
       accessToken: null,
       error: 'VITE_API_HOST is not configured.',
-      role: null,
+      roles: [],
     });
     expect(fetchMock).not.toHaveBeenCalled();
     expect(assignMock).not.toHaveBeenCalled();
@@ -176,7 +176,7 @@ describe('auth bootstrap', () => {
       status: 'failed',
       accessToken: null,
       error: 'VITE_API_HOST is not configured.',
-      role: null,
+      roles: [],
     });
     expect(fetchMock).not.toHaveBeenCalled();
     expect(assignMock).not.toHaveBeenCalled();
@@ -230,7 +230,7 @@ describe('auth bootstrap', () => {
       status: 'loading',
       accessToken: null,
       error: null,
-      role: null,
+      roles: [],
     });
 
     resolveResponse?.(createJsonResponse({ accessToken: 'issued-token' }));
@@ -239,19 +239,19 @@ describe('auth bootstrap', () => {
       status: 'authenticated',
       accessToken: 'issued-token',
       error: null,
-      role: null,
+      roles: [],
     });
 
     await expect(bootstrapAuth()).resolves.toEqual({
       status: 'authenticated',
       accessToken: 'issued-token',
       error: null,
-      role: null,
+      roles: [],
     });
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
-  it('bootstraps successfully without a role field and falls back to null (operator fallback lives in capabilities.ts)', async () => {
+  it('bootstraps successfully without a roleList field and falls back to an empty roles array (least-privilege fallback lives in capabilities.ts)', async () => {
     vi.stubEnv('VITE_API_HOST', 'http://localhost:8000');
     vi.stubGlobal(
       'fetch',
@@ -266,32 +266,11 @@ describe('auth bootstrap', () => {
       status: 'authenticated',
       accessToken: 'issued-token',
       error: null,
-      role: null,
+      roles: [],
     });
   });
 
-  it('parses an uppercase role from the token response and normalises it to the lowercase Role union', async () => {
-    vi.stubEnv('VITE_API_HOST', 'http://localhost:8000');
-    vi.stubGlobal(
-      'fetch',
-      vi
-        .fn<
-          (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>
-        >()
-        .mockResolvedValue(
-          createJsonResponse({ accessToken: 'issued-token', role: 'VIEWER' })
-        )
-    );
-
-    await expect(bootstrapAuth()).resolves.toEqual({
-      status: 'authenticated',
-      accessToken: 'issued-token',
-      error: null,
-      role: 'viewer',
-    });
-  });
-
-  it('falls back to null role rather than throwing when the response contains an unrecognised role value', async () => {
+  it('parses a roleList array of strings from the token response verbatim', async () => {
     vi.stubEnv('VITE_API_HOST', 'http://localhost:8000');
     vi.stubGlobal(
       'fetch',
@@ -302,7 +281,7 @@ describe('auth bootstrap', () => {
         .mockResolvedValue(
           createJsonResponse({
             accessToken: 'issued-token',
-            role: 'super-admin',
+            roleList: ['USER', 'ADMIN'],
           })
         )
     );
@@ -311,7 +290,55 @@ describe('auth bootstrap', () => {
       status: 'authenticated',
       accessToken: 'issued-token',
       error: null,
-      role: null,
+      roles: ['USER', 'ADMIN'],
+    });
+  });
+
+  it('ignores non-array and non-string roleList entries without throwing', async () => {
+    vi.stubEnv('VITE_API_HOST', 'http://localhost:8000');
+    vi.stubGlobal(
+      'fetch',
+      vi
+        .fn<
+          (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>
+        >()
+        .mockResolvedValue(
+          createJsonResponse({
+            accessToken: 'issued-token',
+            roleList: ['USER', 123, null, { role: 'ADMIN' }, 'ADMIN'],
+          })
+        )
+    );
+
+    await expect(bootstrapAuth()).resolves.toEqual({
+      status: 'authenticated',
+      accessToken: 'issued-token',
+      error: null,
+      roles: ['USER', 'ADMIN'],
+    });
+  });
+
+  it('falls back to an empty roles array rather than throwing when roleList is not an array', async () => {
+    vi.stubEnv('VITE_API_HOST', 'http://localhost:8000');
+    vi.stubGlobal(
+      'fetch',
+      vi
+        .fn<
+          (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>
+        >()
+        .mockResolvedValue(
+          createJsonResponse({
+            accessToken: 'issued-token',
+            roleList: 'ADMIN',
+          })
+        )
+    );
+
+    await expect(bootstrapAuth()).resolves.toEqual({
+      status: 'authenticated',
+      accessToken: 'issued-token',
+      error: null,
+      roles: [],
     });
   });
 });

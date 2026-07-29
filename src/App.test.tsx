@@ -436,7 +436,10 @@ describe('App routing', () => {
 
     act(() => {
       deferredResponse.resolve(
-        createJsonResponse({ accessToken: 'issued-token' })
+        createJsonResponse({
+          accessToken: 'issued-token',
+          roleList: ['USER', 'ADMIN'],
+        })
       );
     });
 

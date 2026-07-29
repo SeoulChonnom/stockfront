@@ -1240,7 +1240,7 @@ export function triggerResult(
       error: {
         http: 403,
         code: 'FORBIDDEN',
-        message: '수동 실행 권한이 없습니다. Operator 권한이 필요합니다.',
+        message: '수동 실행 권한이 없습니다. 관리자(ADMIN) 권한이 필요합니다.',
       },
     };
   }
@@ -1309,7 +1309,7 @@ export const ERRORS: Record<string, ErrorFixture> = {
     http: 403,
     code: 'FORBIDDEN',
     title: '이 화면에 접근할 권한이 없습니다',
-    message: '운영 화면은 Operator 권한이 있는 계정만 열 수 있습니다.',
+    message: '운영 화면은 관리자(ADMIN) 권한이 있는 계정만 열 수 있습니다.',
     action: '최신 브리프로 이동',
   },
   error404: {
@@ -1392,14 +1392,16 @@ export type InstallMockApiOptions = {
   /**
    * Phase 9 §16-11 (permissions). Exercises the REAL role source
    * (`src/lib/capabilities.ts#getRole()` reads `auth-bootstrap.ts`'s parsed
-   * `role`, which comes from the `POST /api/users/token` response body — see
-   * `readRole()` in that file) instead of a test-only override. Omitted ->
-   * the token endpoint response carries no `role` field at all, so
-   * `getRole()` falls through to its own default ('operator' — see that
-   * file's doc comment), preserving every pre-existing test's behavior
-   * unchanged.
+   * `roles`, which come from the `POST /api/users/token` response body's
+   * `roleList` field — see `readRoleList()` in that file) instead of a
+   * test-only override. `'admin'` emits `roleList: ['USER', 'ADMIN']`;
+   * `'user'` emits `roleList: ['USER']`. Omitted -> the token endpoint
+   * response carries no `roleList` field at all, so `getRole()` falls
+   * through to its own default ('admin' under this suite's
+   * `VITE_APP_ENV=development` — see that file's doc comment), preserving
+   * every pre-existing test's behavior unchanged.
    */
-  role?: 'viewer' | 'operator';
+  role?: 'user' | 'admin';
   /**
    * Phase 9 §16-10 (Trigger lifecycle). Selects what `POST
    * /stock/api/batch/market-daily` resolves to; mirrors `triggerResult()`'s
@@ -1497,17 +1499,29 @@ export async function installMockApi(
 
   // Auth bootstrap (`src/lib/auth-bootstrap.ts`): fulfilling a real 200 body
   // (rather than aborting the request) exercises the REAL integration path —
-  // `bootstrapAuth()` -> `readAccessToken`/`readRole()` -> `capabilities.ts`'s
-  // `getRole()` — instead of a test-only role backdoor (README §16-11).
-  // `role` is only present on the body when `options.role` is given; omitted
-  // entirely otherwise so `readRole()` returns `null` and `getRole()` falls
-  // through to its own default ('operator'), which is exactly the previous
-  // (abort -> dev-bypass -> 'operator') outcome for every test that doesn't
-  // pass `role` — see `capabilities.ts`'s `getDefaultRole()` doc comment.
+  // `bootstrapAuth()` -> `readAccessToken`/`readRoleList()` ->
+  // `capabilities.ts`'s `getRole()` — instead of a test-only role backdoor
+  // (README §16-11). The body matches the settled backend contract
+  // (docs/design_v2/v2-backend-requests.md P-01): `accessToken` + `username`
+  // + `name` + `roleList`. `roleList` is only present when `options.role` is
+  // given (`'admin'` -> `['USER', 'ADMIN']`, `'user'` -> `['USER']`); omitted
+  // entirely otherwise so `readRoleList()` returns `[]` and `getRole()`
+  // falls through to its own default ('admin' under this suite's
+  // `VITE_APP_ENV=development`), which is exactly the previous (abort ->
+  // dev-bypass -> 'operator', now 'admin') outcome for every test that
+  // doesn't pass `role` — see `capabilities.ts`'s `getDefaultRole()` doc
+  // comment.
+  const roleListByOption: Record<'user' | 'admin', string[]> = {
+    user: ['USER'],
+    admin: ['USER', 'ADMIN'],
+  };
+
   await page.route('**/api/users/token', async (route) => {
     await fulfillJson(route, 200, {
       accessToken: 'mock-e2e-access-token',
-      ...(options.role ? { role: options.role } : {}),
+      username: 'e2e.tester',
+      name: 'E2E Tester',
+      ...(options.role ? { roleList: roleListByOption[options.role] } : {}),
     });
   });
 

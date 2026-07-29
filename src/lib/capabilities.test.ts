@@ -32,86 +32,115 @@ describe('capabilities', () => {
     vi.unstubAllGlobals();
   });
 
-  it('defaults to operator when there is no override and no bootstrap role, even in production (see getDefaultRole comment)', () => {
+  it('defaults to user (least privilege) when there is no override and no bootstrap roleList, in production (see getDefaultRole comment)', () => {
     vi.stubEnv('VITE_APP_ENV', 'production');
 
-    expect(getRole()).toBe('operator');
+    expect(getRole()).toBe('user');
   });
 
-  it('defaults to operator under VITE_APP_ENV=development', () => {
+  it('defaults to admin under VITE_APP_ENV=development (dev auth bypass never calls the token endpoint)', () => {
     vi.stubEnv('VITE_APP_ENV', 'development');
 
-    expect(getRole()).toBe('operator');
+    expect(getRole()).toBe('admin');
   });
 
   it('an explicit override always wins over the environment default', () => {
     vi.stubEnv('VITE_APP_ENV', 'development');
-    setRoleOverride('viewer');
+    setRoleOverride('user');
 
-    expect(getRole()).toBe('viewer');
+    expect(getRole()).toBe('user');
   });
 
-  it('uses the role parsed by auth-bootstrap once bootstrap completes, ranking above the default fallback', async () => {
+  it('roleList containing ADMIN resolves to admin, ranking above the default fallback', async () => {
     vi.stubEnv('VITE_API_HOST', 'http://localhost:8000');
     vi.stubEnv('VITE_APP_ENV', 'production');
-    stubTokenResponse({ accessToken: 'issued-token', role: 'VIEWER' });
+    stubTokenResponse({ accessToken: 'issued-token', roleList: ['USER', 'ADMIN'] });
 
     await bootstrapAuth();
 
-    expect(getRole()).toBe('viewer');
+    expect(getRole()).toBe('admin');
   });
 
-  it('setRoleOverride still wins over a bootstrap-provided role', async () => {
+  it('roleList without ADMIN resolves to user, even under the development default', async () => {
     vi.stubEnv('VITE_API_HOST', 'http://localhost:8000');
-    vi.stubEnv('VITE_APP_ENV', 'production');
-    stubTokenResponse({ accessToken: 'issued-token', role: 'VIEWER' });
+    vi.stubEnv('VITE_APP_ENV', 'development');
+    stubTokenResponse({ accessToken: 'issued-token', roleList: ['USER'] });
 
     await bootstrapAuth();
-    setRoleOverride('operator');
 
-    expect(getRole()).toBe('operator');
+    expect(getRole()).toBe('user');
   });
 
-  it('gates every ops.* capability to operator only (README §10)', () => {
-    expect(can('ops.view', 'viewer')).toBe(false);
-    expect(can('ops.trigger', 'viewer')).toBe(false);
-    expect(can('ops.viewLogs', 'viewer')).toBe(false);
-    expect(can('ops.advancedTriggerOptions', 'viewer')).toBe(false);
+  it('recognises a lowercase "admin" entry in roleList', async () => {
+    vi.stubEnv('VITE_API_HOST', 'http://localhost:8000');
+    vi.stubEnv('VITE_APP_ENV', 'production');
+    stubTokenResponse({ accessToken: 'issued-token', roleList: ['user', 'admin'] });
 
-    expect(can('ops.view', 'operator')).toBe(true);
-    expect(can('ops.trigger', 'operator')).toBe(true);
-    expect(can('ops.viewLogs', 'operator')).toBe(true);
-    expect(can('ops.advancedTriggerOptions', 'operator')).toBe(true);
+    await bootstrapAuth();
+
+    expect(getRole()).toBe('admin');
+  });
+
+  it('falls back to user without throwing when roleList is missing or malformed', async () => {
+    vi.stubEnv('VITE_API_HOST', 'http://localhost:8000');
+    vi.stubEnv('VITE_APP_ENV', 'production');
+    stubTokenResponse({ accessToken: 'issued-token', roleList: 'ADMIN' });
+
+    await bootstrapAuth();
+    expect(getRole()).toBe('user');
+  });
+
+  it('setRoleOverride still wins over a bootstrap-provided roleList', async () => {
+    vi.stubEnv('VITE_API_HOST', 'http://localhost:8000');
+    vi.stubEnv('VITE_APP_ENV', 'production');
+    stubTokenResponse({ accessToken: 'issued-token', roleList: ['USER'] });
+
+    await bootstrapAuth();
+    setRoleOverride('admin');
+
+    expect(getRole()).toBe('admin');
+  });
+
+  it('gates every ops.* capability to admin only (README §10)', () => {
+    expect(can('ops.view', 'user')).toBe(false);
+    expect(can('ops.trigger', 'user')).toBe(false);
+    expect(can('ops.viewLogs', 'user')).toBe(false);
+    expect(can('ops.advancedTriggerOptions', 'user')).toBe(false);
+
+    expect(can('ops.view', 'admin')).toBe(true);
+    expect(can('ops.trigger', 'admin')).toBe(true);
+    expect(can('ops.viewLogs', 'admin')).toBe(true);
+    expect(can('ops.advancedTriggerOptions', 'admin')).toBe(true);
   });
 
   it('useRole() re-renders when the override changes', () => {
     vi.stubEnv('VITE_APP_ENV', 'production');
     const { result } = renderHook(() => useRole());
 
-    expect(result.current).toBe('operator');
+    expect(result.current).toBe('user');
 
     act(() => {
-      setRoleOverride('viewer');
+      setRoleOverride('admin');
     });
 
-    expect(result.current).toBe('viewer');
+    expect(result.current).toBe('admin');
   });
 
   it('useRole() re-renders when the auth-bootstrap state changes (no override)', async () => {
     vi.stubEnv('VITE_API_HOST', 'http://localhost:8000');
     vi.stubEnv('VITE_APP_ENV', 'production');
-    stubTokenResponse({ accessToken: 'issued-token', role: 'VIEWER' });
+    stubTokenResponse({ accessToken: 'issued-token', roleList: ['USER', 'ADMIN'] });
 
     const { result } = renderHook(() => useRole());
 
-    expect(result.current).toBe('operator');
+    expect(result.current).toBe('user');
 
     await act(async () => {
       await bootstrapAuth();
     });
 
     await waitFor(() => {
-      expect(result.current).toBe('viewer');
+      expect(result.current).toBe('admin');
     });
   });
 
@@ -119,14 +148,14 @@ describe('capabilities', () => {
     vi.stubEnv('VITE_APP_ENV', 'production');
     const { result } = renderHook(() => useCapabilities());
 
-    expect(result.current.role).toBe('operator');
-    expect(result.current.can('ops.view')).toBe(true);
+    expect(result.current.role).toBe('user');
+    expect(result.current.can('ops.view')).toBe(false);
 
     act(() => {
-      setRoleOverride('viewer');
+      setRoleOverride('admin');
     });
 
-    expect(result.current.role).toBe('viewer');
-    expect(result.current.can('ops.view')).toBe(false);
+    expect(result.current.role).toBe('admin');
+    expect(result.current.can('ops.view')).toBe(true);
   });
 });
