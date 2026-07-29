@@ -24,6 +24,14 @@ import {
  *   is reproducible across runs/days instead of drifting.
  * - Captures wait for real content markers (a heading, `aria-busy`, a
  *   dialog role) rather than fixed `sleep`s.
+ * - Every test in this spec emulates `prefers-reduced-motion: reduce`
+ *   (`base.css` already turns all animation/transition durations to
+ *   0.01ms under that media query — README §6/§11). Without it, states
+ *   with an in-flight spinner or skeleton shimmer (#11 loading, #15
+ *   trigger-pending) get caught at a different animation frame on every
+ *   run, producing byte-different PNGs from a rerun with zero code
+ *   changes. This makes the shots deterministic regression evidence
+ *   instead of animation noise.
  */
 
 const OUTPUT_DIR = path.join(process.cwd(), 'docs/design_v2/v2-screenshots');
@@ -80,7 +88,11 @@ async function capture(page: Page, options: CaptureOptions): Promise<void> {
   await options.waitFor(page);
 
   const filePath = path.join(OUTPUT_DIR, options.file);
-  await page.screenshot({ path: filePath, fullPage: true });
+  await page.screenshot({
+    animations: 'disabled',
+    path: filePath,
+    fullPage: true,
+  });
 
   manifest.push({
     file: options.file,
@@ -104,6 +116,13 @@ async function waitForHeading(page: Page, text: string | RegExp) {
 
 test.describe
   .serial('Phase 9 Part B — v2 screenshot evidence', () => {
+    test.beforeEach(async ({ page }) => {
+      // Freeze animation/transition state before any navigation so every
+      // capture in this spec — not just the two visibly-animated ones —
+      // is immune to spinner/shimmer phase drift between runs.
+      await page.emulateMedia({ reducedMotion: 'reduce' });
+    });
+
     test('01 latest / ready / desktop / light', async ({ page }) => {
       await capture(page, {
         file: '01-latest-ready-desktop-light.png',
@@ -302,6 +321,7 @@ test.describe
       await expect(page.getByText('실행 요청을 보내고 있습니다')).toBeVisible();
 
       await page.screenshot({
+        animations: 'disabled',
         path: path.join(OUTPUT_DIR, '15-trigger-pending-desktop.png'),
         fullPage: true,
       });

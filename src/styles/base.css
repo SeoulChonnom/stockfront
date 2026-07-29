@@ -155,32 +155,6 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-
-  /*
-   * v2 compat aliases — remove after all screens migrate (Phase 6)
-   * Old token names still referenced by app-shell.css / page-layout.css /
-   * data-display.css / components/ui/* (button, card, input, select, table)
-   * that haven't been migrated to the §6 names yet. Mapped to the nearest
-   * new token so nothing resolves to an undefined custom property.
-   */
-  --surface-strong: var(
-    --surface
-  ); /* was a solid opaque surface; --surface is now solid too */
-  --surface-muted: var(--surface-2);
-  --surface-deep: var(--surface-3);
-  --primary-strong: var(
-    --primary
-  ); /* no darker "strong" primary in v2 palette */
-  --shadow-md: var(--sh2);
-  --shadow-lg: var(--sh3);
-  --radius-lg: var(--r-lg);
-  --radius-xl: var(--r-lg); /* v2 has no radius above 12px */
-  /* layout metrics — not part of §6 token set; AppShell rebuild (Phase 6,
-     §12 "Replace") owns the actual rail/header dimensions (248px rail per
-     §5). Kept at existing values here purely so current app-shell.css /
-     page-layout.css keep compiling until that rebuild lands. */
-  --topbar-height: 72px;
-  --content-max: 1440px;
 }
 
 :root[data-theme="dark"] {

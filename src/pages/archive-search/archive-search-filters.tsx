@@ -105,7 +105,7 @@ export function ArchiveSearchFilters({
           </FilterField>
           <FilterField htmlFor='status' label='생성 상태'>
             <select
-              className='flex min-h-11 w-full rounded-[14px] border border-[color:var(--line)] bg-[color:var(--surface-muted)] px-3.5 py-2 text-[color:var(--text)] outline-none transition-[border-color,box-shadow] duration-150 focus:border-[color:color-mix(in_srgb,var(--primary)_45%,transparent)] focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--primary)_16%,transparent)]'
+              className='flex min-h-11 w-full rounded-[14px] border border-[color:var(--line)] bg-[color:var(--surface-2)] px-3.5 py-2 text-[color:var(--text)] outline-none transition-[border-color,box-shadow] duration-150 focus:border-[color:color-mix(in_srgb,var(--primary)_45%,transparent)] focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--primary)_16%,transparent)]'
               {...getFieldProps('status')}
             >
               {getStatusOptions().map((option) => (

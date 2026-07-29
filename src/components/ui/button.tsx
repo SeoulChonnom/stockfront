@@ -11,9 +11,9 @@ const buttonVariants = cva(
     variants: {
       variant: {
         primary:
-          'border-transparent text-white shadow-[0_16px_30px_color-mix(in_srgb,var(--primary)_24%,transparent)] bg-[linear-gradient(135deg,var(--primary),var(--primary-strong))] hover:-translate-y-px',
+          'border-transparent text-white shadow-[0_16px_30px_color-mix(in_srgb,var(--primary)_24%,transparent)] bg-[linear-gradient(135deg,var(--primary),var(--primary))] hover:-translate-y-px',
         secondary:
-          'border-[color:var(--line-strong)] bg-[color:color-mix(in_srgb,var(--surface-strong)_92%,transparent)] text-[color:var(--text)] hover:-translate-y-px',
+          'border-[color:var(--line-strong)] bg-[color:color-mix(in_srgb,var(--surface)_92%,transparent)] text-[color:var(--text)] hover:-translate-y-px',
         ghost:
           'border-[color:var(--line)] bg-transparent text-[color:var(--text-soft)] hover:-translate-y-px',
         /* README §6 상태 색 사용 규칙과 같은 tone/soft/line 조합 — 위험한
