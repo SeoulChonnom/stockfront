@@ -2,41 +2,29 @@ import type { AppRoute } from '../lib/app-state';
 
 type PageMeta = {
   title: string;
-  topSearchPlaceholder: string;
 };
 
+/**
+ * `document.title` per route. Used to carry `topSearchPlaceholder` for the
+ * old topbar's global search field — that field had no owner or backing
+ * search implementation and was deleted outright (README §5, and the
+ * "Won't" list in `docs/design_v2/09-scope-traceability-decisions.md`), so
+ * the plumbing for it is removed here too rather than left dangling.
+ */
 const STATIC_PAGE_META: Record<
   Exclude<AppRoute['page'], 'archive-market'>,
   PageMeta
 > = {
-  latest: {
-    title: 'Market Daily Brief - Latest Market',
-    topSearchPlaceholder: 'Search market briefs',
-  },
-  'archive-search': {
-    title: 'Market Daily Brief - Archive Search',
-    topSearchPlaceholder: 'Search archive records',
-  },
-  'cluster-detail': {
-    title: 'Market Daily Brief - News Cluster Detail',
-    topSearchPlaceholder: 'Search related clusters',
-  },
-  'batch-ops': {
-    title: 'Market Daily Brief - Batch Operations',
-    topSearchPlaceholder: 'Search operations',
-  },
-  'not-found': {
-    title: 'Market Daily Brief',
-    topSearchPlaceholder: 'Search',
-  },
+  latest: { title: 'Market Brief · 최신 브리프' },
+  'archive-search': { title: 'Market Brief · 아카이브 검색' },
+  'cluster-detail': { title: 'Market Brief · 이슈 상세' },
+  'batch-ops': { title: 'Market Brief · 배치 운영' },
+  'not-found': { title: 'Market Brief · 페이지를 찾을 수 없음' },
 };
 
 export function getPageMeta(route: AppRoute): PageMeta {
   if (route.page === 'archive-market') {
-    return {
-      title: `Market Daily Brief - Archive ${route.businessDate}`,
-      topSearchPlaceholder: 'Search archived summaries',
-    };
+    return { title: `Market Brief · ${route.businessDate} 시장 브리프` };
   }
 
   return STATIC_PAGE_META[route.page];

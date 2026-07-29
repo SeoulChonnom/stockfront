@@ -191,36 +191,9 @@
   color: var(--text);
 }
 
-.status-chip,
-.soft-chip,
-.tag {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  min-height: 30px;
-  padding: 0 11px;
-  border-radius: 999px;
-  font-size: 0.76rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
 
-.status-chip-success {
-  color: var(--success);
-  background: var(--success-soft);
-}
 
-.status-chip-partial {
-  color: var(--warning);
-  background: var(--warning-soft);
-}
 
-.status-chip-failed {
-  color: var(--danger);
-  background: var(--danger-soft);
-}
 
 .soft-chip {
   color: var(--text-soft);

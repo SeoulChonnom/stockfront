@@ -1,169 +1,211 @@
 import { useState } from 'react';
 
-import { PageMessage } from '../components/ui';
-import { parseListFilters } from '../lib/app-state';
+import { useAnnounce } from '@/components/shell/use-announce';
+import { PermissionState } from '@/components/state';
+import { parseListFilters } from '@/lib/app-state';
+import { can, useCapabilities } from '@/lib/capabilities';
 import {
   useBatchJobDetail,
   useBatchJobs,
   useStartBatchRunMutation,
-} from '../lib/query-hooks';
-import { buildUrl, navigate } from '../lib/router';
-import type { BatchRun, BatchSummaryView } from '../lib/view-models';
-import { BatchOperationsFooter } from './batch-operations/batch-operations-footer';
-import { BatchOperationsHistoryTable } from './batch-operations/batch-operations-history-table';
-import { BatchOperationsSummary } from './batch-operations/batch-operations-summary';
-import { BatchRunDetailPanel } from './batch-operations/batch-run-detail-panel';
+} from '@/lib/query-hooks';
+import { navigate } from '@/lib/router';
 
-const batchOperationStatuses = ['SUCCESS', 'PARTIAL', 'FAILED'];
+import { BatchAttentionBanner } from './batch-operations/batch-attention-banner';
+import { BatchDetailPanel } from './batch-operations/batch-detail-panel';
+import { BatchHeader } from './batch-operations/batch-header';
+import { BatchHistoryList } from './batch-operations/batch-history-list';
+import { BatchSummaryTiles } from './batch-operations/batch-summary-tiles';
+import {
+  BatchTriggerBanner,
+  type TriggerBannerState,
+} from './batch-operations/batch-trigger-banner';
+import {
+  buildBatchOperationsUrl,
+  isDetailViewParam,
+  parseJobIdParam,
+} from './batch-operations/batch-url';
+import { TriggerDialog } from './batch-operations/trigger-dialog';
 
-function buildBatchOperationsUrl(filters: {
-  from: string;
-  to: string;
-  status: string;
-  page: number;
-}) {
-  return buildUrl('/ops/batches', filters);
-}
+const BATCH_STATUSES = ['SUCCESS', 'PARTIAL', 'FAILED'];
+const PAGE_SIZE = 20;
 
+/**
+ * `/ops/batches` (README §7-6/§7-7/§10/§16-11).
+ *
+ * SECURITY: `can('ops.view')` below is a UX affordance, not a security
+ * boundary — the backend does not yet enforce Operator-only access to this
+ * screen or its endpoints (README §10, `src/lib/capabilities.ts`'s own
+ * top-of-file note). A Viewer gets `PermissionState` and NOTHING else: the
+ * gate is a plain `if` that returns before `OperatorBatchOperations` (the
+ * component that owns every batch query/mutation) is ever rendered, so
+ * React never even calls its hooks — the log, Trigger dialog, detail panel
+ * and summary tiles are absent from the DOM, not hidden by CSS, and no
+ * batch-jobs/batch-job-detail request is ever issued for a Viewer.
+ */
 export function BatchOperationsPage({
   searchParams,
 }: {
   searchParams: URLSearchParams;
 }) {
+  const { can: canDo } = useCapabilities();
+
+  if (!canDo('ops.view')) {
+    return <PermissionState />;
+  }
+
+  return <OperatorBatchOperations searchParams={searchParams} />;
+}
+
+function OperatorBatchOperations({
+  searchParams,
+}: {
+  searchParams: URLSearchParams;
+}) {
+  const announce = useAnnounce();
   const applied = parseListFilters(searchParams, {
-    allowedStatuses: batchOperationStatuses,
+    allowedStatuses: BATCH_STATUSES,
   });
+  const jobIdParam = parseJobIdParam(searchParams);
+  const isDetailView = isDetailViewParam(searchParams);
 
   const jobsQuery = useBatchJobs({
     fromDate: applied.from,
     toDate: applied.to,
     status: applied.status || undefined,
     page: applied.page,
-    size: 20,
+    size: PAGE_SIZE,
   });
-  const [manualSelectedJobId, setManualSelectedJobId] = useState<number | null>(
+
+  const rows = jobsQuery.data?.rows ?? [];
+  const fallbackJobId =
+    rows.find((row) => row.rawStatus.toUpperCase() === 'FAILED')?.id ??
+    rows[0]?.id ??
+    null;
+  const selectedJobId = jobIdParam ?? fallbackJobId;
+  const detailQuery = useBatchJobDetail(selectedJobId);
+
+  const startBatchMutation = useStartBatchRunMutation();
+  const [triggerDialog, setTriggerDialog] = useState<{
+    open: boolean;
+    prefillDate?: string;
+  }>({ open: false });
+  const [triggerBanner, setTriggerBanner] = useState<TriggerBannerState | null>(
     null
   );
-  const currentRows = jobsQuery.data?.rows ?? [];
-  const defaultSelectedJobId =
-    currentRows.find((run) => run.status === 'FAILED')?.id ??
-    currentRows[0]?.id ??
-    null;
-  const selectedJobId = currentRows.some(
-    (run) => run.id === manualSelectedJobId
-  )
-    ? manualSelectedJobId
-    : defaultSelectedJobId;
-  const detailQuery = useBatchJobDetail(selectedJobId);
-  const startBatchMutation = useStartBatchRunMutation();
-  const detailErrorMessage =
-    detailQuery.error instanceof Error
-      ? detailQuery.error.message
-      : '배치 상세 정보를 불러오지 못했습니다.';
 
-  if (jobsQuery.isLoading) {
-    return (
-      <PageMessage
-        description='배치 실행 이력을 불러오는 중입니다.'
-        title='Loading Batch Jobs'
-      />
+  function goTo(
+    filters: Partial<{
+      from: string;
+      to: string;
+      status: string;
+      page: number;
+    }>,
+    extra: { jobId?: number | null; view?: 'detail' | null } = {}
+  ) {
+    navigate(
+      buildBatchOperationsUrl(
+        {
+          from: filters.from ?? applied.from,
+          to: filters.to ?? applied.to,
+          status: filters.status ?? applied.status,
+          page: filters.page ?? applied.page,
+        },
+        {
+          jobId: 'jobId' in extra ? extra.jobId : selectedJobId,
+          view: 'view' in extra ? extra.view : isDetailView ? 'detail' : null,
+        }
+      )
     );
   }
 
-  if (jobsQuery.error) {
-    return (
-      <PageMessage
-        description={jobsQuery.error.message}
-        title='Batch Jobs Unavailable'
-      />
-    );
-  }
+  const counts = jobsQuery.data?.counts ?? null;
 
   return (
-    <BatchOperationsContent
-      key={`${applied.from}:${applied.to}:${applied.status}:${applied.page}`}
-      applied={applied}
-      detailErrorMessage={detailErrorMessage}
-      filtered={currentRows}
-      isDetailError={detailQuery.isError}
-      isDetailLoading={detailQuery.isLoading}
-      onSelectJob={setManualSelectedJobId}
-      selectedJobId={selectedJobId}
-      selectedRun={detailQuery.data ?? null}
-      startBatchMutation={startBatchMutation}
-      summary={jobsQuery.data?.summary ?? null}
-      totalCount={jobsQuery.data?.totalCount ?? 0}
-    />
-  );
-}
+    <div className='flex min-w-0 flex-col gap-5'>
+      <BatchHeader onOpenTrigger={() => setTriggerDialog({ open: true })} />
 
-function BatchOperationsContent({
-  applied,
-  detailErrorMessage,
-  filtered,
-  isDetailError,
-  isDetailLoading,
-  onSelectJob,
-  selectedJobId,
-  selectedRun,
-  startBatchMutation,
-  summary,
-  totalCount,
-}: {
-  applied: {
-    from: string;
-    to: string;
-    status: string;
-  };
-  detailErrorMessage: string;
-  filtered: BatchRun[];
-  isDetailError: boolean;
-  isDetailLoading: boolean;
-  onSelectJob: (jobId: number) => void;
-  selectedJobId: number | null;
-  selectedRun: BatchRun | null;
-  startBatchMutation: ReturnType<typeof useStartBatchRunMutation>;
-  summary: BatchSummaryView | null;
-  totalCount: number;
-}) {
-  return (
-    <div className='page-stack'>
-      <BatchOperationsSummary
-        isPending={startBatchMutation.isPending}
-        onTrigger={() => startBatchMutation.mutate()}
-        summary={summary}
+      {triggerBanner ? (
+        <BatchTriggerBanner
+          banner={triggerBanner}
+          onDismiss={() => setTriggerBanner(null)}
+          onOpenDetail={(jobId) => goTo({}, { jobId, view: 'detail' })}
+        />
+      ) : null}
+
+      {counts && counts.failedCount + counts.partialCount > 0 ? (
+        <BatchAttentionBanner
+          failedCount={counts.failedCount}
+          onFilterFailed={() => goTo({ status: 'FAILED', page: 1 })}
+          onFilterPartial={() => goTo({ status: 'PARTIAL', page: 1 })}
+          partialCount={counts.partialCount}
+        />
+      ) : null}
+
+      <BatchSummaryTiles
+        avgDurationSeconds={counts?.avgDurationSeconds ?? null}
+        failedCount={counts?.failedCount ?? 0}
+        partialCount={counts?.partialCount ?? 0}
+        successCount={counts?.successCount ?? 0}
       />
 
-      <div className='ops-grid'>
-        <BatchOperationsHistoryTable
-          filtered={filtered}
-          initialFilters={applied}
-          onApplyFilters={(filters) =>
-            navigate(
-              buildBatchOperationsUrl({
-                from: filters.from,
-                to: filters.to,
-                status: filters.status,
-                page: 1,
-              })
-            )
-          }
-          onSelectJob={onSelectJob}
+      <div className='grid min-w-0 grid-cols-1 gap-5 min-[1181px]:grid-cols-[minmax(0,1fr)_400px]'>
+        <BatchHistoryList
+          applied={applied}
+          hiddenOnNarrowView={isDetailView}
+          isError={jobsQuery.isError}
+          isFetching={jobsQuery.isFetching}
+          isLoading={jobsQuery.isLoading}
+          onAnnounce={announce}
+          onApplyFilters={(next) => goTo({ ...next, page: 1 })}
+          onClearStatusFilter={() => goTo({ status: '', page: 1 })}
+          onPageChange={(page) => goTo({ page })}
+          onResetFilters={() => goTo({ from: '', to: '', status: '', page: 1 })}
+          onRetry={() => {
+            void jobsQuery.refetch();
+          }}
+          onSelectRow={(jobId) => goTo({}, { jobId, view: 'detail' })}
+          rows={rows}
           selectedJobId={selectedJobId}
+          totalCount={jobsQuery.data?.totalCount ?? 0}
         />
 
-        <BatchRunDetailPanel
-          errorMessage={detailErrorMessage}
-          isError={isDetailError}
-          isLoading={isDetailLoading}
-          selectedRun={selectedRun}
+        <BatchDetailPanel
+          hasSelection={selectedJobId !== null}
+          hiddenOnNarrowView={!isDetailView}
+          isError={detailQuery.isError}
+          isFetching={detailQuery.isFetching}
+          isLoading={detailQuery.isLoading}
+          onAnnounce={announce}
+          onBackToList={() => goTo({}, { view: null })}
+          onReRun={(businessDate) =>
+            setTriggerDialog({ open: true, prefillDate: businessDate })
+          }
+          onRetry={() => {
+            void detailQuery.refetch();
+          }}
+          run={detailQuery.data ?? null}
         />
       </div>
 
-      <BatchOperationsFooter
-        filteredCount={filtered.length}
-        hasStartError={startBatchMutation.isError}
-        totalCount={totalCount}
+      <TriggerDialog
+        canUseAdvancedOptions={can('ops.advancedTriggerOptions')}
+        initialBusinessDate={triggerDialog.prefillDate}
+        isOpen={triggerDialog.open}
+        mutation={startBatchMutation}
+        onClose={() => setTriggerDialog({ open: false })}
+        onOpenJobDetail={(jobId) => {
+          setTriggerDialog({ open: false });
+          goTo({}, { jobId, view: 'detail' });
+        }}
+        onTriggered={(result) => {
+          setTriggerBanner({
+            jobId: result.jobId,
+            status: result.status,
+            businessDate: result.businessDate,
+            startedAt: result.startedAt,
+          });
+        }}
       />
     </div>
   );

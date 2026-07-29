@@ -18,7 +18,7 @@
   }
 }
 
-@media (max-width: 980px) {
+@media (max-width: 1024px) {
   .sidebar {
     position: static;
     width: 100%;
@@ -62,7 +62,7 @@
   }
 }
 
-@media (max-width: 720px) {
+@media (max-width: 640px) {
   .content {
     padding: 22px 0 20px;
   }

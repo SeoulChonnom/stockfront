@@ -26,8 +26,7 @@ describe('getAuthConfig', () => {
 
     expect(getAuthConfig()).toEqual({
       host: 'http://localhost:8000',
-      loginUrl:
-        'http://localhost:8000/main/login?redirect=%2Fmarket%2Flatest',
+      loginUrl: 'http://localhost:8000/main/login?redirect=%2Fmarket%2Flatest',
       tokenUrl: 'http://localhost:8000/api/users/token',
       isDevelopmentBypassEnabled: false,
     });
