@@ -17,7 +17,7 @@ import { MarketOverviewPage } from './market-overview-page';
  * index table values + ≤640px high/low subline survival, the PARTIAL banner's
  * per-market messages, the `articleLinks` toggle's `aria-expanded` contract,
  * the null-`globalHeadline` fallback copy, the `markets:[]` empty state, and
- * Viewer not receiving the ops-navigation button.
+ * a non-admin user not receiving the ops-navigation button.
  */
 
 const FIXED_NOW = new Date('2026-03-17T10:00:00+09:00');
@@ -135,10 +135,10 @@ describe('MarketOverviewPage — PARTIAL 배너', () => {
     ).toBeInTheDocument();
   });
 
-  it('gates "배치 운영에서 원인 보기" on can(\'ops.view\') — Viewer must not see it', () => {
+  it('gates "배치 운영에서 원인 보기" on can(\'ops.view\') — a non-admin user must not see it', () => {
     const snapshot = buildSnapshot({ status: 'partial' });
 
-    setRoleOverride('viewer');
+    setRoleOverride('user');
     const { rerender } = render(
       <MarketOverviewPage mode='latest' now={FIXED_NOW} snapshot={snapshot} />
     );
@@ -146,7 +146,7 @@ describe('MarketOverviewPage — PARTIAL 배너', () => {
       screen.queryByRole('button', { name: '배치 운영에서 원인 보기' })
     ).not.toBeInTheDocument();
 
-    setRoleOverride('operator');
+    setRoleOverride('admin');
     rerender(
       <MarketOverviewPage mode='latest' now={FIXED_NOW} snapshot={snapshot} />
     );
@@ -209,10 +209,10 @@ describe('MarketOverviewPage — 글로벌 헤드라인', () => {
 });
 
 describe('MarketOverviewPage — markets:[] 빈 상태', () => {
-  it('shows the FAILED-specific reason and hides the ops action for a Viewer', () => {
+  it('shows the FAILED-specific reason and hides the ops action for a non-admin user', () => {
     const snapshot = buildSnapshot({ status: 'failed', markets: [] });
 
-    setRoleOverride('viewer');
+    setRoleOverride('user');
     render(
       <MarketOverviewPage mode='latest' now={FIXED_NOW} snapshot={snapshot} />
     );
@@ -233,10 +233,10 @@ describe('MarketOverviewPage — markets:[] 빈 상태', () => {
     ).toBeInTheDocument();
   });
 
-  it('shows the non-FAILED reason and the ops action for an Operator', () => {
+  it('shows the non-FAILED reason and the ops action for an admin', () => {
     const snapshot = buildSnapshot({ status: 'ready', markets: [] });
 
-    setRoleOverride('operator');
+    setRoleOverride('admin');
     render(
       <MarketOverviewPage mode='latest' now={FIXED_NOW} snapshot={snapshot} />
     );

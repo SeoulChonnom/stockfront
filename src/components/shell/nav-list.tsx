@@ -21,8 +21,8 @@ import { saveScrollPosition } from './scroll-restoration';
  * drawer) and `onNavigate` (drawer closes itself after a link click; the
  * rail has nothing extra to do).
  *
- * The Operator-only "운영" group is rendered from a plain `if` — for a
- * Viewer (`can('ops.view') === false`) that `<div>` is simply never
+ * The admin-only "운영" group is rendered from a plain `if` — for a
+ * non-admin user (`can('ops.view') === false`) that `<div>` is simply never
  * constructed, so it never reaches the DOM (§10, §16-11). CSS-hiding it
  * would not satisfy that requirement; only NOT rendering it does.
  */

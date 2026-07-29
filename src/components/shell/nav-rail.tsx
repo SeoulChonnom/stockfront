@@ -6,9 +6,9 @@ import { DevRoleSimulator } from './dev-role-simulator';
 import { NavList } from './nav-list';
 import { ThemeToggleButton } from './theme-toggle';
 
-const ROLE_LABELS: Readonly<Record<'viewer' | 'operator', string>> = {
-  viewer: 'Viewer',
-  operator: 'Operator',
+const ROLE_LABELS: Readonly<Record<'user' | 'admin', string>> = {
+  user: 'User',
+  admin: 'Admin',
 };
 
 /**

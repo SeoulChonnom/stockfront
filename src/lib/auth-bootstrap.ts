@@ -1,9 +1,4 @@
 import { getAuthConfig, isDevelopmentBypassEnabled } from './auth-config';
-// `Role` is a type-only import: it is erased at compile time
-// (`verbatimModuleSyntax`), so this does not create a runtime circular
-// dependency even though `capabilities.ts` imports runtime values (
-// `getAuthBootstrapState`, `subscribeToAuthBootstrap`) from this file.
-import type { Role } from './capabilities';
 
 export type AuthBootstrapStatus =
   | 'idle'
@@ -18,12 +13,13 @@ export type AuthBootstrapState = Readonly<{
   accessToken: string | null;
   error: string | null;
   /**
-   * 토큰 발급 응답에 담겨 온 역할(있을 때만). 백엔드가 아직 role을 보내지
-   * 않으므로 오늘은 항상 `null`이다 — `capabilities.ts`의 `getRole()`이
-   * 이 값을 override 다음 우선순위로 소비하고, 없으면 자체 폴백으로
-   * 넘어간다(docs/design_v2/v2-backend-requests.md P-01).
+   * 토큰 발급 응답의 `roleList`를 방어적으로 파싱한 결과 — 문자열 배열
+   * 항목만 남기고, 필드가 없거나 배열이 아니면 빈 배열이다. 'ADMIN' 판정 등
+   * 실제 role 해석은 여기서 하지 않는다 — `capabilities.ts#getRole()`이
+   * 이 배열을 override 다음 우선순위로 소비하는 유일한 판단 지점이다
+   * (docs/design_v2/v2-backend-requests.md P-01, 확정된 계약).
    */
-  role: Role | null;
+  roles: readonly string[];
 }>;
 
 type AuthBootstrapListener = () => void;
@@ -31,24 +27,20 @@ type AuthBootstrapListener = () => void;
 type UserRdo = {
   accessToken?: unknown;
   /**
-   * 백엔드가 아직 내려주지 않는 필드(P-01, 미확정). 오면 대소문자 무관하게
-   * `'viewer' | 'operator'`로 정규화하고, 인식할 수 없는 값은 조용히
-   * 무시한다(부트스트랩을 실패시키지 않는다).
+   * 확정된 계약(P-01): `POST /api/users/token` 응답에 담겨 오는 역할 목록,
+   * 예) `["USER", "ADMIN"]`. 선택 필드로 방어적으로 읽는다 — 배열이
+   * 아니거나, 배열 안의 항목이 문자열이 아니면 해당 항목/전체를 조용히
+   * 무시한다(부트스트랩을 실패시키지 않는다). 대소문자 정규화와 'ADMIN'
+   * 판정은 `capabilities.ts`의 책임이다.
    */
-  role?: unknown;
-  /**
-   * P-01의 대안(세분화된 permissions 배열)을 위해 방어적으로 타입만
-   * 예약해 둔다 — 현재는 파싱하지 않는다. 채택 여부는
-   * docs/design_v2/v2-backend-requests.md P-01 참고.
-   */
-  permissions?: unknown;
+  roleList?: unknown;
 };
 
 const idleState: AuthBootstrapState = Object.freeze({
   status: 'idle',
   accessToken: null,
   error: null,
-  role: null,
+  roles: [],
 });
 
 let currentState = idleState;
@@ -66,13 +58,13 @@ function createState(
   status: AuthBootstrapStatus,
   accessToken: string | null,
   error: string | null = null,
-  role: Role | null = null
+  roles: readonly string[] = []
 ): AuthBootstrapState {
   return Object.freeze({
     status,
     accessToken,
     error,
-    role,
+    roles,
   });
 }
 
@@ -120,29 +112,26 @@ function readAccessToken(body: unknown) {
 }
 
 /**
- * `role`을 방어적으로 읽는다. 백엔드는 오늘 이 필드를 보내지 않으므로
- * `undefined`가 정상 경로다. 문자열이 아니거나 대소문자 무관 비교로도
- * `'viewer' | 'operator'`에 해당하지 않으면 `null`을 반환해 호출부가
- * `capabilities.ts`의 자체 폴백으로 넘어가게 한다 — 절대 throw하지 않는다
- * (accessToken 검증과의 핵심 차이).
+ * `roleList`를 방어적으로 읽는다. 배열이 아니면(필드가 없거나, 형식이
+ * 어긋나면) 빈 배열을 반환하고, 배열이어도 문자열이 아닌 항목은 걸러낸다.
+ * accessToken 검증과 달리 이 함수는 절대 throw하지 않는다 — 필드가 없거나
+ * 형식이 어긋나도 부트스트랩 자체는 성공해야 한다(호출부인
+ * `capabilities.ts#getRole()`이 빈 배열을 자체 최소권한(least-privilege)
+ * 폴백으로 처리한다). 'ADMIN' 판정 등 실제 role 해석은 여기서 하지 않는다.
  */
-function readRole(body: unknown): Role | null {
-  const rawRole =
-    body && typeof body === 'object' && 'role' in body
-      ? (body as UserRdo).role
+function readRoleList(body: unknown): readonly string[] {
+  const rawRoleList =
+    body && typeof body === 'object' && 'roleList' in body
+      ? (body as UserRdo).roleList
       : undefined;
 
-  if (typeof rawRole !== 'string') {
-    return null;
+  if (!Array.isArray(rawRoleList)) {
+    return [];
   }
 
-  const normalizedRole = rawRole.trim().toLowerCase();
-
-  if (normalizedRole === 'viewer' || normalizedRole === 'operator') {
-    return normalizedRole;
-  }
-
-  return null;
+  return rawRoleList.filter(
+    (entry): entry is string => typeof entry === 'string'
+  );
 }
 
 function getBootstrapFailureState(message: string) {
@@ -247,7 +236,7 @@ export async function requestAccessTokenBootstrap() {
 
 type TokenBootstrapResult = Readonly<{
   accessToken: string;
-  role: Role | null;
+  roles: readonly string[];
 }>;
 
 async function requestTokenBootstrap(): Promise<TokenBootstrapResult> {
@@ -255,7 +244,7 @@ async function requestTokenBootstrap(): Promise<TokenBootstrapResult> {
 
   return {
     accessToken: readAccessToken(parsedBody),
-    role: readRole(parsedBody),
+    roles: readRoleList(parsedBody),
   };
 }
 
@@ -276,8 +265,8 @@ export function bootstrapAuth() {
   publishState(createState('loading', null));
 
   inFlightBootstrap = requestTokenBootstrap()
-    .then(({ accessToken, role }) =>
-      publishState(createState('authenticated', accessToken, null, role))
+    .then(({ accessToken, roles }) =>
+      publishState(createState('authenticated', accessToken, null, roles))
     )
     .catch((error: unknown) =>
       getBootstrapFailureState(

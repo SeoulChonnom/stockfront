@@ -6,94 +6,93 @@
 Decisions)와 `docs/design_v2/v2-decisions.md`의 결정 로그를 근거로 하며, 프런트는 이
 문서의 계약이 도착하기 전까지 각 항목에 적힌 기본안으로 안전하게 동작한다.
 
-우선순위는 **P-01(사용자 역할/권한)이 최우선**이다 — 담당 PO가 백엔드에 per-user
-permissions를 추가하기로 이미 확정했기 때문이다. 나머지는 README §14에 이미 식별되어
-있던 의존성을 같은 형식으로 정리한 것이다.
+우선순위는 **P-01(사용자 역할/권한)이 최우선**이었다 — 담당 PO가 백엔드에 per-user
+role을 추가하기로 확정했고, 그 작업이 이제 완료되어 아래에 실제 계약으로 기록한다.
+나머지는 README §14에 이미 식별되어 있던 의존성을 같은 형식으로 정리한 것이다.
 
 ---
 
-## P-01. 사용자 역할/권한 (최우선 · 확정된 작업)
+## P-01. 사용자 역할/권한 (확정 · 구현 완료)
 
-### 현재 상태
+### 확정된 계약
 
 - `POST /api/users/token`(별도 인증 서비스, `docs/api_spec_doc.md` §2-4 — 이 배치/페이지
-  API 명세서에는 문서화되어 있지 않다)의 응답은 오늘 아래 형태만 보장된다:
+  API 명세서에는 문서화되어 있지 않다)의 응답은 다음 형태를 보장한다:
 
   ```json
   {
-    "accessToken": "eyJhbGciOi..."
+    "accessToken": "eyJhbGciOi...",
+    "username": "string",
+    "name": "string",
+    "roleList": ["USER", "ADMIN"]
   }
   ```
 
-- 프런트는 `src/lib/auth-bootstrap.ts`에서 이 응답을 파싱해 `accessToken`만 읽는다.
-  역할/권한 개념은 백엔드에 전혀 없다 — README §14 D-01, `docs/api_spec_doc.md` 전체에
-  role/permission 관련 필드나 엔드포인트가 없음을 확인했다.
-- 그 결과 `src/lib/capabilities.ts`가 오늘 모든 사용자를 사실상 `'operator'`로
-  취급한다(아래 "생기면 바뀌는 프런트 지점" 참고) — 즉 **오늘 모든 사용자는 이미
-  `/ops/batches` 전체 접근 권한을 가지고 있다.**
+| 필드     | 타입       | 필수 | 설명                                                       |
+| -------- | ---------- | ---- | ---------------------------------------------------------- |
+| roleList | string[]   | N    | 사용자가 가진 역할 목록. 대소문자는 프런트가 관대하게 처리한다. |
 
-### 제안하는 응답 확장
+- **역할은 단일 계층이다 — "Operator"라는 별도 역할은 존재하지 않는다.** `roleList`에
+  `ADMIN`이 포함되어 있으면(대소문자 무관) `admin`, 그 외 모든 경우(빈 배열, `USER`만
+  있는 경우, 필드 자체가 없는 경우, 형식이 어긋난 경우)는 전부 `user`다.
+  `docs/api_spec_doc.md` 전체를 확인해도 role/permission 관련 필드나 엔드포인트는
+  이 `roleList` 하나뿐이다.
+- JWT payload에도 동일한 정보가 `"roles":["USER","ADMIN"]` claim으로 실려 있지만,
+  프런트는 **JWT를 디코딩하지 않는다** — 클라이언트는 서명을 검증할 수 없으므로
+  디코딩은 이득 없이 위험만 더한다. 응답 body의 `roleList`만을 신뢰한다.
 
-기존 필드는 그대로 두고, 다음 필드를 **선택(optional)**으로 추가한다:
+### 왜 `roleList: string[]`이고 세분화된 `permissions[]`가 아닌가
 
-```json
-{
-  "accessToken": "eyJhbGciOi...",
-  "role": "VIEWER"
-}
-```
-
-| 필드   | 타입                        | 필수 | 설명                                        |
-| ------ | --------------------------- | ---- | ------------------------------------------- |
-| role   | string(`"VIEWER"` \| `"OPERATOR"`) | N    | 사용자 역할. 대소문자는 프런트가 관대하게 처리한다. |
-
-### 왜 `role` 문자열이고 `permissions[]` 배열이 아닌가
-
-두 가지 선택지를 비교했다:
-
-- **(A) `role: 'VIEWER' | 'OPERATOR'` 단일 필드 — 채택**
-- (B) `permissions: string[]` (예: `["ops.view", "ops.trigger", ...]`) 세분화 배열
-
-현재 프런트의 권한 모델(`src/lib/capabilities.ts`)은 역할 2종(Viewer/Operator)이
+현재 프런트의 권한 모델(`src/lib/capabilities.ts`)은 역할 2종(user/admin)이
 `Capability` 4종(`ops.view`, `ops.trigger`, `ops.viewLogs`,
 `ops.advancedTriggerOptions`)을 **전부-아니면-전무**로 묶어서 부여하는 고정 매핑이다
-(README §10 Role/Capability Map). 오늘 시점에 역할별로 capability가 갈리는 시나리오가
-없으므로, `permissions[]`가 주는 세분성은 지금 당장 쓸 데가 없고 백엔드에 더 많은
-필드 설계·직렬화 부담만 지운다. `role` 단일 필드가 계약을 더 작게 만들고, 프런트
-파싱 로직도 한 줄(`normalizeRole`)로 끝난다. **세분화된 권한이 실제로 필요해지는
-시점(예: Operator 중 일부만 `force` 허용 — D-11)이 오면 그때 `permissions[]`나
-별도 필드를 추가로 논의하면 된다** — 지금 미리 설계하지 않는다.
+(README §10 Role/Capability Map). 역할별로 capability가 갈리는 시나리오가 아직
+없으므로, 세분화된 `permissions[]`가 주는 이점은 지금 당장 쓸 데가 없다. `roleList`가
+계약을 더 작게 유지하고, 프런트 파싱 로직도 짧게 끝난다(`src/lib/capabilities.ts`의
+`deriveRoleFromRoleList`). **세분화된 권한이 실제로 필요해지는 시점(예: admin 중
+일부만 `force` 허용 — D-11)이 오면 그때 별도 필드를 추가로 논의한다.**
 
-### 하위 호환 보장
+### 하위 호환 처리
 
-- `role` 필드는 **선택**이다. 필드가 없거나, 문자열이 아니거나, `VIEWER`/`OPERATOR`로
-  (대소문자 무관) 정규화되지 않는 값이면 프런트는 **부트스트랩을 실패시키지 않고**
-  `'operator'` 폴백으로 넘어간다 — 오늘의 동작과 100% 동일하다.
-- 즉 이 필드는 **하위 호환을 깨지 않고 언제든 추가할 수 있다.** 백엔드가 준비되는
-  대로, 프런트 배포 없이도(다음 로그인부터) 바로 적용된다.
+- `roleList` 필드는 프런트에서 여전히 **선택적으로** 파싱된다
+  (`src/lib/auth-bootstrap.ts`의 `readRoleList`). 필드가 없거나, 배열이 아니거나,
+  배열 안에 문자열이 아닌 항목이 섞여 있어도 **부트스트랩을 실패시키지 않는다** —
+  형식이 어긋난 항목은 조용히 걸러내고, 배열 자체가 없으면 빈 배열로 취급한다.
+- **단, 폴백 값이 바뀌었다.** 예전에는 역할 출처 자체가 없었기 때문에 폴백을
+  `'operator'`(모든 화면 접근 허용)로 두어야 했다. 이제 백엔드가 실제로 `roleList`를
+  내려주므로, 그 관계가 뒤집혔다: `roleList`가 없거나 `ADMIN`을 포함하지 않으면
+  **`'user'`(최소 권한)로 취급한다.** 즉 **백엔드가 어떤 이유로든 `roleList`를
+  누락시키면, 그 사용자는 이제 관리자가 아니라 일반 사용자로 보인다** — 예전
+  폴백과 정반대다. 이는 의도된 보안 강화이지만, 백엔드가 실수로 `roleList`를
+  빠뜨리는 응답을 보내면 실제 관리자도 `/ops/batches`에서 403을 보게 된다는 뜻이므로,
+  이 필드는 관리자 계정에 한해 항상 채워 보내야 한다.
 
-### 생기면 바뀌는 프런트 지점
+### 실제 반영 지점
 
-- **`src/lib/auth-bootstrap.ts`의 파싱 로직만** 이 필드를 이미 읽고 있다(`readRole`).
-  즉 백엔드가 이 필드를 보내기 시작하는 순간 **프런트 코드 변경이 전혀 필요 없다.**
-- `src/lib/capabilities.ts`는 이미 `auth-bootstrap.ts`가 파싱한 role을 override 다음
-  우선순위로 소비하도록 구현되어 있다(`getRole()` 우선순위: 1. `setRoleOverride` →
-  2. auth-bootstrap이 파싱한 role → 3~4. 폴백 `'operator'`). `capabilities.ts`가
-  프런트 전체에서 role/capability 판단의 **단일 소비 지점**이므로, 다른 화면·컴포넌트
-  코드는 전혀 건드릴 필요가 없다.
+- `src/lib/auth-bootstrap.ts`의 `readRoleList()`가 `roleList`를 방어적으로 파싱해
+  `AuthBootstrapState.roles: string[]`로 노출한다. 'ADMIN' 판정 등 실제 role 해석은
+  하지 않는다.
+- `src/lib/capabilities.ts`의 `deriveRoleFromRoleList()`가 그 배열을 `admin`/`user`로
+  정규화하는 유일한 지점이다(`getRole()` 우선순위: 1. `setRoleOverride` → 2.
+  `roleList`에서 도출한 role → 3~4. 폴백 `'user'`/개발 빌드 `'admin'`).
+  `capabilities.ts`가 프런트 전체에서 role/capability 판단의 **단일 소비 지점**이므로,
+  다른 화면·컴포넌트 코드는 건드릴 필요가 없었다.
 
-### 반드시 함께 필요한 것 — 서버 측 강제
+### 반드시 함께 필요한 것 — 서버 측 강제 (여전히 미확인, 아직 outstanding)
 
 **클라이언트 게이팅은 보안 경계가 아니다.** `capabilities.ts` 파일 상단 주석에도 이
-경고를 명시해 두었다. `role` 필드를 응답에 추가하는 것과는 **별개로**, 서버가 반드시:
+경고를 명시해 두었다. `roleList` 필드가 응답에 추가된 것과는 **별개로**, 서버가
+반드시 다음을 강제해야 한다 — 이 항목은 위 프런트 작업이 끝난 지금도 **여전히
+확인되지 않은 상태**다:
 
-1. `/ops/*` 관련 조회(배치 목록·상세, `errorMessage`/`logSummary` 등)를 Viewer 토큰으로
-   호출하면 **403**을 반환해야 한다.
-2. 배치 실행(trigger, `POST /batch/market-daily`)을 Viewer 토큰으로 호출하면 **403**을
-   반환해야 한다.
+1. `/ops/*` 관련 조회(배치 목록·상세, `errorMessage`/`logSummary` 등)를 비관리자
+   토큰으로 호출하면 **403**을 반환해야 한다.
+2. 배치 실행(trigger, `POST /batch/market-daily`)을 비관리자 토큰으로 호출하면
+   **403**을 반환해야 한다.
 
 프런트가 운영 메뉴를 숨기고 버튼을 비활성화해도, 서버가 위 두 가지를 강제하지 않으면
-누구든 API를 직접 호출해 우회할 수 있다.
+누구든 API를 직접 호출해 우회할 수 있다. **역할 폴백이 최소 권한으로 바뀐 지금도 이
+서버 측 강제는 대체재가 아니다** — 프런트 게이팅은 UX 장치일 뿐이라는 원칙은 그대로다.
 
 ---
 

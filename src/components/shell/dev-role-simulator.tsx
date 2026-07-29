@@ -8,8 +8,8 @@ import { setRoleOverride, useRole } from '@/lib/capabilities';
  * never imported/rendered in a production build's code path.
  *
  * Flips the single-source-of-truth role override in `src/lib/capabilities.ts`
- * so a developer can preview Viewer vs Operator nav/screens without a real
- * backend role claim (README §10 "[가정]").
+ * so a developer can preview User vs Admin nav/screens without a real
+ * backend `roleList` (README §10).
  */
 export function DevRoleSimulator() {
   const role = useRole();
@@ -20,22 +20,22 @@ export function DevRoleSimulator() {
         DEV
       </span>
       <Button
-        aria-pressed={role === 'viewer'}
-        onClick={() => setRoleOverride('viewer')}
+        aria-pressed={role === 'user'}
+        onClick={() => setRoleOverride('user')}
         size='sm'
         type='button'
-        variant={role === 'viewer' ? 'primary' : 'ghost'}
+        variant={role === 'user' ? 'primary' : 'ghost'}
       >
-        Viewer
+        User
       </Button>
       <Button
-        aria-pressed={role === 'operator'}
-        onClick={() => setRoleOverride('operator')}
+        aria-pressed={role === 'admin'}
+        onClick={() => setRoleOverride('admin')}
         size='sm'
         type='button'
-        variant={role === 'operator' ? 'primary' : 'ghost'}
+        variant={role === 'admin' ? 'primary' : 'ghost'}
       >
-        Operator
+        Admin
       </Button>
     </div>
   );

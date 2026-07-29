@@ -34,14 +34,14 @@ const PAGE_SIZE = 20;
  * `/ops/batches` (README §7-6/§7-7/§10/§16-11).
  *
  * SECURITY: `can('ops.view')` below is a UX affordance, not a security
- * boundary — the backend does not yet enforce Operator-only access to this
- * screen or its endpoints (README §10, `src/lib/capabilities.ts`'s own
- * top-of-file note). A Viewer gets `PermissionState` and NOTHING else: the
- * gate is a plain `if` that returns before `OperatorBatchOperations` (the
- * component that owns every batch query/mutation) is ever rendered, so
+ * boundary — the backend must still enforce ADMIN-only access to this
+ * screen and its endpoints (README §10, `src/lib/capabilities.ts`'s own
+ * top-of-file note). A non-admin user gets `PermissionState` and NOTHING
+ * else: the gate is a plain `if` that returns before `AdminBatchOperations`
+ * (the component that owns every batch query/mutation) is ever rendered, so
  * React never even calls its hooks — the log, Trigger dialog, detail panel
  * and summary tiles are absent from the DOM, not hidden by CSS, and no
- * batch-jobs/batch-job-detail request is ever issued for a Viewer.
+ * batch-jobs/batch-job-detail request is ever issued for a non-admin user.
  */
 export function BatchOperationsPage({
   searchParams,
@@ -54,10 +54,10 @@ export function BatchOperationsPage({
     return <PermissionState />;
   }
 
-  return <OperatorBatchOperations searchParams={searchParams} />;
+  return <AdminBatchOperations searchParams={searchParams} />;
 }
 
-function OperatorBatchOperations({
+function AdminBatchOperations({
   searchParams,
 }: {
   searchParams: URLSearchParams;

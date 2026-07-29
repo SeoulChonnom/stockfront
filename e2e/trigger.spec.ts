@@ -109,7 +109,7 @@ test.describe('§16-10 Trigger lifecycle — error paths', () => {
     {
       triggerMode: 'forbidden403',
       expectedCode: '403',
-      expectedMessage: '수동 실행 권한이 없습니다. Operator 권한이 필요합니다.',
+      expectedMessage: '수동 실행 권한이 없습니다. 관리자(ADMIN) 권한이 필요합니다.',
     },
     {
       triggerMode: 'validation422',
