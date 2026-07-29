@@ -1,22 +1,38 @@
-import { PanelsTopLeft } from 'lucide-react';
+import { StatusCard } from '@/components/shell/status-card';
 import { Button } from '@/components/ui/button';
 
 import { createNavigateHandler } from '../lib/app-state';
+import { withBasePath } from '../lib/router';
 
+/**
+ * 404 — README §7-8. Renders inside `AppShell`'s `<main>` (nav rail/header
+ * stay visible; this is a normal in-app route, unlike the shell-less
+ * auth-bootstrap states in `App.tsx`), so `fullScreen={false}`.
+ *
+ * `titleId="page-title"` is what makes the route-focus contract (§7-1,
+ * §9 — "이동 후 `document.activeElement` === `#page-title`") work for this
+ * route the same way it already does for the other four pages that have
+ * had a `#page-title` heading since before this phase.
+ */
 export function NotFoundPage() {
   return (
-    <section className='empty-state'>
-      <PanelsTopLeft size={34} />
-      <h1>Route not found</h1>
-      <p>정의되지 않은 경로입니다. 최신 시장 화면으로 다시 이동하세요.</p>
-      <Button asChild variant='primary'>
-        <a
-          href='/market/latest'
-          onClick={createNavigateHandler('/market/latest')}
-        >
-          Latest Market으로 이동
-        </a>
-      </Button>
-    </section>
+    <StatusCard
+      actions={
+        <Button asChild variant='primary'>
+          <a
+            href={withBasePath('/market/latest')}
+            onClick={createNavigateHandler('/market/latest')}
+          >
+            최신 브리프로 이동
+          </a>
+        </Button>
+      }
+      badge='404 · ROUTE_NOT_FOUND'
+      description='주소가 바뀌었거나 잘못 입력됐을 수 있습니다. 최신 브리프에서 다시 시작하세요.'
+      fullScreen={false}
+      title='이 주소에 해당하는 화면이 없습니다'
+      titleId='page-title'
+      tone='danger'
+    />
   );
 }

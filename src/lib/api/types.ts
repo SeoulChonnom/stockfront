@@ -80,7 +80,7 @@ type RepresentativeArticleResponse = {
   naverLink?: string | null;
 };
 
-type ArticleLinkResponse = {
+export type ArticleLinkResponse = {
   processedArticleId?: number | null;
   clusterId?: string | null;
   clusterTitle?: string | null;

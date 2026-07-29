@@ -1,0 +1,151 @@
+{
+  "generatedBy": "e2e/capture-screenshots.spec.ts",
+  "note": "Phase 9 Part B v2 screenshot evidence. Never overwrites docs/design_v2/screenshots/ (v1 evidence).",
+  "count": 18,
+  "screenshots": [
+    {
+      "file": "01-latest-ready-desktop-light.png",
+      "route": "/market/latest",
+      "viewport": "1440",
+      "theme": "light",
+      "role": "operator",
+      "fixture": "pageFixture(ready)"
+    },
+    {
+      "file": "02-latest-ready-mobile-light.png",
+      "route": "/market/latest",
+      "viewport": "390",
+      "theme": "light",
+      "role": "operator",
+      "fixture": "pageFixture(ready)"
+    },
+    {
+      "file": "03-archive-search-ready-desktop-light.png",
+      "route": "/market/archive/search",
+      "viewport": "1440",
+      "theme": "light",
+      "role": "operator",
+      "fixture": "archiveFixture(ready, page=1)"
+    },
+    {
+      "file": "04-archive-search-ready-mobile-light.png",
+      "route": "/market/archive/search",
+      "viewport": "390",
+      "theme": "light",
+      "role": "operator",
+      "fixture": "archiveFixture(ready, page=1)"
+    },
+    {
+      "file": "05-archive-detail-ready-desktop-light.png",
+      "route": "/market/archive/2026-07-06",
+      "viewport": "1440",
+      "theme": "light",
+      "role": "operator",
+      "fixture": "pageFixture(ready, 2026-07-06)"
+    },
+    {
+      "file": "06-archive-detail-ready-mobile-light.png",
+      "route": "/market/archive/2026-07-06",
+      "viewport": "390",
+      "theme": "light",
+      "role": "operator",
+      "fixture": "pageFixture(ready, 2026-07-06)"
+    },
+    {
+      "file": "07-cluster-detail-ready-desktop-light.png",
+      "route": "/market/cluster/51f0d9a0-9fc5-4f15-a4f9-62856f128683?origin=latest",
+      "viewport": "1440",
+      "theme": "light",
+      "role": "operator",
+      "fixture": "clusterFixture(ready)"
+    },
+    {
+      "file": "08-cluster-detail-ready-mobile-light.png",
+      "route": "/market/cluster/51f0d9a0-9fc5-4f15-a4f9-62856f128683?origin=latest",
+      "viewport": "390",
+      "theme": "light",
+      "role": "operator",
+      "fixture": "clusterFixture(ready)"
+    },
+    {
+      "file": "09-batch-ops-ready-desktop-light-operator.png",
+      "route": "/ops/batches",
+      "viewport": "1440",
+      "theme": "light",
+      "role": "operator",
+      "fixture": "batchListFixture(ready) + batchDetailFixture"
+    },
+    {
+      "file": "10-batch-ops-ready-mobile-light-operator.png",
+      "route": "/ops/batches",
+      "viewport": "390",
+      "theme": "light",
+      "role": "operator",
+      "fixture": "batchListFixture(ready) + batchDetailFixture"
+    },
+    {
+      "file": "11-latest-loading-desktop.png",
+      "route": "/market/latest",
+      "viewport": "1440",
+      "theme": "light",
+      "role": "operator",
+      "fixture": "scenario=loading (never resolves)"
+    },
+    {
+      "file": "12-latest-error5xx-desktop.png",
+      "route": "/market/latest",
+      "viewport": "1440",
+      "theme": "light",
+      "role": "operator",
+      "fixture": "scenario=error5xx"
+    },
+    {
+      "file": "13-latest-partial-desktop.png",
+      "route": "/market/latest",
+      "viewport": "1440",
+      "theme": "light",
+      "role": "operator",
+      "fixture": "pageFixture(partial)"
+    },
+    {
+      "file": "14-batch-ops-permission403-desktop-viewer.png",
+      "route": "/ops/batches",
+      "viewport": "1440",
+      "theme": "light",
+      "role": "viewer",
+      "fixture": "PermissionState (role=viewer)"
+    },
+    {
+      "file": "15-trigger-pending-desktop.png",
+      "route": "/ops/batches",
+      "viewport": "1440",
+      "theme": "light",
+      "role": "operator",
+      "fixture": "triggerMode=success (captured mid-flight, 300ms mock delay)"
+    },
+    {
+      "file": "16-trigger-success-desktop.png",
+      "route": "/ops/batches",
+      "viewport": "1440",
+      "theme": "light",
+      "role": "operator",
+      "fixture": "triggerResult(success) -> jobId 1043"
+    },
+    {
+      "file": "17-trigger-409-desktop.png",
+      "route": "/ops/batches",
+      "viewport": "1440",
+      "theme": "light",
+      "role": "operator",
+      "fixture": "triggerResult(conflict409) -> existingJobId 1042"
+    },
+    {
+      "file": "18-latest-ready-desktop-dark.png",
+      "route": "/market/latest",
+      "viewport": "1440",
+      "theme": "dark",
+      "role": "operator",
+      "fixture": "pageFixture(ready) — same route/fixture as #01, dark theme"
+    }
+  ]
+}

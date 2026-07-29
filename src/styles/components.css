@@ -1,0 +1,34 @@
+/*
+ * Component keyframes — Market Brief UI v2 (Phase 3).
+ *
+ * Everything else in the Phase 3 component set is plain Tailwind utility
+ * classes (matching the existing `src/components/ui/*` convention — no
+ * dedicated stylesheet for those). The two keyframes below are the only
+ * things Tailwind's utility classes can't express on their own: a moving
+ * gradient sweep (skeleton shimmer, README §6/§8: "shimmer 1.3s linear")
+ * and a one-shot slide-in for the Drawer panel. Both are referenced from
+ * component files via Tailwind arbitrary values, e.g.
+ * `animate-[skeleton-shimmer_var(--dur-shimmer)_linear_infinite]`.
+ *
+ * `prefers-reduced-motion: reduce` is handled globally in
+ * `src/styles/base.css` (`animation-duration: 0.01ms !important` etc.), so
+ * these keyframes don't need their own reduced-motion override.
+ */
+
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@keyframes drawer-slide-in {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}

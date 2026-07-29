@@ -1,0 +1,2120 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{font-family:'IBM Plex Sans KR',system-ui,-apple-system,'Segoe UI',sans-serif;background:#f6f8fb}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px;border-radius:3px}
+h1[tabindex="-1"]:focus,main[tabindex="-1"]:focus{outline:none}
+[data-app]{
+--bg:#f6f8fb;--surface:#ffffff;--surface2:#f1f4f9;--surface3:#e6ebf3;
+--line:#dce3ed;--line2:#c2ccdb;
+--fg:#0f2743;--fg2:#4a6180;--fg3:#7288a5;
+--accent:#0f5bff;--accent-fg:#ffffff;--accent-soft:#eaf1ff;--accent-line:#bdd2ff;
+--up:#0d8b5f;--down:#be3348;
+--success:#0d8b5f;--success-soft:#e7f6ef;--success-line:#a8dcc5;
+--warning:#8a5a00;--warning-soft:#fdf3dd;--warning-line:#e7cd91;
+--danger:#be3348;--danger-soft:#fdecef;--danger-line:#f0b8c2;
+--info:#0f5bff;--info-soft:#eaf1ff;--info-line:#bdd2ff;
+--neutral:#4a6180;--neutral-soft:#eef1f6;--neutral-line:#d5dde8;
+--focus:#0f5bff;
+--r1:4px;--r2:8px;--r3:12px;
+--sh2:0 8px 24px rgba(15,39,67,.10);--sh3:0 24px 56px rgba(15,39,67,.20);
+--mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+--sans:'IBM Plex Sans KR',system-ui,-apple-system,'Segoe UI',sans-serif;
+--shell:248px minmax(0,1fr);--rail-d:flex;--mob-d:none;
+--pad:32px;--gap:20px;--maxw:1280px;
+--g2:1fr 1fr;--g3:repeat(3,minmax(0,1fr));--md:minmax(0,1fr) 400px;
+--idx:repeat(auto-fit,minmax(170px,1fr));--cl:minmax(0,1fr) 200px;
+--h1:26px;--lead:16px;--tc2:table-cell;--tc3:table-cell;--tc2i:none;--tc3i:none;
+--tone:var(--neutral);--tone-soft:var(--neutral-soft);--tone-line:var(--neutral-line);
+color-scheme:light;
+}
+[data-app][data-theme="dark"]{
+--bg:#0a1120;--surface:#111a2b;--surface2:#16223a;--surface3:#1d2c48;
+--line:#243554;--line2:#35496d;
+--fg:#e9f1fb;--fg2:#a3b6d0;--fg3:#7c92b0;
+--accent:#6b9cff;--accent-fg:#07101d;--accent-soft:#17253f;--accent-line:#304b7c;
+--up:#3cd29c;--down:#ff7c91;
+--success:#3cd29c;--success-soft:#0f2f24;--success-line:#1f5a45;
+--warning:#f4cb62;--warning-soft:#31280f;--warning-line:#5d4c1b;
+--danger:#ff7c91;--danger-soft:#39191f;--danger-line:#6b2c37;
+--info:#6b9cff;--info-soft:#17253f;--info-line:#304b7c;
+--neutral:#a3b6d0;--neutral-soft:#17233a;--neutral-line:#2a3b5c;
+--focus:#8bb2ff;
+--sh2:0 8px 24px rgba(0,0,0,.35);--sh3:0 24px 56px rgba(0,0,0,.55);
+color-scheme:dark;
+}
+[data-app][data-density="compact"]{--pad:20px;--gap:14px}
+@media (max-width:1180px){[data-app]{--md:minmax(0,1fr);--g3:repeat(2,minmax(0,1fr));--tc3:none;--tc3i:block}}
+@media (max-width:1024px){[data-app]{--shell:minmax(0,1fr);--rail-d:none;--mob-d:flex;--pad:20px;--g2:1fr;--maxw:100%}}
+@media (max-width:640px){[data-app]{--pad:14px;--gap:12px;--h1:21px;--lead:15px;--g3:1fr;--cl:minmax(0,1fr);--idx:repeat(auto-fit,minmax(136px,1fr));--tc2:none;--tc2i:block}}
+[data-tone="READY"],[data-tone="SUCCESS"],[data-tone="success"]{--tone:var(--success);--tone-soft:var(--success-soft);--tone-line:var(--success-line)}
+[data-tone="PARTIAL"],[data-tone="warning"]{--tone:var(--warning);--tone-soft:var(--warning-soft);--tone-line:var(--warning-line)}
+[data-tone="FAILED"],[data-tone="danger"]{--tone:var(--danger);--tone-soft:var(--danger-soft);--tone-line:var(--danger-line)}
+[data-tone="RUNNING"],[data-tone="PENDING"],[data-tone="info"]{--tone:var(--info);--tone-soft:var(--info-soft);--tone-line:var(--info-line)}
+[data-tone="SKIPPED"],[data-tone="neutral"]{--tone:var(--neutral);--tone-soft:var(--neutral-soft);--tone-line:var(--neutral-line)}
+[data-dir="up"]{color:var(--up)}
+[data-dir="down"]{color:var(--down)}
+[data-dir="flat"]{color:var(--fg3)}
+[data-nav][data-active="true"]{background:var(--accent-soft);color:var(--accent);border-color:var(--accent-line)}
+[data-row][data-selected="true"]{background:var(--accent-soft);box-shadow:inset 3px 0 0 var(--accent)}
+[data-row][data-attention="true"]{box-shadow:inset 3px 0 0 var(--danger)}
+[data-skel]{background:linear-gradient(90deg,var(--surface2),var(--surface3),var(--surface2));background-size:200% 100%;animation:sh 1.3s linear infinite;border-radius:var(--r1)}
+[data-spin]{animation:spin .9s linear infinite}
+@keyframes sh{0%{background-position:200% 0}100%{background-position:-200% 0}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){*{animation-duration:1ms!important;transition-duration:1ms!important}}
+@media (forced-colors:active){[data-app]{--line:CanvasText;--line2:CanvasText}}
+</style>
+</helmet>
+<div data-app data-theme="{{ theme }}" data-density="{{ density }}" style="min-height:100vh;background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:14px;line-height:1.6">
+
+<a href="#main" style="position:fixed;left:12px;top:-64px;z-index:90;padding:10px 16px;background:var(--accent);color:var(--accent-fg);border-radius:var(--r2);font-weight:600;transition:top .12s" style-focus="top:12px">본문으로 바로가기</a>
+
+<div aria-live="polite" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap">{{ live }}</div>
+
+<sc-if value="{{ authGate }}">
+<main style="min-height:100vh;display:grid;place-items:center;padding:24px">
+<div role="{{ authRole }}" aria-live="{{ authLive }}" style="max-width:440px;text-align:center;background:var(--surface);border:1px solid var(--line);border-radius:var(--r3);padding:32px">
+<div data-tone="{{ authTone }}" style="display:inline-flex;align-items:center;gap:7px;padding:4px 9px;border-radius:var(--r1);font-size:12px;font-weight:600;color:var(--tone);background:var(--tone-soft);border:1px solid var(--tone-line);margin-bottom:14px">{{ authChip }}</div>
+<h1 id="page-title" tabindex="-1" style="margin:0 0 8px;font-size:20px;font-weight:600">{{ authTitle }}</h1>
+<p style="margin:0 0 18px;color:var(--fg2);text-wrap:pretty">{{ authBody }}</p>
+<sc-if value="{{ authBusy }}">
+<div aria-hidden="true" style="display:flex;justify-content:center;margin-bottom:18px"><span data-spin style="width:18px;height:18px;border:2px solid var(--accent);border-top-color:transparent;border-radius:50%;display:inline-block"></span></div>
+</sc-if>
+<button type="button" onClick="{{ onAuthRetry }}" style="display:inline-flex;align-items:center;justify-content:center;min-height:40px;padding:0 16px;border-radius:var(--r2);border:1px solid var(--accent);background:var(--accent);color:var(--accent-fg);font-size:13px;font-weight:600;cursor:pointer">{{ authAction }}</button>
+</div>
+</main>
+</sc-if>
+
+<sc-if value="{{ shellOn }}" hint-placeholder-val="{{ true }}">
+<div style="display:grid;grid-template-columns:var(--shell)">
+
+<aside style="display:var(--rail-d);flex-direction:column;gap:20px;position:sticky;top:0;height:100vh;padding:20px 14px;border-right:1px solid var(--line);background:var(--surface)">
+<div style="padding:0 8px">
+<div style="font-size:16px;font-weight:700;letter-spacing:-.01em">Market Brief</div>
+<div style="font-size:12px;color:var(--fg3)">일간 시장 브리프 · 운영 콘솔</div>
+</div>
+<nav aria-label="주요 메뉴" style="display:flex;flex-direction:column;gap:18px">
+<div style="display:flex;flex-direction:column;gap:4px">
+<div style="padding:0 8px 2px;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--fg3)">시장 인텔리전스</div>
+<sc-for list="{{ navMarket }}" as="n" hint-placeholder-count="2">
+<a data-nav data-active="{{ n.active }}" href="{{ n.href }}" aria-current="{{ n.current }}" onClick="{{ n.onClick }}" style="display:flex;align-items:center;gap:10px;min-height:40px;padding:0 10px;border:1px solid transparent;border-radius:var(--r2);color:var(--fg2);font-size:13.5px;font-weight:500;text-decoration:none" style-hover="background:var(--surface2);color:var(--fg)">
+<span aria-hidden="true" data-dot style="width:6px;height:6px;border-radius:50%;background:currentColor;flex:none;opacity:.7"></span>
+<span>{{ n.label }}</span>
+</a>
+</sc-for>
+</div>
+<sc-if value="{{ canOps }}">
+<div style="display:flex;flex-direction:column;gap:4px">
+<div style="padding:0 8px 2px;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--fg3)">운영</div>
+<sc-for list="{{ navOps }}" as="n" hint-placeholder-count="1">
+<a data-nav data-active="{{ n.active }}" href="{{ n.href }}" aria-current="{{ n.current }}" onClick="{{ n.onClick }}" style="display:flex;align-items:center;gap:10px;min-height:40px;padding:0 10px;border:1px solid transparent;border-radius:var(--r2);color:var(--fg2);font-size:13.5px;font-weight:500;text-decoration:none" style-hover="background:var(--surface2);color:var(--fg)">
+<span aria-hidden="true" style="width:6px;height:6px;border-radius:50%;background:currentColor;flex:none;opacity:.7"></span>
+<span>{{ n.label }}</span>
+<sc-if value="{{ n.alert }}"><span data-tone="FAILED" style="margin-left:auto;padding:1px 7px;border-radius:999px;font-family:var(--mono);font-size:11px;font-weight:600;color:var(--tone);background:var(--tone-soft);border:1px solid var(--tone-line)">{{ n.alertCount }}</span></sc-if>
+</a>
+</sc-for>
+</div>
+</sc-if>
+</nav>
+<div style="margin-top:auto;display:flex;flex-direction:column;gap:8px;padding-top:16px;border-top:1px solid var(--line)">
+<div style="display:flex;align-items:center;gap:8px;padding:0 8px">
+<div style="width:26px;height:26px;border-radius:50%;background:var(--surface3);display:grid;place-items:center;font-size:11px;font-weight:700;color:var(--fg2)">{{ roleInitial }}</div>
+<div style="min-width:0">
+<div style="font-size:12.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ userName }}</div>
+<div style="font-size:11px;color:var(--fg3)">{{ roleLabel }}</div>
+</div>
+</div>
+<button type="button" onClick="{{ onToggleTheme }}" style="display:flex;align-items:center;gap:8px;min-height:36px;padding:0 10px;border:1px solid var(--line);border-radius:var(--r2);background:transparent;color:var(--fg2);font-size:12.5px;cursor:pointer;text-align:left" style-hover="background:var(--surface2);color:var(--fg)">{{ themeLabel }}</button>
+<button type="button" onClick="{{ onTogglePanel }}" aria-expanded="{{ panelExpanded }}" style="display:flex;align-items:center;gap:8px;min-height:36px;padding:0 10px;border:1px solid var(--line);border-radius:var(--r2);background:transparent;color:var(--fg2);font-size:12.5px;cursor:pointer;text-align:left" style-hover="background:var(--surface2);color:var(--fg)">상태 시뮬레이터</button>
+</div>
+</aside>
+
+<div style="min-width:0;display:flex;flex-direction:column">
+
+<header style="display:var(--mob-d);align-items:center;gap:10px;position:sticky;top:0;z-index:40;padding:10px 14px;border-bottom:1px solid var(--line);background:var(--surface)">
+<button type="button" onClick="{{ onOpenNav }}" aria-expanded="{{ navExpanded }}" aria-label="메뉴 열기" style="display:grid;place-items:center;width:44px;height:44px;border:1px solid var(--line);border-radius:var(--r2);background:transparent;cursor:pointer">
+<span aria-hidden="true" style="display:block;width:18px;height:2px;background:currentColor;box-shadow:0 -5px 0 currentColor,0 5px 0 currentColor"></span>
+</button>
+<div style="min-width:0;flex:1">
+<div style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--fg3)">{{ sectionLabel }}</div>
+<div style="font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ routeLabel }}</div>
+</div>
+<button type="button" onClick="{{ onToggleTheme }}" aria-label="{{ themeLabel }}" style="display:grid;place-items:center;width:44px;height:44px;border:1px solid var(--line);border-radius:var(--r2);background:transparent;cursor:pointer;font-size:14px">{{ themeGlyph }}</button>
+</header>
+
+<sc-if value="{{ navOpen }}">
+<div role="presentation" onClick="{{ onCloseNav }}" style="position:fixed;inset:0;z-index:60;background:rgba(8,17,31,.5)"></div>
+<div role="dialog" aria-modal="true" aria-label="주요 메뉴" data-drawer style="position:fixed;z-index:61;left:0;top:0;bottom:0;width:min(84vw,300px);display:flex;flex-direction:column;gap:16px;padding:16px;background:var(--surface);border-right:1px solid var(--line);box-shadow:var(--sh3);overscroll-behavior:contain;overflow-y:auto">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+<div>
+<div style="font-size:15px;font-weight:700">Market Brief</div>
+<div style="font-size:11.5px;color:var(--fg3)">{{ roleLabel }} · {{ userName }}</div>
+</div>
+<button type="button" onClick="{{ onCloseNav }}" aria-label="메뉴 닫기" style="width:44px;height:44px;border:1px solid var(--line);border-radius:var(--r2);background:transparent;cursor:pointer;font-size:16px">✕</button>
+</div>
+<nav aria-label="주요 메뉴 (모바일)" style="display:flex;flex-direction:column;gap:16px">
+<div style="display:flex;flex-direction:column;gap:4px">
+<div style="font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--fg3)">시장 인텔리전스</div>
+<sc-for list="{{ navMarket }}" as="n">
+<a data-nav data-active="{{ n.active }}" href="{{ n.href }}" aria-current="{{ n.current }}" onClick="{{ n.onClick }}" style="display:flex;align-items:center;min-height:48px;padding:0 12px;border:1px solid transparent;border-radius:var(--r2);color:var(--fg2);font-size:15px;font-weight:500;text-decoration:none">{{ n.label }}</a>
+</sc-for>
+</div>
+<sc-if value="{{ canOps }}">
+<div style="display:flex;flex-direction:column;gap:4px">
+<div style="font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--fg3)">운영</div>
+<sc-for list="{{ navOps }}" as="n">
+<a data-nav data-active="{{ n.active }}" href="{{ n.href }}" aria-current="{{ n.current }}" onClick="{{ n.onClick }}" style="display:flex;align-items:center;min-height:48px;padding:0 12px;border:1px solid transparent;border-radius:var(--r2);color:var(--fg2);font-size:15px;font-weight:500;text-decoration:none">{{ n.label }}</a>
+</sc-for>
+</div>
+</sc-if>
+</nav>
+<button type="button" onClick="{{ onTogglePanel }}" style="margin-top:auto;min-height:44px;border:1px solid var(--line);border-radius:var(--r2);background:transparent;color:var(--fg2);font-size:13px;cursor:pointer">상태 시뮬레이터</button>
+</div>
+</sc-if>
+
+<div style="display:flex;align-items:center;gap:10px;padding:8px var(--pad);border-bottom:1px solid var(--line);background:var(--surface2);font-family:var(--mono);font-size:11.5px;color:var(--fg3);overflow-x:auto">
+<span style="flex:none;padding:1px 6px;border:1px solid var(--line);border-radius:var(--r1);background:var(--surface)">URL</span>
+<span style="white-space:nowrap;color:var(--fg2)">{{ urlDisplay }}</span>
+</div>
+
+<main id="main" tabindex="-1" style="flex:1;min-width:0;padding:var(--pad);display:flex;flex-direction:column;gap:var(--gap)">
+<div style="width:100%;max-width:var(--maxw);margin:0 auto;display:flex;flex-direction:column;gap:var(--gap);min-width:0">
+<sc-if value="{{ booting }}">
+<div style="display:flex;flex-direction:column;gap:14px">
+<div data-skel style="height:120px"></div>
+<div style="display:grid;grid-template-columns:var(--g2);gap:var(--gap)"><div data-skel style="height:96px"></div><div data-skel style="height:96px"></div></div>
+<div data-skel style="height:260px"></div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isBrief }}" hint-placeholder-val="{{ true }}">
+
+<sc-if value="{{ isArchiveMode }}">
+<div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;padding:12px 16px;border:1px solid var(--warning-line);border-left:4px solid var(--warning);border-radius:var(--r3);background:var(--warning-soft)">
+<span style="font-size:11.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--warning)">아카이브 스냅샷</span>
+<span style="font-family:var(--mono);font-size:14px;font-weight:600">{{ businessDate }}</span>
+<span style="font-family:var(--mono);font-size:12px;color:var(--fg2)">{{ versionLine }}</span>
+<div style="display:flex;flex-wrap:wrap;gap:8px;margin-left:auto">
+<sc-if value="{{ showBackToSearch }}">
+<button type="button" onClick="{{ onBackToSearch }}" style="display:inline-flex;align-items:center;min-height:36px;padding:0 12px;border:1px solid var(--line2);border-radius:var(--r2);background:var(--surface);color:var(--fg);font-size:12.5px;font-weight:600;cursor:pointer">검색 결과로 돌아가기</button>
+</sc-if>
+<button type="button" onClick="{{ onPrevDate }}" style="display:inline-flex;align-items:center;min-height:36px;padding:0 12px;border:1px solid var(--line2);border-radius:var(--r2);background:var(--surface);color:var(--fg);font-family:var(--mono);font-size:12.5px;cursor:pointer">← {{ prevDate }}</button>
+<button type="button" onClick="{{ onNextDate }}" disabled="{{ nextDisabled }}" style="display:inline-flex;align-items:center;min-height:36px;padding:0 12px;border:1px solid var(--line2);border-radius:var(--r2);background:var(--surface);color:var(--fg);font-family:var(--mono);font-size:12.5px;cursor:pointer">{{ nextDate }} →</button>
+<button type="button" onClick="{{ onGoLatest }}" style="display:inline-flex;align-items:center;min-height:36px;padding:0 12px;border:1px solid var(--accent);border-radius:var(--r2);background:var(--accent);color:var(--accent-fg);font-size:12.5px;font-weight:600;cursor:pointer">최신 브리프</button>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ briefLoading }}">
+<div role="status" style="display:flex;flex-direction:column;gap:var(--gap)">
+<div style="padding:20px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r3);display:flex;flex-direction:column;gap:12px">
+<div data-skel style="height:14px;width:200px"></div>
+<div data-skel style="height:24px;width:60%"></div>
+<div data-skel style="height:24px;width:40%"></div>
+</div>
+<div style="display:grid;grid-template-columns:var(--g2);gap:var(--gap)"><div data-skel style="height:104px"></div><div data-skel style="height:104px"></div></div>
+<div data-skel style="height:280px"></div>
+<p style="margin:0;font-size:13px;color:var(--fg3)">브리프를 불러오는 중입니다. 화면 구조는 그대로 유지됩니다.</p>
+</div>
+</sc-if>
+
+<sc-if value="{{ briefError }}">
+<section role="alert" style="padding:20px;border:1px solid var(--danger-line);border-left:4px solid var(--danger);border-radius:var(--r3);background:var(--surface)">
+<div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:6px">
+<span data-tone="FAILED" style="display:inline-flex;align-items:center;gap:6px;padding:3px 8px;border-radius:var(--r1);font-family:var(--mono);font-size:11.5px;font-weight:600;color:var(--tone);background:var(--tone-soft);border:1px solid var(--tone-line)">{{ errCode }}</span>
+</div>
+<h1 id="page-title" tabindex="-1" style="margin:0 0 6px;font-size:19px;font-weight:600">{{ errTitle }}</h1>
+<p style="margin:0 0 16px;max-width:62ch;color:var(--fg2);overflow-wrap:anywhere">{{ errMessage }}</p>
+<div style="display:flex;flex-wrap:wrap;gap:8px">
+<button type="button" onClick="{{ onErrAction }}" style="display:inline-flex;align-items:center;min-height:40px;padding:0 16px;border:1px solid var(--accent);border-radius:var(--r2);background:var(--accent);color:var(--accent-fg);font-size:13px;font-weight:600;cursor:pointer">{{ errAction }}</button>
+<button type="button" onClick="{{ onGoOps }}" style="display:inline-flex;align-items:center;min-height:40px;padding:0 14px;border:1px solid var(--line2);border-radius:var(--r2);background:var(--surface);color:var(--fg);font-size:13px;font-weight:600;cursor:pointer">배치 상태 확인</button>
+</div>
+</section>
+</sc-if>
+
+<sc-if value="{{ briefOk }}">
+<section style="display:flex;flex-direction:column;gap:16px;padding:20px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r3)">
+<div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px">
+<span data-tone="{{ statusTone }}" style="display:inline-flex;align-items:center;gap:6px;padding:4px 9px;border-radius:var(--r1);font-size:12px;font-weight:600;color:var(--tone);background:var(--tone-soft);border:1px solid var(--tone-line)"><span aria-hidden="true" style="width:6px;height:6px;border-radius:50%;background:currentColor"></span>{{ statusLabel }}</span>
+<span style="font-size:12.5px;color:var(--fg3)">기준일</span>
+<span style="font-family:var(--mono);font-size:14px;font-weight:600">{{ businessDate }}</span>
+<span aria-hidden="true" style="color:var(--line2)">|</span>
+<span style="font-size:12.5px;color:var(--fg3)">생성</span>
+<span style="font-family:var(--mono);font-size:12.5px;color:var(--fg2)">{{ generatedLabel }}</span>
+<span style="font-size:12.5px;color:var(--fg2)">· {{ freshness }}</span>
+<sc-if value="{{ briefRefetching }}">
+<span role="status" data-tone="info" style="display:inline-flex;align-items:center;gap:6px;padding:3px 8px;border-radius:var(--r1);font-size:12px;font-weight:600;color:var(--tone);background:var(--tone-soft);border:1px solid var(--tone-line)"><span data-spin aria-hidden="true" style="width:9px;height:9px;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;display:inline-block"></span>갱신 중</span>
+</sc-if>
+</div>
+<div>
+<h1 id="page-title" tabindex="-1" style="margin:0 0 8px;font-size:15px;font-weight:600;color:var(--fg3);letter-spacing:.01em">{{ pageTitleText }}</h1>
+<sc-if value="{{ hasHeadline }}">
+<p style="margin:0;font-size:var(--h1);font-weight:600;line-height:1.35;letter-spacing:-.015em;text-wrap:pretty;overflow-wrap:anywhere">{{ headline }}</p>
+</sc-if>
+<sc-if value="{{ noHeadline }}">
+<p style="margin:0;font-size:var(--lead);color:var(--fg3)">글로벌 헤드라인이 생성되지 않았습니다. AI 요약 단계가 실패했을 수 있습니다 — 아래 상태와 배치 로그에서 원인을 확인하세요.</p>
+</sc-if>
+</div>
+<sc-if value="{{ hasMarkets }}">
+<div style="display:grid;grid-template-columns:var(--g2);gap:12px">
+<sc-for list="{{ compare }}" as="c" hint-placeholder-count="2">
+<div style="display:flex;flex-direction:column;gap:8px;padding:14px;border:1px solid var(--line);border-radius:var(--r2);background:var(--surface2);min-width:0">
+<div style="display:flex;align-items:center;gap:8px">
+<span style="font-size:11px;font-weight:700;letter-spacing:.07em;color:var(--fg3)">{{ c.scope }}</span>
+<span style="font-size:13.5px;font-weight:600">{{ c.label }}</span>
+<button type="button" onClick="{{ c.onJump }}" style="margin-left:auto;min-height:32px;padding:0 10px;border:1px solid var(--line2);border-radius:var(--r1);background:var(--surface);color:var(--fg2);font-size:12px;cursor:pointer">섹션 이동</button>
+</div>
+<div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:10px">
+<span style="font-size:12.5px;color:var(--fg3)">{{ c.indexName }}</span>
+<span style="font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:21px;font-weight:600">{{ c.close }}</span>
+<span data-dir="{{ c.dir }}" style="font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:14px;font-weight:600">{{ c.change }} ({{ c.pct }})</span>
+</div>
+<p style="margin:0;font-size:13px;color:var(--fg2);text-wrap:pretty;overflow-wrap:anywhere">{{ c.note }}</p>
+<div style="font-family:var(--mono);font-size:11.5px;color:var(--fg3)">지수 {{ c.indexCount }} · 이슈 {{ c.clusterCount }}</div>
+</div>
+</sc-for>
+</div>
+</sc-if>
+<div style="display:flex;flex-wrap:wrap;gap:8px 18px;padding-top:12px;border-top:1px solid var(--line);font-family:var(--mono);font-size:11.5px;color:var(--fg3)">
+<span style="white-space:nowrap">{{ metaCounts }}</span>
+<span style="white-space:nowrap">{{ versionLine }}</span>
+<span style="white-space:nowrap">마지막 갱신 {{ lastUpdated }}</span>
+</div>
+</section>
+
+<sc-if value="{{ hasPartial }}">
+<section aria-labelledby="partial-h" style="padding:16px 18px;border:1px solid var(--warning-line);border-left:4px solid var(--warning);border-radius:var(--r3);background:var(--surface)">
+<h2 id="partial-h" style="margin:0 0 6px;font-size:14.5px;font-weight:600">이 브리프는 일부 데이터가 누락된 상태로 생성됐습니다</h2>
+<ul style="margin:0 0 12px;padding-left:18px;display:flex;flex-direction:column;gap:4px;color:var(--fg2);font-size:13px">
+<sc-for list="{{ partialItems }}" as="p" hint-placeholder-count="2"><li style="overflow-wrap:anywhere">{{ p.text }}</li></sc-for>
+</ul>
+<p style="margin:0 0 12px;font-size:13px;color:var(--fg2)">누락된 항목은 아래 해당 섹션에도 표시됩니다. 재생성이 필요하면 배치 운영에서 같은 기준일로 다시 실행할 수 있습니다.</p>
+<button type="button" onClick="{{ onGoOps }}" style="display:inline-flex;align-items:center;min-height:38px;padding:0 14px;border:1px solid var(--line2);border-radius:var(--r2);background:var(--surface);color:var(--fg);font-size:12.5px;font-weight:600;cursor:pointer">배치 운영에서 원인 보기</button>
+</section>
+</sc-if>
+
+<sc-if value="{{ emptyMarkets }}">
+<section style="padding:28px 22px;border:1px dashed var(--line2);border-radius:var(--r3);background:var(--surface)">
+<h2 style="margin:0 0 8px;font-size:16px;font-weight:600">시장 섹션이 생성되지 않았습니다</h2>
+<p style="margin:0 0 16px;max-width:64ch;color:var(--fg2);font-size:13.5px">{{ emptyMarketsReason }}</p>
+<div style="display:flex;flex-wrap:wrap;gap:8px">
+<button type="button" onClick="{{ onGoOps }}" style="display:inline-flex;align-items:center;min-height:40px;padding:0 16px;border:1px solid var(--accent);border-radius:var(--r2);background:var(--accent);color:var(--accent-fg);font-size:13px;font-weight:600;cursor:pointer">배치 상태 확인</button>
+<button type="button" onClick="{{ onBackToSearch }}" style="display:inline-flex;align-items:center;min-height:40px;padding:0 14px;border:1px solid var(--line2);border-radius:var(--r2);background:var(--surface);color:var(--fg);font-size:13px;font-weight:600;cursor:pointer">다른 날짜 찾기</button>
+</div>
+</section>
+</sc-if>
+
+<sc-for list="{{ markets }}" as="m" hint-placeholder-count="2">
+<section id="mk-{{ m.key }}" aria-label="{{ m.label }}" style="display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:var(--r3);overflow:hidden;min-width:0;scroll-margin-top:16px">
+<div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 12px;padding:16px 18px;border-bottom:1px solid var(--line)">
+<span style="font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.08em;padding:2px 7px;border:1px solid var(--line2);border-radius:var(--r1);color:var(--fg2)">{{ m.scope }}</span>
+<h2 style="margin:0;font-size:17px;font-weight:600">{{ m.label }}</h2>
+<sc-if value="{{ m.hasSummaryTitle }}"><span style="font-size:14px;color:var(--fg2);text-wrap:pretty">— {{ m.summaryTitle }}</span></sc-if>
+<span style="margin-left:auto;font-family:var(--mono);font-size:11.5px;color:var(--fg3)">{{ m.counts }}</span>
+</div>
+
+<sc-if value="{{ m.hasPartial }}">
+<div style="display:flex;gap:10px;padding:12px 18px;background:var(--warning-soft);border-bottom:1px solid var(--warning-line)">
+<span aria-hidden="true" style="font-weight:700;color:var(--warning)">!</span>
+<p style="margin:0;font-size:13px;color:var(--fg)"><strong style="font-weight:600">누락 </strong>{{ m.partial }}</p>
+</div>
+</sc-if>
+
+<div style="display:flex;flex-direction:column;gap:14px;padding:16px 18px">
+<sc-if value="{{ m.hasSummaryBody }}">
+<p style="margin:0;font-size:var(--lead);line-height:1.65;color:var(--fg);max-width:76ch;text-wrap:pretty;overflow-wrap:anywhere">{{ m.summaryBody }}</p>
+</sc-if>
+<div style="display:grid;grid-template-columns:var(--g2);gap:12px">
+<sc-if value="{{ m.hasBackground }}">
+<div style="min-width:0">
+<div style="font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--fg3);margin-bottom:6px">배경</div>
+<ul style="margin:0;padding-left:16px;display:flex;flex-direction:column;gap:3px;font-size:13.5px;color:var(--fg2)">
+<sc-for list="{{ m.background }}" as="b" hint-placeholder-count="3"><li style="overflow-wrap:anywhere">{{ b.text }}</li></sc-for>
+</ul>
+</div>
+</sc-if>
+<div style="min-width:0;display:flex;flex-direction:column;gap:12px">
+<sc-if value="{{ m.hasThemes }}">
+<div>
+<div style="font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--fg3);margin-bottom:6px">핵심 테마</div>
+<div style="display:flex;flex-wrap:wrap;gap:6px">
+<sc-for list="{{ m.themes }}" as="t" hint-placeholder-count="3"><span style="padding:3px 9px;border:1px solid var(--line);border-radius:var(--r1);background:var(--surface2);font-size:12.5px;color:var(--fg2)">{{ t.label }}</span></sc-for>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{ m.hasOutlook }}">
+<div>
+<div style="font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--fg3);margin-bottom:6px">관전 포인트</div>
+<p style="margin:0;font-size:13.5px;color:var(--fg2);text-wrap:pretty;overflow-wrap:anywhere">{{ m.outlook }}</p>
+</div>
+</sc-if>
+</div>
+</div>
+<sc-if value="{{ m.noNarrative }}">
+<p style="margin:0;padding:12px 14px;border:1px dashed var(--line2);border-radius:var(--r2);font-size:13px;color:var(--fg3)">이 시장의 요약이 생성되지 않았습니다. 수집된 기사가 임계값에 미달했거나 AI 요약이 실패한 경우입니다. 지수와 원문은 아래에서 그대로 확인할 수 있습니다.</p>
+</sc-if>
+</div>
+
+<div style="display:flex;align-items:baseline;gap:10px;padding:12px 18px;border-top:1px solid var(--line);background:var(--surface2)">
+<h3 style="margin:0;font-size:13.5px;font-weight:600">대표 지수</h3>
+<span style="font-family:var(--mono);font-size:11.5px;color:var(--fg3)">{{ m.indexCount }}</span>
+</div>
+<sc-if value="{{ m.hasIndices }}">
+<div style="overflow-x:auto;-webkit-overflow-scrolling:touch">
+<table style="width:100%;min-width:380px;border-collapse:collapse;font-size:13px">
+<thead>
+<tr>
+<th scope="col" style="text-align:left;padding:8px 18px;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--fg3);border-bottom:1px solid var(--line)">지수</th>
+<th scope="col" style="text-align:right;padding:8px 12px;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--fg3);border-bottom:1px solid var(--line)">종가</th>
+<th scope="col" style="text-align:right;padding:8px 12px;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--fg3);border-bottom:1px solid var(--line)">등락</th>
+<th scope="col" style="text-align:right;padding:8px 12px;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--fg3);border-bottom:1px solid var(--line)">등락률</th>
+<th scope="col" style="display:var(--tc2);text-align:right;padding:8px 12px;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--fg3);border-bottom:1px solid var(--line)">고가</th>
+<th scope="col" style="display:var(--tc2);text-align:right;padding:8px 18px;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--fg3);border-bottom:1px solid var(--line)">저가</th>
+</tr>
+</thead>
+<tbody>
+<sc-for list="{{ m.indices }}" as="i" hint-placeholder-count="3">
+<tr>
+<th scope="row" style="text-align:left;padding:9px 18px;font-weight:600;border-bottom:1px solid var(--line)">{{ i.name }}<span style="display:block;font-family:var(--mono);font-size:11px;font-weight:400;color:var(--fg3)">{{ i.code }}</span></th>
+<td style="text-align:right;padding:9px 12px;font-family:var(--mono);font-variant-numeric:tabular-nums;font-weight:600;border-bottom:1px solid var(--line)">{{ i.close }}<span style="display:var(--tc2i);font-size:10.5px;font-weight:400;color:var(--fg3);white-space:nowrap">고 {{ i.high }} · 저 {{ i.low }}</span></td>
+<td data-dir="{{ i.dir }}" style="text-align:right;padding:9px 12px;font-family:var(--mono);font-variant-numeric:tabular-nums;font-weight:600;border-bottom:1px solid var(--line)">{{ i.change }}</td>
+<td data-dir="{{ i.dir }}" style="text-align:right;padding:9px 12px;font-family:var(--mono);font-variant-numeric:tabular-nums;font-weight:600;border-bottom:1px solid var(--line)">{{ i.pct }}</td>
+<td style="display:var(--tc2);text-align:right;padding:9px 12px;font-family:var(--mono);font-variant-numeric:tabular-nums;color:var(--fg2);border-bottom:1px solid var(--line)">{{ i.high }}</td>
+<td style="display:var(--tc2);text-align:right;padding:9px 18px;font-family:var(--mono);font-variant-numeric:tabular-nums;color:var(--fg2);border-bottom:1px solid var(--line)">{{ i.low }}</td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+</div>
+</sc-if>
+<sc-if value="{{ m.noIndices }}">
+<p style="margin:0;padding:16px 18px;font-size:13px;color:var(--fg3)">지수 데이터가 수집되지 않았습니다. provider 응답 실패 시 부분 실패로 처리되며, 재수집은 배치 운영에서 같은 기준일로 실행합니다.</p>
+</sc-if>
+
+<div style="display:flex;align-items:baseline;gap:10px;padding:12px 18px;border-top:1px solid var(--line);background:var(--surface2)">
+<h3 style="margin:0;font-size:13.5px;font-weight:600">핵심 이슈</h3>
+<span style="font-family:var(--mono);font-size:11.5px;color:var(--fg3)">{{ m.clusterCount }}</span>
+</div>
+<sc-if value="{{ m.hasClusters }}">
+<div>
+<sc-for list="{{ m.clusters }}" as="c" hint-placeholder-count="3">
+<article style="display:grid;grid-template-columns:var(--cl);gap:10px 18px;padding:14px 18px;border-bottom:1px solid var(--line);min-width:0">
+<div style="min-width:0;display:flex;flex-direction:column;gap:7px">
+<a href="{{ c.href }}" onClick="{{ c.onOpen }}" style="font-size:15px;font-weight:600;color:var(--fg);text-decoration:none;text-wrap:pretty;overflow-wrap:anywhere" style-hover="color:var(--accent);text-decoration:underline">{{ c.title }}</a>
+<sc-if value="{{ c.hasSummary }}"><p style="margin:0;font-size:13.5px;color:var(--fg2);text-wrap:pretty;overflow-wrap:anywhere">{{ c.summary }}</p></sc-if>
+<sc-if value="{{ c.hasTags }}">
+<div style="display:flex;flex-wrap:wrap;gap:5px">
+<sc-for list="{{ c.tags }}" as="t" hint-placeholder-count="3"><span style="padding:2px 7px;border:1px solid var(--line);border-radius:var(--r1);font-size:11.5px;color:var(--fg2);background:var(--surface2)">{{ t.label }}</span></sc-for>
+</div>
+</sc-if>
+<div style="font-size:12px;color:var(--fg3);overflow-wrap:anywhere">대표 기사 · {{ c.repLine }}</div>
+</div>
+<div style="display:flex;flex-direction:column;align-items:flex-start;gap:6px;min-width:0">
+<span style="font-family:var(--mono);font-size:12px;font-weight:600;color:var(--fg2)">{{ c.countText }}</span>
+<a href="{{ c.href }}" onClick="{{ c.onOpen }}" style="display:inline-flex;align-items:center;min-height:36px;padding:0 12px;border:1px solid var(--accent);border-radius:var(--r2);background:var(--accent);color:var(--accent-fg);font-size:12.5px;font-weight:600;text-decoration:none">이슈 상세</a>
+<a href="{{ c.originLink }}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;min-height:36px;padding:0 12px;border:1px solid var(--line2);border-radius:var(--r2);background:var(--surface);color:var(--fg);font-size:12.5px;font-weight:600;text-decoration:none">원문 ↗</a>
+<sc-if value="{{ c.hasNaver }}">
+<a href="{{ c.naverLink }}" target="_blank" rel="noopener noreferrer" style="font-size:12px;color:var(--fg3);text-decoration:underline">네이버 미러 ↗</a>
+</sc-if>
+</div>
+</article>
+</sc-for>
+</div>
+</sc-if>
+<sc-if value="{{ m.noClusters }}">
+<p style="margin:0;padding:16px 18px;font-size:13px;color:var(--fg3)">묶인 이슈가 없습니다. 수집 기사 수가 부족해 클러스터가 만들어지지 않은 경우이며, 원문 목록이 있으면 아래에서 직접 확인할 수 있습니다.</p>
+</sc-if>
+
+<sc-if value="{{ m.hasLinks }}">
+<div style="padding:14px 18px;border-top:1px solid var(--line)">
+<div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:10px">
+<h3 style="margin:0;font-size:13.5px;font-weight:600">근거 원문</h3>
+<span style="font-family:var(--mono);font-size:11.5px;color:var(--fg3)">{{ m.linkTotal }}</span>
+<sc-if value="{{ m.linkToggleNeeded }}">
+<button type="button" onClick="{{ m.onToggleLinks }}" aria-expanded="{{ m.linkExpanded }}" style="margin-left:auto;min-height:34px;padding:0 12px;border:1px solid var(--line2);border-radius:var(--r2);background:var(--surface);color:var(--fg2);font-size:12.5px;cursor:pointer">{{ m.linkToggleLabel }}</button>
+</sc-if>
+</div>
+<ul style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px">
+<sc-for list="{{ m.links }}" as="a" hint-placeholder-count="4">
+<li style="display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 10px;padding-bottom:8px;border-bottom:1px solid var(--line);min-width:0">
+<a href="{{ a.originLink }}" target="_blank" rel="noopener noreferrer" style="font-size:13.5px;font-weight:500;color:var(--fg);text-decoration:none;overflow-wrap:anywhere" style-hover="color:var(--accent);text-decoration:underline">{{ a.title }} ↗</a>
+<span style="font-family:var(--mono);font-size:11.5px;color:var(--fg3);overflow-wrap:anywhere">{{ a.meta }}</span>
+<sc-if value="{{ a.hasNaver }}"><a href="{{ a.naverLink }}" target="_blank" rel="noopener noreferrer" style="font-size:11.5px;color:var(--fg3);text-decoration:underline">미러 ↗</a></sc-if>
+</li>
+</sc-for>
+</ul>
+</div>
+</sc-if>
+</section>
+</sc-for>
+</sc-if>
+</sc-if>
+<sc-if value="{{ isSearch }}">
+<section style="display:flex;flex-direction:column;gap:6px">
+<h1 id="page-title" tabindex="-1" style="margin:0;font-size:22px;font-weight:600">아카이브 검색</h1>
+<p style="margin:0;max-width:70ch;color:var(--fg2);font-size:13.5px">기준일 범위와 생성 상태로 과거 스냅샷을 찾습니다. 결과를 열면 해당 날짜의 시장 브리프로 이동하고, 돌아올 때 필터·페이지·스크롤 위치가 복원됩니다.</p>
+</section>
+
+<section aria-labelledby="filter-h" style="padding:16px 18px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r3)">
+<div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:12px">
+<h2 id="filter-h" style="margin:0;font-size:14px;font-weight:600">필터</h2>
+<span style="font-family:var(--mono);font-size:11.5px;color:var(--fg3)">적용됨 · {{ appliedLabel }}</span>
+<sc-if value="{{ isDirty }}"><span data-tone="info" style="padding:2px 8px;border-radius:var(--r1);font-size:11.5px;font-weight:600;color:var(--tone);background:var(--tone-soft);border:1px solid var(--tone-line)">적용 전 변경 있음</span></sc-if>
+</div>
+<div style="display:grid;grid-template-columns:var(--g3);gap:12px;align-items:start">
+<div style="display:flex;flex-direction:column;gap:5px;min-width:0">
+<label for="f-from" style="font-size:12px;font-weight:600;color:var(--fg2)">시작일</label>
+<input id="f-from" type="date" value="{{ dFrom }}" onChange="{{ onFrom }}" aria-invalid="{{ hasErrFrom }}" aria-describedby="f-from-e" style="min-height:44px;padding:0 12px;border:1px solid var(--line2);border-radius:var(--r2);background:var(--surface);color:var(--fg);font-family:var(--mono);font-size:13.5px;width:100%">
+<sc-if value="{{ hasErrFrom }}"><span id="f-from-e" style="font-size:12px;color:var(--danger)">{{ errFrom }}</span></sc-if>
+</div>
+<div style="display:flex;flex-direction:column;gap:5px;min-width:0">
+<label for="f-to" style="font-size:12px;font-weight:600;color:var(--fg2)">종료일</label>
+<input id="f-to" type="date" value="{{ dTo }}" onChange="{{ onTo }}" aria-invalid="{{ hasErrTo }}" aria-describedby="f-to-e" style="min-height:44px;padding:0 12px;border:1px solid var(--line2);border-radius:var(--r2);background:var(--surface);color:var(--fg);font-family:var(--mono);font-size:13.5px;width:100%">
+<sc-if value="{{ hasErrTo }}"><span id="f-to-e" style="font-size:12px;color:var(--danger)">{{ errTo }}</span></sc-if>
+</div>
+<div style="display:flex;flex-direction:column;gap:5px;min-width:0">
+<label for="f-status" style="font-size:12px;font-weight:600;color:var(--fg2)">생성 상태</label>
+<select id="f-status" value="{{ dStatus }}" onChange="{{ onStatus }}" style="min-height:44px;padding:0 10px;border:1px solid var(--line2);border-radius:var(--r2);background:var(--surface);color:var(--fg);font-size:13.5px;width:100%">
+<sc-for list="{{ statusOptions }}" as="o" hint-placeholder-count="4"><option value="{{ o.value }}">{{ o.label }}</option></sc-for>
+</select>
+</div>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:14px">
+<button type="button" onClick="{{ onApply }}" style="display:inline-flex;align-items:center;min-height:44px;padding:0 18px;border:1px solid var(--accent);border-radius:var(--r2);background:var(--accent);color:var(--accent-fg);font-size:13.5px;font-weight:600;cursor:pointer">필터 적용</button>
+<button type="button" onClick="{{ onReset }}" style="display:inline-flex;align-items:center;min-height:44px;padding:0 16px;border:1px solid var(--line2);border-radius:var(--r2);background:var(--surface);color:var(--fg);font-size:13.5px;font-weight:600;cursor:pointer">초기화</button>
+</div>
+</section>
+
+<sc-if value="{{ searchError }}">
+<section role="alert" style="padding:16px 18px;border:1px solid var(--danger-line);border-left:4px solid var(--danger);border-radius:var(--r3);background:var(--surface)">
+<div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:6px">
+<strong style="font-size:14.5px;font-weight:600">{{ errTitle }}</strong>
+<span data-tone="FAILED" style="padding:2px 8px;border-radius:var(--r1);font-family:var(--mono);font-size:11.5px;font-weight:600;color:var(--tone);background:var(--tone-soft);border:1px solid var(--tone-line)">{{ errCode }}</span>
+</div>
+<p style="margin:0 0 12px;color:var(--fg2);font-size:13.5px">{{ errMessage }}</p>
+<button type="button" onClick="{{ onRetry }}" style="display:inline-flex;align-items:center;min-height:40px;padding:0 16px;border:1px solid var(--accent);border-radius:var(--r2);background:var(--accent);color:var(--accent-fg);font-size:13px;font-weight:600;cursor:pointer">다시 시도</button>
+</section>
+</sc-if>
+
+<section aria-labelledby="results-h" style="background:var(--surface);border:1px solid var(--line);border-radius:var(--r3);overflow:hidden">
+<div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:14px 18px;border-bottom:1px solid var(--line)">
+<h2 id="results-h" style="margin:0;font-size:14.5px;font-weight:600">검색 결과</h2>
+<span style="font-family:var(--mono);font-size:12.5px;font-weight:600;color:var(--fg)">{{ resultCount }}</span>
+<span style="font-family:var(--mono);font-size:11.5px;color:var(--fg3)">{{ rangeLabel }}</span>
+<sc-if value="{{ searchRefetching }}">
+<span role="status" data-tone="info" style="display:inline-flex;align-items:center;gap:6px;padding:2px 8px;border-radius:var(--r1);font-size:11.5px;font-weight:600;color:var(--tone);background:var(--tone-soft);border:1px solid var(--tone-line)"><span data-spin aria-hidden="true" style="width:9px;height:9px;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;display:inline-block"></span>갱신 중</span>
+</sc-if>
+</div>
+
+<sc-if value="{{ searchLoading }}">
+<div role="status" style="padding:18px;display:flex;flex-direction:column;gap:10px">
+<sc-for list="{{ statusOptions }}" as="o" hint-placeholder-count="4"><div data-skel style="height:44px"></div></sc-for>
+<p style="margin:0;font-size:12.5px;color:var(--fg3)">결과를 불러오는 중입니다. 필터는 그대로 유지됩니다.</p>
+</div>
+</sc-if>
+
+<sc-if value="{{ noResults }}">
+<div style="padding:32px 20px;text-align:left">
+<h3 style="margin:0 0 8px;font-size:15.5px;font-weight:600">조건에 맞는 스냅샷이 없습니다</h3>
+<p style="margin:0 0 14px;max-width:60ch;color:var(--fg2);font-size:13.5px">선택한 기간에 생성된 브리프가 없거나, 상태 필터가 결과를 모두 제외했습니다. 기간을 넓히거나 상태 필터를 해제해 보세요.</p>
+<button type="button" onClick="{{ onReset }}" style="display:inline-flex;align-items:center;min-height:40px;padding:0 16px;border:1px solid var(--line2);border-radius:var(--r2);background:var(--surface);color:var(--fg);font-size:13px;font-weight:600;cursor:pointer">필터 초기화</button>
+</div>
+</sc-if>
+
+<sc-if value="{{ hasRows }}">
+<div style="overflow-x:auto;-webkit-overflow-scrolling:touch">
+<table style="width:100%;min-width:520px;border-collapse:collapse;font-size:13px">
+<thead>
+<tr>
+<th scope="col" style="text-align:left;padding:9px 18px;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--fg3);border-bottom:1px solid var(--line)">기준일</th>
+<th scope="col" style="text-align:left;padding:9px 12px;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--fg3);border-bottom:1px solid var(--line)">글로벌 헤드라인</th>
+<th scope="col" style="text-align:left;padding:9px 12px;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--fg3);border-bottom:1px solid var(--line)">상태</th>
+<th scope="col" style="display:var(--tc3);text-align:left;padding:9px 18px;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--fg3);border-bottom:1px solid var(--line)">생성 시각</th>
+</tr>
+</thead>
+<tbody>
+<sc-for list="{{ rows }}" as="r" hint-placeholder-count="6">
+<tr data-row data-attention="{{ r.attention }}">
+<th scope="row" style="text-align:left;padding:12px 18px;vertical-align:top;border-bottom:1px solid var(--line)">
+<a href="{{ r.href }}" onClick="{{ r.onOpen }}" style="font-family:var(--mono);font-size:13.5px;font-weight:600;color:var(--fg);text-decoration:none" style-hover="color:var(--accent);text-decoration:underline">{{ r.date }}</a>
+<span style="display:block;font-family:var(--mono);font-size:11px;font-weight:400;color:var(--fg3)">{{ r.pageIdLabel }}</span>
+</th>
+<td style="padding:12px 12px;vertical-align:top;border-bottom:1px solid var(--line);min-width:0">
+<a href="{{ r.href }}" onClick="{{ r.onOpen }}" style="color:var(--fg);text-decoration:none;text-wrap:pretty;overflow-wrap:anywhere" style-hover="color:var(--accent);text-decoration:underline">{{ r.headline }}</a>
+<sc-if value="{{ r.hasDetail }}"><span style="display:block;margin-top:4px;font-size:12px;color:var(--fg3);overflow-wrap:anywhere">{{ r.detail }}</span></sc-if>
+<span style="display:var(--tc3i);margin-top:4px;font-family:var(--mono);font-size:11.5px;color:var(--fg3)">생성 {{ r.generated }}</span>
+</td>
+<td style="padding:12px 12px;vertical-align:top;border-bottom:1px solid var(--line)">
+<span data-tone="{{ r.status }}" style="display:inline-flex;align-items:center;gap:5px;padding:3px 8px;border-radius:var(--r1);font-size:11.5px;font-weight:600;white-space:nowrap;color:var(--tone);background:var(--tone-soft);border:1px solid var(--tone-line)"><span aria-hidden="true" style="width:5px;height:5px;border-radius:50%;background:currentColor"></span>{{ r.statusLabel }}</span>
+</td>
+<td style="display:var(--tc3);padding:12px 18px;vertical-align:top;font-family:var(--mono);font-size:12px;color:var(--fg2);white-space:nowrap;border-bottom:1px solid var(--line)">{{ r.generated }}</td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+</div>
+<nav aria-label="페이지 이동" style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:12px 18px">
+<button type="button" onClick="{{ onPrevPage }}" disabled="{{ prevDisabled }}" style="display:inline-flex;align-items:center;min-height:40px;min-width:44px;justify-content:center;padding:0 12px;border:1px solid var(--line2);border-radius:var(--r2);background:var(--surface);color:var(--fg);font-size:13px;cursor:pointer">이전</button>
+<sc-for list="{{ pages }}" as="p" hint-placeholder-count="3">
+<button type="button" data-nav data-active="{{ p.active }}" onClick="{{ p.onClick }}" style="display:inline-flex;align-items:center;justify-content:center;min-height:40px;min-width:44px;padding:0 10px;border:1px solid var(--line);border-radius:var(--r2);background:var(--surface);color:var(--fg2);font-family:var(--mono);font-size:13px;font-weight:600;cursor:pointer">{{ p.label }}</button>
+</sc-for>
+<button type="button" onClick="{{ onNextPage }}" disabled="{{ nextDisabled }}" style="display:inline-flex;align-items:center;min-height:40px;min-width:44px;justify-content:center;padding:0 12px;border:1px solid var(--line2);border-radius:var(--r2);background:var(--surface);color:var(--fg);font-size:13px;cursor:pointer">다음</button>
+<span style="margin-left:auto;font-family:var(--mono);font-size:12px;color:var(--fg3)">{{ pageLabel }}</span>
+</nav>
+</sc-if>
+</section>
+</sc-if>
+
+<sc-if value="{{ isCluster }}">
+<nav aria-label="위치" style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:12.5px;color:var(--fg3)">
+<a href="{{ backHref }}" onClick="{{ onBack }}" style="color:var(--fg2);text-decoration:none" style-hover="color:var(--accent);text-decoration:underline">{{ crumbRootLabel }}</a>
+<span aria-hidden="true">/</span>
+<span>{{ crumbMidLabel }}</span>
+<span aria-hidden="true">/</span>
+<span style="color:var(--fg2)">이슈 상세</span>
+</nav>
+
+<sc-if value="{{ isDirectEntry }}">
+<div style="display:flex;gap:10px;padding:12px 16px;border:1px solid var(--info-line);border-radius:var(--r3);background:var(--info-soft);font-size:13px">
+<span aria-hidden="true" style="font-weight:700;color:var(--info)">i</span>
+<p style="margin:0;color:var(--fg2)">{{ directNote }}</p>
+</div>
+</sc-if>
+
+<sc-if value="{{ clusterLoading }}">
+<div role="status" style="display:flex;flex-direction:column;gap:12px">
+<div data-skel style="height:96px"></div>
+<div data-skel style="height:200px"></div>
+<div data-skel style="height:160px"></div>
+</div>
+</sc-if>
+
+<sc-if value="{{ clusterError }}">
+<section role="alert" style="padding:20px;border:1px solid var(--danger-line);border-left:4px solid var(--danger);border-radius:var(--r3);background:var(--surface)">
+<span data-tone="FAILED" style="display:inline-flex;padding:2px 8px;border-radius:var(--r1);font-family:var(--mono);font-size:11.5px;font-weight:600;color:var(--tone);background:var(--tone-soft);border:1px solid var(--tone-line)">{{ errCode }}</span>
+<h1 id="page-title" tabindex="-1" style="margin:8px 0 6px;font-size:19px;font-weight:600">{{ errTitle }}</h1>
+<p style="margin:0 0 16px;max-width:62ch;color:var(--fg2);font-size:13.5px">{{ errMessage }}</p>
+<div style="display:flex;flex-wrap:wrap;gap:8px">
+<button type="button" onClick="{{ onErrAction }}" style="display:inline-flex;align-items:center;min-height:40px;padding:0 16px;border:1px solid var(--accent);border-radius:var(--r2);background:var(--accent);color:var(--accent-fg);font-size:13px;font-weight:600;cursor:pointer">{{ errAction }}</button>
+<button type="button" onClick="{{ onBack }}" style="display:inline-flex;align-items:center;min-height:40px;padding:0 14px;border:1px solid var(--line2);border-radius:var(--r2);background:var(--surface);color:var(--fg);font-size:13px;font-weight:600;cursor:pointer">{{ backLabel }}</button>
+</div>
+</section>
+</sc-if>
+
+<sc-if value="{{ clusterOk }}">
+<section style="display:flex;flex-direction:column;gap:14px;padding:20px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r3)">
+<div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px">
+<span style="font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.07em;padding:2px 7px;border:1px solid var(--line2);border-radius:var(--r1);color:var(--fg2)">{{ clMarket }}</span>
+<span style="font-size:12.5px;color:var(--fg3)">기준일</span>
+<span style="font-family:var(--mono);font-size:13.5px;font-weight:600">{{ clDate }}</span>
+<span style="font-family:var(--mono);font-size:12px;color:var(--fg2)">{{ clCount }}</span>
+<span aria-hidden="true" style="color:var(--line2)">|</span>
+<span style="font-family:var(--mono);font-size:12px;color:var(--fg3)">갱신 {{ clUpdated }}</span>
+</div>
+<h1 id="page-title" tabindex="-1" style="margin:0;font-size:var(--h1);font-weight:600;line-height:1.35;letter-spacing:-.015em;text-wrap:pretty;overflow-wrap:anywhere">{{ clTitle }}</h1>
+<sc-if value="{{ hasShort }}"><p style="margin:0;font-size:var(--lead);color:var(--fg2);max-width:76ch;text-wrap:pretty;overflow-wrap:anywhere">{{ clShort }}</p></sc-if>
+<sc-if value="{{ hasTags }}">
+<div style="display:flex;flex-wrap:wrap;gap:6px">
+<sc-for list="{{ clTags }}" as="t" hint-placeholder-count="3"><span style="padding:3px 9px;border:1px solid var(--line);border-radius:var(--r1);background:var(--surface2);font-size:12px;color:var(--fg2)">{{ t.label }}</span></sc-for>
+</div>
+</sc-if>
+<div style="display:flex;flex-wrap:wrap;gap:8px;padding-top:12px;border-top:1px solid var(--line)">
+<button type="button" onClick="{{ onBack }}" style="display:inline-flex;align-items:center;min-height:40px;padding:0 14px;border:1px solid var(--line2);border-radius:var(--r2);background:var(--surface);color:var(--fg);font-size:13px;font-weight:600;cursor:pointer">← {{ backLabel }}</button>
+<button type="button" onClick="{{ onGoBrief }}" style="display:inline-flex;align-items:center;min-height:40px;padding:0 14px;border:1px solid var(--line2);border-radius:var(--r2);background:var(--surface);color:var(--fg);font-size:13px;font-weight:600;cursor:pointer">{{ briefCtaLabel }}</button>
+</div>
+</section>
+
+<div style="display:grid;grid-template-columns:var(--md);gap:var(--gap);align-items:start">
+<div style="min-width:0;display:flex;flex-direction:column;gap:var(--gap)">
+<section aria-labelledby="an-h" style="padding:18px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r3)">
+<h2 id="an-h" style="margin:0 0 12px;font-size:15px;font-weight:600">AI 심층 분석</h2>
+<sc-if value="{{ hasLong }}"><p style="margin:0 0 12px;font-size:14px;color:var(--fg);max-width:74ch;text-wrap:pretty;overflow-wrap:anywhere">{{ clLong }}</p></sc-if>
+<sc-if value="{{ hasAnalysis }}">
+<div style="display:flex;flex-direction:column;gap:10px">
+<sc-for list="{{ clAnalysis }}" as="a" hint-placeholder-count="3">
+<p style="margin:0;padding-left:12px;border-left:2px solid var(--line2);font-size:13.5px;color:var(--fg2);max-width:74ch;text-wrap:pretty;overflow-wrap:anywhere">{{ a.text }}</p>
+</sc-for>
+</div>
+</sc-if>
+<sc-if value="{{ noAnalysis }}">
+<p style="margin:0;padding:14px 16px;border:1px dashed var(--line2);border-radius:var(--r2);font-size:13px;color:var(--fg3)">이 이슈의 심층 분석이 아직 생성되지 않았습니다. 대표 기사와 관련 기사 원문으로 직접 확인할 수 있습니다.</p>
+</sc-if>
+</section>
+
+<section aria-labelledby="ar-h" style="background:var(--surface);border:1px solid var(--line);border-radius:var(--r3);overflow:hidden">
+<div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--line)">
+<h2 id="ar-h" style="margin:0;font-size:15px;font-weight:600">관련 기사</h2>
+<span style="font-family:var(--mono);font-size:11.5px;color:var(--fg3)">{{ articleTotal }}</span>
+<sc-if value="{{ articleToggleNeeded }}">
+<button type="button" onClick="{{ onToggleArticles }}" aria-expanded="{{ articleExpanded }}" style="margin-left:auto;min-height:36px;padding:0 12px;border:1px solid var(--line2);border-radius:var(--r2);background:var(--surface);color:var(--fg2);font-size:12.5px;cursor:pointer">{{ articleToggleLabel }}</button>
+</sc-if>
+</div>
+<ul style="margin:0;padding:0;list-style:none">
+<sc-for list="{{ articles }}" as="a" hint-placeholder-count="4">
+<li style="display:flex;flex-direction:column;gap:5px;padding:12px 18px;border-bottom:1px solid var(--line);min-width:0">
+<a href="{{ a.originLink }}" target="_blank" rel="noopener noreferrer" style="font-size:13.5px;font-weight:500;color:var(--fg);text-decoration:none;text-wrap:pretty;overflow-wrap:anywhere" style-hover="color:var(--accent);text-decoration:underline">{{ a.title }} ↗</a>
+<div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-family:var(--mono);font-size:11.5px;color:var(--fg3)">
+<span>{{ a.publisher }}</span>
+<span>{{ a.published }}</span>
+<span style="padding:1px 6px;border:1px solid var(--line);border-radius:var(--r1);color:var(--fg2)">원문</span>
+<sc-if value="{{ a.hasNaver }}"><a href="{{ a.naverLink }}" target="_blank" rel="noopener noreferrer" style="padding:1px 6px;border:1px solid var(--line);border-radius:var(--r1);color:var(--fg2);text-decoration:none">네이버 미러 ↗</a></sc-if>
+</div>
+</li>
+</sc-for>
+</ul>
+</section>
+</div>
+
+<aside style="min-width:0;display:flex;flex-direction:column;gap:var(--gap);position:sticky;top:12px">
+<sc-if value="{{ hasRep }}">
+<section aria-labelledby="rep-h" style="padding:18px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r3)">
+<h2 id="rep-h" style="margin:0 0 4px;font-size:12px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--fg3)">대표 기사</h2>
+<p style="margin:0 0 8px;font-size:14.5px;font-weight:600;text-wrap:pretty;overflow-wrap:anywhere">{{ rep.title }}</p>
+<div style="display:flex;flex-direction:column;gap:2px;font-family:var(--mono);font-size:11.5px;color:var(--fg3);margin-bottom:12px">
+<span>{{ rep.publisher }}</span>
+<span>{{ rep.published }}</span>
+<span style="font-family:var(--sans)">{{ rep.source }}</span>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:8px">
+<a href="{{ rep.originLink }}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;min-height:40px;padding:0 14px;border:1px solid var(--accent);border-radius:var(--r2);background:var(--accent);color:var(--accent-fg);font-size:13px;font-weight:600;text-decoration:none">원문 보기 ↗</a>
+<sc-if value="{{ rep.hasNaver }}">
+<a href="{{ rep.naverLink }}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;min-height:40px;padding:0 14px;border:1px solid var(--line2);border-radius:var(--r2);background:var(--surface);color:var(--fg);font-size:13px;font-weight:600;text-decoration:none">네이버 미러 ↗</a>
+</sc-if>
+</div>
+</section>
+</sc-if>
+</aside>
+</div>
+</sc-if>
+</sc-if>
+<sc-if value="{{ isOps }}">
+
+<sc-if value="{{ opsDenied }}">
+<section style="padding:28px 22px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r3);max-width:70ch">
+<span data-tone="FAILED" style="display:inline-flex;padding:2px 8px;border-radius:var(--r1);font-family:var(--mono);font-size:11.5px;font-weight:600;color:var(--tone);background:var(--tone-soft);border:1px solid var(--tone-line)">{{ deniedCode }}</span>
+<h1 id="page-title" tabindex="-1" style="margin:10px 0 8px;font-size:20px;font-weight:600">{{ deniedTitle }}</h1>
+<p style="margin:0 0 18px;color:var(--fg2);font-size:13.5px">{{ deniedMessage }}</p>
+<button type="button" onClick="{{ onDeniedHome }}" style="display:inline-flex;align-items:center;min-height:44px;padding:0 18px;border:1px solid var(--accent);border-radius:var(--r2);background:var(--accent);color:var(--accent-fg);font-size:13.5px;font-weight:600;cursor:pointer">최신 브리프로 이동</button>
+</section>
+</sc-if>
+
+<sc-if value="{{ opsAllowed }}">
+<section style="display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px">
+<div style="min-width:0;flex:1">
+<h1 id="page-title" tabindex="-1" style="margin:0 0 4px;font-size:22px;font-weight:600">배치 운영</h1>
+<p style="margin:0;max-width:70ch;color:var(--fg2);font-size:13.5px">일간 통합 배치의 단계별 진행, 실패 지점, 영향 범위를 확인합니다. 목록과 상세는 독립적으로 조회되며 한쪽이 실패해도 다른 쪽 문맥은 유지됩니다.</p>
+</div>
+<button id="trigger-btn" type="button" onClick="{{ onOpenTrigger }}" style="display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 18px;border:1px solid var(--accent);border-radius:var(--r2);background:var(--accent);color:var(--accent-fg);font-size:13.5px;font-weight:600;cursor:pointer">수동 실행</button>
+</section>
+
+<sc-if value="{{ triggerDone }}">
+<section role="status" style="display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;padding:14px 18px;border:1px solid var(--success-line);border-left:4px solid var(--success);border-radius:var(--r3);background:var(--surface)">
+<strong style="font-size:14px;font-weight:600">실행을 시작했습니다</strong>
+<span style="font-family:var(--mono);font-size:13px;font-weight:600">{{ trJobId }}</span>
+<span data-tone="{{ trStatusRaw }}" style="padding:2px 8px;border-radius:var(--r1);font-size:11.5px;font-weight:600;color:var(--tone);background:var(--tone-soft);border:1px solid var(--tone-line)">{{ trStatus }}</span>
+<span style="font-family:var(--mono);font-size:12px;color:var(--fg2)">기준일 {{ trDate }} · 시작 {{ trStarted }}</span>
+<button type="button" onClick="{{ onViewJob }}" style="margin-left:auto;display:inline-flex;align-items:center;min-height:38px;padding:0 14px;border:1px solid var(--line2);border-radius:var(--r2);background:var(--surface);color:var(--fg);font-size:12.5px;font-weight:600;cursor:pointer">작업 보기</button>
+</section>
+</sc-if>
+
+<section aria-label="배치 요약" style="display:flex;flex-direction:column;gap:12px">
+<sc-if value="{{ needsAttention }}">
+<div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:12px 16px;border:1px solid var(--danger-line);border-left:4px solid var(--danger);border-radius:var(--r3);background:var(--surface)">
+<span style="font-size:13.5px;font-weight:600">{{ attentionLine }}</span>
+<div style="display:flex;gap:8px;margin-left:auto">
+<button type="button" onClick="{{ onFilterFailed }}" style="display:inline-flex;align-items:center;min-height:36px;padding:0 12px;border:1px solid var(--line2);border-radius:var(--r2);background:var(--surface);color:var(--fg);font-size:12.5px;font-weight:600;cursor:pointer">실패만 보기</button>
+<button type="button" onClick="{{ onFilterPartial }}" style="display:inline-flex;align-items:center;min-height:36px;padding:0 12px;border:1px solid var(--line2);border-radius:var(--r2);background:var(--surface);color:var(--fg);font-size:12.5px;font-weight:600;cursor:pointer">부분 실패만 보기</button>
+</div>
+</div>
+</sc-if>
+<div style="display:grid;grid-template-columns:var(--g3);gap:12px">
+<div style="padding:14px 16px;border:1px solid var(--line);border-radius:var(--r3);background:var(--surface);border-left:3px solid var(--danger)">
+<div style="font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--fg3)">실패</div>
+<div style="font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:26px;font-weight:600;color:var(--danger)">{{ sumFailed }}</div>
+<div style="font-size:12px;color:var(--fg3)">스냅샷 미생성 · 재실행 필요</div>
+</div>
+<div style="padding:14px 16px;border:1px solid var(--line);border-radius:var(--r3);background:var(--surface);border-left:3px solid var(--warning)">
+<div style="font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--fg3)">부분 실패</div>
+<div style="font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:26px;font-weight:600;color:var(--warning)">{{ sumPartial }}</div>
+<div style="font-size:12px;color:var(--fg3)">일부 지수·요약 누락</div>
+</div>
+<div style="padding:14px 16px;border:1px solid var(--line);border-radius:var(--r3);background:var(--surface)">
+<div style="font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--fg3)">성공</div>
+<div style="font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:26px;font-weight:600">{{ sumSuccess }}</div>
+<div style="font-size:12px;color:var(--fg3)">평균 소요 {{ sumAvg }}</div>
+</div>
+</div>
+</section>
+
+<div style="display:grid;grid-template-columns:var(--md);gap:var(--gap);align-items:start">
+
+<sc-if value="{{ showList }}">
+<section aria-labelledby="ops-list-h" style="min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:var(--r3);overflow:hidden">
+<div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:14px 18px;border-bottom:1px solid var(--line)">
+<h2 id="ops-list-h" style="margin:0;font-size:14.5px;font-weight:600">실행 이력</h2>
+<span style="font-family:var(--mono);font-size:11.5px;color:var(--fg3)">{{ opsRangeLabel }}</span>
+<span style="font-family:var(--mono);font-size:11.5px;color:var(--fg3)">· {{ appliedFilterLabel }}</span>
+<sc-if value="{{ hasStatusFilter }}">
+<button type="button" onClick="{{ onFilterAll }}" style="margin-left:auto;min-height:34px;padding:0 12px;border:1px solid var(--line2);border-radius:var(--r2);background:var(--surface);color:var(--fg2);font-size:12.5px;cursor:pointer">필터 해제</button>
+</sc-if>
+</div>
+
+<sc-if value="{{ opsListLoading }}">
+<div role="status" style="padding:18px;display:flex;flex-direction:column;gap:10px">
+<div data-skel style="height:44px"></div>
+<div data-skel style="height:44px"></div>
+<div data-skel style="height:44px"></div>
+<p style="margin:0;font-size:12.5px;color:var(--fg3)">목록을 불러오는 중입니다. 선택한 작업의 상세는 그대로 유지됩니다.</p>
+</div>
+</sc-if>
+
+<sc-if value="{{ opsListError }}">
+<div role="alert" style="padding:18px">
+<div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:6px">
+<strong style="font-size:14px;font-weight:600">{{ errTitle }}</strong>
+<span data-tone="FAILED" style="padding:2px 8px;border-radius:var(--r1);font-family:var(--mono);font-size:11.5px;font-weight:600;color:var(--tone);background:var(--tone-soft);border:1px solid var(--tone-line)">{{ errCode }}</span>
+</div>
+<p style="margin:0 0 12px;font-size:13px;color:var(--fg2)">{{ errMessage }}</p>
+<button type="button" onClick="{{ onRetry }}" style="display:inline-flex;align-items:center;min-height:40px;padding:0 16px;border:1px solid var(--accent);border-radius:var(--r2);background:var(--accent);color:var(--accent-fg);font-size:13px;font-weight:600;cursor:pointer">목록 다시 시도</button>
+</div>
+</sc-if>
+
+<sc-if value="{{ opsEmpty }}">
+<div style="padding:28px 18px">
+<h3 style="margin:0 0 8px;font-size:15px;font-weight:600">표시할 실행 이력이 없습니다</h3>
+<p style="margin:0 0 14px;max-width:56ch;font-size:13px;color:var(--fg2)">선택한 상태 조건에 해당하는 작업이 없습니다. 필터를 해제하면 전체 이력을 볼 수 있습니다.</p>
+<button type="button" onClick="{{ onFilterAll }}" style="display:inline-flex;align-items:center;min-height:40px;padding:0 14px;border:1px solid var(--line2);border-radius:var(--r2);background:var(--surface);color:var(--fg);font-size:13px;font-weight:600;cursor:pointer">필터 해제</button>
+</div>
+</sc-if>
+
+<sc-if value="{{ hasRows }}">
+<div style="overflow-x:auto;-webkit-overflow-scrolling:touch">
+<table style="width:100%;min-width:480px;border-collapse:collapse;font-size:13px">
+<thead>
+<tr>
+<th scope="col" style="text-align:left;padding:9px 18px;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--fg3);border-bottom:1px solid var(--line)">작업 · 기준일</th>
+<th scope="col" style="text-align:left;padding:9px 12px;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--fg3);border-bottom:1px solid var(--line)">상태</th>
+<th scope="col" style="text-align:right;padding:9px 12px;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--fg3);border-bottom:1px solid var(--line)">소요</th>
+<th scope="col" style="display:var(--tc3);text-align:right;padding:9px 18px;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--fg3);border-bottom:1px solid var(--line)">원문/정제/이슈</th>
+</tr>
+</thead>
+<tbody>
+<sc-for list="{{ rows }}" as="r" hint-placeholder-count="6">
+<tr data-row data-selected="{{ r.selected }}" data-attention="{{ r.attention }}">
+<th scope="row" style="text-align:left;padding:10px 18px;vertical-align:top;border-bottom:1px solid var(--line)">
+<button type="button" onClick="{{ r.onSelect }}" aria-current="{{ r.selected }}" style="display:block;padding:0;border:0;background:transparent;color:var(--fg);font-family:var(--mono);font-size:13.5px;font-weight:600;cursor:pointer;text-align:left" style-hover="color:var(--accent);text-decoration:underline">{{ r.date }}</button>
+<span style="display:block;font-family:var(--mono);font-size:11px;font-weight:400;color:var(--fg3)">{{ r.jobId }} · {{ r.pageLabel }}</span>
+<span style="display:var(--tc3i);font-family:var(--mono);font-size:11px;font-weight:400;color:var(--fg3)">원문/정제/이슈 {{ r.counts }}</span>
+</th>
+<td style="padding:10px 12px;vertical-align:top;border-bottom:1px solid var(--line)">
+<span data-tone="{{ r.status }}" style="display:inline-flex;align-items:center;gap:5px;padding:3px 8px;border-radius:var(--r1);font-size:11.5px;font-weight:600;white-space:nowrap;color:var(--tone);background:var(--tone-soft);border:1px solid var(--tone-line)"><span aria-hidden="true" style="width:5px;height:5px;border-radius:50%;background:currentColor"></span>{{ r.statusLabel }}</span>
+<sc-if value="{{ r.hasPartial }}"><span style="display:block;margin-top:4px;font-size:11.5px;color:var(--fg3);overflow-wrap:anywhere">{{ r.partial }}</span></sc-if>
+</td>
+<td style="padding:10px 12px;vertical-align:top;text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums;color:var(--fg2);white-space:nowrap;border-bottom:1px solid var(--line)">{{ r.duration }}<span style="display:block;font-size:11px;color:var(--fg3)">{{ r.started }}</span></td>
+<td style="display:var(--tc3);padding:10px 18px;vertical-align:top;text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums;color:var(--fg2);white-space:nowrap;border-bottom:1px solid var(--line)">{{ r.counts }}</td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+</div>
+<nav aria-label="배치 페이지 이동" style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:12px 18px">
+<button type="button" onClick="{{ onOpsPrev }}" disabled="{{ opsPrevDisabled }}" style="display:inline-flex;align-items:center;justify-content:center;min-height:40px;min-width:44px;padding:0 12px;border:1px solid var(--line2);border-radius:var(--r2);background:var(--surface);color:var(--fg);font-size:13px;cursor:pointer">이전</button>
+<sc-for list="{{ opsPages }}" as="p" hint-placeholder-count="2">
+<button type="button" data-nav data-active="{{ p.active }}" onClick="{{ p.onClick }}" style="display:inline-flex;align-items:center;justify-content:center;min-height:40px;min-width:44px;padding:0 10px;border:1px solid var(--line);border-radius:var(--r2);background:var(--surface);color:var(--fg2);font-family:var(--mono);font-size:13px;font-weight:600;cursor:pointer">{{ p.label }}</button>
+</sc-for>
+<button type="button" onClick="{{ onOpsNext }}" disabled="{{ opsNextDisabled }}" style="display:inline-flex;align-items:center;justify-content:center;min-height:40px;min-width:44px;padding:0 12px;border:1px solid var(--line2);border-radius:var(--r2);background:var(--surface);color:var(--fg);font-size:13px;cursor:pointer">다음</button>
+</nav>
+</sc-if>
+</section>
+</sc-if>
+
+<sc-if value="{{ showDetail }}">
+<section aria-labelledby="ops-detail-h" style="min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:var(--r3);overflow:hidden">
+<div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;padding:14px 18px;border-bottom:1px solid var(--line)">
+<sc-if value="{{ narrow }}">
+<button type="button" onClick="{{ onBackToList }}" style="display:inline-flex;align-items:center;min-height:36px;padding:0 12px;border:1px solid var(--line2);border-radius:var(--r2);background:var(--surface);color:var(--fg);font-size:12.5px;font-weight:600;cursor:pointer">← 목록</button>
+</sc-if>
+<h2 id="ops-detail-h" style="margin:0;font-size:14.5px;font-weight:600">{{ dJobId }}</h2>
+<span data-tone="{{ dStatus }}" style="display:inline-flex;align-items:center;gap:5px;padding:3px 8px;border-radius:var(--r1);font-size:11.5px;font-weight:600;color:var(--tone);background:var(--tone-soft);border:1px solid var(--tone-line)">{{ dStatusLabel }}</span>
+<span style="font-family:var(--mono);font-size:12px;color:var(--fg2)">{{ dDate }}</span>
+</div>
+
+<sc-if value="{{ detailLoading }}">
+<div role="status" aria-busy="true" style="padding:18px;display:flex;flex-direction:column;gap:10px">
+<div data-skel style="height:64px"></div>
+<div data-skel style="height:150px"></div>
+<p style="margin:0;font-size:12.5px;color:var(--fg3)">선택한 작업의 상세를 불러오는 중입니다. 목록과 필터는 유지됩니다.</p>
+</div>
+</sc-if>
+
+<sc-if value="{{ detailError }}">
+<div role="alert" style="padding:18px">
+<strong style="display:block;margin-bottom:6px;font-size:14px;font-weight:600">이 작업의 상세를 불러오지 못했습니다</strong>
+<p style="margin:0 0 12px;font-size:13px;color:var(--fg2)">목록은 정상입니다. 다시 시도하거나 다른 작업을 선택할 수 있습니다.</p>
+<button type="button" onClick="{{ onRetry }}" style="display:inline-flex;align-items:center;min-height:40px;padding:0 16px;border:1px solid var(--accent);border-radius:var(--r2);background:var(--accent);color:var(--accent-fg);font-size:13px;font-weight:600;cursor:pointer">상세 다시 시도</button>
+</div>
+</sc-if>
+
+<sc-if value="{{ detailOk }}">
+<div style="display:flex;flex-direction:column;gap:16px;padding:16px 18px">
+<dl style="margin:0;display:grid;grid-template-columns:1fr 1fr;gap:10px 14px;font-size:12.5px">
+<div><dt style="color:var(--fg3);margin-bottom:2px">시작</dt><dd style="margin:0;font-family:var(--mono)">{{ dStarted }}</dd></div>
+<div><dt style="color:var(--fg3);margin-bottom:2px">종료</dt><dd style="margin:0;font-family:var(--mono)">{{ dEnded }}</dd></div>
+<div><dt style="color:var(--fg3);margin-bottom:2px">소요</dt><dd style="margin:0;font-family:var(--mono)">{{ dDuration }}</dd></div>
+<div><dt style="color:var(--fg3);margin-bottom:2px">원문/정제/이슈</dt><dd style="margin:0;font-family:var(--mono)">{{ dCounts }}</dd></div>
+<div><dt style="color:var(--fg3);margin-bottom:2px">스냅샷</dt><dd style="margin:0;font-family:var(--mono)">{{ dPage }}</dd></div>
+<div><dt style="color:var(--fg3);margin-bottom:2px">실행 옵션</dt><dd style="margin:0;font-family:var(--mono);overflow-wrap:anywhere">{{ dOptions }}</dd></div>
+</dl>
+
+<div>
+<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+<h3 style="margin:0;font-size:13px;font-weight:600">파이프라인 단계</h3>
+<span style="font-family:var(--mono);font-size:10.5px;padding:1px 6px;border:1px solid var(--warning-line);border-radius:var(--r1);color:var(--warning);background:var(--warning-soft)">PROPOSED · BACKEND</span>
+</div>
+<ol style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column">
+<sc-for list="{{ dStages }}" as="g" hint-placeholder-count="8">
+<li data-tone="{{ g.status }}" style="display:grid;grid-template-columns:14px minmax(0,1fr) auto;gap:10px;align-items:start;padding:7px 0;border-bottom:1px solid var(--line)">
+<span aria-hidden="true" style="margin-top:5px;width:9px;height:9px;border-radius:50%;background:var(--tone);border:2px solid var(--tone-soft)"></span>
+<div style="min-width:0">
+<div style="font-size:13px;font-weight:500">{{ g.label }}</div>
+<sc-if value="{{ g.hasNote }}"><div style="font-size:12px;color:var(--tone);overflow-wrap:anywhere">{{ g.note }}</div></sc-if>
+</div>
+<div style="text-align:right;white-space:nowrap">
+<span style="font-size:11.5px;font-weight:600;color:var(--tone)">{{ g.statusLabel }}</span>
+<span style="display:block;font-family:var(--mono);font-size:11px;color:var(--fg3)">{{ g.duration }}</span>
+</div>
+</li>
+</sc-for>
+</ol>
+</div>
+
+<sc-if value="{{ hasImpact }}">
+<div>
+<h3 style="margin:0 0 6px;font-size:13px;font-weight:600">사용자 영향</h3>
+<ul style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:3px;font-size:12.5px;color:var(--fg2)">
+<sc-for list="{{ dImpact }}" as="p" hint-placeholder-count="2"><li style="overflow-wrap:anywhere">{{ p.text }}</li></sc-for>
+</ul>
+</div>
+</sc-if>
+
+<sc-if value="{{ hasError }}">
+<div style="padding:12px 14px;border:1px solid var(--danger-line);border-left:3px solid var(--danger);border-radius:var(--r2);background:var(--danger-soft)">
+<div style="font-family:var(--mono);font-size:12px;font-weight:600;color:var(--danger);margin-bottom:4px">{{ dErrorCode }}</div>
+<p style="margin:0;font-size:12.5px;color:var(--fg);overflow-wrap:anywhere">{{ dErrorMessage }}</p>
+</div>
+</sc-if>
+
+<div>
+<div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:6px">
+<h3 style="margin:0;font-size:13px;font-weight:600">실행 로그</h3>
+<button type="button" onClick="{{ onCopyLog }}" style="min-height:32px;padding:0 10px;border:1px solid var(--line2);border-radius:var(--r1);background:var(--surface);color:var(--fg2);font-size:11.5px;cursor:pointer">복사</button>
+<sc-if value="{{ logTruncated }}">
+<button type="button" onClick="{{ onToggleLog }}" aria-expanded="{{ logExpanded }}" style="min-height:32px;padding:0 10px;border:1px solid var(--line2);border-radius:var(--r1);background:var(--surface);color:var(--fg2);font-size:11.5px;cursor:pointer">{{ logToggleLabel }}</button>
+</sc-if>
+</div>
+<pre style="margin:0;max-height:240px;overflow:auto;padding:12px;border:1px solid var(--line);border-radius:var(--r2);background:var(--surface2);font-family:var(--mono);font-size:11.5px;line-height:1.55;color:var(--fg2);white-space:pre-wrap;overflow-wrap:anywhere">{{ logShown }}</pre>
+</div>
+
+<div style="display:flex;flex-wrap:wrap;gap:8px;padding-top:12px;border-top:1px solid var(--line)">
+<sc-if value="{{ hasSnapshotLink }}">
+<button type="button" onClick="{{ onOpenSnapshot }}" style="display:inline-flex;align-items:center;min-height:40px;padding:0 14px;border:1px solid var(--line2);border-radius:var(--r2);background:var(--surface);color:var(--fg);font-size:12.5px;font-weight:600;cursor:pointer">{{ snapshotLabel }}</button>
+</sc-if>
+<button type="button" onClick="{{ onOpenTrigger }}" style="display:inline-flex;align-items:center;min-height:40px;padding:0 14px;border:1px solid var(--line2);border-radius:var(--r2);background:var(--surface);color:var(--fg);font-size:12.5px;font-weight:600;cursor:pointer">같은 기준일 재실행</button>
+<span style="align-self:center;font-family:var(--mono);font-size:11.5px;color:var(--fg3)">{{ dRetryable }}</span>
+</div>
+</div>
+</sc-if>
+</section>
+</sc-if>
+</div>
+</sc-if>
+</sc-if>
+
+<sc-if value="{{ isNotFound }}">
+<section style="padding:28px 22px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r3);max-width:64ch">
+<span data-tone="neutral" style="display:inline-flex;padding:2px 8px;border-radius:var(--r1);font-family:var(--mono);font-size:11.5px;font-weight:600;color:var(--tone);background:var(--tone-soft);border:1px solid var(--tone-line)">404 · ROUTE_NOT_FOUND</span>
+<h1 id="page-title" tabindex="-1" style="margin:10px 0 8px;font-size:20px;font-weight:600">이 주소에 해당하는 화면이 없습니다</h1>
+<p style="margin:0 0 18px;color:var(--fg2);font-size:13.5px">주소가 바뀌었거나 잘못 입력됐을 수 있습니다. 최신 브리프에서 다시 시작하세요.</p>
+<button type="button" onClick="{{ onNotFoundHome }}" style="display:inline-flex;align-items:center;min-height:44px;padding:0 18px;border:1px solid var(--accent);border-radius:var(--r2);background:var(--accent);color:var(--accent-fg);font-size:13.5px;font-weight:600;cursor:pointer">최신 브리프로 이동</button>
+</section>
+</sc-if>
+<sc-if value="{{ isCatalog }}">
+<section>
+<h1 id="page-title" tabindex="-1" style="margin:0 0 4px;font-size:22px;font-weight:600">상태 카탈로그 · 변경 추적표</h1>
+<p style="margin:0;max-width:76ch;color:var(--fg2);font-size:13.5px">Mock 픽스처는 실제 DTO 계약(DailyPageResponse, ArchiveListResponse, ClusterDetailResponse, BatchJob*Response)을 그대로 따릅니다. 아래 등가군은 레이아웃·정보 우선순위·복구 행동·포커스·권한 노출이 달라지는 대표 상태만 골랐습니다.</p>
+</section>
+
+<section aria-labelledby="cat-h" style="padding:18px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r3)">
+<h2 id="cat-h" style="margin:0 0 14px;font-size:15px;font-weight:600">상태 등가군</h2>
+<div style="display:flex;flex-direction:column;gap:16px">
+<sc-for list="{{ catalogGroups }}" as="g" hint-placeholder-count="7">
+<div>
+<div style="font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--fg3);margin-bottom:7px">{{ g.label }}</div>
+<div style="display:flex;flex-wrap:wrap;gap:7px">
+<sc-for list="{{ g.items }}" as="s" hint-placeholder-count="5">
+<button type="button" data-nav data-active="{{ s.active }}" onClick="{{ s.onClick }}" style="min-height:38px;padding:0 12px;border:1px solid var(--line);border-radius:var(--r2);background:var(--surface2);color:var(--fg2);font-size:12.5px;font-weight:500;cursor:pointer" style-hover="border-color:var(--accent-line);color:var(--accent)">{{ s.label }}</button>
+</sc-for>
+</div>
+</div>
+</sc-for>
+</div>
+</section>
+
+<section aria-labelledby="trace-h" style="background:var(--surface);border:1px solid var(--line);border-radius:var(--r3);overflow:hidden">
+<div style="padding:14px 18px;border-bottom:1px solid var(--line)">
+<h2 id="trace-h" style="margin:0 0 6px;font-size:15px;font-weight:600">기존 문제 → v2 변경 → 검증 기준</h2>
+<p style="margin:0;font-size:12px;color:var(--warning);overflow-wrap:anywhere">오른쪽 열은 <strong style="font-weight:600">충족해야 할 기준</strong>이며 아직 측정된 결과가 아닙니다. 320·390·768·1024·1280·1440 뷰포트 점검과 키보드·스크린리더 검증은 구현 저장소에서 Playwright로 실행해야 합니다.</p>
+</div>
+<div style="overflow-x:auto">
+<table style="width:100%;min-width:640px;border-collapse:collapse;font-size:12.5px">
+<thead>
+<tr>
+<th scope="col" style="text-align:left;padding:9px 18px;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--fg3);border-bottom:1px solid var(--line)">기존 문제</th>
+<th scope="col" style="text-align:left;padding:9px 12px;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--fg3);border-bottom:1px solid var(--line)">v2 변경</th>
+<th scope="col" style="text-align:left;padding:9px 18px;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--fg3);border-bottom:1px solid var(--line)">검증 기준</th>
+</tr>
+</thead>
+<tbody>
+<tr><th scope="row" style="text-align:left;padding:10px 18px;vertical-align:top;font-weight:500;border-bottom:1px solid var(--line)">모바일에서 272px sidebar가 본문보다 먼저 노출</th><td style="padding:10px 12px;vertical-align:top;color:var(--fg2);border-bottom:1px solid var(--line)">데스크톱 좌측 레일 단일 체계, 모바일은 compact header + drawer(focus trap · Escape · trigger 포커스 복귀)</td><td style="padding:10px 18px;vertical-align:top;color:var(--fg2);border-bottom:1px solid var(--line)">390px 첫 화면에 h1과 글로벌 헤드라인이 보인다</td></tr>
+<tr><th scope="row" style="text-align:left;padding:10px 18px;vertical-align:top;font-weight:500;border-bottom:1px solid var(--line)">sidebar와 topbar에 primary nav 중복</th><td style="padding:10px 12px;vertical-align:top;color:var(--fg2);border-bottom:1px solid var(--line)">primary nav는 한 곳. 상단은 route·모드·기준일 컨텍스트와 URL 계약만 표시</td><td style="padding:10px 18px;vertical-align:top;color:var(--fg2);border-bottom:1px solid var(--line)">동일 목적지 링크가 데스크톱에서 1회만 존재</td></tr>
+<tr><th scope="row" style="text-align:left;padding:10px 18px;vertical-align:top;font-weight:500;border-bottom:1px solid var(--line)">고정폭 table로 문서 전체 가로 스크롤</th><td style="padding:10px 12px;vertical-align:top;color:var(--fg2);border-bottom:1px solid var(--line)">테이블 내부만 scoped scroll. 좁은 폭에서는 고가·저가 / 생성 시각 / 처리량 컬럼을 접고 같은 값을 우선순위 행의 보조 줄로 그대로 노출 — 값이 사라지지 않는다</td><td style="padding:10px 18px;vertical-align:top;color:var(--fg2);border-bottom:1px solid var(--line)">320·390·768·1024·1280·1440에서 documentElement.scrollWidth ≤ clientWidth</td></tr>
+<tr><th scope="row" style="text-align:left;padding:10px 18px;vertical-align:top;font-weight:500;border-bottom:1px solid var(--line)">공백 없는 장문이 화면 폭을 확장</th><td style="padding:10px 12px;vertical-align:top;color:var(--fg2);border-bottom:1px solid var(--line)">텍스트 영역 overflow-wrap:anywhere, grid 자식 min-width:0, 로그는 pre-wrap + 높이 제한 + 전체 보기</td><td style="padding:10px 18px;vertical-align:top;color:var(--fg2);border-bottom:1px solid var(--line)">200자 토큰·긴 URL·4,000자 로그 픽스처에서 overflow 없음</td></tr>
+<tr><th scope="row" style="text-align:left;padding:10px 18px;vertical-align:top;font-weight:500;border-bottom:1px solid var(--line)">Batch pagination UI 부재로 20건 이후 접근 불가</th><td style="padding:10px 12px;vertical-align:top;color:var(--fg2);border-bottom:1px solid var(--line)">목록 하단 페이지네이션, page를 URL query에 반영, 필터 변경 시 page=1</td><td style="padding:10px 18px;vertical-align:top;color:var(--fg2);border-bottom:1px solid var(--line)">27건 픽스처에서 2페이지 이동·Back 복원</td></tr>
+<tr><th scope="row" style="text-align:left;padding:10px 18px;vertical-align:top;font-weight:500;border-bottom:1px solid var(--line)">일반 사용자에게 운영 로그·Trigger 노출</th><td style="padding:10px 12px;vertical-align:top;color:var(--fg2);border-bottom:1px solid var(--line)">Viewer는 운영 그룹 자체가 렌더되지 않고, 직접 진입 시 403 이유·안전한 목적지 제공</td><td style="padding:10px 18px;vertical-align:top;color:var(--fg2);border-bottom:1px solid var(--line)">Viewer 전환 시 /ops/batches에 로그·Trigger 노드 없음</td></tr>
+<tr><th scope="row" style="text-align:left;padding:10px 18px;vertical-align:top;font-weight:500;border-bottom:1px solid var(--line)">Latest와 Archive Detail 구분 약함</th><td style="padding:10px 12px;vertical-align:top;color:var(--fg2);border-bottom:1px solid var(--line)">아카이브 전용 상단 밴드(경고색 · pageId · versionNo · 인접 날짜 이동 · 검색 결과 복귀)</td><td style="padding:10px 18px;vertical-align:top;color:var(--fg2);border-bottom:1px solid var(--line)">두 화면 스크린샷에서 모드 구분이 2초 내 가능</td></tr>
+<tr><th scope="row" style="text-align:left;padding:10px 18px;vertical-align:top;font-weight:500;border-bottom:1px solid var(--line)">loading/error가 문맥 전체를 제거하고 Retry 없음</th><td style="padding:10px 12px;vertical-align:top;color:var(--fg2);border-bottom:1px solid var(--line)">skeleton이 레이아웃 유지, 오류는 영향 범위 내 inline alert + Retry, 필터와 이전 결과 유지</td><td style="padding:10px 18px;vertical-align:top;color:var(--fg2);border-bottom:1px solid var(--line)">loading·refetching·error·retrying 픽스처에서 필터 폼 유지</td></tr>
+<tr><th scope="row" style="text-align:left;padding:10px 18px;vertical-align:top;font-weight:500;border-bottom:1px solid var(--line)">Trigger 완료 피드백·job ID·conflict 처리 부족</th><td style="padding:10px 12px;vertical-align:top;color:var(--fg2);border-bottom:1px solid var(--line)">confirm → pending(중복 제출 차단) → success(job ID·상태·시작 시각·작업 보기) / 409·403·422·429·5xx·네트워크</td><td style="padding:10px 18px;vertical-align:top;color:var(--fg2);border-bottom:1px solid var(--line)">7개 트리거 시나리오에서 입력 유지·안전한 Retry</td></tr>
+<tr><th scope="row" style="text-align:left;padding:10px 18px;vertical-align:top;font-weight:500;border-bottom:1px solid var(--line)">PARTIAL이 원인·영향·다음 행동을 설명하지 않음</th><td style="padding:10px 12px;vertical-align:top;color:var(--fg2);border-bottom:1px solid var(--line)">상단 누락 목록 + 영향받은 시장 섹션 inline 표시 + 배치 운영 이동 경로</td><td style="padding:10px 18px;vertical-align:top;color:var(--fg2);border-bottom:1px solid var(--line)">partial 픽스처에서 누락 항목이 두 위치에 나타남</td></tr>
+<tr><th scope="row" style="text-align:left;padding:10px 18px;vertical-align:top;font-weight:500;border-bottom:1px solid var(--line)">Cluster에서 진입 원점·스크롤 복귀 어려움</th><td style="padding:10px 12px;vertical-align:top;color:var(--fg2);border-bottom:1px solid var(--line)">origin query 전달, breadcrumb·Back이 원점을 반영, 직접 진입은 기준일 브리프로 fallback</td><td style="padding:10px 18px;vertical-align:top;color:var(--fg2);border-bottom:1px solid var(--line)">Latest·Archive·직접 진입 3경로에서 Back 목적지 일치</td></tr>
+<tr><th scope="row" style="text-align:left;padding:10px 18px;vertical-align:top;font-weight:500;border-bottom:1px solid var(--line)">Coming soon 요소가 내비게이션 공간 점유</th><td style="padding:10px 12px;vertical-align:top;color:var(--fg2);border-bottom:1px solid var(--line)">전역 검색·Support·Documentation·System Status 제거(v2 MVP 범위 제외)</td><td style="padding:10px 18px;vertical-align:top;color:var(--fg2);border-bottom:1px solid var(--line)">비활성 항목이 primary nav에 없음</td></tr>
+<tr><th scope="row" style="text-align:left;padding:10px 18px;vertical-align:top;font-weight:500;border-bottom:1px solid var(--line)">접근성 계약 부족</th><td style="padding:10px 12px;vertical-align:top;color:var(--fg2);border-bottom:1px solid var(--line)">skip link, route 변경 시 h1 focus(preventScroll), 단일 polite live region, 44px 타깃, focus-visible, reduced-motion, forced-colors</td><td style="padding:10px 18px;vertical-align:top;color:var(--fg2);border-bottom:1px solid var(--line)">키보드만으로 전 과업 완료, 200% 확대에서 손실 없음</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section aria-labelledby="tok-h" style="display:grid;grid-template-columns:var(--g2);gap:var(--gap)">
+<div style="padding:18px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r3);min-width:0">
+<h2 id="tok-h" style="margin:0 0 10px;font-size:15px;font-weight:600">시맨틱 토큰</h2>
+<ul style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:5px;font-size:12.5px;color:var(--fg2)">
+<li><strong style="font-weight:600">색</strong> — bg / surface·surface2·surface3 / line·line2 / fg·fg2·fg3 / accent(+soft·line) / intent success·warning·danger·info·neutral(각 soft·line) / up·down / focus</li>
+<li><strong style="font-weight:600">상태 전달</strong> — 색 단독 금지. tone 토큰 + 아이콘/도트 + 한국어 상태어(준비 완료·부분 생성·생성 실패·성공·실행 중·대기·건너뜀)를 함께 사용</li>
+<li><strong style="font-weight:600">타입</strong> — UI는 system sans, 수치·ID·시각·로그는 mono + tabular-nums. h1 21–26px, 본문 13.5–16px, 라벨 11–12px</li>
+<li><strong style="font-weight:600">간격·모양</strong> — pad/gap 토큰이 breakpoint별로 변동(32→20→14). radius 4·8·12, pill은 상태 배지에만</li>
+<li><strong style="font-weight:600">모션</strong> — transform·opacity만, 120–200ms. skeleton shimmer와 spinner는 reduced-motion에서 정지</li>
+<li><strong style="font-weight:600">레이아웃</strong> — shell·md(master-detail)·g2·g3·cl·tc2·tc3 토큰이 1180/1024/640에서 재정의되어 컴포넌트 스타일 없이 반응</li>
+</ul>
+</div>
+<div style="padding:18px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r3);min-width:0">
+<h2 style="margin:0 0 10px;font-size:15px;font-weight:600">열린 결정 · 백엔드 의존성</h2>
+<ul style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:5px;font-size:12.5px;color:var(--fg2)">
+<li><strong style="font-weight:600">D-01 (가정)</strong> Viewer/Operator 2단계. 역할 출처가 없어 프런트 상태로 대체 — 실제로는 권한 API 필요</li>
+<li><strong style="font-weight:600">D-05·D-06 (BACKEND)</strong> 인접 날짜 이동은 날짜 산술로 구현. 영업일·스냅샷 존재 여부는 보장되지 않아 없는 날짜는 404 상태로 안내</li>
+<li><strong style="font-weight:600">파이프라인 단계 (PROPOSED·BACKEND)</strong> 단계별 상태·소요는 현재 API에 없음. app/batch/steps 모듈명을 근거로 가정. 미제공 시 errorCode/logSummary만 표시하도록 축소 가능</li>
+<li><strong style="font-weight:600">D-11·D-12 (Open)</strong> force·rebuildPageOnly는 고급 모드로 분리하고 확인 단계에서 경고. 권한·audit 정책은 백엔드 확인 필요</li>
+<li><strong style="font-weight:600">D-13 (Open)</strong> PARTIAL 누락 범위는 현재 문자열 partialMessage. 구조화 필드가 생기면 섹션 자동 매핑으로 대체</li>
+<li><strong style="font-weight:600">401/403 구분 (BACKEND)</strong> 세션 만료와 권한 없음을 다른 화면으로 처리. 현재 계약은 코드 구분만 있음</li>
+<li><strong style="font-weight:600">409 payload (BACKEND)</strong> 중복 실행 시 기존 jobId를 함께 주면 “실행 중 작업 열기”가 동작. 없으면 목록 이동으로 대체</li>
+<li><strong style="font-weight:600">채택</strong> jobId를 URL query로 승격(선택 deep link·Back 복원). articleLinks·metadata를 근거/신뢰 정보로 복원</li>
+</ul>
+</div>
+</section>
+</sc-if>
+<sc-if value="{{ panelOpen }}">
+<div role="region" aria-label="상태 시뮬레이터" style="position:fixed;z-index:70;right:16px;bottom:16px;width:min(370px,92vw);max-height:74vh;overflow:auto;overscroll-behavior:contain;display:flex;flex-direction:column;gap:14px;padding:16px;background:var(--surface);border:1px solid var(--line2);border-radius:var(--r3);box-shadow:var(--sh3)">
+<div style="display:flex;align-items:center;gap:10px">
+<strong style="font-size:13.5px;font-weight:600">상태 시뮬레이터</strong>
+<span style="font-family:var(--mono);font-size:11px;padding:1px 6px;border:1px solid var(--line);border-radius:var(--r1);color:var(--fg3)">{{ modeLabel }}</span>
+<button type="button" onClick="{{ onClosePanel }}" aria-label="닫기" style="margin-left:auto;width:32px;height:32px;border:1px solid var(--line);border-radius:var(--r1);background:transparent;color:var(--fg2);cursor:pointer">✕</button>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px">
+<div style="font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--fg3)">권한</div>
+<div style="display:flex;gap:7px">
+<button type="button" data-nav data-active="{{ roleViewerActive }}" onClick="{{ onRoleViewer }}" style="flex:1;min-height:38px;border:1px solid var(--line);border-radius:var(--r2);background:var(--surface2);color:var(--fg2);font-size:12.5px;font-weight:600;cursor:pointer">Viewer</button>
+<button type="button" data-nav data-active="{{ roleOperatorActive }}" onClick="{{ onRoleOperator }}" style="flex:1;min-height:38px;border:1px solid var(--line);border-radius:var(--r2);background:var(--surface2);color:var(--fg2);font-size:12.5px;font-weight:600;cursor:pointer">Operator</button>
+</div>
+<div style="font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--fg3)">밀도</div>
+<div style="display:flex;gap:7px">
+<button type="button" data-nav data-active="{{ densityComfortActive }}" onClick="{{ onDensityComfort }}" style="flex:1;min-height:38px;border:1px solid var(--line);border-radius:var(--r2);background:var(--surface2);color:var(--fg2);font-size:12.5px;font-weight:600;cursor:pointer">기본</button>
+<button type="button" data-nav data-active="{{ densityCompactActive }}" onClick="{{ onDensityCompact }}" style="flex:1;min-height:38px;border:1px solid var(--line);border-radius:var(--r2);background:var(--surface2);color:var(--fg2);font-size:12.5px;font-weight:600;cursor:pointer">고밀도</button>
+</div>
+</div>
+<sc-for list="{{ scenarioGroups }}" as="g" hint-placeholder-count="7">
+<div style="display:flex;flex-direction:column;gap:6px">
+<div style="font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--fg3)">{{ g.label }}</div>
+<div style="display:flex;flex-wrap:wrap;gap:6px">
+<sc-for list="{{ g.items }}" as="s" hint-placeholder-count="5">
+<button type="button" data-nav data-active="{{ s.active }}" onClick="{{ s.onClick }}" style="min-height:34px;padding:0 10px;border:1px solid var(--line);border-radius:var(--r1);background:var(--surface2);color:var(--fg2);font-size:12px;cursor:pointer">{{ s.label }}</button>
+</sc-for>
+</div>
+</div>
+</sc-for>
+<button type="button" onClick="{{ onOpenCatalog }}" style="min-height:40px;border:1px solid var(--accent);border-radius:var(--r2);background:var(--accent);color:var(--accent-fg);font-size:12.5px;font-weight:600;cursor:pointer">전체 카탈로그 · 추적표 열기</button>
+</div>
+</sc-if>
+
+<sc-if value="{{ triggerOpen }}">
+<div role="presentation" onClick="{{ onCloseTrigger }}" style="position:fixed;inset:0;z-index:80;background:rgba(8,17,31,.55)"></div>
+<div role="dialog" aria-modal="true" aria-labelledby="tr-h" data-dialog style="position:fixed;z-index:81;left:50%;top:50%;transform:translate(-50%,-50%);width:min(520px,94vw);max-height:88vh;overflow:auto;overscroll-behavior:contain;display:flex;flex-direction:column;gap:14px;padding:20px;background:var(--surface);border:1px solid var(--line2);border-radius:var(--r3);box-shadow:var(--sh3)">
+<div style="display:flex;align-items:center;gap:10px">
+<h2 id="tr-h" style="margin:0;font-size:16px;font-weight:600">일간 배치 수동 실행</h2>
+<button type="button" onClick="{{ onCloseTrigger }}" aria-label="닫기" style="margin-left:auto;width:36px;height:36px;border:1px solid var(--line);border-radius:var(--r1);background:transparent;color:var(--fg2);cursor:pointer">✕</button>
+</div>
+
+<sc-if value="{{ triggerDone }}">
+<div role="status" style="display:flex;flex-direction:column;gap:12px">
+<div style="padding:14px 16px;border:1px solid var(--success-line);border-left:3px solid var(--success);border-radius:var(--r2);background:var(--success-soft)">
+<strong style="display:block;margin-bottom:8px;font-size:14px;font-weight:600">실행 요청이 접수됐습니다</strong>
+<dl style="margin:0;display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:12.5px">
+<dt style="color:var(--fg3)">작업 ID</dt><dd style="margin:0;font-family:var(--mono);font-weight:600">{{ trJobId }}</dd>
+<dt style="color:var(--fg3)">상태</dt><dd style="margin:0;font-family:var(--mono)">{{ trStatus }}</dd>
+<dt style="color:var(--fg3)">기준일</dt><dd style="margin:0;font-family:var(--mono)">{{ trDate }}</dd>
+<dt style="color:var(--fg3)">시작 시각</dt><dd style="margin:0;font-family:var(--mono)">{{ trStarted }}</dd>
+</dl>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:8px">
+<button type="button" onClick="{{ onViewJob }}" style="display:inline-flex;align-items:center;min-height:44px;padding:0 18px;border:1px solid var(--accent);border-radius:var(--r2);background:var(--accent);color:var(--accent-fg);font-size:13.5px;font-weight:600;cursor:pointer">작업 상세 보기</button>
+<button type="button" onClick="{{ onCloseTrigger }}" style="display:inline-flex;align-items:center;min-height:44px;padding:0 16px;border:1px solid var(--line2);border-radius:var(--r2);background:var(--surface);color:var(--fg);font-size:13.5px;font-weight:600;cursor:pointer">닫기</button>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ triggerFailed }}">
+<div role="alert" style="display:flex;flex-direction:column;gap:12px">
+<div style="padding:14px 16px;border:1px solid var(--danger-line);border-left:3px solid var(--danger);border-radius:var(--r2);background:var(--danger-soft)">
+<span style="display:inline-block;margin-bottom:6px;font-family:var(--mono);font-size:11.5px;font-weight:600;color:var(--danger)">{{ trErrTitle }}</span>
+<p style="margin:0;font-size:13px;color:var(--fg);overflow-wrap:anywhere">{{ trErrMessage }}</p>
+</div>
+<p style="margin:0;font-size:12.5px;color:var(--fg3)">입력값은 그대로 유지됩니다. 원인을 확인한 뒤 다시 시도할 수 있습니다.</p>
+<div style="display:flex;flex-wrap:wrap;gap:8px">
+<button type="button" onClick="{{ onTriggerRetry }}" style="display:inline-flex;align-items:center;min-height:44px;padding:0 18px;border:1px solid var(--accent);border-radius:var(--r2);background:var(--accent);color:var(--accent-fg);font-size:13.5px;font-weight:600;cursor:pointer">입력으로 돌아가기</button>
+<sc-if value="{{ trHasExisting }}">
+<button type="button" onClick="{{ onOpenExisting }}" style="display:inline-flex;align-items:center;min-height:44px;padding:0 16px;border:1px solid var(--line2);border-radius:var(--r2);background:var(--surface);color:var(--fg);font-size:13.5px;font-weight:600;cursor:pointer">{{ trExistingLabel }}</button>
+</sc-if>
+<button type="button" onClick="{{ onCloseTrigger }}" style="display:inline-flex;align-items:center;min-height:44px;padding:0 16px;border:1px solid var(--line2);border-radius:var(--r2);background:var(--surface);color:var(--fg);font-size:13.5px;font-weight:600;cursor:pointer">닫기</button>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ triggerIdle }}">
+<div style="display:flex;flex-direction:column;gap:14px">
+<p style="margin:0;font-size:13.5px;color:var(--fg2)">기준일 하루치 뉴스·지수를 다시 수집하고 통합 페이지 스냅샷을 생성합니다. 같은 기준일 작업이 실행 중이면 요청은 거부됩니다.</p>
+<div style="display:flex;flex-direction:column;gap:5px">
+<label for="trigger-date" style="font-size:12px;font-weight:600;color:var(--fg2)">기준일 (KST)</label>
+<input id="trigger-date" type="date" value="{{ triggerDate }}" onChange="{{ onTriggerDate }}" style="min-height:44px;padding:0 12px;border:1px solid var(--line2);border-radius:var(--r2);background:var(--surface);color:var(--fg);font-family:var(--mono);font-size:14px">
+</div>
+<div>
+<button type="button" onClick="{{ onToggleAdvanced }}" aria-expanded="{{ triggerAdvancedExpanded }}" style="min-height:38px;padding:0 12px;border:1px solid var(--line2);border-radius:var(--r2);background:var(--surface);color:var(--fg2);font-size:12.5px;cursor:pointer">고급 옵션</button>
+<sc-if value="{{ triggerAdvanced }}">
+<div style="margin-top:10px;display:flex;flex-direction:column;gap:10px;padding:12px 14px;border:1px solid var(--warning-line);border-radius:var(--r2);background:var(--warning-soft)">
+<label style="display:flex;gap:9px;align-items:flex-start;font-size:12.5px;cursor:pointer">
+<input type="checkbox" checked="{{ triggerForce }}" onChange="{{ onToggleForce }}" style="margin-top:3px;width:18px;height:18px">
+<span><strong style="font-weight:600">force</strong> — 이미 생성된 스냅샷이 있어도 새 versionNo로 다시 생성합니다. 기존 버전은 보존됩니다.</span>
+</label>
+<label style="display:flex;gap:9px;align-items:flex-start;font-size:12.5px;cursor:pointer">
+<input type="checkbox" checked="{{ triggerRebuild }}" onChange="{{ onToggleRebuild }}" style="margin-top:3px;width:18px;height:18px">
+<span><strong style="font-weight:600">rebuildPageOnly</strong> — 뉴스·지수를 재수집하지 않고 저장된 정제 결과로 페이지만 다시 만듭니다.</span>
+</label>
+<p style="margin:0;font-size:11.5px;color:var(--warning)">두 옵션의 실행 권한과 audit 정책은 백엔드 확인이 필요합니다 (D-11).</p>
+</div>
+</sc-if>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:8px;padding-top:12px;border-top:1px solid var(--line)">
+<button type="button" onClick="{{ onSubmitTrigger }}" disabled="{{ triggerDisabled }}" style="display:inline-flex;align-items:center;min-height:44px;padding:0 18px;border:1px solid var(--accent);border-radius:var(--r2);background:var(--accent);color:var(--accent-fg);font-size:13.5px;font-weight:600;cursor:pointer">{{ triggerSubmitLabel }}</button>
+<button type="button" onClick="{{ onCloseTrigger }}" style="display:inline-flex;align-items:center;min-height:44px;padding:0 16px;border:1px solid var(--line2);border-radius:var(--r2);background:var(--surface);color:var(--fg);font-size:13.5px;font-weight:600;cursor:pointer">취소</button>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ triggerPending }}">
+<div role="status" style="display:flex;align-items:center;gap:12px;padding:18px;border:1px solid var(--info-line);border-radius:var(--r2);background:var(--info-soft)">
+<span data-spin aria-hidden="true" style="width:18px;height:18px;border:2px solid var(--info);border-top-color:transparent;border-radius:50%;display:inline-block"></span>
+<div>
+<strong style="display:block;font-size:13.5px;font-weight:600">실행 요청을 보내고 있습니다</strong>
+<span style="font-size:12.5px;color:var(--fg2)">응답이 올 때까지 다시 요청할 수 없습니다. 중복 실행은 발생하지 않습니다.</span>
+</div>
+</div>
+</sc-if>
+</div>
+</sc-if>
+</div>
+</main>
+
+</div>
+</div>
+</sc-if>
+
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;role&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;viewer&quot;,&quot;operator&quot;],&quot;default&quot;:&quot;operator&quot;,&quot;tsType&quot;:&quot;'viewer'|'operator'&quot;,&quot;section&quot;:&quot;권한&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;light&quot;,&quot;tsType&quot;:&quot;'light'|'dark'&quot;,&quot;section&quot;:&quot;표시&quot;},&quot;density&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;comfortable&quot;,&quot;compact&quot;],&quot;default&quot;:&quot;comfortable&quot;,&quot;tsType&quot;:&quot;'comfortable'|'compact'&quot;,&quot;section&quot;:&quot;표시&quot;}}">
+class Component extends DCLogic {
+  state = {
+    ready: false,
+    fx: null,
+    theme: null,
+    density: null,
+    role: null,
+    path: '/market/latest',
+    query: {},
+    mode: 'ready',
+    navOpen: false,
+    panelOpen: false,
+    live: '',
+    authMode: null,
+    draft: null,
+    fieldErrors: {},
+    expanded: {},
+    narrow: false,
+    triggerOpen: false,
+    triggerPhase: 'idle',
+    triggerMode: 'success',
+    triggerResult: null,
+    triggerDate: '2026-07-27',
+    triggerForce: false,
+    triggerRebuild: false,
+    triggerAdvanced: false,
+  };
+
+  componentDidMount() {
+    import('./fixtures.js').then((fx) => {
+      this.setState({ fx, ready: true });
+    });
+    this._mq = window.matchMedia('(max-width:1180px)');
+    this._onMq = () => this.setState({ narrow: this._mq.matches });
+    this._mq.addEventListener('change', this._onMq);
+    this.setState({ narrow: this._mq.matches });
+    this._onKey = (e) => {
+      if (e.key !== 'Escape') return;
+      if (this.state.triggerOpen) this.closeTrigger();
+      else if (this.state.navOpen) this.setState({ navOpen: false });
+      else if (this.state.panelOpen) this.setState({ panelOpen: false });
+    };
+    document.addEventListener('keydown', this._onKey);
+    this.syncFromHash();
+    this._onHash = () => this.syncFromHash();
+    window.addEventListener('hashchange', this._onHash);
+    this.applyBodyBg();
+  }
+
+  componentDidUpdate() {
+    this.applyBodyBg();
+    const key = this.state.path + '|' + new URLSearchParams(this.state.query).toString();
+    if (this._lastKey !== key) {
+      this._lastKey = key;
+      const t = document.getElementById('page-title');
+      if (t && t.focus) t.focus({ preventScroll: true });
+      window.scrollTo(0, this._restore || 0);
+      this._restore = 0;
+    }
+    if (this.state.triggerOpen && !this._trOpen) {
+      const el = document.getElementById('trigger-date');
+      if (el) el.focus();
+    }
+    this._trOpen = this.state.triggerOpen;
+    if (this.state.navOpen && !this._navOpen) {
+      const el = document.querySelector('[data-drawer] a');
+      if (el) el.focus();
+    }
+    this._navOpen = this.state.navOpen;
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener('hashchange', this._onHash);
+    document.removeEventListener('keydown', this._onKey);
+    if (this._mq) this._mq.removeEventListener('change', this._onMq);
+  }
+
+  applyBodyBg() {
+    const dark = (this.state.theme ?? this.props.theme ?? 'light') === 'dark';
+    document.body.style.background = dark ? '#0a1120' : '#f6f8fb';
+  }
+
+  syncFromHash() {
+    const raw = (window.location.hash || '').replace(/^#/, '') || '/market/latest';
+    const [pathname, search = ''] = raw.split('?');
+    const query = {};
+    new URLSearchParams(search).forEach((v, k) => {
+      query[k] = v;
+    });
+    this._scroll = this._scroll || {};
+    this._restore = this._scroll[raw] || 0;
+    // mock/trigger/auth 는 Playwright 픽스처 선택용이며 제품 URL 계약에 포함되지 않는다.
+    const mode = query.mock || this._pendingMode || 'ready';
+    this._pendingMode = null;
+    const next = { path: pathname, query, navOpen: false, mode, draft: null, fieldErrors: {}, live: '' };
+    if (query.trigger) next.triggerMode = query.trigger;
+    next.authMode = query.auth || null;
+    this.setState(next);
+  }
+
+  go = (to) => {
+    this._scroll = this._scroll || {};
+    this._scroll[(window.location.hash || '').replace(/^#/, '')] = window.scrollY;
+    window.location.hash = to;
+  };
+
+  renderVals() {
+    const s = this.state;
+    const theme = s.theme ?? this.props.theme ?? 'light';
+    const density = s.density ?? this.props.density ?? 'comfortable';
+    const role = s.role ?? this.props.role ?? 'operator';
+    const canOps = role === 'operator';
+    const path = s.path;
+
+    const mk = (href, label) => ({
+      href: '#' + href,
+      label,
+      active: path === href || (href === '/market/archive/search' && path.startsWith('/market/archive')) ? 'true' : 'false',
+      current: path === href ? 'page' : undefined,
+      onClick: (e) => {
+        e.preventDefault();
+        this.go(href);
+      },
+    });
+
+    return {
+      theme,
+      density,
+      role,
+      canOps,
+      live: s.live,
+      shellOn: !s.authMode,
+      authGate: !!s.authMode,
+      authTone: s.authMode === 'failed' ? 'FAILED' : s.authMode === 'redirecting' ? 'info' : 'neutral',
+      authChip: s.authMode === 'failed' ? '401 · AUTH_BOOTSTRAP_FAILED' : s.authMode === 'redirecting' ? '로그인으로 이동' : '인증 확인 중',
+      authTitle: s.authMode === 'failed' ? '로그인 상태를 확인할 수 없습니다' : s.authMode === 'redirecting' ? '로그인 페이지로 이동 중입니다' : '로그인 상태를 확인하고 있습니다',
+      authBody:
+        s.authMode === 'failed'
+          ? '잠시 후 다시 시도하거나 로그인 페이지에서 다시 접속해 주세요. 인증이 끝나면 마지막으로 보던 화면으로 돌아옵니다.'
+          : s.authMode === 'redirecting'
+            ? '자동으로 이동하지 않으면 새로고침 후 다시 시도해 주세요.'
+            : '잠시만 기다려 주세요. 인증이 끝나면 최신 브리프가 열립니다.',
+      authAction: s.authMode === 'failed' ? '다시 시도' : '앱으로 계속',
+      authBusy: s.authMode === 'loading' || s.authMode === 'redirecting',
+      authRole: s.authMode === 'failed' ? 'alert' : 'status',
+      authLive: s.authMode === 'failed' ? 'assertive' : 'polite',
+      navOpen: s.navOpen,
+      navExpanded: s.navOpen ? 'true' : 'false',
+      panelExpanded: s.panelOpen ? 'true' : 'false',
+      navMarket: [mk('/market/latest', '최신 브리프'), mk('/market/archive/search', '아카이브')],
+      navOps: [{ ...mk('/ops/batches', '배치 운영'), alert: true, alertCount: 3 }],
+      roleLabel: canOps ? 'Operator' : 'Viewer',
+      roleInitial: canOps ? 'OP' : 'VW',
+      userName: 'ops.analyst',
+      themeLabel: theme === 'dark' ? '라이트 테마로 전환' : '다크 테마로 전환',
+      themeGlyph: theme === 'dark' ? '☀' : '☾',
+      sectionLabel: path.startsWith('/ops') ? '운영' : '시장 인텔리전스',
+      routeLabel: '최신 브리프',
+      urlDisplay: '/stock' + path,
+      onToggleTheme: () => this.setState({ theme: theme === 'dark' ? 'light' : 'dark' }),
+      onTogglePanel: () => this.setState({ panelOpen: !s.panelOpen }),
+      onOpenNav: () => this.setState({ navOpen: true }),
+      onCloseNav: () => this.setState({ navOpen: false }),
+      onAuthRetry: () => this.setState({ authMode: null }),
+      ...this.panelVals(),
+      ...this.routeVals(),
+    };
+  }
+
+  // ── 포맷 (정책: 모든 시각은 KST 절대시각) ─────────────────────────
+  n2(v) {
+    if (v === null || v === undefined || v === '') return '-';
+    return Number(v).toLocaleString('ko-KR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  sgn(v, suffix) {
+    if (v === null || v === undefined || v === '') return '-';
+    const n = Number(v);
+    const abs = Math.abs(n).toLocaleString('ko-KR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return (n > 0 ? '+' : n < 0 ? '-' : '') + abs + (suffix || '');
+  }
+
+  dirOf(v) {
+    const n = Number(v);
+    return n > 0 ? 'up' : n < 0 ? 'down' : 'flat';
+  }
+
+  kst(iso) {
+    return iso ? iso.slice(0, 10) + ' ' + iso.slice(11, 16) + ' KST' : '-';
+  }
+
+  ago(iso) {
+    if (!iso || !this.state.fx) return '-';
+    const a = Date.parse(this.state.fx.NOW_KST + 'Z');
+    const b = Date.parse(iso + 'Z');
+    if (Number.isNaN(a) || Number.isNaN(b)) return '-';
+    const m = Math.max(0, Math.round((a - b) / 60000));
+    if (m < 60) return m + '분 전 생성';
+    const h = Math.floor(m / 60);
+    if (h < 48) return h + '시간 ' + (m % 60) + '분 전 생성';
+    return Math.floor(h / 24) + '일 전 생성';
+  }
+
+  dur(sec) {
+    if (sec === null || sec === undefined) return '-';
+    if (sec < 60) return sec + '초';
+    return Math.floor(sec / 60) + '분 ' + (sec % 60) + '초';
+  }
+
+  st(v) {
+    return { READY: '준비 완료', PARTIAL: '부분 생성', FAILED: '생성 실패', SUCCESS: '성공', RUNNING: '실행 중', PENDING: '대기', SKIPPED: '건너뜀' }[v] || v;
+  }
+
+  qstr(obj) {
+    const p = new URLSearchParams();
+    Object.entries(obj).forEach(([k, v]) => {
+      if (v === null || v === undefined || v === '' || v === 0) return;
+      p.set(k, String(v));
+    });
+    const s = p.toString();
+    return s;
+  }
+
+  toggle(key) {
+    const e = { ...this.state.expanded };
+    e[key] = !e[key];
+    this.setState({ expanded: e });
+  }
+
+  announce(msg) {
+    this.setState({ live: msg });
+  }
+
+  retry = () => {
+    const back = this.state.mode;
+    this.setState({ mode: 'refetching', live: '다시 불러오는 중입니다.' });
+    window.setTimeout(() => {
+      if (this.state.mode === 'refetching') this.setState({ mode: 'ready', live: '데이터를 다시 불러왔습니다.' });
+      else this.setState({ mode: back });
+    }, 700);
+  };
+
+  // ── 시나리오 ────────────────────────────────────────────────────
+  get scenarios() {
+    return [
+      { g: '최신 브리프', p: '/market/latest', items: [
+        ['ready', '정상 (READY)'], ['refetching', '백그라운드 갱신'], ['loading', '최초 로딩 skeleton'],
+        ['partial', 'PARTIAL — 누락 범위 설명'], ['failed', 'FAILED 스냅샷'], ['emptyMarkets', 'markets 빈 배열'],
+        ['sparse', 'null·빈 배열 혼재'], ['long', '장문 + 공백 없는 200자 토큰'],
+        ['error500', '5xx 오류'], ['offline', '네트워크 오프라인'], ['malformed', '형식 오류 응답'], ['error401', '401 세션 만료'], ['error429', '429 rate limit'],
+      ] },
+      { g: '아카이브 검색', p: '/market/archive/search', items: [
+        ['ready', '결과 20건'], ['loading', '로딩 (필터 유지)'], ['refetching', '갱신 (이전 결과 유지)'],
+        ['noResults', '검색 결과 없음'], ['error500', '오류 (필터 유지 + 재시도)'], ['validation', '날짜 field validation'],
+      ] },
+      { g: '아카이브 상세', p: '/market/archive/2026-07-21', items: [
+        ['ready', '과거 스냅샷 정상'], ['partial', 'PARTIAL 스냅샷'], ['notFound', '404 스냅샷 없음'], ['loading', '로딩'],
+      ] },
+      { g: '이슈 상세', p: '/market/cluster/51f0d9a0-9fc5-4f15-a4f9-62856f128683', items: [
+        ['ready', '정상 (기사 8건)'], ['sparse', 'sparse — null 필드'], ['heavy', 'tags 20 · 기사 50'],
+        ['long', '장문 + 긴 URL'], ['clusterNotFound', '404 이슈 없음'], ['loading', '로딩'], ['error500', '오류'],
+      ] },
+      { g: '배치 운영', p: '/ops/batches', items: [
+        ['ready', '정상 (실패 우선 요약)'], ['listLoading', '목록 로딩'], ['listError', '목록 오류'],
+        ['detailLoading', '상세만 로딩'], ['detailError', '상세만 오류'], ['longLog', '4,000자 오류 로그'], ['empty', '결과 없음'],
+      ] },
+      { g: '수동 실행', p: '/ops/batches', trigger: true, items: [
+        ['success', '성공 → job ID'], ['conflict409', '409 중복 실행'], ['forbidden403', '403 권한 없음'],
+        ['validation422', '422 유효하지 않은 날짜'], ['rate429', '429 rate limit'], ['error500', '5xx'], ['offline', '네트워크 오류'],
+      ] },
+      { g: '인증 부트스트랩', p: '/market/latest', auth: true, items: [
+        ['loading', '로그인 상태 확인 중'], ['redirecting', '로그인 페이지로 이동 중'], ['failed', '확인 실패'],
+      ] },
+      { g: '시스템', p: '/qa/states', items: [
+        ['ready', '상태 카탈로그 · 추적표'],
+      ] },
+    ];
+  }
+
+  panelVals() {
+    const s = this.state;
+    const role = s.role ?? this.props.role ?? 'operator';
+    const density = s.density ?? this.props.density ?? 'comfortable';
+    const groups = this.scenarios.map((g) => ({
+      label: g.g,
+      items: g.items.map(([mode, label]) => ({
+        label,
+        active: g.trigger ? (s.triggerMode === mode ? 'true' : 'false') : g.auth ? (s.authMode === mode ? 'true' : 'false') : (s.path === g.p && s.mode === mode ? 'true' : 'false'),
+        onClick: () => {
+          if (g.auth) {
+            this.setState({ authMode: mode, panelOpen: false });
+            return;
+          }
+          if (g.trigger) {
+            this.setState({ triggerMode: mode, triggerPhase: 'idle', triggerResult: null, authMode: null });
+            this._pendingMode = 'ready';
+          } else {
+            this.setState({ authMode: null });
+            this._pendingMode = mode;
+          }
+          const target = '#' + g.p;
+          if (window.location.hash === target) this.syncFromHash();
+          else window.location.hash = target;
+        },
+      })),
+    }));
+    return {
+      panelOpen: s.panelOpen,
+      scenarioGroups: groups,
+      modeLabel: s.mode,
+      onRoleViewer: () => this.setState({ role: 'viewer' }),
+      onRoleOperator: () => this.setState({ role: 'operator' }),
+      roleViewerActive: role === 'viewer' ? 'true' : 'false',
+      roleOperatorActive: role === 'operator' ? 'true' : 'false',
+      densityComfortActive: density === 'comfortable' ? 'true' : 'false',
+      densityCompactActive: density === 'compact' ? 'true' : 'false',
+      onDensityComfort: () => this.setState({ density: 'comfortable' }),
+      onDensityCompact: () => this.setState({ density: 'compact' }),
+      onClosePanel: () => this.setState({ panelOpen: false }),
+      onOpenCatalog: () => {
+        this._pendingMode = 'ready';
+        this.setState({ panelOpen: false });
+        this.go('/qa/states');
+      },
+    };
+  }
+
+  // ── 라우트 분기 ─────────────────────────────────────────────────
+  routeVals() {
+    const s = this.state;
+    const fx = s.fx;
+    const path = s.path;
+    const q = s.query;
+    const role = s.role ?? this.props.role ?? 'operator';
+    const off = { booting: false, isBrief: false, isSearch: false, isCluster: false, isOps: false, isCatalog: false, isNotFound: false };
+    const contract = {};
+    Object.entries(q).forEach(([k, v]) => {
+      if (k !== 'mock' && k !== 'trigger' && k !== 'auth') contract[k] = v;
+    });
+    const qs = new URLSearchParams(contract).toString();
+    const urlDisplay = '/stock' + path + (qs ? '?' + qs : '');
+    if (!fx) return { ...off, booting: true, routeLabel: '불러오는 중', sectionLabel: '시장 인텔리전스', urlDisplay };
+
+    const dm = /^\/market\/archive\/(\d{4}-\d{2}-\d{2})$/.exec(path);
+    const cm = /^\/market\/cluster\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/.exec(path);
+
+    if (path === '/market/latest') return { ...off, ...this.briefVals('latest', '2026-07-26'), urlDisplay };
+    if (path === '/market/archive/search') return { ...off, ...this.searchVals(), urlDisplay };
+    if (dm) return { ...off, ...this.briefVals('archive', dm[1]), urlDisplay };
+    if (cm) return { ...off, ...this.clusterVals(cm[1]), urlDisplay };
+    if (path === '/ops/batches') return { ...off, ...this.opsVals(role), urlDisplay };
+    if (path === '/qa/states') return { ...off, ...this.catalogVals(), urlDisplay };
+    return {
+      ...off, isNotFound: true, routeLabel: '페이지를 찾을 수 없음', sectionLabel: '시장 인텔리전스',
+      onNotFoundHome: () => { this._pendingMode = 'ready'; this.go('/market/latest'); },
+      urlDisplay,
+    };
+  }
+
+  // ── Latest / Archive Detail 공용 ────────────────────────────────
+  briefVals(kind, date) {
+    const s = this.state;
+    const fx = s.fx;
+    const q = s.query;
+    const mode = s.mode;
+    const errKey = { error500: 'error500', offline: 'offline', malformed: 'malformed', notFound: 'error404', error401: 'error401', error429: 'error429' }[mode];
+    const loading = mode === 'loading';
+    const err = errKey ? fx.ERRORS[errKey] : null;
+    const data = err || loading ? null : fx.pageFixture(mode === 'refetching' ? 'ready' : mode, date);
+    const isArchive = kind === 'archive';
+    const ctx = { from: q.from, to: q.to, status: q.status, page: q.page };
+    const retStr = this.qstr(ctx);
+
+    const markets = (data ? data.markets : []).map((m) => {
+      const indices = m.indices.map((i) => ({
+        code: i.indexCode,
+        name: i.indexName,
+        close: this.n2(i.closePrice),
+        change: this.sgn(i.changeValue),
+        pct: this.sgn(i.changePercent, '%'),
+        dir: this.dirOf(i.changeValue),
+        high: this.n2(i.highPrice),
+        low: this.n2(i.lowPrice),
+      }));
+      const clusters = m.topClusters.map((c) => ({
+        id: c.clusterId,
+        title: c.title,
+        summary: c.summary,
+        hasSummary: !!c.summary,
+        countText: '기사 ' + c.articleCount + '건',
+        tags: c.tags.map((t) => ({ label: t })),
+        hasTags: c.tags.length > 0,
+        repLine: [c.representativeArticle.publisherName || '언론사 미확인', c.representativeArticle.publishedAt ? this.kst(c.representativeArticle.publishedAt) : '발행 시각 미확인'].join(' · '),
+        repTitle: c.representativeArticle.title || '대표 기사 제목 없음',
+        originLink: c.representativeArticle.originLink,
+        naverLink: c.representativeArticle.naverLink,
+        hasNaver: !!c.representativeArticle.naverLink,
+        onOpen: (e) => {
+          if (e && e.preventDefault) e.preventDefault();
+          this._pendingMode = 'ready';
+          const qq = this.qstr({ origin: isArchive ? date : 'latest', from: q.from, to: q.to, status: q.status, page: q.page });
+          this.go('/market/cluster/' + c.clusterId + (qq ? '?' + qq : ''));
+        },
+        href: '#/market/cluster/' + c.clusterId,
+      }));
+      const linkKey = 'links-' + m.marketType;
+      const links = m.articleLinks;
+      const open = !!s.expanded[linkKey];
+      return {
+        key: m.marketType,
+        label: m.marketLabel,
+        scope: m.marketType,
+        summaryTitle: m.summaryTitle,
+        hasSummaryTitle: !!m.summaryTitle,
+        summaryBody: m.summaryBody,
+        hasSummaryBody: !!m.summaryBody,
+        background: (m.analysis.background || []).map((t) => ({ text: t })),
+        hasBackground: (m.analysis.background || []).length > 0,
+        themes: (m.analysis.keyThemes || []).map((t) => ({ label: t })),
+        hasThemes: (m.analysis.keyThemes || []).length > 0,
+        outlook: m.analysis.outlook,
+        hasOutlook: !!m.analysis.outlook,
+        indices,
+        hasIndices: indices.length > 0,
+        noIndices: indices.length === 0,
+        noNarrative: !m.summaryBody,
+        indexCount: indices.length + '종',
+        clusters,
+        hasClusters: clusters.length > 0,
+        noClusters: clusters.length === 0,
+        clusterCount: clusters.length + '건',
+        partial: m.metadata.partialMessage,
+        hasPartial: !!m.metadata.partialMessage,
+        counts: '원문 ' + m.metadata.rawNewsCount + '건 · 정제 ' + m.metadata.processedNewsCount + '건 · 클러스터 ' + m.metadata.clusterCount + '건',
+        links: (open ? links : links.slice(0, 4)).map((a) => ({
+          title: a.title,
+          meta: [a.publisherName || '언론사 미확인', a.publishedAt ? this.kst(a.publishedAt) : '-'].join(' · '),
+          cluster: a.clusterTitle,
+          originLink: a.originLink,
+          naverLink: a.naverLink,
+          hasNaver: !!a.naverLink,
+        })),
+        hasLinks: links.length > 0,
+        linkTotal: '원문 ' + links.length + '건',
+        linkToggleLabel: open ? '접기' : '전체 ' + links.length + '건 보기',
+        linkToggleNeeded: links.length > 4,
+        linkExpanded: open ? 'true' : 'false',
+        onToggleLinks: () => this.toggle(linkKey),
+      };
+    });
+
+    const compare = markets.map((m) => {
+      const lead = m.indices[0];
+      return {
+        label: m.label,
+        scope: m.key,
+        indexName: lead ? lead.name : '지수 없음',
+        close: lead ? lead.close : '-',
+        change: lead ? lead.change : '-',
+        pct: lead ? lead.pct : '-',
+        dir: lead ? lead.dir : 'flat',
+        hasLead: !!lead,
+        note: m.summaryTitle || '요약 미생성',
+        clusterCount: m.clusters.length + '건',
+        indexCount: m.indices.length + '종',
+        onJump: () => {
+          const el = document.getElementById('mk-' + m.key);
+          if (el) window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - 12);
+        },
+      };
+    });
+
+    const partialItems = [];
+    if (data && data.partialMessage) partialItems.push({ text: data.partialMessage });
+    (data ? data.markets : []).forEach((m) => {
+      if (m.metadata.partialMessage) partialItems.push({ text: m.marketLabel + ' — ' + m.metadata.partialMessage });
+    });
+
+    const status = data ? data.status : 'FAILED';
+    return {
+      isBrief: true,
+      briefKind: kind,
+      isArchiveMode: isArchive,
+      sectionLabel: '시장 인텔리전스',
+      routeLabel: isArchive ? '아카이브 · ' + date : '최신 브리프',
+      briefLoading: loading,
+      briefError: !!err,
+      briefOk: !!data,
+      briefRefetching: mode === 'refetching',
+      errTitle: err ? err.title : '',
+      errMessage: err ? err.message : '',
+      errCode: err ? err.http + ' · ' + err.code : '',
+      errAction: err ? err.action : '',
+      onErrAction: () => {
+        if (mode === 'notFound') { this._pendingMode = 'ready'; this.go('/market/archive/search'); }
+        else if (mode === 'malformed') { this._pendingMode = 'ready'; this.go('/ops/batches'); }
+        else this.retry();
+      },
+      onRetry: this.retry,
+      pageTitleText: isArchive ? date + ' 시장 브리프' : '최신 시장 브리프',
+      businessDate: data ? data.businessDate : date,
+      generatedLabel: data ? this.kst(data.generatedAt) : '-',
+      freshness: data ? this.ago(data.generatedAt) : '-',
+      statusTone: status,
+      statusLabel: this.st(status),
+      headline: data && data.globalHeadline ? data.globalHeadline : null,
+      hasHeadline: !!(data && data.globalHeadline),
+      noHeadline: !!data && !data.globalHeadline,
+      versionLine: data ? 'pageId ' + data.pageId + ' · v' + data.versionNo : '-',
+      metaCounts: data ? '원문 ' + data.metadata.rawNewsCount + '건 → 정제 ' + data.metadata.processedNewsCount + '건 → 클러스터 ' + data.metadata.clusterCount + '건' : '-',
+      lastUpdated: data ? this.kst(data.metadata.lastUpdatedAt) : '-',
+      markets,
+      compare,
+      hasMarkets: markets.length > 0,
+      emptyMarkets: !!data && markets.length === 0,
+      emptyMarketsReason: data && data.status === 'FAILED' ? '이 날짜의 배치가 뉴스 수집 단계에서 실패해 시장 섹션이 생성되지 않았습니다.' : '배치는 완료됐지만 시장 섹션이 비어 있습니다. 수집 결과가 0건이었을 수 있습니다.',
+      partialItems,
+      hasPartial: partialItems.length > 0,
+      showBackToSearch: isArchive && !!retStr,
+      onBackToSearch: () => { this._pendingMode = 'ready'; this.go('/market/archive/search' + (retStr ? '?' + retStr : '')); },
+      onGoLatest: () => { this._pendingMode = 'ready'; this.go('/market/latest'); },
+      onGoOps: () => { this._pendingMode = 'ready'; this.go('/ops/batches'); },
+      prevDate: fx.shiftDate(date, -1),
+      nextDate: fx.shiftDate(date, 1),
+      onPrevDate: () => { this._pendingMode = 'ready'; this.go('/market/archive/' + fx.shiftDate(date, -1)); },
+      onNextDate: () => { this._pendingMode = 'ready'; this.go('/market/archive/' + fx.shiftDate(date, 1)); },
+      nextDisabled: fx.shiftDate(date, 1) > fx.TODAY,
+      isLatestSnapshot: !!(data && data.metadata.isLatest),
+    };
+  }
+
+  // ── Archive Search ─────────────────────────────────────────────
+  searchVals() {
+    const s = this.state;
+    const fx = s.fx;
+    const q = s.query;
+    const mode = s.mode;
+    const applied = {
+      from: q.from || '2026-07-13',
+      to: q.to || fx.TODAY,
+      status: q.status || '',
+      page: Number(q.page || 1),
+    };
+    const draft = s.draft || (mode === 'validation' ? { from: '2026-08-02', to: '2026-08-15', status: '' } : { from: applied.from, to: applied.to, status: applied.status });
+    const fe = mode === 'validation' && !s.draft ? { to: '미래 날짜는 선택할 수 없습니다. 오늘(2026-07-27)까지 조회할 수 있습니다.' } : s.fieldErrors;
+    const loading = mode === 'loading';
+    const err = mode === 'error500' ? fx.ERRORS.error500 : null;
+    const res = fx.archiveFixture(mode === 'noResults' ? 'noResults' : 'ready', applied.page, 20, applied.status);
+    const totalPages = Math.max(1, Math.ceil(res.pagination.totalCount / res.pagination.size));
+    const start = (applied.page - 1) * res.pagination.size;
+
+    const setDraft = (k) => (e) => {
+      const v = e && e.target ? e.target.value : '';
+      const next = { ...draft };
+      next[k] = v;
+      this.setState({ draft: next });
+    };
+
+    const pages = [];
+    const from = Math.max(1, Math.min(applied.page - 2, totalPages - 4));
+    for (let p = from; p <= Math.min(totalPages, from + 4); p += 1) {
+      pages.push({
+        label: String(p),
+        active: p === applied.page ? 'true' : 'false',
+        onClick: () => {
+          this._pendingMode = 'ready';
+          this.announce(p + '페이지를 불러옵니다.');
+          this.go('/market/archive/search?' + this.qstr({ ...applied, page: p }));
+        },
+      });
+    }
+
+    return {
+      isSearch: true,
+      sectionLabel: '시장 인텔리전스',
+      routeLabel: '아카이브 검색',
+      searchLoading: loading,
+      searchError: !!err,
+      searchRefetching: mode === 'refetching',
+      searchStale: mode === 'refetching' || loading,
+      errTitle: err ? err.title : '',
+      errMessage: err ? err.message : '',
+      errCode: err ? err.http + ' · ' + err.code : '',
+      onRetry: this.retry,
+      dFrom: draft.from,
+      dTo: draft.to,
+      dStatus: draft.status,
+      onFrom: setDraft('from'),
+      onTo: setDraft('to'),
+      onStatus: setDraft('status'),
+      errFrom: fe.from || '',
+      hasErrFrom: !!fe.from,
+      errTo: fe.to || '',
+      hasErrTo: !!fe.to,
+      isDirty: draft.from !== applied.from || draft.to !== applied.to || draft.status !== applied.status,
+      appliedLabel: applied.from + ' ~ ' + applied.to + (applied.status ? ' · ' + applied.status : ' · 전체 상태'),
+      onApply: () => {
+        const errs = {};
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(draft.from)) errs.from = 'YYYY-MM-DD 형식으로 입력해 주세요.';
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(draft.to)) errs.to = 'YYYY-MM-DD 형식으로 입력해 주세요.';
+        if (!errs.to && draft.to > fx.TODAY) errs.to = '미래 날짜는 선택할 수 없습니다. 오늘(2026-07-27)까지 조회할 수 있습니다.';
+        if (!errs.from && !errs.to && draft.from > draft.to) errs.from = '시작일이 종료일보다 늦습니다. 두 날짜를 바꿔 입력해 주세요.';
+        const keys = Object.keys(errs);
+        if (keys.length) {
+          this.setState({ fieldErrors: errs, live: '필터를 적용하지 못했습니다. 입력 오류 ' + keys.length + '건을 확인해 주세요.' });
+          const el = document.getElementById('f-' + keys[0]);
+          if (el) el.focus();
+          return;
+        }
+        const next = fx.archiveFixture('ready', 1, 20, draft.status);
+        this.setState({ fieldErrors: {}, live: '검색 결과 ' + next.pagination.totalCount + '건을 찾았습니다.' });
+        this._pendingMode = 'ready';
+        this.go('/market/archive/search?' + this.qstr({ from: draft.from, to: draft.to, status: draft.status, page: 1 }));
+      },
+      onReset: () => {
+        this._pendingMode = 'ready';
+        this.setState({ draft: null, fieldErrors: {}, live: '필터를 기본값으로 초기화했습니다.' });
+        this.go('/market/archive/search');
+      },
+      rows: res.items.map((r) => ({
+        date: r.businessDate,
+        headline: r.headlineSummary || '헤드라인이 생성되지 않았습니다',
+        hasHeadline: !!r.headlineSummary,
+        status: r.status,
+        statusLabel: this.st(r.status),
+        generated: this.kst(r.generatedAt),
+        detail: r.partialMessage,
+        hasDetail: !!r.partialMessage,
+        pageIdLabel: 'pageId ' + r.pageId,
+        attention: r.status === 'FAILED' ? 'true' : 'false',
+        href: '#/market/archive/' + r.businessDate,
+        onOpen: (e) => {
+          if (e && e.preventDefault) e.preventDefault();
+          this._pendingMode = 'ready';
+          this.go('/market/archive/' + r.businessDate + '?' + this.qstr({ pageId: r.pageId, from: applied.from, to: applied.to, status: applied.status, page: applied.page }));
+        },
+      })),
+      hasRows: res.items.length > 0,
+      noResults: res.items.length === 0,
+      resultCount: res.pagination.totalCount + '건',
+      rangeLabel: res.items.length ? start + 1 + '–' + (start + res.items.length) + ' / ' + res.pagination.totalCount : '0 / 0',
+      pageLabel: applied.page + ' / ' + totalPages,
+      pages,
+      prevDisabled: applied.page <= 1,
+      nextDisabled: applied.page >= totalPages,
+      onPrevPage: () => { this._pendingMode = 'ready'; this.go('/market/archive/search?' + this.qstr({ ...applied, page: applied.page - 1 })); },
+      onNextPage: () => { this._pendingMode = 'ready'; this.go('/market/archive/search?' + this.qstr({ ...applied, page: applied.page + 1 })); },
+      statusOptions: [
+        { value: '', label: '전체 상태' },
+        { value: 'READY', label: 'READY · 준비 완료' },
+        { value: 'PARTIAL', label: 'PARTIAL · 부분 생성' },
+        { value: 'FAILED', label: 'FAILED · 생성 실패' },
+      ],
+    };
+  }
+
+  // ── Cluster Detail ─────────────────────────────────────────────
+  clusterVals(id) {
+    const s = this.state;
+    const fx = s.fx;
+    const q = s.query;
+    const mode = s.mode;
+    const loading = mode === 'loading';
+    const errKey = { error500: 'error500', clusterNotFound: 'clusterNotFound', offline: 'offline' }[mode];
+    const err = errKey ? fx.ERRORS[errKey] : null;
+    const c = err || loading ? null : fx.clusterFixture(mode, id);
+    const origin = q.origin || '';
+    const fromLatest = origin === 'latest';
+    const fromArchive = /^\d{4}-\d{2}-\d{2}$/.test(origin);
+    const direct = !fromLatest && !fromArchive;
+    const retStr = this.qstr({ from: q.from, to: q.to, status: q.status, page: q.page });
+    const backTo = fromLatest ? '/market/latest' : fromArchive ? '/market/archive/' + origin + (retStr ? '?' + retStr : '') : '/market/latest';
+    const dateOf = c ? c.businessDate : origin || '2026-07-26';
+    const key = 'cl-articles';
+    const open = !!s.expanded[key];
+    const all = c ? c.articles : [];
+
+    return {
+      isCluster: true,
+      sectionLabel: '시장 인텔리전스',
+      routeLabel: '이슈 상세',
+      clusterLoading: loading,
+      clusterError: !!err,
+      clusterOk: !!c,
+      errTitle: err ? err.title : '',
+      errMessage: err ? err.message : '',
+      errCode: err ? err.http + ' · ' + err.code : '',
+      errAction: err ? err.action : '',
+      onErrAction: () => { this._pendingMode = 'ready'; if (mode === 'clusterNotFound') this.go('/market/archive/' + dateOf); else this.retry(); },
+      onRetry: this.retry,
+      crumbRootLabel: fromLatest ? '최신 브리프' : fromArchive ? '아카이브 ' + origin : '시장 브리프',
+      crumbMidLabel: c ? c.marketLabel : '-',
+      backLabel: fromLatest ? '최신 브리프로 돌아가기' : fromArchive ? origin + ' 브리프로 돌아가기' : '해당 날짜 브리프 열기',
+      onBack: (e) => { if (e && e.preventDefault) e.preventDefault(); this._pendingMode = 'ready'; this.go(backTo); },
+      backHref: '#' + backTo,
+      isDirectEntry: direct,
+      directNote: '진입 경로 정보가 없어 이 이슈의 기준일(' + dateOf + ') 브리프로 돌아갑니다.',
+      clTitle: c ? c.title : '',
+      clMarket: c ? c.marketLabel : '',
+      clDate: dateOf,
+      clUpdated: c ? this.kst(c.lastUpdatedAt) : '-',
+      clCount: c ? '기사 ' + c.articleCount + '건' : '-',
+      clTags: c ? c.tags.map((t) => ({ label: t })) : [],
+      hasTags: !!(c && c.tags.length),
+      clShort: c ? c.summary.short : null,
+      hasShort: !!(c && c.summary.short),
+      clLong: c ? c.summary.long : null,
+      hasLong: !!(c && c.summary.long),
+      clAnalysis: c ? c.summary.analysis.map((t) => ({ text: t })) : [],
+      hasAnalysis: !!(c && c.summary.analysis.length),
+      noAnalysis: !!c && !c.summary.analysis.length && !c.summary.long,
+      rep: c
+        ? {
+            title: c.representativeArticle.title,
+            publisher: c.representativeArticle.publisherName || '언론사 미확인',
+            published: c.representativeArticle.publishedAt ? this.kst(c.representativeArticle.publishedAt) : '발행 시각 미확인',
+            source: c.representativeArticle.sourceSummary || '출처 설명 없음',
+            originLink: c.representativeArticle.originLink,
+            naverLink: c.representativeArticle.naverLink,
+            hasNaver: !!c.representativeArticle.naverLink,
+          }
+        : null,
+      hasRep: !!c,
+      articles: (open ? all : all.slice(0, 10)).map((a) => ({
+        title: a.title,
+        publisher: a.publisherName || '언론사 미확인',
+        published: a.publishedAt ? this.kst(a.publishedAt) : '발행 시각 미확인',
+        originLink: a.originLink,
+        naverLink: a.naverLink,
+        hasNaver: !!a.naverLink,
+      })),
+      hasArticles: all.length > 0,
+      articleTotal: '관련 기사 ' + all.length + '건',
+      articleToggleNeeded: all.length > 10,
+      articleToggleLabel: open ? '접기' : '남은 ' + Math.max(0, all.length - 10) + '건 더 보기',
+      articleExpanded: open ? 'true' : 'false',
+      onToggleArticles: () => this.toggle(key),
+      onGoBrief: () => { this._pendingMode = 'ready'; this.go('/market/archive/' + dateOf); },
+      briefCtaLabel: dateOf + ' 시장 브리프 보기',
+    };
+  }
+
+  // ── Batch Operations ───────────────────────────────────────────
+  closeTrigger() {
+    this.setState({ triggerOpen: false });
+    const el = document.getElementById('trigger-btn');
+    if (el) el.focus();
+  }
+
+  opsVals(role) {
+    const s = this.state;
+    const fx = s.fx;
+    const q = s.query;
+    const mode = s.mode;
+    if (role !== 'operator') {
+      return {
+        isOps: true,
+        opsDenied: true,
+        sectionLabel: '운영',
+        routeLabel: '배치 운영',
+        deniedTitle: fx.ERRORS.error403.title,
+        deniedMessage: '이 화면은 파이프라인 로그와 수동 실행을 포함하므로 Operator 권한이 있는 계정만 열 수 있습니다. 현재 계정은 Viewer입니다.',
+        deniedCode: '403 · FORBIDDEN',
+        onDeniedHome: () => { this._pendingMode = 'ready'; this.go('/market/latest'); },
+      };
+    }
+
+    const status = q.status || '';
+    const page = Number(q.page || 1);
+    const listLoading = mode === 'listLoading';
+    const listError = mode === 'listError';
+    const list = fx.batchListFixture(mode === 'empty' ? 'empty' : 'ready', page, 20, status);
+    const totalPages = Math.max(1, Math.ceil(list.pagination.totalCount / list.pagination.size));
+    const rows = list.items;
+    const selectedId = Number(q.jobId || 0) || (rows.length ? rows[0].jobId : 0);
+    const detailLoading = mode === 'detailLoading';
+    const detailError = mode === 'detailError';
+    const d = rows.length && !detailLoading && !detailError ? fx.batchDetailFixture(selectedId, mode === 'longLog' ? 'longLog' : '') : null;
+    const logKey = 'ops-log';
+    const logOpen = !!s.expanded[logKey];
+    const logFull = d && d.logSummary ? d.logSummary : '';
+    const logShown = logOpen ? logFull : logFull.slice(0, 900);
+
+    const setStatus = (v) => () => {
+      this._pendingMode = 'ready';
+      this.announce(v ? v + ' 상태만 필터링합니다.' : '상태 필터를 해제했습니다.');
+      this.go('/ops/batches?' + this.qstr({ status: v, page: 1 }));
+    };
+
+    const pages = [];
+    const start0 = Math.max(1, Math.min(page - 2, totalPages - 4));
+    for (let p = start0; p <= Math.min(totalPages, start0 + 4); p += 1) {
+      pages.push({
+        label: String(p),
+        active: p === page ? 'true' : 'false',
+        onClick: () => { this._pendingMode = 'ready'; this.announce(p + '페이지를 불러옵니다.'); this.go('/ops/batches?' + this.qstr({ status, page: p })); },
+      });
+    }
+
+    const tr = s.triggerResult;
+    return {
+      isOps: true,
+      opsDenied: false,
+      opsAllowed: true,
+      sectionLabel: '운영',
+      routeLabel: '배치 운영',
+      opsListLoading: listLoading,
+      opsListError: listError,
+      opsListOk: !listLoading && !listError,
+      opsEmpty: !listLoading && !listError && rows.length === 0,
+      errTitle: fx.ERRORS.error500.title,
+      errMessage: '배치 목록을 불러오지 못했습니다. 필터와 이전 선택은 그대로 유지됩니다.',
+      errCode: '500 · INTERNAL_ERROR',
+      onRetry: this.retry,
+      sumFailed: String(list.summary.failedCount),
+      sumPartial: String(list.summary.partialCount),
+      sumSuccess: String(list.summary.successCount),
+      sumAvg: this.dur(list.summary.avgDurationSeconds),
+      needsAttention: list.summary.failedCount + list.summary.partialCount > 0,
+      attentionLine: list.summary.failedCount + '건 실패, ' + list.summary.partialCount + '건 부분 실패 — 확인이 필요합니다.',
+      onFilterFailed: setStatus('FAILED'),
+      onFilterPartial: setStatus('PARTIAL'),
+      onFilterAll: setStatus(''),
+      filterLabel: status ? status + ' 만 보기 해제' : '',
+      hasStatusFilter: !!status,
+      appliedFilterLabel: status ? status : '전체 상태',
+      rows: rows.map((r) => ({
+        jobId: 'job ' + r.jobId,
+        date: r.businessDate,
+        status: r.status,
+        statusLabel: this.st(r.status),
+        started: this.kst(r.startedAt),
+        duration: this.dur(r.durationSeconds),
+        counts: r.rawNewsCount + ' / ' + r.processedNewsCount + ' / ' + r.clusterCount,
+        pageLabel: r.pageId ? 'pageId ' + r.pageId + ' · v' + r.pageVersionNo : '스냅샷 없음',
+        selected: r.jobId === selectedId ? 'true' : 'false',
+        attention: r.status === 'FAILED' ? 'true' : 'false',
+        partial: r.partialMessage,
+        hasPartial: !!r.partialMessage,
+        onSelect: () => {
+          this._pendingMode = mode === 'detailLoading' || mode === 'detailError' || mode === 'longLog' ? mode : 'ready';
+          this.announce('job ' + r.jobId + ' 상세를 표시합니다.');
+          this.go('/ops/batches?' + this.qstr({ status, page, jobId: r.jobId, view: s.narrow ? 'detail' : '' }));
+        },
+      })),
+      hasRows: rows.length > 0,
+      opsRangeLabel: rows.length ? (page - 1) * 20 + 1 + '–' + ((page - 1) * 20 + rows.length) + ' / ' + list.pagination.totalCount : '0 / 0',
+      opsPages: pages,
+      opsPrevDisabled: page <= 1,
+      opsNextDisabled: page >= totalPages,
+      onOpsPrev: () => { this._pendingMode = 'ready'; this.go('/ops/batches?' + this.qstr({ status, page: page - 1 })); },
+      onOpsNext: () => { this._pendingMode = 'ready'; this.go('/ops/batches?' + this.qstr({ status, page: page + 1 })); },
+      narrow: s.narrow,
+      showList: !(s.narrow && q.view === 'detail'),
+      showDetail: !s.narrow || q.view === 'detail',
+      onBackToList: () => { this._pendingMode = 'ready'; this.go('/ops/batches?' + this.qstr({ status, page, jobId: selectedId })); },
+      detailLoading,
+      detailError,
+      detailOk: !!d,
+      dJobId: d ? 'job ' + d.jobId : '-',
+      dStatus: d ? d.status : 'SUCCESS',
+      dStatusLabel: d ? this.st(d.status) : '-',
+      dDate: d ? d.businessDate : '-',
+      dStarted: d ? this.kst(d.startedAt) : '-',
+      dEnded: d && d.endedAt ? this.kst(d.endedAt) : '진행 중',
+      dDuration: d ? this.dur(d.durationSeconds) : '-',
+      dCounts: d ? d.rawNewsCount + ' / ' + d.processedNewsCount + ' / ' + d.clusterCount : '-',
+      dPage: d && d.pageId ? 'pageId ' + d.pageId + ' · v' + d.pageVersionNo : '스냅샷 없음',
+      dOptions: d ? 'force=' + String(d.forceRun) + ' · rebuildPageOnly=' + String(d.rebuildPageOnly) : '-',
+      dRetryable: d ? (d.retryable ? '재실행 가능' : '재실행 불필요') : '-',
+      dStages: d ? d.stages.map((g) => ({ label: g.label, status: g.status, statusLabel: this.st(g.status), duration: this.dur(g.durationSeconds), note: g.note, hasNote: !!g.note })) : [],
+      hasStages: !!d,
+      dImpact: d ? d.impact.map((t) => ({ text: t })) : [],
+      hasImpact: !!(d && d.impact.length),
+      dErrorCode: d ? d.errorCode : null,
+      hasError: !!(d && d.errorCode),
+      dErrorMessage: d ? d.errorMessage : '',
+      logShown,
+      logTruncated: logFull.length > 900,
+      logToggleLabel: logOpen ? '접기' : '전체 ' + logFull.length.toLocaleString('ko-KR') + '자 보기',
+      logExpanded: logOpen ? 'true' : 'false',
+      onToggleLog: () => this.toggle(logKey),
+      onCopyLog: () => {
+        if (navigator.clipboard) navigator.clipboard.writeText(logFull);
+        this.announce('오류 로그를 클립보드에 복사했습니다.');
+      },
+      hasSnapshotLink: !!(d && d.pageId),
+      onOpenSnapshot: () => { this._pendingMode = 'ready'; this.go('/market/archive/' + (d ? d.businessDate : '')); },
+      snapshotLabel: d ? d.businessDate + ' 스냅샷 열기' : '',
+      // Manual Trigger
+      triggerOpen: s.triggerOpen,
+      triggerPhase: s.triggerPhase,
+      triggerIdle: s.triggerPhase === 'idle',
+      triggerPending: s.triggerPhase === 'pending',
+      triggerDone: s.triggerPhase === 'success',
+      triggerFailed: s.triggerPhase === 'error',
+      triggerAdvanced: s.triggerAdvanced,
+      triggerAdvancedExpanded: s.triggerAdvanced ? 'true' : 'false',
+      triggerDate: s.triggerDate,
+      triggerForce: s.triggerForce,
+      triggerRebuild: s.triggerRebuild,
+      triggerSubmitLabel: s.triggerPhase === 'pending' ? '실행 요청 중…' : '실행',
+      triggerDisabled: s.triggerPhase === 'pending',
+      trJobId: tr && tr.data ? 'job ' + tr.data.jobId : '',
+      trStatus: tr && tr.data ? this.st(tr.data.status) : '',
+      trStatusRaw: tr && tr.data ? tr.data.status : 'RUNNING',
+      trStarted: tr && tr.data ? this.kst(tr.data.startedAt) : '',
+      trDate: tr && tr.data ? tr.data.businessDate : '',
+      trErrTitle: tr && tr.error ? tr.error.http + ' · ' + tr.error.code : '',
+      trErrMessage: tr && tr.error ? tr.error.message : '',
+      trHasExisting: !!(tr && tr.error && tr.error.existingJobId),
+      trExistingLabel: tr && tr.error && tr.error.existingJobId ? 'job ' + tr.error.existingJobId + ' 열기' : '',
+      onOpenExisting: () => {
+        const ex = tr && tr.error ? tr.error.existingJobId : null;
+        this._pendingMode = 'ready';
+        this.setState({ triggerOpen: false });
+        if (ex) this.go('/ops/batches?' + this.qstr({ jobId: ex }));
+      },
+      onOpenTrigger: () => this.setState({ triggerOpen: true, triggerPhase: 'idle', triggerResult: null }),
+      onCloseTrigger: () => this.closeTrigger(),
+      onTriggerDate: (e) => this.setState({ triggerDate: e.target.value }),
+      onToggleForce: (e) => this.setState({ triggerForce: e.target.checked }),
+      onToggleRebuild: (e) => this.setState({ triggerRebuild: e.target.checked }),
+      onToggleAdvanced: () => this.setState({ triggerAdvanced: !s.triggerAdvanced }),
+      onSubmitTrigger: () => {
+        if (s.triggerPhase === 'pending') return;
+        this.setState({ triggerPhase: 'pending', live: '배치 실행을 요청하고 있습니다.' });
+        window.setTimeout(() => {
+          const r = fx.triggerResult(s.triggerMode, s.triggerDate);
+          if (r.error) this.setState({ triggerPhase: 'error', triggerResult: r, live: '실행 실패: ' + r.error.message });
+          else this.setState({ triggerPhase: 'success', triggerResult: r, live: 'job ' + r.data.jobId + ' 실행을 시작했습니다. 상태 ' + this.st(r.data.status) + '.' });
+        }, 900);
+      },
+      onViewJob: () => {
+        const j = tr && tr.data ? tr.data.jobId : null;
+        this.setState({ triggerOpen: false });
+        this._pendingMode = 'ready';
+        if (j) this.go('/ops/batches?' + this.qstr({ jobId: 1042 }));
+      },
+      onTriggerRetry: () => this.setState({ triggerPhase: 'idle' }),
+    };
+  }
+
+  // ── 상태 카탈로그 / 추적표 ──────────────────────────────────────
+  catalogVals() {
+    return {
+      isCatalog: true,
+      sectionLabel: '시스템',
+      routeLabel: '상태 카탈로그 · 추적표',
+      catalogGroups: this.panelVals().scenarioGroups,
+    };
+  }
+}
+</script>
+</body>
+</html>

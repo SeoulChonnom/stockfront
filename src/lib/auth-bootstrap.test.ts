@@ -60,12 +60,14 @@ describe('auth bootstrap', () => {
       status: 'authenticated',
       accessToken: 'issued-token',
       error: null,
+      role: null,
     });
     expect(getAccessToken()).toBe('issued-token');
     expect(getAuthBootstrapState()).toEqual({
       status: 'authenticated',
       accessToken: 'issued-token',
       error: null,
+      role: null,
     });
   });
 
@@ -110,11 +112,10 @@ describe('auth bootstrap', () => {
       accessToken: null,
       error:
         'Token bootstrap response must include a non-empty accessToken string.',
+      role: null,
     });
     expect(assignMock).toHaveBeenCalledWith(
-      expect.stringMatching(
-        /^http:\/\/localhost:8000\/main\/login\?redirect=/
-      )
+      expect.stringMatching(/^http:\/\/localhost:8000\/main\/login\?redirect=/)
     );
     expect(getAccessToken()).toBeNull();
   });
@@ -137,6 +138,7 @@ describe('auth bootstrap', () => {
       accessToken: null,
       error:
         'Token bootstrap response must include a non-empty accessToken string.',
+      role: null,
     });
     expect(assignMock).not.toHaveBeenCalled();
   });
@@ -155,6 +157,7 @@ describe('auth bootstrap', () => {
       status: 'bypassed',
       accessToken: null,
       error: 'VITE_API_HOST is not configured.',
+      role: null,
     });
     expect(fetchMock).not.toHaveBeenCalled();
     expect(assignMock).not.toHaveBeenCalled();
@@ -173,6 +176,7 @@ describe('auth bootstrap', () => {
       status: 'failed',
       accessToken: null,
       error: 'VITE_API_HOST is not configured.',
+      role: null,
     });
     expect(fetchMock).not.toHaveBeenCalled();
     expect(assignMock).not.toHaveBeenCalled();
@@ -226,6 +230,7 @@ describe('auth bootstrap', () => {
       status: 'loading',
       accessToken: null,
       error: null,
+      role: null,
     });
 
     resolveResponse?.(createJsonResponse({ accessToken: 'issued-token' }));
@@ -234,13 +239,79 @@ describe('auth bootstrap', () => {
       status: 'authenticated',
       accessToken: 'issued-token',
       error: null,
+      role: null,
     });
 
     await expect(bootstrapAuth()).resolves.toEqual({
       status: 'authenticated',
       accessToken: 'issued-token',
       error: null,
+      role: null,
     });
     expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('bootstraps successfully without a role field and falls back to null (operator fallback lives in capabilities.ts)', async () => {
+    vi.stubEnv('VITE_API_HOST', 'http://localhost:8000');
+    vi.stubGlobal(
+      'fetch',
+      vi
+        .fn<
+          (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>
+        >()
+        .mockResolvedValue(createJsonResponse({ accessToken: 'issued-token' }))
+    );
+
+    await expect(bootstrapAuth()).resolves.toEqual({
+      status: 'authenticated',
+      accessToken: 'issued-token',
+      error: null,
+      role: null,
+    });
+  });
+
+  it('parses an uppercase role from the token response and normalises it to the lowercase Role union', async () => {
+    vi.stubEnv('VITE_API_HOST', 'http://localhost:8000');
+    vi.stubGlobal(
+      'fetch',
+      vi
+        .fn<
+          (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>
+        >()
+        .mockResolvedValue(
+          createJsonResponse({ accessToken: 'issued-token', role: 'VIEWER' })
+        )
+    );
+
+    await expect(bootstrapAuth()).resolves.toEqual({
+      status: 'authenticated',
+      accessToken: 'issued-token',
+      error: null,
+      role: 'viewer',
+    });
+  });
+
+  it('falls back to null role rather than throwing when the response contains an unrecognised role value', async () => {
+    vi.stubEnv('VITE_API_HOST', 'http://localhost:8000');
+    vi.stubGlobal(
+      'fetch',
+      vi
+        .fn<
+          (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>
+        >()
+        .mockResolvedValue(
+          createJsonResponse({
+            accessToken: 'issued-token',
+            role: 'super-admin',
+          })
+        )
+    );
+
+    await expect(bootstrapAuth()).resolves.toEqual({
+      status: 'authenticated',
+      accessToken: 'issued-token',
+      error: null,
+      role: null,
+    });
   });
 });

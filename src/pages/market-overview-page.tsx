@@ -1,216 +1,97 @@
-import { Bolt, CalendarDays, Clock3 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { InfoBadge } from '../components/ui';
-import { createNavigateHandler, getStatusClass } from '../lib/app-state';
-import { buildUrl, withBasePath } from '../lib/router';
-import type {
-  ClusterCard,
-  MarketIndex,
-  MarketSnapshot,
-} from '../lib/view-models';
+import { useCapabilities } from '@/lib/capabilities';
+import { useUrlState } from '@/lib/router';
+import type { MarketSnapshot } from '@/lib/view-models';
 
-type SourceViewStatus = 'READY' | 'PARTIAL' | 'FAILED';
+import { ArchiveModeBand } from './market-overview/archive-mode-band';
+import {
+  getTodayBusinessDateKst,
+  shiftBusinessDate,
+} from './market-overview/date-utils';
+import { DecisionHeaderCard } from './market-overview/decision-header-card';
+import { EmptyMarketsPanel } from './market-overview/empty-markets-panel';
+import { MarketSection } from './market-overview/market-section';
+import {
+  type ClusterOriginQuery,
+  extractFilterQuery,
+} from './market-overview/navigation';
+import { PartialBanner } from './market-overview/partial-banner';
 
-const sourceViewStatusBySnapshotStatus = {
-  ready: 'READY',
-  partial: 'PARTIAL',
-  failed: 'FAILED',
-  success: 'READY',
-} satisfies Record<MarketSnapshot['status'], SourceViewStatus>;
+/**
+ * Latest (`/market/latest`, README §7-2)와 Archive Detail
+ * (`/market/archive/:businessDate`, §7-3)이 공유하는 단일 컴포넌트.
+ * "본문은 Latest와 동일 컴포넌트를 재사용한다" — Archive Detail은 이 위에
+ * `ArchiveModeBand`를 얹고 `mode='archive'`로 h1/원점 쿼리만 바꾼다.
+ *
+ * URL 상태(현재 search params, pathname)는 이 컴포넌트가 직접
+ * `useUrlState()`로 읽는다 — 아카이브 필터 복귀 쿼리(§7-2 item 3: "coming
+ * from archive")와 스크롤 복원 키(§9) 양쪽에 필요하기 때문이다.
+ */
+export type MarketOverviewPageProps = {
+  mode: 'latest' | 'archive';
+  snapshot: MarketSnapshot;
+  isRefetching?: boolean;
+  /** 테스트에서 freshness("N시간 전 생성")를 고정하기 위한 주입 지점. */
+  now?: Date;
+};
 
 export function MarketOverviewPage({
   mode,
   snapshot,
-  title,
-}: {
-  mode: 'latest' | 'archive';
-  snapshot: MarketSnapshot;
-  title: string;
-}) {
+  isRefetching = false,
+  now,
+}: MarketOverviewPageProps) {
+  const url = useUrlState();
+  const capabilities = useCapabilities();
+  const canViewOps = capabilities.can('ops.view');
+  const currentSearch = url.searchParams.toString();
+
+  const filterQuery =
+    mode === 'archive' ? extractFilterQuery(url.searchParams) : null;
+  const originQuery: ClusterOriginQuery = {
+    origin: mode === 'archive' ? snapshot.businessDate : 'latest',
+    ...(filterQuery ?? {}),
+  };
+
   return (
-    <div className='page-stack'>
-      <section className='hero-header'>
-        <div className='hero-copy'>
-          <div className='eyebrow-row'>
-            <span className='eyebrow'>Market Daily Brief</span>
-            <span className={getStatusClass(snapshot.status)}>
-              {snapshot.status}
-            </span>
-          </div>
-          <h1 id='page-title' tabIndex={-1}>
-            {mode === 'latest'
-              ? `${snapshot.businessDate} 글로벌 시장 요약`
-              : `${snapshot.businessDate} 아카이브 시장 요약`}
-          </h1>
-          <p>
-            {title} 화면은 API 응답 기반으로 렌더링됩니다. 데이터 패칭과 화면
-            상태 관리는 React query 계층으로 분리했습니다.
-          </p>
-          <div className='meta-row'>
-            <span>
-              <CalendarDays size={16} />
-              Business Date <strong>{snapshot.businessDate}</strong>
-            </span>
-            <span>
-              <Clock3 size={16} />
-              Generated <strong>{snapshot.generatedAt}</strong>
-            </span>
-          </div>
-        </div>
+    <div className='flex flex-col gap-4 sm:gap-5'>
+      {mode === 'archive' ? (
+        <ArchiveModeBand
+          businessDate={snapshot.businessDate}
+          filterQuery={filterQuery}
+          nextDate={shiftBusinessDate(snapshot.businessDate, 1)}
+          nextDisabled={
+            shiftBusinessDate(snapshot.businessDate, 1) >
+            getTodayBusinessDateKst(now)
+          }
+          pageId={snapshot.pageId}
+          prevDate={shiftBusinessDate(snapshot.businessDate, -1)}
+          versionNo={snapshot.versionNo}
+        />
+      ) : null}
 
-        <div className='callout-card'>
-          <div className='callout-icon'>
-            <Bolt size={22} />
-          </div>
-          <div>
-            <span className='eyebrow'>Global Market Insight</span>
-            <h2>{snapshot.globalHeadline}</h2>
-          </div>
-        </div>
-      </section>
+      <DecisionHeaderCard
+        isRefetching={isRefetching}
+        mode={mode}
+        now={now}
+        snapshot={snapshot}
+      />
 
-      {snapshot.markets.map((market) => (
-        <section className='section-stack' key={market.label}>
-          <div className='section-header'>
-            <div>
-              <h3>{market.label}</h3>
-              <p>{market.summaryTitle}</p>
-            </div>
-            <div className='section-line' />
-          </div>
+      <PartialBanner canViewOps={canViewOps} snapshot={snapshot} />
 
-          <div className='market-summary-card'>
-            <div className='market-summary-copy'>
-              <span className='eyebrow'>Analyst Narrative</span>
-              <p>{market.summaryBody}</p>
-            </div>
-            <div className='metric-badges'>
-              <InfoBadge
-                label='Index Set'
-                value={`${market.indices.length}개`}
-              />
-              <InfoBadge
-                label='News Clusters'
-                value={`${market.clusters.length}개`}
-              />
-            </div>
-          </div>
-
-          <div className='index-grid'>
-            {market.indices.map((item) => (
-              <IndexCard item={item} key={item.label} />
-            ))}
-          </div>
-
-          <div className='cluster-grid'>
-            {market.clusters.map((cluster) => (
-              <ClusterPreviewCard
-                key={cluster.id}
-                snapshot={snapshot}
-                cluster={cluster}
-              />
-            ))}
-          </div>
-        </section>
-      ))}
+      {snapshot.markets.length === 0 ? (
+        <EmptyMarketsPanel canViewOps={canViewOps} status={snapshot.status} />
+      ) : (
+        snapshot.markets.map((market, index) => (
+          <MarketSection
+            currentPathname={url.pathname}
+            currentSearch={currentSearch}
+            index={index}
+            key={`${market.label}-${index}`}
+            market={market}
+            originQuery={originQuery}
+          />
+        ))
+      )}
     </div>
-  );
-}
-
-function IndexCard({ item }: { item: MarketIndex }) {
-  return (
-    <Card className='panel index-card'>
-      <CardContent className='p-6'>
-        <div className='index-card-top'>
-          <div>
-            <p className='muted-label'>{item.label}</p>
-            <h4>{item.value}</h4>
-          </div>
-          <div className='delta-block'>
-            <strong
-              className={item.direction === 'up' ? 'trend-up' : 'trend-down'}
-            >
-              {item.change}
-            </strong>
-            <span
-              className={
-                item.direction === 'up'
-                  ? 'status-chip status-chip-success'
-                  : 'status-chip status-chip-failed'
-              }
-            >
-              {item.changeRate}
-            </span>
-          </div>
-        </div>
-
-        <dl className='mini-grid'>
-          <div>
-            <dt>High</dt>
-            <dd>{item.high}</dd>
-          </div>
-          <div>
-            <dt>Low</dt>
-            <dd>{item.low}</dd>
-          </div>
-        </dl>
-      </CardContent>
-    </Card>
-  );
-}
-
-function ClusterPreviewCard({
-  cluster,
-  snapshot,
-}: {
-  cluster: ClusterCard;
-  snapshot: MarketSnapshot;
-}) {
-  const archiveHref = buildUrl('/market/archive/search', {
-    from: snapshot.businessDate,
-    to: snapshot.businessDate,
-    status: sourceViewStatusBySnapshotStatus[snapshot.status],
-    page: 1,
-  });
-  const detailHref = `/market/cluster/${cluster.id}`;
-
-  return (
-    <Card className='panel cluster-card'>
-      <CardContent className='grid gap-6 p-6'>
-        <div className='cluster-card-copy'>
-          <div className='cluster-card-head'>
-            <h4>{cluster.title}</h4>
-            <span className='soft-chip'>{cluster.articleCount}건</span>
-          </div>
-          <p>{cluster.summary}</p>
-          <div className='tag-row'>
-            {cluster.tags.map((tag) => (
-              <span className='tag' key={tag}>
-                #{tag}
-              </span>
-            ))}
-          </div>
-        </div>
-        <div className='action-row'>
-          <Button asChild variant='secondary'>
-            <a
-              href={withBasePath(archiveHref)}
-              onClick={createNavigateHandler(archiveHref)}
-            >
-              Source View
-            </a>
-          </Button>
-          <Button asChild variant='primary'>
-            <a
-              href={withBasePath(detailHref)}
-              onClick={createNavigateHandler(detailHref)}
-            >
-              Detail View
-            </a>
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
   );
 }

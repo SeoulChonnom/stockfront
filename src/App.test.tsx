@@ -4,10 +4,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import App from './App';
 import {
+  resetScrollPositionsForTesting,
+  saveScrollPosition,
+} from './components/shell/scroll-restoration';
+import {
   authBootstrapNavigation,
   resetAuthBootstrapForTesting,
 } from './lib/auth-bootstrap';
-import { withBasePath } from './lib/router';
+import { navigate, withBasePath } from './lib/router';
 
 const {
   mockUseArchiveList,
@@ -75,14 +79,18 @@ function mockMatchMedia(matches: boolean) {
   );
 }
 
+/**
+ * Pre-auth-resolve, none of the shell should exist at all — no brand mark,
+ * no nav (old or new labels), no user chip. Updated for the Phase 4 shell
+ * rebuild: the old brand had a "Financial Intelligence Console" subtitle
+ * (removed, README §5 has no subtitle in the brand mark) and English nav/
+ * user-chip labels ("Batch Status", "Admin.Ops") that are now "배치 운영"/
+ * "ops.analyst" (README §5's literal Korean nav tree + user chip).
+ */
 function expectProtectedShellToBeHidden() {
   expect(screen.queryByText('Market Brief')).not.toBeInTheDocument();
-  expect(
-    screen.queryByText('Financial Intelligence Console')
-  ).not.toBeInTheDocument();
-  expect(screen.queryByText('Batch Status')).not.toBeInTheDocument();
-  expect(screen.queryByText('Admin.Ops')).not.toBeInTheDocument();
-  expect(screen.queryByText('Market Daily Brief')).not.toBeInTheDocument();
+  expect(screen.queryByText('배치 운영')).not.toBeInTheDocument();
+  expect(screen.queryByText('ops.analyst')).not.toBeInTheDocument();
 }
 
 describe('App routing', () => {
@@ -141,6 +149,7 @@ describe('App routing', () => {
 
   afterEach(() => {
     resetAuthBootstrapForTesting();
+    resetScrollPositionsForTesting();
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
     vi.unstubAllEnvs();
@@ -168,7 +177,9 @@ describe('App routing', () => {
     expect(screen.getByRole('status')).toHaveTextContent(
       '로그인 상태를 확인하고 있습니다'
     );
-    expect(screen.queryByText('No Market Data')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('표시할 데이터가 없습니다')
+    ).not.toBeInTheDocument();
 
     act(() => {
       deferredResponse.resolve(
@@ -184,10 +195,7 @@ describe('App routing', () => {
       expect(mockUseLatestMarketPage).toHaveBeenCalledWith(true);
     });
     expect(screen.getByText('Market Brief')).toBeInTheDocument();
-    expect(
-      screen.getByText('Financial Intelligence Console')
-    ).toBeInTheDocument();
-    expect(screen.getByText('No Market Data')).toBeInTheDocument();
+    expect(screen.getByText('표시할 데이터가 없습니다')).toBeInTheDocument();
   });
 
   it('redirects to the exact production login URL when bootstrap fails', async () => {
@@ -222,7 +230,9 @@ describe('App routing', () => {
     expect(screen.getByRole('status')).toHaveTextContent(
       '로그인 페이지로 이동 중입니다'
     );
-    expect(screen.queryByText('No Market Data')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('표시할 데이터가 없습니다')
+    ).not.toBeInTheDocument();
   });
 
   it('renders a safe accessible failure state when bootstrap cannot redirect', async () => {
@@ -250,7 +260,9 @@ describe('App routing', () => {
     expect(fetchMock).not.toHaveBeenCalled();
     expect(window.location.pathname).toBe('/');
     expectProtectedShellToBeHidden();
-    expect(screen.queryByText('No Market Data')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('표시할 데이터가 없습니다')
+    ).not.toBeInTheDocument();
   });
 
   it('redirects to the exact production login URL when bootstrap payload is malformed from a trailing-slash host', async () => {
@@ -312,7 +324,9 @@ describe('App routing', () => {
 
     expect(window.location.pathname).toBe('/');
     expectProtectedShellToBeHidden();
-    expect(screen.queryByText('No Market Data')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('표시할 데이터가 없습니다')
+    ).not.toBeInTheDocument();
   });
 
   it('keeps bootstrap idempotent under StrictMode so duplicate startup effects do not duplicate token requests', async () => {
@@ -382,14 +396,18 @@ describe('App routing', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText('Archive Search')).toBeInTheDocument();
+      expect(screen.getByText('아카이브 검색')).toBeInTheDocument();
     });
 
     expect(redirectToLogin).not.toHaveBeenCalled();
     expect(screen.getByText('Market Brief')).toBeInTheDocument();
-    expect(screen.getByText('Archive Search')).toBeInTheDocument();
-    expect(screen.getByText('Page 2 / 3')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Search' })).toBeInTheDocument();
+    expect(screen.getByText('아카이브 검색')).toBeInTheDocument();
+    // v2: 페이지 표시는 공용 Pagination의 mono `page / totalPages` 이고,
+    // 적용 버튼은 draft/applied 분리를 반영한 '필터 적용'이다.
+    expect(screen.getByText('2 / 3')).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: '필터 적용' })
+    ).toBeInTheDocument();
   });
 
   it('does not render protected query pages before bootstrap resolves', async () => {
@@ -413,7 +431,7 @@ describe('App routing', () => {
       '로그인 상태를 확인하고 있습니다'
     );
     expect(
-      screen.queryByRole('heading', { name: 'Batch Operations' })
+      screen.queryByRole('heading', { name: '배치 운영' })
     ).not.toBeInTheDocument();
 
     act(() => {
@@ -427,9 +445,10 @@ describe('App routing', () => {
     });
     expect(screen.getByText('Market Brief')).toBeInTheDocument();
     expect(
-      screen.getByRole('heading', { name: 'Batch Operations' })
+      screen.getByRole('heading', { name: '배치 운영' })
     ).toBeInTheDocument();
-    expect(screen.getByText('Selected Run Detail')).toBeInTheDocument();
+    // v2: master-detail 목록 헤딩. 상세는 jobId 선택 시에만 렌더된다.
+    expect(screen.getByText('실행 이력')).toBeInTheDocument();
   });
 
   it('passes archive pageId from the URL into the archive page query identity', async () => {
@@ -459,6 +478,106 @@ describe('App routing', () => {
         { businessDate: '2026-03-31', pageId: 42 },
         true
       );
+    });
+  });
+
+  it('focuses #page-title on a pathname route change, and leaves query-only changes to the page (§7-1, §9)', async () => {
+    vi.stubEnv('VITE_API_HOST', 'http://localhost:8000');
+    vi.stubEnv('VITE_APP_ENV', 'development');
+    vi.stubGlobal(
+      'fetch',
+      vi
+        .fn<
+          (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>
+        >()
+        .mockResolvedValue(createJsonResponse({ accessToken: '' }))
+    );
+    window.history.replaceState(null, '', '/market/archive/search');
+
+    await act(async () => {
+      render(<App />);
+      await Promise.resolve();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('아카이브 검색')).toBeInTheDocument();
+    });
+    expect(document.activeElement?.id).toBe('page-title');
+
+    // Move focus away, then change ONLY the query string (pathname stays
+    // identical).
+    //
+    // §9 assigns query-only transitions to the PAGE, not the shell: Archive
+    // 필터 적용 and pagination focus the 결과 heading, 검증 실패 focuses the
+    // first invalid field, Batch `jobId` selection focuses the 상세 heading.
+    // Because `App.tsx` is the parent, its effect commits after the page's,
+    // so if the shell refocused `#page-title` here it would always win and
+    // undo whatever the page just did. The shell must therefore stay out of
+    // the way — `#page-title` must NOT be refocused by a search-only change.
+    act(() => {
+      (document.activeElement as HTMLElement | null)?.blur();
+    });
+    expect(document.activeElement?.id).not.toBe('page-title');
+
+    act(() => {
+      navigate('/market/archive/search?page=2');
+    });
+
+    await waitFor(() => {
+      expect(window.location.search).toBe('?page=2');
+    });
+    expect(document.activeElement?.id).not.toBe('page-title');
+  });
+
+  it('scrolls a brand-new URL to the top, and restores a saved scroll position when returning to a visited one (§7-1, §9)', async () => {
+    vi.stubEnv('VITE_API_HOST', 'http://localhost:8000');
+    vi.stubEnv('VITE_APP_ENV', 'development');
+    vi.stubGlobal(
+      'fetch',
+      vi
+        .fn<
+          (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>
+        >()
+        .mockResolvedValue(createJsonResponse({ accessToken: '' }))
+    );
+    window.history.replaceState(null, '', '/market/latest');
+    const scrollToSpy = vi
+      .spyOn(window, 'scrollTo')
+      .mockImplementation(() => undefined);
+
+    await act(async () => {
+      render(<App />);
+      await Promise.resolve();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('Market Brief')).toBeInTheDocument();
+    });
+    // Brand-new key (never saved before) scrolls to 0 — App.tsx's own
+    // restoration effect, the part this phase owns. (Saving `window.scrollY`
+    // for a URL the user is LEAVING is the caller's job — see
+    // `saveScrollPosition`'s doc comment in `scroll-restoration.ts` — so this
+    // test calls it explicitly, the same way a screen's own navigate link
+    // would, rather than assuming a bare `navigate()` call saves it.)
+    expect(scrollToSpy).toHaveBeenLastCalledWith(0, 0);
+
+    saveScrollPosition('/market/latest', 480);
+
+    act(() => {
+      navigate('/market/archive/search');
+    });
+    await waitFor(() => {
+      expect(screen.getByText('아카이브 검색')).toBeInTheDocument();
+    });
+    // A different, never-visited key also starts at 0.
+    expect(scrollToSpy).toHaveBeenLastCalledWith(0, 0);
+
+    act(() => {
+      navigate('/market/latest');
+    });
+
+    await waitFor(() => {
+      expect(scrollToSpy).toHaveBeenLastCalledWith(0, 480);
     });
   });
 });

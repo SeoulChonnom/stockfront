@@ -102,20 +102,6 @@ export function parseListFilters(
   };
 }
 
-export function getStatusClass(status: string) {
-  const normalized = status.toLowerCase();
-
-  if (normalized === 'ready' || normalized === 'success') {
-    return 'status-chip status-chip-success';
-  }
-
-  if (normalized === 'partial') {
-    return 'status-chip status-chip-partial';
-  }
-
-  return 'status-chip status-chip-failed';
-}
-
 export function parseRoute(
   pathname: string,
   searchParams = new URLSearchParams()
