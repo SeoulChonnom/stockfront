@@ -1,48 +1,157 @@
+/*
+ * Design tokens — Market Brief UI v2 (handoff_v2/README.md §6, §7-1, §15).
+ * Values here are FINAL per the handoff doc: colors, type scale, spacing,
+ * radius, shadow, motion, breakpoints, z-index and content measures.
+ *
+ * Font decision (README §3-1 / Phase 2 task):
+ * The repo previously declared --font-sans: Inter and --font-display: Manrope,
+ * but no font asset, @font-face, or CDN link ever backed those names — every
+ * user has always rendered this app in their system UI font. Declaring a
+ * font family that never loads is a broken promise, not a design decision.
+ * Verified via `grep -rn "@font-face|Inter|Manrope" src/ index.html` → no
+ * matches, and `ls src/assets public/` → no font files.
+ * Decision: go with the honest system stack (Segoe UI/Apple SD Gothic Neo/
+ * Noto Sans KR fallbacks matter — this is a Korean-language UI). Numbers,
+ * IDs, timestamps and logs use --font-mono + tabular-nums via .mono /
+ * [data-mono] (see bottom of this file).
+ */
+
 :root {
   color-scheme: light;
-  --bg: #f4f8ff;
-  --surface: rgba(255, 255, 255, 0.78);
-  --surface-strong: #ffffff;
-  --surface-muted: #eaf1ff;
-  --surface-deep: #d8e6ff;
-  --line: rgba(48, 101, 168, 0.18);
-  --line-strong: rgba(48, 101, 168, 0.28);
+
+  /* ---- Color — surfaces & text ---- */
+  --bg: #f6f8fb;
+  --surface: #ffffff;
+  --surface-2: #f1f4f9;
+  --surface-3: #e6ebf3;
+  --line: #dce3ed;
+  --line-strong: #c2ccdb;
   --text: #0f2743;
-  --text-soft: #466a92;
-  --text-faint: #6f90b5;
+  --text-soft: #4a6180;
+  --text-faint: #7288a5;
+
+  /* ---- Color — primary / brand ---- */
   --primary: #0f5bff;
-  --primary-strong: #0a46cb;
-  --primary-soft: rgba(15, 91, 255, 0.1);
+  --primary-fg: #ffffff;
+  --primary-soft: #eaf1ff;
+  --primary-line: #bdd2ff;
+
+  /* ---- Color — market direction (text only, never background) ---- */
+  --up: #0d8b5f;
+  --down: #be3348;
+
+  /* ---- Color — intent (status badges: color + -soft bg + -line border) ---- */
   --success: #0d8b5f;
-  --success-soft: rgba(15, 177, 109, 0.14);
-  --warning: #7f5d00;
-  --warning-soft: rgba(255, 187, 0, 0.15);
+  --success-soft: #e7f6ef;
+  --success-line: #a8dcc5;
+  --warning: #8a5a00;
+  --warning-soft: #fdf3dd;
+  --warning-line: #e7cd91;
   --danger: #be3348;
-  --danger-soft: rgba(220, 70, 92, 0.14);
-  --shadow-lg: 0 24px 60px rgba(15, 39, 67, 0.14);
-  --shadow-md: 0 16px 30px rgba(15, 39, 67, 0.08);
-  --radius-xl: 24px;
-  --radius-lg: 18px;
-  --radius-md: 14px;
-  --radius-sm: 10px;
-  --sidebar-width: 272px;
-  --topbar-height: 72px;
-  --content-max: 1440px;
+  --danger-soft: #fdecef;
+  --danger-line: #f0b8c2;
+  --info: #0f5bff;
+  --info-soft: #eaf1ff;
+  --info-line: #bdd2ff;
+  --neutral: #4a6180;
+  --neutral-soft: #eef1f6;
+  --neutral-line: #d5dde8;
+
+  --focus: #0f5bff;
+
+  /* ---- Typography ---- */
   --font-sans:
-    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
-    "Segoe UI", sans-serif;
-  --font-display:
-    Manrope, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
-    "Segoe UI", sans-serif;
+    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic",
+    sans-serif;
+  --font-display: var(--font-sans);
+  --font-mono:
+    ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono",
+    monospace;
+
+  /* type scale — §6 Typography table (>640px values; ≤640 step below) */
+  --fs-display: 26px;
+  --fs-h1: 22px;
+  --fs-h2: 17px;
+  --fs-h3: 14px; /* h3 range is 13–15px depending on block density */
+  --fs-lead: 16px;
+  --fs-body: 13.5px;
+  --fs-sm: 12.5px;
+  --fs-label: 11px;
+  --fs-mono-sm: 11px;
+  --fs-mono: 12.5px;
+  --fs-mono-lg: 14px;
+
+  --fw-regular: 400;
+  --fw-semibold: 600;
+  --fw-bold: 700;
+
+  --lh-display: 1.35;
+  --lh-lead: 1.65;
+  --lh-body: 1.5;
+  --lh-tight: 1.2;
+
+  --ls-display: -0.015em;
+  --ls-caps: 0.07em; /* default caps/label letter-spacing */
+  --ls-caps-wide: 0.08em; /* nav group label variant (§5) */
+
+  /* content measures */
+  --measure-summary: 76ch;
+  --measure-error: 62ch;
+  --measure-analysis: 74ch;
+
+  /* ---- Spacing — steps down at 1024 / 640 (see media queries below) ---- */
+  --pad: 32px;
+  --pad-dense: 20px; /* 고밀도 모드, independent of breakpoint */
+  --gap: 20px;
+  --gap-dense: 14px;
+
+  /* card internal padding */
+  --pad-card-header: 18px; /* 16–20px range */
+  --pad-card-body: 16px; /* 16–18px range */
+  --pad-cell-y: 10px; /* table cell, 9–12px range */
+  --pad-cell-x: 14px; /* table cell, 12–18px range */
+
+  /* ---- Radius ---- */
+  --r-sm: 4px; /* badge, chip, small control */
+  --r-md: 8px; /* button, input, tile */
+  --r-lg: 12px; /* card, panel */
+  --r-pill: 999px; /* nav badge only */
+
+  /* ---- Shadow — cards use border only; shadow reserved for sticky/overlay ---- */
+  --sh2: 0 8px 24px rgba(15, 39, 67, 0.1); /* sticky header / popover */
+  --sh3: 0 24px 56px rgba(15, 39, 67, 0.2); /* drawer / dialog */
+
+  /* ---- Motion ---- */
+  --dur-fast: 120ms;
+  --dur: 200ms;
+  /* README doesn't pin an exact curve — standard "ease-out"-ish easing for
+     120–200ms transform/opacity transitions. */
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --dur-shimmer: 1.3s; /* skeleton shimmer, linear */
+  --dur-spinner: 0.9s; /* spinner, linear */
+
+  /*
+   * ---- Breakpoints (documentation only — no bare media queries here) ----
+   * 1180px — master-detail 2 col -> 1 col, 3-col grid -> 2 col, aside collapses
+   * 1024px — nav rail -> mobile header, 2 col -> 1 col
+   * 640px  — mobile density, high/low price columns collapse to sub-line
+   * Repo convention: components express these via Tailwind md:/lg:/xl:
+   * prefixes (README §2); --pad/--gap below are the exception that must be
+   * plain CSS since they're consumed outside Tailwind's utility scanner.
+   */
+
+  /* ---- z-index ---- */
+  --z-sticky: 40;
+  --z-drawer-overlay: 60;
+  --z-drawer: 61;
+  --z-dialog-overlay: 80;
+  --z-dialog: 81;
+  --z-skip: 90;
+
   font-family: var(--font-sans);
   color: var(--text);
-  background:
-    radial-gradient(
-      circle at top left,
-      rgba(76, 129, 255, 0.18),
-      transparent 28%
-    ),
-    linear-gradient(180deg, #f8fbff 0%, #eef5ff 100%);
+  background: var(--bg);
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -50,37 +159,68 @@
 
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --bg: #07111f;
-  --surface: rgba(13, 24, 39, 0.82);
-  --surface-strong: #0d1827;
-  --surface-muted: #122237;
-  --surface-deep: #17304b;
-  --line: rgba(148, 179, 221, 0.12);
-  --line-strong: rgba(148, 179, 221, 0.2);
-  --text: #ebf4ff;
-  --text-soft: #a7bdd9;
-  --text-faint: #7290b0;
+
+  --bg: #0a1120;
+  --surface: #111a2b;
+  --surface-2: #16223a;
+  --surface-3: #1d2c48;
+  --line: #243554;
+  --line-strong: #35496d;
+  --text: #e9f1fb;
+  --text-soft: #a3b6d0;
+  --text-faint: #7c92b0;
+
   --primary: #6b9cff;
-  --primary-strong: #8bb2ff;
-  --primary-soft: rgba(107, 156, 255, 0.14);
+  --primary-fg: #07101d;
+  --primary-soft: #17253f;
+  --primary-line: #304b7c;
+
+  --up: #3cd29c;
+  --down: #ff7c91;
+
   --success: #3cd29c;
-  --success-soft: rgba(60, 210, 156, 0.14);
+  --success-soft: #0f2f24;
+  --success-line: #1f5a45;
   --warning: #f4cb62;
-  --warning-soft: rgba(244, 203, 98, 0.15);
+  --warning-soft: #31280f;
+  --warning-line: #5d4c1b;
   --danger: #ff7c91;
-  --danger-soft: rgba(255, 124, 145, 0.15);
-  --shadow-lg: 0 30px 80px rgba(0, 0, 0, 0.4);
-  --shadow-md: 0 18px 34px rgba(0, 0, 0, 0.22);
-  background:
-    radial-gradient(
-      circle at top left,
-      rgba(46, 96, 204, 0.28),
-      transparent 24%
-    ),
-    linear-gradient(180deg, #07111f 0%, #091524 100%);
+  --danger-soft: #39191f;
+  --danger-line: #6b2c37;
+  --info: #6b9cff;
+  --info-soft: #17253f;
+  --info-line: #304b7c;
+  --neutral: #a3b6d0;
+  --neutral-soft: #17233a;
+  --neutral-line: #2a3b5c;
+
+  --focus: #8bb2ff;
+
+  --sh2: 0 8px 24px rgba(0, 0, 0, 0.35);
+  --sh3: 0 24px 56px rgba(0, 0, 0, 0.55);
+
+  background: var(--bg);
 }
 
-* {
+/* Spacing steps — README §6: --pad 32→20→14, --gap 20→…→12 */
+@media (max-width: 1024px) {
+  :root {
+    --pad: 20px;
+  }
+}
+
+@media (max-width: 640px) {
+  :root {
+    --pad: 14px;
+    --gap: 12px;
+    --fs-display: 21px;
+    --fs-lead: 15px;
+  }
+}
+
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
@@ -92,8 +232,12 @@ body,
 
 body {
   margin: 0;
-  background: transparent;
+  background: var(--bg);
   color: var(--text);
+  /* Never mask horizontal overflow with overflow-x:hidden — README §11
+     requires document.scrollWidth <= clientWidth to be TRUE at every
+     breakpoint, not merely hidden. If it's ever wider than the viewport
+     that's a layout bug to fix at the source, not to paper over here. */
 }
 
 button,
@@ -114,4 +258,77 @@ button {
 img {
   display: block;
   max-width: 100%;
+}
+
+/* ---- Mono / tabular numerals — README §3-1, §6 ----
+   Apply to indices, prices, job/page IDs, timestamps and logs. */
+.mono,
+[data-mono] {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- Content measure utilities (README §6 "본문 최대 너비") ---- */
+.measure-summary,
+.measure-error,
+.measure-analysis {
+  overflow-wrap: anywhere;
+}
+
+.measure-summary {
+  max-width: var(--measure-summary);
+}
+
+.measure-error {
+  max-width: var(--measure-error);
+}
+
+.measure-analysis {
+  max-width: var(--measure-analysis);
+}
+
+/* ---- Responsive safety utilities (README §11) ---- */
+.min-w-0 {
+  min-width: 0;
+}
+
+.wrap-anywhere {
+  overflow-wrap: anywhere;
+}
+
+/* ---- Focus ---- */
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* Programmatic route-change focus on headings shouldn't show a ring, but
+   keyboard-driven :focus-visible must keep working everywhere else (§7-1). */
+h1[tabindex="-1"]:focus,
+main[tabindex="-1"]:focus {
+  outline: none;
+}
+
+@media (forced-colors: active) {
+  :root,
+  :root[data-theme="dark"] {
+    --line: CanvasText;
+    --line-strong: CanvasText;
+    --focus: Highlight;
+  }
+
+  :focus-visible {
+    outline-color: Highlight;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

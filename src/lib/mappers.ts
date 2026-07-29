@@ -1,5 +1,6 @@
 import type {
   ArchiveListResponse,
+  ArticleLinkResponse,
   BatchJobDetailResponse,
   BatchJobListItemResponse,
   BatchJobListResponse,
@@ -11,6 +12,7 @@ import type {
 import {
   formatDateTime,
   formatDurationSeconds,
+  formatKstDateTime,
   formatNumericText,
   formatPercent,
   formatSignedNumber,
@@ -19,13 +21,18 @@ import {
 } from './formatters';
 import type {
   ArchiveListView,
+  ArticleLink,
   BatchJobsView,
   BatchRun,
   BatchSummaryView,
   ClusterArticle,
   ClusterDetail,
+  ClusterRepresentativeArticle,
+  MarketAnalysis,
   MarketIndex,
+  MarketMetadata,
   MarketSnapshot,
+  PageMetadata,
 } from './view-models';
 
 type DailyMarketResponse = DailyPageResponse['markets'][number];
@@ -44,6 +51,12 @@ function asStringArray(value: unknown): string[] {
 function asArticleArray(value: unknown): ClusterArticleResponse[] {
   return Array.isArray(value)
     ? value.filter((item): item is ClusterArticleResponse => isRecord(item))
+    : [];
+}
+
+function asArticleLinkArray(value: unknown): ArticleLinkResponse[] {
+  return Array.isArray(value)
+    ? value.filter((item): item is ArticleLinkResponse => isRecord(item))
     : [];
 }
 
@@ -67,6 +80,14 @@ function asDailyClusterArray(value: unknown): DailyClusterResponse[] {
 
 function asString(value: unknown, fallback: string): string {
   return typeof value === 'string' ? value : fallback;
+}
+
+function asNullableString(value: unknown): string | null {
+  return typeof value === 'string' ? value : null;
+}
+
+function asOptionalBoolean(value: unknown): boolean | null {
+  return typeof value === 'boolean' ? value : null;
 }
 
 function asFiniteNumber(value: unknown, fallback: number): number {
@@ -99,10 +120,16 @@ function asDisplayId(value: unknown, fallback: string): string {
   return fallback;
 }
 
-function toUpperStatus<T extends 'READY' | 'PARTIAL' | 'FAILED' | 'SUCCESS'>(
-  value: unknown,
-  allowed: readonly T[]
-): T | 'FAILED' {
+function toUpperStatus<
+  T extends
+    | 'READY'
+    | 'PARTIAL'
+    | 'FAILED'
+    | 'SUCCESS'
+    | 'RUNNING'
+    | 'PENDING'
+    | 'SKIPPED',
+>(value: unknown, allowed: readonly T[]): T | 'FAILED' {
   if (typeof value !== 'string') {
     return 'FAILED';
   }
@@ -111,6 +138,24 @@ function toUpperStatus<T extends 'READY' | 'PARTIAL' | 'FAILED' | 'SUCCESS'>(
 
   return allowed.includes(normalized as T) ? (normalized as T) : 'FAILED';
 }
+
+/**
+ * 배치 작업 상태 허용값.
+ *
+ * `docs/api_spec_doc.md`(§배치 작업 상태 표)는 batch job status를
+ * `PENDING | RUNNING | SUCCESS | PARTIAL | FAILED`로 정의한다. 과거에는
+ * `['SUCCESS','PARTIAL','FAILED']`만 허용해서 `toUpperStatus`의 fallback이
+ * 실행 중(RUNNING)·대기(PENDING) 작업을 전부 `FAILED`로 떨어뜨렸고,
+ * 그 결과 정상 진행 중인 배치가 빨간 '생성 실패' 배지로 표시됐다.
+ * 상태를 임의로 축소하지 말 것 — StatusBadge가 6개 상태를 모두 렌더한다.
+ */
+const batchJobStatuses = [
+  'PENDING',
+  'RUNNING',
+  'SUCCESS',
+  'PARTIAL',
+  'FAILED',
+] as const;
 
 function firstString(values: unknown[], fallback: string): string {
   return (
@@ -129,12 +174,91 @@ function mapIndex(item: IndexCardResponse): MarketIndex {
 
   return {
     label: asString(item.indexName, '-'),
+    /** DTO의 indexCode — §7-2 지수명 아래 mono 코드 서브라인. */
+    code: asNullableString(item.indexCode),
     value: formatNumericText(item.closePrice),
     change: formatSignedNumber(item.changeValue),
     changeRate: formatPercent(item.changePercent),
     direction: changeValue !== null && changeValue >= 0 ? 'up' : 'down',
     high: formatNumericText(item.highPrice),
     low: formatNumericText(item.lowPrice),
+  };
+}
+
+/**
+ * Maps a daily-page or cluster-card `representativeArticle` sub-object into
+ * a view model. Unlike `mapClusterArticle` (used by the cluster DETAIL
+ * response, which already bakes Korean fallback copy into `source`/`title`
+ * for existing, test-locked behavior), this keeps every field `null` when
+ * absent so the market-section "핵심 이슈" row can choose its own
+ * empty-state copy per §7-2 of the v2 handoff.
+ */
+function mapRepresentativeArticleMeta(
+  value: unknown
+): ClusterRepresentativeArticle {
+  const record: Record<string, unknown> = isRecord(value) ? value : {};
+
+  return {
+    title: asNullableString(record.title),
+    source: asNullableString(record.publisherName),
+    publishedAt: formatKstDateTime(record.publishedAt),
+    originalUrl: asNullableString(record.originLink),
+    mirrorUrl: asNullableString(record.naverLink),
+  };
+}
+
+function mapArticleLink(value: unknown, fallbackId: string): ArticleLink {
+  const record: Record<string, unknown> = isRecord(value) ? value : {};
+
+  return {
+    id: asDisplayId(record.processedArticleId, fallbackId),
+    clusterId: asNullableString(record.clusterId),
+    clusterTitle: asNullableString(record.clusterTitle),
+    title: asString(record.title, '기사 제목이 없습니다.'),
+    source: asNullableString(record.publisherName),
+    publishedAt: formatKstDateTime(record.publishedAt),
+    originalUrl: asString(record.originLink, ''),
+    mirrorUrl: asNullableString(record.naverLink),
+  };
+}
+
+function mapMarketMetadata(value: unknown): MarketMetadata {
+  const record: Record<string, unknown> = isRecord(value) ? value : {};
+
+  return {
+    rawNewsCount: asNonNegativeSafeInteger(record.rawNewsCount, 0),
+    processedNewsCount: asNonNegativeSafeInteger(record.processedNewsCount, 0),
+    clusterCount: asNonNegativeSafeInteger(record.clusterCount, 0),
+    lastUpdatedAt: formatKstDateTime(record.lastUpdatedAt),
+    partialMessage: asNullableString(record.partialMessage),
+  };
+}
+
+function mapPageMetadata(value: unknown): PageMetadata {
+  const record: Record<string, unknown> = isRecord(value) ? value : {};
+
+  return {
+    rawNewsCount: asNonNegativeSafeInteger(record.rawNewsCount, 0),
+    processedNewsCount: asNonNegativeSafeInteger(record.processedNewsCount, 0),
+    clusterCount: asNonNegativeSafeInteger(record.clusterCount, 0),
+    lastUpdatedAt: formatKstDateTime(record.lastUpdatedAt),
+    // `isLatest`는 현재 API 계약(docs/api_spec_doc.md:175-180)에 없는
+    // 필드다. `docs/design_v2/handoff_v2/fixtures.js`는 디자인 프로토타입용
+    // 픽스처일 뿐 실제 응답 캡처가 아니며, 이 필드를 임의로 포함하고 있다.
+    // 따라서 오늘 기준으로는 항상 `null`로 귀결되며, UI는 이 값에 의존하지
+    // 말고 백엔드가 필드를 실제로 내려주기 전까지는 별도 의존성(README §14)
+    // 으로 취급해야 한다.
+    isLatest: asOptionalBoolean(record.isLatest),
+  };
+}
+
+function mapMarketAnalysis(value: unknown): MarketAnalysis {
+  const record: Record<string, unknown> = isRecord(value) ? value : {};
+
+  return {
+    background: asStringArray(record.background),
+    keyThemes: asStringArray(record.keyThemes),
+    outlook: asNullableString(record.outlook),
   };
 }
 
@@ -148,30 +272,36 @@ export function mapDailyPageToSnapshot(
     businessDate: asString(response.businessDate, '-'),
     versionNo: asFiniteNumber(response.versionNo, 0),
     generatedAt: formatDateTime(response.generatedAt),
+    generatedAtIso: asNullableString(response.generatedAt),
     status: toStatusTone(response.status),
-    globalHeadline: firstString(
-      [response.globalHeadline, response.pageTitle],
-      '글로벌 시장 헤드라인이 없습니다.'
-    ),
+    /**
+     * null을 보존한다. 예전에는 `pageTitle`로 치환해서, AI 요약 단계가
+     * 실패해 헤드라인이 생성되지 않은 브리프가 페이지 제목을 헤드라인처럼
+     * 보여주며 정상처럼 렌더됐다. README §7-2의 "글로벌 헤드라인이 생성되지
+     * 않았습니다" 상태는 그래서 실제 데이터로는 도달할 수 없었다.
+     * 표현(대체 문구) 선택은 UI의 책임이다.
+     */
+    globalHeadline: asNullableString(response.globalHeadline),
+    partialMessage: asNullableString(response.partialMessage),
+    metadata: mapPageMetadata(response.metadata),
     markets: markets.map((market) => {
       const label = asString(market.marketLabel, '시장');
-      const analysis: Record<string, unknown> = isRecord(market.analysis)
-        ? market.analysis
-        : {};
-      const keyThemes = asStringArray(analysis.keyThemes);
-      const background = asStringArray(analysis.background);
       const indices = asIndexArray(market.indices);
       const clusters = asDailyClusterArray(market.topClusters);
+      const articleLinks = asArticleLinkArray(market.articleLinks);
 
       return {
         label,
-        summaryTitle: firstString(
-          [market.summaryTitle, keyThemes[0]],
-          `${label} 요약`
-        ),
-        summaryBody:
-          firstString([market.summaryBody, background.join(' ')], '') ||
-          '시장 요약 데이터가 아직 생성되지 않았습니다.',
+        /** DTO의 marketType(US/KR) — §7-2 시장 코드 배지에 필요. */
+        marketType: asNullableString(market.marketType),
+        /**
+         * summaryTitle / summaryBody 역시 null을 보존한다. summaryBody를
+         * `background.join(' ')`로 대체하면 "이 시장의 요약이 생성되지
+         * 않았습니다"(§7-2) 상태에 도달할 수 없고, 분석 배경 불릿이 내러티브
+         * 본문으로 둔갑해 같은 문장이 두 곳에 중복 표시된다.
+         */
+        summaryTitle: asNullableString(market.summaryTitle),
+        summaryBody: asNullableString(market.summaryBody),
         indices: indices.map(mapIndex),
         clusters: clusters.map((cluster) => {
           const representativeArticle = isRecord(cluster.representativeArticle)
@@ -187,8 +317,16 @@ export function mapDailyPageToSnapshot(
               '클러스터 요약이 아직 생성되지 않았습니다.'
             ),
             tags: asStringArray(cluster.tags),
+            representativeArticle: mapRepresentativeArticleMeta(
+              cluster.representativeArticle
+            ),
           };
         }),
+        analysis: mapMarketAnalysis(market.analysis),
+        articleLinks: articleLinks.map((link, index) =>
+          mapArticleLink(link, `article-link-${index}`)
+        ),
+        metadata: mapMarketMetadata(market.metadata),
       };
     }),
   };
@@ -228,11 +366,21 @@ function mapClusterArticle(
 ): ClusterArticle {
   return {
     id: asDisplayId(article.processedArticleId, fallbackId),
-    source: asString(article.publisherName, 'Unknown Source'),
-    publishedAt: formatDateTime(article.publishedAt),
-    title: asString(article.title, '기사 제목이 없습니다.'),
+    /**
+     * 한국어 UI에 영어 placeholder('Unknown Source')를 굽지 않는다.
+     * null을 그대로 넘기고 "언론사 미확인"/"발행 시각 미확인" 같은 문구는
+     * 컴포넌트가 고른다 (§7-5).
+     */
+    source: asNullableString(article.publisherName),
+    publishedAt: formatKstDateTime(article.publishedAt),
+    title: asNullableString(article.title),
     originalUrl: asString(article.originLink, ''),
-    mirrorUrl: asString(article.naverLink, asString(article.originLink, '')),
+    /**
+     * naverLink가 없을 때 originLink로 backfill하지 않는다. backfill하면
+     * 원문과 네이버 미러를 구분할 수 없어(§7-5 필수) 화면이
+     * `mirrorUrl === originalUrl` 문자열 비교로 되돌려 추측해야 했다.
+     */
+    mirrorUrl: asNullableString(article.naverLink),
   };
 }
 
@@ -284,7 +432,7 @@ export function mapClusterDetailToView(
 
 function mapBatchListItemToRun(item: BatchJobListItemResponse): BatchRun {
   const jobName = asString(item.jobName, 'batch');
-  const status = toUpperStatus(item.status, ['SUCCESS', 'PARTIAL', 'FAILED']);
+  const status = toUpperStatus(item.status, batchJobStatuses);
 
   return {
     id: asFiniteNumber(item.jobId, 0),
@@ -305,6 +453,15 @@ function mapBatchListItemToRun(item: BatchJobListItemResponse): BatchRun {
       asNullableFiniteNumber(item.pageVersionNo) === null
         ? '-'
         : `v${asNullableFiniteNumber(item.pageVersionNo)}`,
+    // The batch job LIST DTO (`BatchJobListItemResponse`) has no errorCode /
+    // errorMessage / logSummary / forceRun / rebuildPageOnly fields — those
+    // only exist on the DETAIL response. Kept `null` here for a uniform
+    // `BatchRun` shape; `mapBatchDetailToRun` below populates them.
+    errorCode: null,
+    errorMessage: null,
+    logSummary: null,
+    forceRun: null,
+    rebuildPageOnly: null,
   };
 }
 
@@ -362,7 +519,7 @@ export function mapBatchDetailToRun(
     jobName,
     market: 'N/A',
     businessDate: asString(response.businessDate, '-'),
-    status: toUpperStatus(response.status, ['SUCCESS', 'PARTIAL', 'FAILED']),
+    status: toUpperStatus(response.status, batchJobStatuses),
     startedAt: formatTime(response.startedAt),
     finishedAt: formatTime(response.endedAt),
     duration: formatDurationSeconds(
@@ -378,5 +535,10 @@ export function mapBatchDetailToRun(
       asNullableFiniteNumber(response.pageVersionNo) === null
         ? '-'
         : `v${asNullableFiniteNumber(response.pageVersionNo)}`,
+    errorCode: asNullableString(response.errorCode),
+    errorMessage: asNullableString(response.errorMessage),
+    logSummary: asNullableString(response.logSummary),
+    forceRun: asOptionalBoolean(response.forceRun),
+    rebuildPageOnly: asOptionalBoolean(response.rebuildPageOnly),
   };
 }

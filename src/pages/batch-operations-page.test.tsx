@@ -1,19 +1,56 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { BatchJobsParams } from '../lib/api/batch';
-import type { BatchRun } from '../lib/view-models';
+import { AnnounceProvider } from '@/components/shell/announce-context';
+import {
+  resetRoleOverrideForTesting,
+  setRoleOverride,
+} from '@/lib/capabilities';
+
+import type { BatchJobsParams } from './../lib/api/batch';
+import type { BatchRunRow } from './../lib/query-hooks';
 import { BatchOperationsPage } from './batch-operations-page';
 
+/**
+ * `/ops/batches` (README §7-6/§7-7). Rewritten for Phase 6's full rebuild:
+ * non-admin 403 gating with NO batch request issued, failure-first summary
+ * tiles, real pagination, `?jobId=` deep link, list/detail INDEPENDENT
+ * loading/error, and the ≤1180px column collapse. Trigger dialog lifecycle
+ * (idle→pending→success/409/403/422/429/5xx/network, duplicate-submit
+ * impossibility, input preservation) is covered in the colocated
+ * `batch-operations/trigger-dialog.test.tsx` instead of here, since it's
+ * independently unit-testable against a real `useStartBatchRunMutation` and
+ * doesn't need this page's list/detail wiring around it.
+ */
+
 type BatchJobsQueryResult = {
+  data:
+    | {
+        rows: BatchRunRow[];
+        totalCount: number;
+        counts: {
+          successCount: number;
+          partialCount: number;
+          failedCount: number;
+          avgDurationSeconds: number | null;
+        };
+      }
+    | undefined;
+  error: Error | null;
   isLoading: boolean;
-  error: null;
-  data: {
-    rows: BatchRun[];
-    summary: ReturnType<typeof createSummary>;
-    totalCount: number;
-  };
+  isError: boolean;
+  isFetching: boolean;
+  refetch: () => void;
+};
+
+type BatchJobDetailQueryResult = {
+  data: BatchRunRow | undefined;
+  error: Error | null;
+  isLoading: boolean;
+  isError: boolean;
+  isFetching: boolean;
+  refetch: () => void;
 };
 
 const {
@@ -22,300 +59,347 @@ const {
   mockUseStartBatchRunMutation,
 } = vi.hoisted(() => ({
   mockUseBatchJobs: vi.fn<(params: BatchJobsParams) => BatchJobsQueryResult>(),
-  mockUseBatchJobDetail: vi.fn(),
+  mockUseBatchJobDetail:
+    vi.fn<(jobId: number | null) => BatchJobDetailQueryResult>(),
   mockUseStartBatchRunMutation: vi.fn(),
 }));
 
-vi.mock('../lib/query-hooks', () => ({
+vi.mock('@/lib/query-hooks', () => ({
   useBatchJobs: mockUseBatchJobs,
   useBatchJobDetail: mockUseBatchJobDetail,
   useStartBatchRunMutation: mockUseStartBatchRunMutation,
 }));
 
-describe('BatchOperationsPage', () => {
-  beforeEach(() => {
-    mockUseBatchJobs.mockReset();
-    mockUseBatchJobDetail.mockReset();
-    mockUseStartBatchRunMutation.mockReset();
-    mockUseStartBatchRunMutation.mockReturnValue({
-      isPending: false,
-      isError: false,
-      mutate: vi.fn(),
-    });
-  });
-
-  it('passes normalized batch date ranges to the batch query', () => {
-    mockUseBatchJobs.mockReturnValue({
-      isLoading: false,
-      error: null,
-      data: {
-        rows: [],
-        summary: createSummary(),
-        totalCount: 0,
-      },
-    });
-
-    mockUseBatchJobDetail.mockReturnValue({
-      data: null,
-      isError: false,
-      isLoading: false,
-      error: null,
-    });
-
-    render(
-      <BatchOperationsPage
-        searchParams={new URLSearchParams('from=2026-03-14&to=2026-03-01')}
-      />
-    );
-
-    expect(mockUseBatchJobs).toHaveBeenLastCalledWith({
-      fromDate: '2026-03-01',
-      toDate: '2026-03-14',
-      status: undefined,
-      page: 1,
-      size: 20,
-    });
-  });
-
-  it('uses a real button to select a batch row', async () => {
-    const user = userEvent.setup();
-
-    mockUseBatchJobs.mockReturnValue({
-      isLoading: false,
-      error: null,
-      data: {
-        rows: [
-          {
-            id: 101,
-            jobName: 'daily-market-brief',
-            market: 'US Market',
-            businessDate: '2026-03-31',
-            status: 'FAILED',
-            startedAt: '09:00:00',
-            finishedAt: '09:05:00',
-            duration: '5m 0s',
-            counts: '10 / 8 / 2',
-            detail: 'Batch run failed',
-            pageVersion: 'v2',
-          },
-        ],
-        summary: {
-          successRate: '0.0%',
-          avgProcessingTime: '5m 0s',
-          marketSyncQuality: 'Attention',
-          successSupporting: '0 success / 1 failed',
-          durationSupporting: 'Average across 1 runs',
-          qualitySupporting: '1 failed job(s) detected',
-        },
-        totalCount: 1,
-      },
-    });
-
-    mockUseBatchJobDetail.mockReturnValue({
-      data: {
-        id: 101,
-        jobName: 'daily-market-brief',
-        market: 'US Market',
-        businessDate: '2026-03-31',
-        status: 'FAILED',
-        startedAt: '09:00:00',
-        finishedAt: '09:05:00',
-        duration: '5m 0s',
-        counts: '10 / 8 / 2',
-        detail: 'Batch run failed',
-        pageVersion: 'v2',
-      },
-    });
-
-    render(<BatchOperationsPage searchParams={new URLSearchParams()} />);
-
-    const selectButton = screen.getByRole('button', {
-      name: 'Select batch job 101',
-    });
-    const row = selectButton.closest('tr');
-
-    expect(row).not.toBeNull();
-    expect(row).toHaveAttribute('aria-selected', 'true');
-
-    await user.click(selectButton);
-
-    expect(
-      screen.getByRole('button', { name: 'Select batch job 101' })
-    ).toBeEnabled();
-    expect(row).toHaveAttribute('aria-selected', 'true');
-  });
-
-  it('resets the selected batch when the current page no longer contains it', async () => {
-    const user = userEvent.setup();
-
-    mockUseBatchJobs.mockImplementation(({ page }: BatchJobsParams) => {
-      if (page === 2) {
-        return {
-          isLoading: false,
-          error: null,
-          data: {
-            rows: [createBatchRun({ id: 303, status: 'SUCCESS' })],
-            summary: createSummary(),
-            totalCount: 1,
-          },
-        };
-      }
-
-      return {
-        isLoading: false,
-        error: null,
-        data: {
-          rows: [
-            createBatchRun({ id: 101, status: 'SUCCESS' }),
-            createBatchRun({ id: 202, status: 'SUCCESS' }),
-          ],
-          summary: createSummary(),
-          totalCount: 2,
-        },
-      };
-    });
-
-    mockUseBatchJobDetail.mockReturnValue({
-      data: createBatchRun({ id: 101, status: 'SUCCESS' }),
-      isError: false,
-      isLoading: false,
-      error: null,
-    });
-
-    const { rerender } = render(
-      <BatchOperationsPage searchParams={new URLSearchParams()} />
-    );
-
-    await user.click(
-      screen.getByRole('button', { name: 'Select batch job 202' })
-    );
-
-    expect(mockUseBatchJobDetail).toHaveBeenLastCalledWith(202);
-
-    rerender(
-      <BatchOperationsPage searchParams={new URLSearchParams('page=2')} />
-    );
-
-    expect(mockUseBatchJobDetail).toHaveBeenLastCalledWith(303);
-    expect(
-      screen.getByRole('button', { name: 'Select batch job 303' }).closest('tr')
-    ).toHaveAttribute('aria-selected', 'true');
-  });
-
-  it('renders an explicit loading state while selected batch details load', () => {
-    mockUseBatchJobs.mockReturnValue({
-      isLoading: false,
-      error: null,
-      data: {
-        rows: [createBatchRun({ id: 101, status: 'SUCCESS' })],
-        summary: createSummary(),
-        totalCount: 1,
-      },
-    });
-
-    mockUseBatchJobDetail.mockReturnValue({
-      data: null,
-      isError: false,
-      isLoading: true,
-      error: null,
-    });
-
-    render(<BatchOperationsPage searchParams={new URLSearchParams()} />);
-
-    expect(screen.getByRole('status')).toHaveTextContent(
-      '선택한 배치 상세 정보를 불러오는 중입니다.'
-    );
-    expect(
-      screen.queryByText('선택된 배치가 없습니다.')
-    ).not.toBeInTheDocument();
-  });
-
-  it('renders an explicit error state for failed selected batch detail requests', () => {
-    mockUseBatchJobs.mockReturnValue({
-      isLoading: false,
-      error: null,
-      data: {
-        rows: [createBatchRun({ id: 101, status: 'FAILED' })],
-        summary: createSummary(),
-        totalCount: 1,
-      },
-    });
-
-    mockUseBatchJobDetail.mockReturnValue({
-      data: null,
-      isError: true,
-      isLoading: false,
-      error: new Error('Batch detail unavailable'),
-    });
-
-    render(<BatchOperationsPage searchParams={new URLSearchParams()} />);
-
-    expect(screen.getByRole('alert')).toHaveTextContent(
-      'Batch detail unavailable'
-    );
-    expect(
-      screen.queryByText('선택된 배치가 없습니다.')
-    ).not.toBeInTheDocument();
-  });
-
-  it('removes statuses unsupported by batch operations before querying', () => {
-    mockUseBatchJobs.mockReturnValue({
-      isLoading: false,
-      error: null,
-      data: {
-        rows: [],
-        summary: createSummary(),
-        totalCount: 0,
-      },
-    });
-    mockUseBatchJobDetail.mockReturnValue({
-      data: null,
-      isError: false,
-      isLoading: false,
-      error: null,
-    });
-
-    render(
-      <BatchOperationsPage searchParams={new URLSearchParams('status=READY')} />
-    );
-
-    const batchQuery = mockUseBatchJobs.mock.calls.at(-1)?.[0];
-
-    expect(batchQuery).toBeDefined();
-    expect(batchQuery).toMatchObject({
-      status: undefined,
-      page: 1,
-      size: 20,
-    });
-    expect(typeof batchQuery?.fromDate).toBe('string');
-    expect(typeof batchQuery?.toDate).toBe('string');
-  });
-});
-
-function createBatchRun(overrides: Partial<BatchRun> = {}): BatchRun {
+function createRow(overrides: Partial<BatchRunRow> = {}): BatchRunRow {
   return {
     id: 101,
-    jobName: 'daily-market-brief',
-    market: 'US Market',
-    businessDate: '2026-03-31',
+    jobName: 'market_daily_batch',
+    market: 'N/A',
+    businessDate: '2026-07-26',
     status: 'SUCCESS',
-    startedAt: '09:00:00',
-    finishedAt: '09:05:00',
-    duration: '5m 0s',
-    counts: '10 / 10 / 0',
-    detail: 'Batch run completed',
-    pageVersion: 'v2',
+    rawStatus: 'SUCCESS',
+    startedAt: '06:10:00',
+    finishedAt: '06:12:15',
+    duration: '2m 15s',
+    counts: '174 / 114 / 21',
+    detail: 'market_daily_batch 배치가 SUCCESS 상태로 기록되었습니다.',
+    pageVersion: 'v3',
+    pageId: 501,
+    errorCode: null,
+    errorMessage: null,
+    logSummary: null,
+    forceRun: false,
+    rebuildPageOnly: false,
     ...overrides,
   };
 }
 
-function createSummary() {
+function jobsReady(
+  overrides: Partial<NonNullable<BatchJobsQueryResult['data']>> = {}
+): BatchJobsQueryResult {
   return {
-    successRate: '100.0%',
-    avgProcessingTime: '5m 0s',
-    marketSyncQuality: 'Healthy',
-    successSupporting: '1 success / 0 failed',
-    durationSupporting: 'Average across 1 runs',
-    qualitySupporting: 'No failed jobs detected',
+    data: {
+      rows: [createRow()],
+      totalCount: 1,
+      counts: {
+        successCount: 1,
+        partialCount: 0,
+        failedCount: 0,
+        avgDurationSeconds: 135,
+      },
+      ...overrides,
+    },
+    error: null,
+    isLoading: false,
+    isError: false,
+    isFetching: false,
+    refetch: vi.fn(),
   };
 }
+
+function detailReady(run: BatchRunRow | undefined): BatchJobDetailQueryResult {
+  return {
+    data: run,
+    error: null,
+    isLoading: false,
+    isError: false,
+    isFetching: false,
+    refetch: vi.fn(),
+  };
+}
+
+function renderPage(searchParams = new URLSearchParams()) {
+  return render(
+    <AnnounceProvider pathname='/test'>
+      <BatchOperationsPage searchParams={searchParams} />
+    </AnnounceProvider>
+  );
+}
+
+beforeEach(() => {
+  // Reset role BEFORE each test (not after) so it happens once the previous
+  // test's RTL cleanup/unmount has unconditionally already run (guaranteed
+  // by the test runner's lifecycle) — resetting in `afterEach` risks
+  // `setRoleOverride`'s `notifyListeners()` reactively re-rendering a
+  // still-mounted tree from the JUST-finished test with this file's mocks
+  // already `.mockReset()` for the NEXT test, i.e. returning `undefined`.
+  resetRoleOverrideForTesting();
+  mockUseBatchJobs.mockReset();
+  mockUseBatchJobDetail.mockReset();
+  mockUseStartBatchRunMutation.mockReset();
+  mockUseStartBatchRunMutation.mockReturnValue({
+    isPending: false,
+    isError: false,
+    isSuccess: false,
+    data: undefined,
+    error: null,
+    mutate: vi.fn(),
+    reset: vi.fn(),
+  });
+});
+
+afterEach(() => {
+  window.history.replaceState(null, '', '/');
+});
+
+describe('BatchOperationsPage — non-admin user (§10, §16-11)', () => {
+  beforeEach(() => {
+    setRoleOverride('user');
+  });
+
+  it('renders only the 403 PermissionState and issues no batch request', () => {
+    renderPage();
+
+    expect(
+      screen.getByRole('heading', {
+        level: 1,
+        name: '이 화면에 접근할 권한이 없습니다',
+      })
+    ).toBeInTheDocument();
+    expect(screen.getByText('403 · FORBIDDEN')).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: '최신 브리프로 이동' })
+    ).toBeInTheDocument();
+
+    expect(mockUseBatchJobs).not.toHaveBeenCalled();
+    expect(mockUseBatchJobDetail).not.toHaveBeenCalled();
+    expect(mockUseStartBatchRunMutation).not.toHaveBeenCalled();
+  });
+
+  it('never renders the trigger button, log box, or detail/summary nodes — not merely hidden', () => {
+    const { container } = renderPage();
+
+    // Note: PermissionState's OWN explanatory copy legitimately contains the
+    // substring "수동 실행" ("...파이프라인 로그와 수동 실행을 포함하므로...") —
+    // the requirement is that the TRIGGER BUTTON/list/detail nodes don't
+    // exist, not that the two words never co-occur in prose, so this
+    // asserts absence by role/heading rather than raw substring search.
+    expect(
+      screen.queryByRole('button', { name: '수동 실행' })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('heading', { name: '실행 이력' })
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('파이프라인 단계')).not.toBeInTheDocument();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(container.innerHTML).not.toContain('실행 이력');
+  });
+});
+
+describe('BatchOperationsPage — admin', () => {
+  beforeEach(() => {
+    setRoleOverride('admin');
+  });
+
+  it('renders the header, and passes page/status/size through to the batch query', () => {
+    mockUseBatchJobs.mockReturnValue(jobsReady());
+    mockUseBatchJobDetail.mockReturnValue(detailReady(createRow()));
+
+    renderPage(new URLSearchParams('page=2&status=FAILED'));
+
+    expect(
+      screen.getByRole('heading', { level: 1, name: '배치 운영' })
+    ).toBeInTheDocument();
+    expect(mockUseBatchJobs).toHaveBeenLastCalledWith(
+      expect.objectContaining({ page: 2, status: 'FAILED', size: 20 })
+    );
+  });
+
+  it('renders the 3 summary tiles in failure-first order (실패 → 부분 실패 → 성공)', () => {
+    mockUseBatchJobs.mockReturnValue(
+      jobsReady({
+        counts: {
+          successCount: 20,
+          partialCount: 4,
+          failedCount: 3,
+          avgDurationSeconds: 190,
+        },
+      })
+    );
+    mockUseBatchJobDetail.mockReturnValue(detailReady(createRow()));
+
+    renderPage();
+
+    const group = screen.getByRole('group', { name: '배치 실행 요약' });
+    const labels = within(group)
+      .getAllByText(/^(실패|부분 실패|성공)$/)
+      .map((el) => el.textContent);
+
+    expect(labels).toEqual(['실패', '부분 실패', '성공']);
+    expect(within(group).getByText('3')).toBeInTheDocument();
+    expect(within(group).getByText('4')).toBeInTheDocument();
+    expect(within(group).getByText('20')).toBeInTheDocument();
+    expect(within(group).getByText(/평균 소요/)).toHaveTextContent('3분 10초');
+  });
+
+  it('shows the 주의 배너 only when failed+partial > 0, and quick filters set status+page=1', async () => {
+    const user = userEvent.setup();
+    mockUseBatchJobs.mockReturnValue(
+      jobsReady({
+        counts: {
+          successCount: 20,
+          partialCount: 2,
+          failedCount: 1,
+          avgDurationSeconds: 190,
+        },
+      })
+    );
+    mockUseBatchJobDetail.mockReturnValue(detailReady(createRow()));
+
+    renderPage(new URLSearchParams('page=3'));
+
+    expect(
+      screen.getByText('1건 실패, 2건 부분 실패 — 확인이 필요합니다.')
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: '실패만 보기' }));
+
+    // from/to are preserved (today-relative defaults, not asserted
+    // verbatim); status+page=1 is what this quick filter is responsible for
+    // (README §7-6 point 3).
+    const params = new URLSearchParams(window.location.search);
+    expect(params.get('status')).toBe('FAILED');
+    expect(params.get('page')).toBe('1');
+  });
+
+  it('pagination reflects the page query param and paging updates the URL', async () => {
+    const user = userEvent.setup();
+    mockUseBatchJobs.mockReturnValue(
+      jobsReady({
+        rows: [createRow({ id: 900 })],
+        totalCount: 27,
+      })
+    );
+    mockUseBatchJobDetail.mockReturnValue(detailReady(createRow({ id: 900 })));
+
+    renderPage(new URLSearchParams('page=2'));
+
+    expect(screen.getByText('2 / 2')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: '1' }));
+
+    expect(new URLSearchParams(window.location.search).get('page')).toBe('1');
+  });
+
+  it('?jobId= deep link selects that row and drives the detail panel', () => {
+    mockUseBatchJobs.mockReturnValue(
+      jobsReady({
+        rows: [
+          createRow({ id: 101 }),
+          createRow({ id: 202, businessDate: '2026-07-25' }),
+        ],
+      })
+    );
+    mockUseBatchJobDetail.mockReturnValue(
+      detailReady(createRow({ id: 202, businessDate: '2026-07-25' }))
+    );
+
+    renderPage(new URLSearchParams('jobId=202'));
+
+    expect(mockUseBatchJobDetail).toHaveBeenLastCalledWith(202);
+    const selectButton = screen.getByRole('button', {
+      name: 'job 202 상세 선택',
+    });
+    expect(selectButton.closest('tr')).toHaveAttribute('aria-selected', 'true');
+    expect(
+      screen.getByRole('heading', { level: 2, name: 'job 202' })
+    ).toBeInTheDocument();
+  });
+
+  it('list error keeps filters and the previous selection, while detail keeps working', () => {
+    mockUseBatchJobs.mockReturnValue({
+      data: undefined,
+      error: new Error('boom'),
+      isLoading: false,
+      isError: true,
+      isFetching: false,
+      refetch: vi.fn(),
+    });
+    mockUseBatchJobDetail.mockReturnValue(detailReady(createRow({ id: 202 })));
+
+    renderPage(new URLSearchParams('jobId=202&status=FAILED'));
+
+    expect(
+      screen.getByText(
+        '배치 목록을 불러오지 못했습니다. 필터와 이전 선택은 그대로 유지됩니다.'
+      )
+    ).toBeInTheDocument();
+    expect(screen.getByDisplayValue('FAILED · 생성 실패')).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { level: 2, name: 'job 202' })
+    ).toBeInTheDocument();
+  });
+
+  it('detail error keeps the list working and offers 상세 다시 시도', () => {
+    mockUseBatchJobs.mockReturnValue(jobsReady());
+    mockUseBatchJobDetail.mockReturnValue({
+      data: undefined,
+      error: new Error('boom'),
+      isLoading: false,
+      isError: true,
+      isFetching: false,
+      refetch: vi.fn(),
+    });
+
+    renderPage();
+
+    expect(screen.getByText('실행 이력')).toBeInTheDocument();
+    expect(
+      screen.getByText('이 작업의 상세를 불러오지 못했습니다')
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: '상세 다시 시도' })
+    ).toBeInTheDocument();
+  });
+
+  it('≤1180px collapse keeps 원문/정제/이슈 counts present as a first-cell subline', () => {
+    mockUseBatchJobs.mockReturnValue(
+      jobsReady({ rows: [createRow({ counts: '174 / 114 / 21' })] })
+    );
+    mockUseBatchJobDetail.mockReturnValue(detailReady(createRow()));
+
+    renderPage();
+
+    // Rendered unconditionally (visibility is CSS-media-query-driven, not
+    // `display:none` removal), so the value must exist in the DOM
+    // regardless of the jsdom viewport width used to run this test.
+    expect(
+      screen.getByText('원문/정제/이슈 174 / 114 / 21')
+    ).toBeInTheDocument();
+  });
+
+  it('opens the Manual Trigger dialog from the header button', async () => {
+    const user = userEvent.setup();
+    mockUseBatchJobs.mockReturnValue(jobsReady());
+    mockUseBatchJobDetail.mockReturnValue(detailReady(createRow()));
+
+    renderPage();
+
+    await user.click(screen.getByRole('button', { name: '수동 실행' }));
+
+    expect(
+      screen.getByRole('dialog', { name: '수동 실행' })
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText('기준일 (KST)')).toBeInTheDocument();
+  });
+});

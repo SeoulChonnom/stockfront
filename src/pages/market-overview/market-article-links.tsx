@@ -1,0 +1,85 @@
+import { useState } from 'react';
+
+import type { ArticleLink } from '@/lib/view-models';
+
+import { getSafeExternalUrl } from './link-utils';
+
+/**
+ * 근거 원문 — README §7-2 item 3 마지막 블록. 기본 4건 + `전체 N건 보기`
+ * 토글(`aria-expanded`). `articleLinks`는 이전엔 mapper가 버리던 필드라
+ * 이 화면에서 처음 소비된다(§13).
+ */
+export function MarketArticleLinks({ links }: { links: ArticleLink[] }) {
+  const [expanded, setExpanded] = useState(false);
+
+  if (links.length === 0) {
+    return null;
+  }
+
+  const visible = expanded ? links : links.slice(0, 4);
+  const needsToggle = links.length > 4;
+
+  return (
+    <div className='border-t border-[color:var(--line)] px-4 py-3.5'>
+      <div className='mb-2.5 flex flex-wrap items-center gap-2.5'>
+        <h3 className='m-0 text-[13.5px] font-semibold'>근거 원문</h3>
+        <span className='mono text-[11.5px] text-[color:var(--text-faint)]'>
+          원문 {links.length}건
+        </span>
+        {needsToggle ? (
+          <button
+            aria-expanded={expanded}
+            className='ml-auto min-h-8.5 rounded-[var(--r-md)] border border-[color:var(--line-strong)] bg-[color:var(--surface)] px-3 text-[12.5px] text-[color:var(--text-soft)]'
+            onClick={() => setExpanded((current) => !current)}
+            type='button'
+          >
+            {expanded ? '접기' : `전체 ${links.length}건 보기`}
+          </button>
+        ) : null}
+      </div>
+      <ul className='m-0 flex list-none flex-col gap-2 p-0'>
+        {visible.map((link) => (
+          <ArticleLinkRow key={link.id} link={link} />
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function ArticleLinkRow({ link }: { link: ArticleLink }) {
+  const originalUrl = getSafeExternalUrl(link.originalUrl);
+  const mirrorUrl = getSafeExternalUrl(link.mirrorUrl);
+  const meta = `${link.source ?? '언론사 미확인'} · ${link.publishedAt ?? '-'}`;
+
+  return (
+    <li className='flex min-w-0 flex-wrap items-baseline gap-x-2.5 gap-y-1.5 border-b border-[color:var(--line)] pb-2 last:border-b-0'>
+      {originalUrl ? (
+        <a
+          className='wrap-anywhere text-[13.5px] font-medium text-[color:var(--text)] no-underline hover:text-[color:var(--primary)] hover:underline'
+          href={originalUrl}
+          rel='noopener noreferrer'
+          target='_blank'
+        >
+          {`${link.title} ↗`}
+        </a>
+      ) : (
+        <span className='wrap-anywhere text-[13.5px] font-medium text-[color:var(--text)]'>
+          {link.title}
+        </span>
+      )}
+      <span className='mono wrap-anywhere text-[11.5px] text-[color:var(--text-faint)]'>
+        {meta}
+      </span>
+      {mirrorUrl ? (
+        <a
+          className='text-[11.5px] text-[color:var(--text-faint)] underline'
+          href={mirrorUrl}
+          rel='noopener noreferrer'
+          target='_blank'
+        >
+          미러 ↗
+        </a>
+      ) : null}
+    </li>
+  );
+}

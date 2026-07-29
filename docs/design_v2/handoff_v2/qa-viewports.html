@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>Market Brief v2 — 반응형 · 상태 검증 하네스</title>
+<style>
+  body{margin:0;padding:16px;font:13px/1.5 system-ui,sans-serif;background:#0f1420;color:#e8eef8}
+  h1{font-size:15px;margin:0 0 12px}
+  #out{white-space:pre;font:11px/1.5 ui-monospace,monospace;background:#161d2c;padding:12px;border-radius:8px;max-height:60vh;overflow:auto}
+  .frames{display:flex;gap:12px;flex-wrap:wrap;margin-top:16px}
+  .frames figure{margin:0}
+  .frames figcaption{font:11px ui-monospace,monospace;color:#8fa4c4;margin-bottom:4px}
+  iframe{border:1px solid #2b3854;background:#fff}
+</style>
+</head>
+<body>
+<h1>Market Brief v2 — 뷰포트 × 상태 오버플로 측정 하네스</h1>
+<div id="out">측정 준비 중…</div>
+<div class="frames" id="frames"></div>
+<script>
+const WIDTHS = [320, 390, 768, 1024, 1280, 1440];
+const CASES = [
+  ['/market/latest', ''],
+  ['/market/latest', 'mock=long'],
+  ['/market/latest', 'mock=partial'],
+  ['/market/latest', 'mock=sparse'],
+  ['/market/latest', 'mock=failed'],
+  ['/market/archive/search', ''],
+  ['/market/archive/search', 'mock=validation'],
+  ['/market/archive/2026-07-21', 'mock=partial'],
+  ['/market/cluster/51f0d9a0-9fc5-4f15-a4f9-62856f128683', 'mock=heavy'],
+  ['/market/cluster/51f0d9a0-9fc5-4f15-a4f9-62856f128683', 'mock=long'],
+  ['/ops/batches', ''],
+  ['/ops/batches', 'mock=longLog'],
+  ['/qa/states', ''],
+];
+const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+
+async function measure(width, path, extra) {
+  const f = document.createElement('iframe');
+  f.style.width = width + 'px';
+  f.style.height = '900px';
+  f.src = 'Market Brief v2.dc.html#' + path + (extra ? '?' + extra : '');
+  document.body.appendChild(f);
+  await new Promise((r) => { f.onload = r; setTimeout(r, 2500); });
+  await wait(900);
+  let res;
+  try {
+    const d = f.contentDocument;
+    const de = d.documentElement;
+    const wide = [...d.querySelectorAll('*')].filter((el) => {
+      const r = el.getBoundingClientRect();
+      return r.width > width + 2 && el.scrollWidth <= el.clientWidth + 1;
+    }).length;
+    res = {
+      width, path, extra,
+      scrollWidth: de.scrollWidth,
+      clientWidth: de.clientWidth,
+      overflow: de.scrollWidth - de.clientWidth,
+      h1: (d.getElementById('page-title') || {}).textContent || null,
+      textLen: d.body.innerText.length,
+      wideEls: wide,
+    };
+  } catch (e) {
+    res = { width, path, extra, error: String(e) };
+  }
+  f.remove();
+  return res;
+}
+
+(async () => {
+  const out = document.getElementById('out');
+  const rows = [];
+  for (const [path, extra] of CASES) {
+    for (const w of WIDTHS) {
+      const r = await measure(w, path, extra);
+      rows.push(r);
+      out.textContent = rows.map((x) => JSON.stringify(x)).join('\n');
+    }
+  }
+  const bad = rows.filter((r) => r.error || r.overflow > 0);
+  window.__QA = { rows, bad, total: rows.length, failures: bad.length };
+  out.textContent =
+    'total=' + rows.length + '  overflow_failures=' + bad.length + '\n\n' +
+    (bad.length ? bad.map((x) => JSON.stringify(x)).join('\n') + '\n\n' : '') +
+    rows.map((x) => [String(x.width).padStart(4), x.path + (x.extra ? '?' + x.extra : ''), 'sw=' + x.scrollWidth, 'cw=' + x.clientWidth, 'over=' + x.overflow, 'len=' + x.textLen].join('  ')).join('\n');
+})();
+</script>
+</body>
+</html>

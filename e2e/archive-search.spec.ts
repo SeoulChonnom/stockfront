@@ -1,0 +1,268 @@
+import { expect, test } from './fixtures/console-guard';
+import { installMockApi } from './fixtures/mock-api';
+
+/**
+ * Phase 9 §16 items 2 (filter apply/reset), 3 (validation), 4 (Archive
+ * pagination), 5 (browser Back for Archive Search), 9 (Retry preserving
+ * filters + previous results), 12 (live region — the subset this screen
+ * owns).
+ */
+
+test.describe('§16-2 filter apply / reset', () => {
+  test('typing does not change the URL; 필터 적용 sets query + page=1; 초기화 restores the default range', async ({
+    page,
+  }) => {
+    await installMockApi(page, { scenario: 'ready' });
+    await page.goto('market/archive/search');
+
+    const urlBeforeTyping = page.url();
+    await page.locator('#from').fill('2026-07-01');
+    await page.locator('#to').fill('2026-07-10');
+    expect(page.url(), 'typing must not touch the URL').toBe(urlBeforeTyping);
+
+    await page.getByRole('button', { name: '필터 적용' }).click();
+    await expect(page).toHaveURL(/from=2026-07-01/);
+    await expect(page).toHaveURL(/to=2026-07-10/);
+    await expect(page).toHaveURL(/page=1/);
+
+    await page.getByRole('button', { name: '초기화' }).click();
+    // Bare URL (no from/to/status/page) — `parseListFilters` recomputes the
+    // default 14-day range from this alone.
+    await expect(page).toHaveURL(/\/market\/archive\/search$/);
+    await expect(page.locator('#from')).not.toHaveValue('2026-07-01');
+  });
+});
+
+test.describe('§16-3 validation', () => {
+  test('future date: URL unchanged, field message shown, focus on the field', async ({
+    page,
+  }) => {
+    await installMockApi(page, { scenario: 'ready' });
+    await page.goto('market/archive/search');
+    const urlBefore = page.url();
+
+    await page.locator('#to').fill('2026-08-01'); // after TODAY (2026-07-27)
+    await page.getByRole('button', { name: '필터 적용' }).click();
+
+    expect(page.url()).toBe(urlBefore);
+    await expect(page.locator('#to-error')).toContainText(
+      '미래 날짜는 선택할 수 없습니다'
+    );
+    await expect(page.locator('#to')).toBeFocused();
+    await expect(page.locator('#to')).toHaveAttribute('aria-invalid', 'true');
+  });
+
+  test('reversed range: URL unchanged, error attached to the from field, focus on it', async ({
+    page,
+  }) => {
+    await installMockApi(page, { scenario: 'ready' });
+    await page.goto('market/archive/search');
+    const urlBefore = page.url();
+
+    await page.locator('#from').fill('2026-07-20');
+    await page.locator('#to').fill('2026-07-10');
+    await page.getByRole('button', { name: '필터 적용' }).click();
+
+    expect(page.url()).toBe(urlBefore);
+    await expect(page.locator('#from-error')).toContainText(
+      '시작일이 종료일보다 늦습니다'
+    );
+    await expect(page.locator('#from')).toBeFocused();
+  });
+
+  test('bad format (cleared field): URL unchanged, format message shown, focus on it', async ({
+    page,
+  }) => {
+    await installMockApi(page, { scenario: 'ready' });
+    await page.goto('market/archive/search');
+    const urlBefore = page.url();
+
+    await page.locator('#to').fill('');
+    await page.getByRole('button', { name: '필터 적용' }).click();
+
+    expect(page.url()).toBe(urlBefore);
+    await expect(page.locator('#to-error')).toContainText(
+      '날짜 형식이 올바르지 않습니다'
+    );
+    await expect(page.locator('#to')).toBeFocused();
+  });
+});
+
+test.describe('§16-4 pagination (Archive: 46/20 -> 3 pages)', () => {
+  test('paginates through all 3 pages and reflects `page` in the URL', async ({
+    page,
+  }) => {
+    await installMockApi(page, { scenario: 'ready' });
+    await page.goto('market/archive/search');
+
+    await expect(page.getByText('46건')).toBeVisible();
+    await expect(page.getByText('1 / 3', { exact: true })).toBeVisible();
+
+    await page.getByRole('button', { name: '다음' }).click();
+    await expect(page).toHaveURL(/page=2/);
+    await expect(page.getByText('2 / 3', { exact: true })).toBeVisible();
+
+    await page.getByRole('button', { name: '다음' }).click();
+    await expect(page).toHaveURL(/page=3/);
+    await expect(page.getByText('3 / 3', { exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: '다음' })).toBeDisabled();
+  });
+});
+
+test.describe('§16-5 browser Back (Archive Search)', () => {
+  test('Back restores filters, page, and scroll position', async ({ page }) => {
+    await installMockApi(page, { scenario: 'ready' });
+    await page.setViewportSize({ width: 1280, height: 700 });
+    await page.goto('market/archive/search');
+
+    await page.getByRole('button', { name: '다음' }).click(); // page=2
+    await expect(page).toHaveURL(/page=2/);
+
+    await page.evaluate(() => window.scrollTo(0, 500));
+    await page.waitForTimeout(50);
+
+    const firstRowLink = page
+      .locator('table tbody tr')
+      .first()
+      .locator('a')
+      .first();
+    await firstRowLink.click();
+    await expect(page.locator('#page-title')).toHaveText(/시장 브리프/);
+
+    await page.goBack();
+    await expect(page).toHaveURL(/page=2/);
+    await expect
+      .poll(() => page.evaluate(() => window.scrollY))
+      .toBeGreaterThan(400);
+  });
+
+  test('Back after applying a filter restores the applied filter', async ({
+    page,
+    consoleGuard,
+  }) => {
+    await installMockApi(page, { scenario: 'ready' });
+    // Rapid Back navigations cancel whichever `pages/archive` fetch was still
+    // in-flight for the page being navigated away from (React Query's
+    // `AbortSignal` wired through `queryFn`) — a real, expected
+    // `net::ERR_ABORTED`, not an app bug, so it is allow-listed rather than
+    // silenced globally.
+    consoleGuard.allowFailedRequest(/pages\/archive/);
+    await page.goto('market/archive/search');
+
+    await page.locator('#from').fill('2026-07-01');
+    await page.locator('#to').fill('2026-07-15');
+    await page.getByRole('button', { name: '필터 적용' }).click();
+    await expect(page).toHaveURL(/from=2026-07-01/);
+
+    await page.getByRole('button', { name: '다음' }).click();
+    await expect(page).toHaveURL(/page=2/);
+
+    await page.goBack();
+    await expect(page).toHaveURL(/page=1/);
+    await expect(page).toHaveURL(/from=2026-07-01/);
+
+    await page.goBack();
+    await expect(page).not.toHaveURL(/from=2026-07-01/);
+  });
+});
+
+test.describe('§16-9 Retry (Archive Search)', () => {
+  test('a failed re-fetch keeps filters + previous rows visible; retry recovers', async ({
+    page,
+    consoleGuard,
+  }) => {
+    await installMockApi(page, { scenario: 'ready' });
+    await page.goto('market/archive/search?status=READY&page=1');
+    await expect(page.locator('table tbody tr').first()).toBeVisible();
+    // Just the pageId subline — robust against the responsive collapse of
+    // the "생성 시각" column into a subline at narrower widths, unlike a
+    // whole-row text comparison.
+    const firstPageIdBefore = await page
+      .locator('table tbody tr')
+      .first()
+      .getByText(/pageId \d+/)
+      .innerText();
+
+    let shouldFail = true;
+    // The deliberately-injected 500 response below makes Chromium itself log
+    // a "Failed to load resource: ... 500" console error for that request —
+    // expected fallout from this test's own fault injection, not an app bug.
+    consoleGuard.allowConsoleError(/Failed to load resource.*500/);
+    await page.route('**/stock/api/pages/archive**', async (route) => {
+      if (!shouldFail) {
+        await route.fallback();
+        return;
+      }
+      await route.fulfill({
+        status: 500,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          success: false,
+          error: {
+            code: 'INTERNAL_ERROR',
+            message: '서버가 요청을 처리하지 못했습니다.',
+          },
+        }),
+      });
+    });
+
+    // A new filter (status changes) issues a NEW query key, which is the
+    // request forced to fail above.
+    await page.locator('#status').selectOption('PARTIAL');
+    await page.getByRole('button', { name: '필터 적용' }).click();
+
+    await expect(
+      page.getByText('아카이브 검색 결과를 불러오지 못했습니다')
+    ).toBeVisible();
+    // §9 Retry contract: filters + PREVIOUS rows stay visible through the error.
+    await expect(
+      page
+        .locator('table tbody tr')
+        .first()
+        .getByText(/pageId \d+/)
+    ).toHaveText(firstPageIdBefore);
+    await expect(page.locator('#status')).toHaveValue('PARTIAL');
+
+    shouldFail = false;
+    await page.getByRole('button', { name: '다시 시도' }).click();
+
+    await expect(
+      page.getByText('아카이브 검색 결과를 불러오지 못했습니다')
+    ).not.toBeVisible();
+    await expect(page.locator('table tbody tr').first()).toBeVisible();
+  });
+});
+
+test.describe('§16-12 live region (Archive Search)', () => {
+  const LIVE_REGION = '[aria-live="polite"]';
+
+  test('announces result count on apply, and page moves', async ({ page }) => {
+    await installMockApi(page, { scenario: 'ready' });
+    await page.goto('market/archive/search');
+
+    await page.locator('#status').selectOption('READY');
+    await page.getByRole('button', { name: '필터 적용' }).click();
+    await expect(page.locator(LIVE_REGION)).toContainText(/건을 찾았습니다\./);
+
+    await page.getByRole('button', { name: '다음' }).click();
+    await expect(page.locator(LIVE_REGION)).toContainText(
+      '2페이지를 불러옵니다.'
+    );
+  });
+
+  test('announces a validation failure and a reset', async ({ page }) => {
+    await installMockApi(page, { scenario: 'ready' });
+    await page.goto('market/archive/search');
+
+    await page.locator('#to').fill('');
+    await page.getByRole('button', { name: '필터 적용' }).click();
+    await expect(page.locator(LIVE_REGION)).toContainText(
+      '필터를 적용하지 못했습니다. 입력 오류 1건을 확인해 주세요.'
+    );
+
+    await page.getByRole('button', { name: '초기화' }).click();
+    await expect(page.locator(LIVE_REGION)).toContainText(
+      '필터를 기본값으로 초기화했습니다.'
+    );
+  });
+});

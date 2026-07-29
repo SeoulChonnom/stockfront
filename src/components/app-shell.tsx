@@ -1,204 +1,121 @@
-import {
-  Archive as ArchiveIcon,
-  BookText,
-  ChartNoAxesCombined,
-  CircleHelp,
-  CircleUserRound,
-  type LucideIcon,
-  MoonStar,
-  Search,
-  SunMedium,
-  Workflow,
-} from 'lucide-react';
-import type { ReactNode } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { type ReactNode, useState } from 'react';
 
-import { createNavigateHandler, type ThemeMode } from '../lib/app-state';
-import { withBasePath } from '../lib/router';
+import type { ThemeMode } from '../lib/app-state';
 
-type NavItem = {
-  href: string;
-  label: string;
-  icon: LucideIcon;
-  isActive: (pathname: string) => boolean;
-};
+import { AnnounceProvider } from './shell/announce-context';
+import { DevUrlStrip } from './shell/dev-url-strip';
+import { MobileHeader } from './shell/mobile-header';
+import { NavDrawer } from './shell/nav-drawer';
+import { getActiveNavContext } from './shell/nav-items';
+import { NavRail } from './shell/nav-rail';
+import { buildScrollKey } from './shell/scroll-restoration';
+import { useOpsFailedCount } from './shell/use-ops-failed-count';
 
-const navItems: NavItem[] = [
-  {
-    href: '/market/latest',
-    label: 'Latest Market',
-    icon: ChartNoAxesCombined,
-    isActive: (pathname) =>
-      pathname === '/market/latest' || pathname.startsWith('/market/cluster/'),
-  },
-  {
-    href: '/market/archive/search',
-    label: 'Archive',
-    icon: ArchiveIcon,
-    isActive: (pathname) => pathname.startsWith('/market/archive'),
-  },
-  {
-    href: '/ops/batches',
-    label: 'Batch Status',
-    icon: Workflow,
-    isActive: (pathname) => pathname.startsWith('/ops/batches'),
-  },
-];
-
+/**
+ * App Shell — README §5, §7-1. Replaces the old dual-nav sidebar+topbar
+ * (duplicate links, non-functional search, Support/Documentation/System
+ * Status/footer "Coming soon" placeholders — all deleted, §5 / the "Won't"
+ * list in `docs/design_v2/09-scope-traceability-decisions.md`) with exactly
+ * one primary nav rendered by `NavRail` (desktop, ≥1025px) / `NavDrawer`
+ * (mobile, ≤1024px via `MobileHeader`'s menu button).
+ *
+ * Component tree:
+ * ```
+ * AppShell
+ * └─ AnnounceProvider (keyed on pathname — the app's ONE aria-live region, §7-1)
+ *    ├─ <a href="#main-content"> skip link
+ *    ├─ NavRail            (desktop, hidden ≤1024px — not just visually: see NavList)
+ *    ├─ MobileHeader        (mobile, hidden ≥1025px)
+ *    ├─ (DEV only) DevUrlStrip
+ *    ├─ <main id="main-content" tabIndex={-1}>  ← children (AppPageContent)
+ *    └─ NavDrawer           (mobile menu, portal-less — renders null while closed)
+ * ```
+ *
+ * `NavRail`/`NavDrawer` both render through `shell/nav-list.tsx`, the single
+ * source of nav items + active-route rules (`shell/nav-items.ts`) — desktop
+ * and mobile can never drift from each other.
+ *
+ * Any screen rendered as `children` can call `useAnnounce()`
+ * (`src/components/shell/use-announce.ts`) to publish to the shared live
+ * region — see `shell/announce-context.tsx`'s doc comment for the full
+ * contract (it clears itself whenever `pathname`/`searchParams` change, so a
+ * screen never needs to clear its own announcement on unmount).
+ */
 export function AppShell({
   children,
   pathname,
-  placeholder,
+  searchParams,
   theme,
   onToggleTheme,
 }: {
   children: ReactNode;
   pathname: string;
-  placeholder: string;
+  searchParams: URLSearchParams;
   theme: ThemeMode;
   onToggleTheme: () => void;
 }) {
+  const [isDrawerOpen, setDrawerOpen] = useState(false);
+  const failedCount = useOpsFailedCount();
+  const search = searchParams.toString();
+  const currentRouteKey = buildScrollKey(pathname, search);
+  const navContext = getActiveNavContext(pathname, searchParams);
+
   return (
-    <div className='app-shell'>
-      <a className='skip-link' href='#main-content'>
-        본문으로 바로가기
-      </a>
-      <aside className='sidebar'>
-        <div className='brand'>
-          <div className='brand-mark'>Market Brief</div>
-          <p>Financial Intelligence Console</p>
-        </div>
+    <AnnounceProvider pathname={pathname}>
+      <div className='min-h-screen'>
+        <a
+          className='fixed top-[-64px] left-3 z-(--z-skip) rounded-[8px] bg-[color:var(--primary)] px-4 py-2.5 text-[13.5px] font-semibold text-[color:var(--primary-fg)] transition-[top] duration-(--dur) ease-(--ease) focus:top-3'
+          href='#main-content'
+        >
+          본문으로 바로가기
+        </a>
 
-        <nav className='sidebar-nav' aria-label='Primary'>
-          {navItems.map((item) => {
-            const active = item.isActive(pathname);
-            const Icon = item.icon;
-            return (
-              <a
-                className={`nav-link${active ? ' nav-link-active' : ''}`}
-                aria-current={active ? 'page' : undefined}
-                href={withBasePath(item.href)}
-                key={item.href}
-                onClick={createNavigateHandler(item.href)}
-              >
-                <Icon className='nav-icon' size={18} />
-                <span>{item.label}</span>
-              </a>
-            );
-          })}
-        </nav>
+        <div className='flex min-w-0'>
+          <NavRail
+            currentRouteKey={currentRouteKey}
+            failedCount={failedCount}
+            onToggleTheme={onToggleTheme}
+            pathname={pathname}
+            searchParams={searchParams}
+            theme={theme}
+          />
 
-        <div className='sidebar-support'>
-          <span className='nav-link nav-link-muted nav-link-static'>
-            <CircleHelp className='nav-icon' size={18} />
-            <span>Support · Coming soon</span>
-          </span>
-          <span className='nav-link nav-link-muted nav-link-static'>
-            <BookText className='nav-icon' size={18} />
-            <span>Documentation · Coming soon</span>
-          </span>
-        </div>
-      </aside>
+          <div className='flex min-w-0 flex-1 flex-col'>
+            <MobileHeader
+              groupLabel={navContext.groupLabel}
+              isDrawerOpen={isDrawerOpen}
+              itemLabel={navContext.itemLabel}
+              onOpenMenu={() => setDrawerOpen(true)}
+              onToggleTheme={onToggleTheme}
+              theme={theme}
+            />
 
-      <div className='shell-main'>
-        <header className='topbar'>
-          <div className='topbar-left'>
-            <div className='search-field'>
-              <Search size={16} />
-              <Input
-                aria-label={`${placeholder} (coming soon)`}
-                className='min-h-0 border-0 bg-transparent px-0 py-0 shadow-none focus:border-0 focus:shadow-none'
-                disabled
-                placeholder={`${placeholder} (coming soon)`}
-                readOnly
+            {import.meta.env.DEV ? (
+              <DevUrlStrip
+                pathname={pathname}
+                search={search ? `?${search}` : ''}
               />
-            </div>
-            <nav className='top-links' aria-label='Section'>
-              <a
-                className={
-                  pathname === '/market/latest' ? 'top-link-active' : ''
-                }
-                aria-current={
-                  pathname === '/market/latest' ? 'page' : undefined
-                }
-                href={withBasePath('/market/latest')}
-                onClick={createNavigateHandler('/market/latest')}
-              >
-                Latest Market
-              </a>
-              <a
-                className={
-                  pathname.startsWith('/market/archive')
-                    ? 'top-link-active'
-                    : ''
-                }
-                aria-current={
-                  pathname.startsWith('/market/archive') ? 'page' : undefined
-                }
-                href={withBasePath('/market/archive/search')}
-                onClick={createNavigateHandler('/market/archive/search')}
-              >
-                Archive
-              </a>
-              <a
-                className={
-                  pathname.startsWith('/ops/batches') ? 'top-link-active' : ''
-                }
-                aria-current={
-                  pathname.startsWith('/ops/batches') ? 'page' : undefined
-                }
-                href={withBasePath('/ops/batches')}
-                onClick={createNavigateHandler('/ops/batches')}
-              >
-                Ops Admin
-              </a>
-            </nav>
-          </div>
+            ) : null}
 
-          <div className='topbar-right'>
-            <Button
-              aria-label={
-                theme === 'dark'
-                  ? 'Switch to light mode'
-                  : 'Switch to dark mode'
-              }
-              className='icon-button'
-              onClick={onToggleTheme}
-              size='icon'
-              type='button'
-              variant='ghost'
+            <main
+              className='mx-auto w-full min-w-0 max-w-[1280px] flex-1 px-3 py-5 min-[1025px]:px-8 min-[1025px]:py-8'
+              id='main-content'
+              tabIndex={-1}
             >
-              {theme === 'dark' ? (
-                <SunMedium size={18} />
-              ) : (
-                <MoonStar size={18} />
-              )}
-            </Button>
-            <div className='user-chip'>
-              <span>Admin.Ops</span>
-              <div className='user-avatar'>
-                <CircleUserRound size={18} />
-              </div>
-            </div>
+              {children}
+            </main>
           </div>
-        </header>
+        </div>
 
-        <main className='content' id='main-content' tabIndex={-1}>
-          {children}
-        </main>
-        <footer className='site-footer'>
-          <div>
-            <strong>Market Daily Brief</strong>
-            <p>PoC UI for market intelligence workflow and ops monitoring.</p>
-          </div>
-          <div className='site-footer-links'>
-            <span>Documentation · Coming soon</span>
-            <span>System Status · Coming soon</span>
-            <span>Usage Policy · Coming soon</span>
-          </div>
-        </footer>
+        <NavDrawer
+          currentRouteKey={currentRouteKey}
+          failedCount={failedCount}
+          isOpen={isDrawerOpen}
+          onClose={() => setDrawerOpen(false)}
+          pathname={pathname}
+          searchParams={searchParams}
+        />
       </div>
-    </div>
+    </AnnounceProvider>
   );
 }
