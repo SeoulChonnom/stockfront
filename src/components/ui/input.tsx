@@ -18,7 +18,7 @@ export function Input({
     <input
       aria-invalid={ariaInvalidProp ?? invalid ?? undefined}
       className={cn(
-        'flex min-h-11 w-full rounded-[14px] border border-[color:var(--line)] bg-[color:var(--surface-muted)] px-3.5 py-2 text-[color:var(--text)] outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-[color:var(--text-faint)] focus:border-[color:color-mix(in_srgb,var(--primary)_45%,transparent)] focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--primary)_16%,transparent)] disabled:cursor-not-allowed disabled:opacity-50',
+        'flex min-h-11 w-full rounded-[14px] border border-[color:var(--line)] bg-[color:var(--surface-2)] px-3.5 py-2 text-[color:var(--text)] outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-[color:var(--text-faint)] focus:border-[color:color-mix(in_srgb,var(--primary)_45%,transparent)] focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--primary)_16%,transparent)] disabled:cursor-not-allowed disabled:opacity-50',
         invalid &&
           'border-[color:var(--danger-line)] focus:border-[color:var(--danger)] focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--danger)_16%,transparent)]',
         className
