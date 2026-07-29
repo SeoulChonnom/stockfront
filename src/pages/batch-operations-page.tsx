@@ -34,9 +34,12 @@ const PAGE_SIZE = 20;
  * `/ops/batches` (README §7-6/§7-7/§10/§16-11).
  *
  * SECURITY: `can('ops.view')` below is a UX affordance, not a security
- * boundary — the backend must still enforce ADMIN-only access to this
- * screen and its endpoints (README §10, `src/lib/capabilities.ts`'s own
- * top-of-file note). A non-admin user gets `PermissionState` and NOTHING
+ * boundary. The backend enforces ADMIN-only access to this screen's
+ * endpoints and returns 403 to a non-admin token (confirmed 2026-07-30;
+ * see README §10 and `src/lib/capabilities.ts`'s top-of-file note). The
+ * gate here exists so a user is never shown a screen that would only 403
+ * on them — it is not what keeps the data safe. A non-admin user gets
+ * `PermissionState` and NOTHING
  * else: the gate is a plain `if` that returns before `AdminBatchOperations`
  * (the component that owns every batch query/mutation) is ever rendered, so
  * React never even calls its hooks — the log, Trigger dialog, detail panel
