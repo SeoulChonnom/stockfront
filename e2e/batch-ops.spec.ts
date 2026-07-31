@@ -9,8 +9,17 @@ import { installMockApi } from './fixtures/mock-api';
  * `BATCH_ALL` (mock-api.ts) seeds 27 jobs; `jobStatusFor(i)`: i=0 -> RUNNING,
  * i%9===2 -> PARTIAL, i%9===5 -> FAILED, else SUCCESS. `jobId = 1042 - i`.
  * Page 1 (first 20, i=0..19) contains exactly one FAILED row at i=5 ->
- * jobId 1037 — the page's own `fallbackJobId` logic (first FAILED, else
- * first row) selects this by default with no `?jobId=` in the URL.
+ * jobId 1037. Design parity cycle 1 (E2) changed the page's default-selection
+ * fallback from "first FAILED, else first row" to just "first row" — with no
+ * `?jobId=` in the URL the detail panel now shows the first (newest) row,
+ * jobId 1042 (i=0, RUNNING), not 1037. Tests below that care which job is
+ * selected pass an explicit `?jobId=` rather than relying on the fallback.
+ *
+ * Design parity cycle 1 (E1) also removed the 시작일/종료일/상태 filter FORM
+ * (`BatchFilterBar`) — there is no `#batch-status-trigger`/필터 적용 flow
+ * anymore. The only way to change `status` from the UI is the attention
+ * banner's 실패만 보기/부분 실패만 보기 quick filters (see
+ * `batch-attention-banner.tsx`) or the list header's 필터 해제 button.
  */
 
 test.describe('§16-4 pagination (Batch: 27/20 -> 2 pages)', () => {
@@ -20,19 +29,17 @@ test.describe('§16-4 pagination (Batch: 27/20 -> 2 pages)', () => {
     await installMockApi(page, { scenario: 'ready' });
     await page.goto('ops/batches');
 
-    // "1–20 / 27" appears twice by design (the list header's own count span
-    // AND the shared `Pagination` component's range text) — `.first()`
-    // rather than a stricter locator since both instances are correct.
-    await expect(
-      page.getByText('1–20 / 27', { exact: true }).first()
-    ).toBeVisible();
-    await expect(page.getByText('1 / 2', { exact: true })).toBeVisible();
+    // The "1–20 / 27" range lives only in the list header (design parity
+    // cycle 1, D5) — the shared `Pagination` component no longer renders a
+    // range next to the pager. E7 (cycle 2): Ops's pager also has no
+    // trailing "N / M" indicator at all (unlike Archive's, which does) —
+    // this screen only has the range in the header, nothing beside 다음.
+    await expect(page.getByText('1–20 / 27', { exact: true })).toBeVisible();
+    await expect(page.getByText(/^\d+ \/ \d+$/)).not.toBeVisible();
 
     await page.getByRole('button', { name: '다음' }).click();
     await expect(page).toHaveURL(/page=2/);
-    await expect(
-      page.getByText('21–27 / 27', { exact: true }).first()
-    ).toBeVisible();
+    await expect(page.getByText('21–27 / 27', { exact: true })).toBeVisible();
     await expect(page.getByRole('button', { name: '다음' })).toBeDisabled();
   });
 });
@@ -99,12 +106,18 @@ test.describe('§16-9 Retry (Batch list/detail independence)', () => {
       });
     });
 
-    // Applying a filter keeps the current `jobId` in the URL (goTo() only
-    // overrides `jobId` when explicitly asked to), so the detail query key
-    // is untouched by this — the list failing is independent of it.
-    await page.locator('#batch-status-trigger').click();
-    await page.getByRole('option', { name: 'SUCCESS · 성공' }).click();
-    await page.getByRole('button', { name: '필터 적용' }).click();
+    // The attention banner's quick filter navigates immediately (no
+    // separate apply step) and keeps the current `jobId` in the URL
+    // (goTo() only overrides `jobId` when explicitly asked to), so the
+    // detail query key is untouched by this — the list failing is
+    // independent of it. `BATCH_ALL`'s seed guarantees FAILED rows exist
+    // (i%9===5), so the attention banner is showing. `exact: true` since
+    // "실패만 보기" is otherwise a substring match of the sibling "부분 실패만
+    // 보기" button too.
+    await page
+      .getByRole('button', { name: '실패만 보기', exact: true })
+      .click();
+    await expect(page).toHaveURL(/status=FAILED/);
 
     await expect(
       page.getByText('배치 목록을 불러오지 못했습니다')

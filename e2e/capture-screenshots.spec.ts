@@ -219,9 +219,7 @@ test.describe
       });
     });
 
-    test('09 batch ops / ready / desktop / light / admin', async ({
-      page,
-    }) => {
+    test('09 batch ops / ready / desktop / light / admin', async ({ page }) => {
       await capture(page, {
         file: '09-batch-ops-ready-desktop-light-admin.png',
         route: 'ops/batches',
@@ -234,9 +232,7 @@ test.describe
       });
     });
 
-    test('10 batch ops / ready / mobile / light / admin', async ({
-      page,
-    }) => {
+    test('10 batch ops / ready / mobile / light / admin', async ({ page }) => {
       await capture(page, {
         file: '10-batch-ops-ready-mobile-light-admin.png',
         route: 'ops/batches',
@@ -291,9 +287,7 @@ test.describe
       });
     });
 
-    test('14 batch ops / permission 403 / desktop / user', async ({
-      page,
-    }) => {
+    test('14 batch ops / permission 403 / desktop / user', async ({ page }) => {
       await capture(page, {
         file: '14-batch-ops-permission403-desktop-user.png',
         route: 'ops/batches',
