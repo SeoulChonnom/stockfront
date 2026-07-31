@@ -9,6 +9,8 @@ coverage
 .env.*
 !.env.example
 
+docs
+
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
