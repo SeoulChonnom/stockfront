@@ -144,6 +144,25 @@ export type ClusterDetail = {
   businessDate: string;
   marketLabel: string;
   title: string;
+  /**
+   * `response.summary.short` — parity cycle D11's header lead paragraph
+   * (design shows a short summary between the `h1` and the tag row). Not
+   * the same slot as `representative.sourceSummary` below, which is a
+   * per-article fallback chain that also happens to end at this same DTO
+   * field when the representative article has no `sourceSummary` of its
+   * own — in that fallback case the header and the aside can legitimately
+   * show the same sentence, since the backend has only one field to draw
+   * from for both.
+   */
+  summary: string | null;
+  /**
+   * `response.summary.long` — parity cycle 2's F1 lead paragraph for the
+   * "AI 심층 분석" panel. A genuinely different DTO field from `summary`
+   * (`.short`) above, not the same sentence rendered twice: the design's
+   * fixtures show `long` opening with the same sentence as `short` and then
+   * continuing for 1-2 more.
+   */
+  analysisLead: string | null;
   tags: string[];
   analysis: string[];
   articles: ClusterArticle[];

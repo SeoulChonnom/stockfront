@@ -1,28 +1,42 @@
-import { Sparkles } from 'lucide-react';
-
 /**
  * README §7-5 "AI 심층 분석" — spec calls for `summary.long`(14px) followed
  * by each `summary.analysis[]` paragraph with a left quote rule.
- * `summary.long`/`summary.short` are never surfaced on the `ClusterDetail`
- * view model (`mapClusterDetailToView` in `mappers.ts` drops
- * `response.summary.long` entirely and only folds `summary.short` into
- * `representative.sourceSummary`) — out of this phase's file ownership, so
- * this section renders `analysis[]` only. See `cluster-detail-page.tsx`'s
- * top comment for the full gap writeup.
+ *
+ * F1 (parity cycle 2): `summary.long` now reaches this component as
+ * `analysisLead` (`ClusterDetail.analysisLead`, mapped in `mappers.ts` from
+ * `response.summary.long`) — a distinct DTO field from `summary.short`
+ * (cycle 1's D11 header lead), not the same sentence rendered twice.
  */
-export function ClusterAnalysis({ analysis }: { analysis: string[] }) {
+export function ClusterAnalysis({
+  analysis,
+  analysisLead,
+}: {
+  analysis: string[];
+  analysisLead: string | null;
+}) {
   return (
     <section
       aria-labelledby='cluster-analysis-heading'
-      className='flex min-w-0 flex-col gap-4 rounded-[var(--r-lg)] border border-[color:var(--line)] bg-[color:var(--surface)] p-5'
+      className='min-w-0 rounded-[var(--r-lg)] border border-[color:var(--line)] bg-[color:var(--surface)] p-[18px]'
     >
+      {/* parity cycle A3: per-block card-heading size (see
+          archive-search-filters.tsx's comment) — "AI 심층 분석" measures
+          15px in the design, not the README §6 17px scale.
+          C9: the design has no icon on this heading.
+          A2 (cycle 2): design's heading margin-bottom is 12px of its own,
+          not a parent flex `gap`. */}
       <h2
-        className='m-0 flex items-center gap-2 text-[17px] font-semibold text-[color:var(--text)]'
+        className='m-0 mb-3 text-[15px] font-semibold text-[color:var(--text)]'
         id='cluster-analysis-heading'
       >
-        <Sparkles aria-hidden='true' size={17} />
         AI 심층 분석
       </h2>
+
+      {analysisLead ? (
+        <p className='measure-analysis wrap-anywhere m-0 mb-3 text-[14px] text-[color:var(--text)]'>
+          {analysisLead}
+        </p>
+      ) : null}
 
       {analysis.length === 0 ? (
         <p className='measure-analysis wrap-anywhere m-0 text-[13.5px] text-[color:var(--text-soft)]'>
@@ -30,10 +44,10 @@ export function ClusterAnalysis({ analysis }: { analysis: string[] }) {
           완료되면 이 영역에 표시됩니다.
         </p>
       ) : (
-        <div className='flex flex-col gap-3'>
+        <div className='flex flex-col gap-2.5'>
           {analysis.map((paragraph, index) => (
             <p
-              className='measure-analysis wrap-anywhere m-0 border-l-2 border-[color:var(--line-strong)] pl-3 text-[14px] leading-[1.65] text-[color:var(--text-soft)]'
+              className='measure-analysis wrap-anywhere m-0 border-l-2 border-[color:var(--line-strong)] pl-3 text-[13.5px] leading-[1.65] text-[color:var(--text-soft)]'
               key={`${index}-${paragraph.slice(0, 24)}`}
             >
               {paragraph}

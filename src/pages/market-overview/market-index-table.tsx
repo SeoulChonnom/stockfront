@@ -19,9 +19,9 @@ import type { MarketIndex } from '@/lib/view-models';
  * `sm:table-cell`/`sm:hidden`을 직접 쓴다 — 같은 "숨김 대신 서브라인" 계약은
  * 그대로 지킨다.
  *
- * 지수명 옆 mono 코드 서브라인(§7-2 "이름 + mono 코드 서브라인")은 DTO의
- * `indexCode`가 `mapIndex`(`mappers.ts`)에서 view model에 남지 않아 생략했다
- * — 리포트의 데이터 계층 의존성 참고.
+ * D7: 지수명 옆 mono 코드 서브라인(§7-2 "이름 + mono 코드 서브라인")은
+ * `MarketIndex.code`가 `mapIndex`(`mappers.ts:178`)에서 이미 매핑되어 view
+ * model까지 도달한다 — 이 표가 그동안 렌더하지 않고 있었을 뿐이다.
  */
 export function MarketIndexTable({ indices }: { indices: MarketIndex[] }) {
   if (indices.length === 0) {
@@ -42,16 +42,20 @@ export function MarketIndexTable({ indices }: { indices: MarketIndex[] }) {
             <TableHead className='h-auto px-3 py-2 text-right text-[11px]'>
               종가
             </TableHead>
-            <TableHead className='h-auto px-3 py-2 text-right text-[11px]'>
+            {/* C1: `w-[1%]` shrinks 등락/등락률 to their own content width
+                instead of claiming a disproportionate share of the table's
+                auto-layout surplus space at 고가/저가's expense — same total
+                table width, closer to the design's even column distribution. */}
+            <TableHead className='h-auto w-[1%] px-3 py-2 text-right text-[11px] whitespace-nowrap'>
               등락
             </TableHead>
-            <TableHead className='h-auto px-3 py-2 text-right text-[11px]'>
+            <TableHead className='h-auto w-[1%] px-3 py-2 text-right text-[11px] whitespace-nowrap'>
               등락률
             </TableHead>
-            <TableHead className='hidden h-auto px-3 py-2 text-right text-[11px] sm:table-cell'>
+            <TableHead className='hidden h-auto px-3 py-2 text-right text-[11px] whitespace-nowrap sm:table-cell'>
               고가
             </TableHead>
-            <TableHead className='hidden h-auto px-4 py-2 text-right text-[11px] sm:table-cell'>
+            <TableHead className='hidden h-auto px-4 py-2 text-right text-[11px] whitespace-nowrap sm:table-cell'>
               저가
             </TableHead>
           </TableRow>
@@ -74,10 +78,15 @@ function IndexRow({ item }: { item: MarketIndex }) {
 
   return (
     <TableRow>
-      <TableCell className='min-w-0 px-4 py-2.5 font-semibold'>
+      <TableCell className='min-w-0 px-4 py-[9px] font-semibold'>
         {item.label}
+        {item.code ? (
+          <div className='mono mt-0.5 text-[11px] font-normal text-[color:var(--text-faint)]'>
+            {item.code}
+          </div>
+        ) : null}
       </TableCell>
-      <TableCell className='mono px-3 py-2.5 text-right font-semibold'>
+      <TableCell className='mono px-3 py-[9px] text-right font-semibold'>
         {item.value}
         <div className='mt-1 text-[10.5px] font-normal text-[color:var(--text-faint)] sm:hidden'>
           {`고 ${item.high} · 저 ${item.low}`}
@@ -85,7 +94,7 @@ function IndexRow({ item }: { item: MarketIndex }) {
       </TableCell>
       <TableCell
         className={cn(
-          'mono px-3 py-2.5 text-right font-semibold',
+          'mono px-3 py-[9px] text-right font-semibold',
           directionClass
         )}
       >
@@ -93,16 +102,16 @@ function IndexRow({ item }: { item: MarketIndex }) {
       </TableCell>
       <TableCell
         className={cn(
-          'mono px-3 py-2.5 text-right font-semibold',
+          'mono px-3 py-[9px] text-right font-semibold',
           directionClass
         )}
       >
         {item.changeRate}
       </TableCell>
-      <TableCell className='mono hidden px-3 py-2.5 text-right text-[color:var(--text-soft)] sm:table-cell'>
+      <TableCell className='mono hidden px-3 py-[9px] text-right text-[color:var(--text-soft)] sm:table-cell'>
         {item.high}
       </TableCell>
-      <TableCell className='mono hidden px-4 py-2.5 text-right text-[color:var(--text-soft)] sm:table-cell'>
+      <TableCell className='mono hidden px-4 py-[9px] text-right text-[color:var(--text-soft)] sm:table-cell'>
         {item.low}
       </TableCell>
     </TableRow>

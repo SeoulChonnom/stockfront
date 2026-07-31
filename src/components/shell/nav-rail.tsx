@@ -4,11 +4,15 @@ import { useCapabilities } from '@/lib/capabilities';
 
 import { DevRoleSimulator } from './dev-role-simulator';
 import { NavList } from './nav-list';
-import { ThemeToggleButton } from './theme-toggle';
 
 const ROLE_LABELS: Readonly<Record<'user' | 'admin', string>> = {
   user: 'User',
   admin: 'Admin',
+};
+
+const THEME_LABELS: Readonly<Record<ThemeMode, string>> = {
+  dark: '라이트 테마로 전환',
+  light: '다크 테마로 전환',
 };
 
 /**
@@ -37,8 +41,13 @@ export function NavRail({
   return (
     <aside className='sticky top-0 hidden h-screen w-[248px] shrink-0 flex-col border-r border-[color:var(--line)] bg-[color:var(--surface)] min-[1025px]:flex'>
       <div className='px-5 pt-6 pb-4'>
-        <p className='text-[19px] font-bold tracking-[-0.02em] text-[color:var(--primary)] [font-family:var(--font-display)]'>
+        {/* C5: design wordmark color is `--text`, not `--primary`. */}
+        <p className='m-0 text-[19px] font-bold tracking-[-0.02em] text-[color:var(--text)] [font-family:var(--font-display)]'>
           Market Brief
+        </p>
+        {/* B1 (parity cycle 2): design rail has a subtitle under the wordmark. */}
+        <p className='m-0 text-[12px] text-[color:var(--text-faint)]'>
+          일간 시장 브리프 · 운영 콘솔
         </p>
       </div>
 
@@ -52,7 +61,7 @@ export function NavRail({
         />
       </div>
 
-      <div className='flex flex-col gap-3 border-t border-[color:var(--line)] p-3'>
+      <div className='flex flex-col gap-2 border-t border-[color:var(--line)] p-3'>
         <div className='flex items-center gap-2.5 px-1'>
           <span className='flex size-[26px] shrink-0 items-center justify-center rounded-full border border-[color:var(--primary-line)] bg-[color:var(--primary-soft)] text-[color:var(--primary)]'>
             <CircleUserRound aria-hidden='true' size={16} />
@@ -65,8 +74,17 @@ export function NavRail({
               {ROLE_LABELS[role]}
             </p>
           </div>
-          <ThemeToggleButton onToggle={onToggleTheme} theme={theme} />
         </div>
+
+        {/* C6: design's rail footer is a full-width outline "다크 테마로
+            전환" text button, not a small circular icon button. */}
+        <button
+          className='flex min-h-9 items-center gap-2 rounded-[var(--r-md)] border border-[color:var(--line)] bg-transparent px-2.5 text-left text-[12.5px] text-[color:var(--text-soft)] hover:bg-[color:var(--surface-2)] hover:text-[color:var(--text)]'
+          onClick={onToggleTheme}
+          type='button'
+        >
+          {THEME_LABELS[theme]}
+        </button>
 
         {import.meta.env.DEV ? <DevRoleSimulator /> : null}
       </div>

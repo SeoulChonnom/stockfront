@@ -29,6 +29,18 @@ describe('Pagination', () => {
     );
   });
 
+  it('gives the current page a soft-accent fill so it is also visible to sighted users (aria-current alone is invisible)', () => {
+    render(<Pagination onPageChange={vi.fn()} page={5} totalPages={10} />);
+
+    const current = screen.getByRole('button', { name: '5' });
+    expect(current.className).toContain('bg-[color:var(--primary-soft)]');
+    expect(current.className).toContain('text-[color:var(--primary)]');
+    expect(current.className).toContain('border-[color:var(--primary-line)]');
+
+    const other = screen.getByRole('button', { name: '4' });
+    expect(other.className).not.toContain('bg-[color:var(--primary-soft)]');
+  });
+
   it('disables 이전 on the first page and 다음 on the last page', () => {
     const { rerender } = render(
       <Pagination onPageChange={vi.fn()} page={1} totalPages={3} />
@@ -41,19 +53,11 @@ describe('Pagination', () => {
     expect(screen.getByRole('button', { name: '다음' })).toBeDisabled();
   });
 
-  it('renders the range text and the mono page indicator', () => {
-    render(
-      <Pagination
-        onPageChange={vi.fn()}
-        page={2}
-        pageSize={20}
-        totalCount={46}
-        totalPages={3}
-      />
-    );
+  it("renders only the mono page indicator — the design has no count-range text next to the pager (D5/C2: that range now lives in each list panel's own heading)", () => {
+    render(<Pagination onPageChange={vi.fn()} page={2} totalPages={3} />);
 
-    expect(screen.getByText('21–40 / 46')).toBeInTheDocument();
     expect(screen.getByText('2 / 3')).toBeInTheDocument();
+    expect(screen.queryByText(/\d+–\d+ \/ \d+/)).not.toBeInTheDocument();
   });
 
   it('calls onAnnounce with "N페이지를 불러옵니다." and onPageChange when a page button is clicked', async () => {

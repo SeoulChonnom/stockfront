@@ -97,8 +97,13 @@ export function AppShell({
               />
             ) : null}
 
+            {/* B1/B2: design's <main> pads all 4 sides equally with
+                `var(--pad)` (32/20/14 across breakpoints, already declared
+                in base.css) and is `flex; flex-direction:column;
+                gap:var(--gap)` — not the previous 20px/12px asymmetric
+                block padding. */}
             <main
-              className='mx-auto w-full min-w-0 max-w-[1280px] flex-1 px-3 py-5 min-[1025px]:px-8 min-[1025px]:py-8'
+              className='mx-auto flex w-full min-w-0 max-w-[1280px] flex-1 flex-col gap-(--gap) p-(--pad)'
               id='main-content'
               tabIndex={-1}
             >

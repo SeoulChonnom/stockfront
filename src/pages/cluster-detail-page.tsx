@@ -58,17 +58,21 @@ export function ClusterDetailPage({ clusterId }: { clusterId: string }) {
   const detail = clusterQuery.data;
 
   return (
-    <div className='flex min-w-0 flex-col gap-5'>
+    <div className='flex min-w-0 flex-col gap-[var(--gap)]'>
       <ClusterBreadcrumb
         businessDate={detail.businessDate}
         marketLabel={detail.marketLabel}
         origin={origin}
       />
-      <ClusterHeader detail={detail} />
+      <ClusterHeader detail={detail} origin={origin} />
 
-      <div className='grid min-w-0 grid-cols-1 gap-5 min-[1181px]:grid-cols-[minmax(0,1fr)_320px] min-[1181px]:items-start'>
-        <div className='flex min-w-0 flex-col gap-5'>
-          <ClusterAnalysis analysis={detail.analysis} />
+      {/* C11: aside column is the design's `--md` shell track (400px), not 320px. */}
+      <div className='grid min-w-0 grid-cols-1 gap-[var(--gap)] min-[1181px]:grid-cols-[minmax(0,1fr)_400px] min-[1181px]:items-start'>
+        <div className='flex min-w-0 flex-col gap-[var(--gap)]'>
+          <ClusterAnalysis
+            analysis={detail.analysis}
+            analysisLead={detail.analysisLead}
+          />
           <ClusterArticlesList articles={detail.articles} />
         </div>
         <ClusterRepresentativeAside representative={detail.representative} />
@@ -79,7 +83,7 @@ export function ClusterDetailPage({ clusterId }: { clusterId: string }) {
 
 function ClusterDetailSkeleton() {
   return (
-    <div aria-busy='true' className='flex min-w-0 flex-col gap-5'>
+    <div aria-busy='true' className='flex min-w-0 flex-col gap-[var(--gap)]'>
       <Skeleton className='h-4 w-64' />
       <div className='flex min-w-0 flex-col gap-4 rounded-[var(--r-lg)] border border-[color:var(--line)] bg-[color:var(--surface)] p-5'>
         <Skeleton className='h-4 w-40' />
@@ -89,8 +93,8 @@ function ClusterDetailSkeleton() {
       <p className='m-0 text-[13.5px] text-[color:var(--text-soft)]'>
         이슈 상세를 불러오는 중입니다.
       </p>
-      <div className='grid min-w-0 grid-cols-1 gap-5 min-[1181px]:grid-cols-[minmax(0,1fr)_320px]'>
-        <div className='flex min-w-0 flex-col gap-5'>
+      <div className='grid min-w-0 grid-cols-1 gap-[var(--gap)] min-[1181px]:grid-cols-[minmax(0,1fr)_400px]'>
+        <div className='flex min-w-0 flex-col gap-[var(--gap)]'>
           <div className='rounded-[var(--r-lg)] border border-[color:var(--line)] bg-[color:var(--surface)] p-5'>
             <SkeletonText lines={5} />
           </div>

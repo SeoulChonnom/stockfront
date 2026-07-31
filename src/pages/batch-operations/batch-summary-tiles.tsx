@@ -38,7 +38,9 @@ function SummaryTile({
   return (
     <div
       className={cn(
-        'min-w-0 rounded-[var(--r-lg)] border border-[color:var(--line)] bg-[color:var(--surface)] p-4',
+        // U4 (parity cycle 5): design's tile padding is 14px top/bottom,
+        // 16px left/right — not a uniform `p-4` (16px all sides).
+        'min-w-0 rounded-[var(--r-lg)] border border-[color:var(--line)] bg-[color:var(--surface)] px-4 py-3.5',
         TILE_BAR_CLASSES[tone]
       )}
     >
@@ -47,13 +49,13 @@ function SummaryTile({
       </p>
       <p
         className={cn(
-          'mono m-0 mt-1 text-[26px] font-semibold',
+          'mono m-0 text-[26px] font-semibold',
           TILE_NUMBER_CLASSES[tone]
         )}
       >
         {value}
       </p>
-      <p className='wrap-anywhere m-0 mt-1 text-[12.5px] text-[color:var(--text-soft)]'>
+      <p className='wrap-anywhere m-0 text-[12px] text-[color:var(--text-soft)]'>
         {supporting}
       </p>
     </div>
@@ -74,18 +76,25 @@ export function BatchSummaryTiles({
   return (
     <div
       aria-label='배치 실행 요약'
-      className='grid min-w-0 grid-cols-1 gap-3 min-[1181px]:grid-cols-3 max-[1180px]:grid-cols-2'
+      // Found via the corrected `summary-tiles` probe (cycle 2, section 0):
+      // `max-[1180px]:grid-cols-2` applied at EVERY width ≤1180px, including
+      // mobile, so this never actually collapsed to the design's 1-column
+      // mobile layout (design steps 3→2 at 1180px, 2→1 at 640px). Rewritten
+      // mobile-first with non-overlapping min-width ranges so there's no
+      // ambiguity about which rule wins at a given width.
+      className='grid min-w-0 grid-cols-1 gap-3 min-[641px]:grid-cols-2 min-[1181px]:grid-cols-3'
       role='group'
     >
+      {/* D9: supporting copy matches the design's exact wording. */}
       <SummaryTile
         label='실패'
-        supporting='확인이 필요한 실패 건수'
+        supporting='스냅샷 미생성 · 재실행 필요'
         tone='danger'
         value={failedCount}
       />
       <SummaryTile
         label='부분 실패'
-        supporting='일부 데이터가 누락된 채 완료된 건수'
+        supporting='일부 지수·요약 누락'
         tone='warning'
         value={partialCount}
       />

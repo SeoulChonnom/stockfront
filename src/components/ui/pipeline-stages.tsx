@@ -130,18 +130,38 @@ function deriveStages(
   }
 
   if (normalized === 'RUNNING' || normalized === 'PENDING') {
+    // E6 (parity cycle 2): the design's RUNNING example marks exactly ONE
+    // stage "실행 중" (whichever one is actually in flight) — stages before
+    // it are 성공, stages after it are 대기. The backend gives us no
+    // per-stage signal at all (confirmed PROPOSED · BACKEND), so we can't
+    // know which real stage is active; but marking nearly every stage
+    // "실행 중" (the previous behavior) was actively misleading, not just a
+    // style mismatch. Stage 1 (뉴스 수집) is the one honest guess we can
+    // make — a batch job that's still RUNNING has, at minimum, started —
+    // and its note says plainly that we don't have real per-stage progress.
+    // E6 (parity cycle 3, findings-cycle-3.md "Explicitly NOT to be
+    // changed"): the design prototype's RUNNING fixture (job 1042)
+    // FABRICATES per-stage completion and elapsed time — 작업 생성 성공/1초
+    // · 뉴스 수집 성공/1분 36초 · 지수 수집 성공/12초 · 중복 제거 실행 중—
+    // none of which the backend actually returns (this whole block is
+    // tagged `PROPOSED · BACKEND` in the design itself). Rendering that
+    // fabricated detail here would misrepresent a missing backend
+    // capability as working. This divergence from the design capture is
+    // deliberate and intentionally preserved — see
+    // `docs/design_v2/v2-decisions.md` §10 for the recorded decision. Do
+    // NOT "fix" this to match the composite.
     return names.map((name, index) => {
       if (index === 0) {
         return { name, tone: 'success' };
       }
-      if (index === names.length - 1) {
-        return { name, tone: 'pending' };
+      if (index === 1) {
+        return {
+          name,
+          tone: 'running',
+          note: '세부 단계 진행률은 제공되지 않습니다',
+        };
       }
-      return {
-        name,
-        tone: 'running',
-        note: index === 1 ? '세부 단계 진행률은 제공되지 않습니다' : undefined,
-      };
+      return { name, tone: 'pending' };
     });
   }
 
@@ -198,8 +218,21 @@ export function PipelineStages({
                 </span>
               ) : null}
             </span>
-            <span className='mono shrink-0 text-[12.5px] font-semibold text-[color:var(--text-soft)]'>
+            <span className='mono shrink-0 text-right text-[12.5px] font-semibold text-[color:var(--text-soft)]'>
               {STAGE_STATUS_LABELS[stage.tone]}
+              {/* E6: design shows a per-stage duration line below the
+                  status word. The backend has no per-stage timing at all
+                  (confirmed PROPOSED · BACKEND) — never fabricated, so this
+                  is always the same "unknown" dash design itself renders
+                  for any stage whose own duration is null.
+                  This literal always-"-" column is kept (not dropped)
+                  deliberately for layout parity with the design's per-stage
+                  row shape (status word + duration line stacked) — see
+                  `docs/design_v2/v2-decisions.md` §10. It can never show a
+                  real value until the backend adds per-stage timing. */}
+              <span className='mono block text-[11px] font-normal text-[color:var(--text-faint)]'>
+                -
+              </span>
             </span>
           </li>
         ))}

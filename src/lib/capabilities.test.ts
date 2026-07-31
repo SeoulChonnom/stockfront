@@ -54,7 +54,10 @@ describe('capabilities', () => {
   it('roleList containing ADMIN resolves to admin, ranking above the default fallback', async () => {
     vi.stubEnv('VITE_API_HOST', 'http://localhost:8000');
     vi.stubEnv('VITE_APP_ENV', 'production');
-    stubTokenResponse({ accessToken: 'issued-token', roleList: ['USER', 'ADMIN'] });
+    stubTokenResponse({
+      accessToken: 'issued-token',
+      roleList: ['USER', 'ADMIN'],
+    });
 
     await bootstrapAuth();
 
@@ -74,7 +77,10 @@ describe('capabilities', () => {
   it('recognises a lowercase "admin" entry in roleList', async () => {
     vi.stubEnv('VITE_API_HOST', 'http://localhost:8000');
     vi.stubEnv('VITE_APP_ENV', 'production');
-    stubTokenResponse({ accessToken: 'issued-token', roleList: ['user', 'admin'] });
+    stubTokenResponse({
+      accessToken: 'issued-token',
+      roleList: ['user', 'admin'],
+    });
 
     await bootstrapAuth();
 
@@ -129,7 +135,10 @@ describe('capabilities', () => {
   it('useRole() re-renders when the auth-bootstrap state changes (no override)', async () => {
     vi.stubEnv('VITE_API_HOST', 'http://localhost:8000');
     vi.stubEnv('VITE_APP_ENV', 'production');
-    stubTokenResponse({ accessToken: 'issued-token', roleList: ['USER', 'ADMIN'] });
+    stubTokenResponse({
+      accessToken: 'issued-token',
+      roleList: ['USER', 'ADMIN'],
+    });
 
     const { result } = renderHook(() => useRole());
 

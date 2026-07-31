@@ -1,28 +1,8 @@
-import { ChevronRight } from 'lucide-react';
-
 import { InlineAlert } from '@/components/state';
 
 import { createNavigateHandler } from '../../lib/app-state';
 import { withBasePath } from '../../lib/router';
-
-const ARCHIVE_DATE_ORIGIN_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
-
-function getOriginLink(
-  origin: string | null,
-  businessDate: string
-): { label: string; href: string } {
-  if (origin === 'latest') {
-    return { label: '최신 브리프', href: '/market/latest' };
-  }
-
-  if (origin && ARCHIVE_DATE_ORIGIN_PATTERN.test(origin)) {
-    return { label: `아카이브 ${origin}`, href: `/market/archive/${origin}` };
-  }
-
-  // README §7-5: direct entry (no `origin` query) falls back to this
-  // cluster's OWN business-date archive snapshot, not always `/market/latest`.
-  return { label: '시장 브리프', href: `/market/archive/${businessDate}` };
-}
+import { getOriginLink } from './origin-link';
 
 /**
  * README §7-5 breadcrumb: `nav[aria-label="위치"]`, origin-aware first
@@ -57,9 +37,11 @@ export function ClusterBreadcrumb({
         >
           {label}
         </a>
-        <ChevronRight aria-hidden='true' size={13} />
+        {/* D13: design separator is a plain "/", not a chevron icon. */}
+        <span aria-hidden='true'>/</span>
         <span className='wrap-anywhere'>{marketLabel}</span>
-        <ChevronRight aria-hidden='true' size={13} />
+        {/* D13: design separator is a plain "/", not a chevron icon. */}
+        <span aria-hidden='true'>/</span>
         <span
           aria-current='page'
           className='font-semibold text-[color:var(--text-soft)]'

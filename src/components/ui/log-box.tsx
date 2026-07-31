@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { useState } from 'react';
 
 import { cn } from '@/lib/utils';
@@ -47,9 +48,16 @@ function fallbackCopy(text: string): boolean {
 export type LogBoxProps = {
   content: string;
   className?: string;
+  /**
+   * O3 (parity cycle 3): the design puts the section heading in the SAME
+   * flex row as 복사/전체보기, not stacked above it — render the caller's
+   * heading here instead of above `LogBox` so all three share one wrapping
+   * row.
+   */
+  heading?: ReactNode;
 };
 
-export function LogBox({ content, className }: LogBoxProps) {
+export function LogBox({ content, className, heading }: LogBoxProps) {
   const [expanded, setExpanded] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -82,7 +90,8 @@ export function LogBox({ content, className }: LogBoxProps) {
 
   return (
     <div className={cn('min-w-0', className)}>
-      <div className='mb-2 flex flex-wrap gap-2'>
+      <div className='mb-2 flex flex-wrap items-center gap-2'>
+        {heading}
         <Button
           onClick={() => {
             void handleCopy();

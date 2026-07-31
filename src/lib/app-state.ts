@@ -27,10 +27,6 @@ const archiveMarketRoutePattern = /^\/market\/archive\/(\d{4}-\d{2}-\d{2})$/;
 const clusterDetailRoutePattern =
   /^\/market\/cluster\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/;
 
-export function formatDateDots(value: string) {
-  return value.replaceAll('-', '. ');
-}
-
 function normalizeDateParam(value: string | null, fallback: string) {
   if (!value) {
     return fallback;
@@ -67,13 +63,28 @@ function normalizeStatusParam(
   return allowedStatuses.includes(value) ? value : '';
 }
 
+// D6 (parity cycle 2): this product is KST-only, but `new Date().toISOString()`
+// reads the UTC calendar date. Between 00:00 and 09:00 KST that is still
+// YESTERDAY in UTC, so the old implementation shifted every default
+// from/to range one day earlier for roughly a third of the day, every day —
+// a real user-facing bug, not just a parity mismatch. Shifting the instant
+// by the fixed +9h KST offset before reading its UTC calendar fields yields
+// the correct KST wall-clock date regardless of the host runtime's own
+// timezone (same technique `formatters.ts`'s `parseKstAwareDate` uses, just
+// applied to "now" instead of a parsed timestamp).
+const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
+
+function getKstNow(): Date {
+  return new Date(Date.now() + KST_OFFSET_MS);
+}
+
 function getTodayIso() {
-  return new Date().toISOString().slice(0, 10);
+  return getKstNow().toISOString().slice(0, 10);
 }
 
 function getRelativeIso(days: number) {
-  const date = new Date();
-  date.setDate(date.getDate() - days);
+  const date = getKstNow();
+  date.setUTCDate(date.getUTCDate() - days);
   return date.toISOString().slice(0, 10);
 }
 

@@ -29,7 +29,8 @@ describe('ArchiveResultsTable', () => {
       '/market/archive/2026-03-31?pageId=42&from=2026-03-01&to=2026-03-31&page=1'
     );
 
-    expect(screen.getByRole('link', { name: '2026. 03. 31' })).toHaveAttribute(
+    // D1: ISO date, not the ko-KR dotted format ("2026. 03. 31").
+    expect(screen.getByRole('link', { name: '2026-03-31' })).toHaveAttribute(
       'href',
       expectedHref
     );

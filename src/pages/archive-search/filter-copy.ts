@@ -43,13 +43,26 @@ export function getStatusSummaryLabel(status: string): string {
   );
 }
 
+// D6 (parity cycle 2): KST calendar date, not UTC — see the matching fix +
+// comment in `src/lib/app-state.ts`'s `getTodayIso`/`getRelativeIso` (this
+// file duplicates those on purpose, per this file's header comment, to keep
+// `app-state.ts`'s public surface from widening for an unrelated phase; both
+// copies must stay bug-for-bug — or in this case fix-for-fix — identical so
+// a 초기화 round-trip through the URL produces the exact same `from`/`to`
+// `parseListFilters` itself would default to).
+const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
+
+function getKstNow(): Date {
+  return new Date(Date.now() + KST_OFFSET_MS);
+}
+
 export function getTodayIso(): string {
-  return new Date().toISOString().slice(0, 10);
+  return getKstNow().toISOString().slice(0, 10);
 }
 
 function getRelativeIso(days: number): string {
-  const date = new Date();
-  date.setDate(date.getDate() - days);
+  const date = getKstNow();
+  date.setUTCDate(date.getUTCDate() - days);
   return date.toISOString().slice(0, 10);
 }
 

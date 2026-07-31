@@ -41,7 +41,10 @@ export type BatchDetailPanelProps = {
 
 function Dl({ children }: { children: ReactNode }) {
   return (
-    <dl className='m-0 grid min-w-0 grid-cols-1 gap-x-4 gap-y-2 text-[13.5px] sm:grid-cols-2'>
+    // B5: design gap is 10px row / 14px column, not 8px / 16px.
+    // A1 (cycle 2): design text is 12.5px, not 13.5px — no explicit
+    // leading, inherits the content root's 1.6 (→ 20px, matching design).
+    <dl className='m-0 grid min-w-0 grid-cols-1 gap-x-[14px] gap-y-[10px] text-[12.5px] sm:grid-cols-2'>
       {children}
     </dl>
   );
@@ -156,7 +159,10 @@ function BatchDetailContent({
   return (
     <div className='flex min-w-0 flex-col gap-4'>
       <div className='flex flex-wrap items-center gap-2'>
-        <h2 className='mono m-0 text-[17px] font-semibold text-[color:var(--text)]'>
+        {/* parity cycle A3: per-block card-heading size (see
+            archive-search-filters.tsx's comment) — the ops detail heading
+            measures 14.5px in the design, not the README §6 17px scale. */}
+        <h2 className='mono m-0 text-[14.5px] font-semibold text-[color:var(--text)]'>
           job {run.id}
         </h2>
         <StatusBadge status={run.rawStatus} />
@@ -172,7 +178,9 @@ function BatchDetailContent({
           value={running && run.finishedAt === '-' ? '진행 중' : run.finishedAt}
         />
         <DlItem label='소요' value={run.duration} />
-        <DlItem label='원문 · 정제 · 이슈' value={run.counts} />
+        {/* O4 (parity cycle 3): match batch-history-list.tsx's slash label
+            — this call site still had the old middle-dot copy. */}
+        <DlItem label='원문/정제/이슈' value={run.counts} />
         <DlItem
           label='스냅샷'
           value={
@@ -218,15 +226,27 @@ function BatchDetailContent({
       ) : null}
 
       <div className='min-w-0'>
-        <h3 className='m-0 mb-1.5 text-[15px] font-semibold text-[color:var(--text)]'>
-          실행 로그
-        </h3>
+        {/* O3 (parity cycle 3): design keeps the heading and 복사/전체보기
+            buttons on one wrapping row — pass the heading into `LogBox` so
+            it renders inside that row instead of stacked above it. */}
         {run.logSummary ? (
-          <LogBox content={run.logSummary} />
+          <LogBox
+            content={run.logSummary}
+            heading={
+              <h3 className='m-0 text-[15px] font-semibold text-[color:var(--text)]'>
+                실행 로그
+              </h3>
+            }
+          />
         ) : (
-          <p className='m-0 text-[12.5px] text-[color:var(--text-faint)]'>
-            실행 로그가 없습니다.
-          </p>
+          <>
+            <h3 className='m-0 mb-1.5 text-[15px] font-semibold text-[color:var(--text)]'>
+              실행 로그
+            </h3>
+            <p className='m-0 text-[12.5px] text-[color:var(--text-faint)]'>
+              실행 로그가 없습니다.
+            </p>
+          </>
         )}
       </div>
 

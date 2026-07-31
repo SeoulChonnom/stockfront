@@ -130,8 +130,8 @@ export function ArchiveSearchPage({
   }
 
   return (
-    <div className='flex min-w-0 flex-col gap-5'>
-      <section>
+    <div className='flex min-w-0 flex-col gap-[var(--gap)]'>
+      <section className='flex flex-col gap-1.5'>
         <h1
           className='m-0 text-[22px] font-semibold text-[color:var(--text)] focus:outline-none'
           id='page-title'
@@ -139,7 +139,12 @@ export function ArchiveSearchPage({
         >
           아카이브 검색
         </h1>
-        <p className='measure-summary wrap-anywhere mt-2 text-[13.5px] text-[color:var(--text-soft)]'>
+        {/* D5: design's measure here is 70ch, not the shared 76ch
+            `.measure-summary` utility. U2: the design's title `<section>`
+            is `display:flex;gap:6px` between h1 and this paragraph, not a
+            margin on the paragraph — `gap-1.5` (6px) on the wrapper above
+            replaces what used to be an `mt-2` (8px) margin here. */}
+        <p className='wrap-anywhere max-w-[70ch] text-[13.5px] text-[color:var(--text-soft)]'>
           기준일 범위와 생성 상태로 과거 스냅샷을 찾습니다. 결과를 열면 해당
           날짜의 시장 브리프로 이동하고, 돌아올 때 필터·페이지·스크롤 위치가
           복원됩니다.
@@ -203,14 +208,19 @@ function ArchiveResultsCard({
   const rows = data?.rows ?? [];
 
   return (
+    // B6: list panels (관련 기사/실행 이력/검색 결과) carry 0 padding on the
+    // panel itself — the header row, body, and pagination each own theirs.
     <div
       aria-busy={isInitialLoading || undefined}
-      className='flex min-w-0 flex-col gap-4 rounded-[var(--r-lg)] border border-[color:var(--line)] bg-[color:var(--surface)] p-4 sm:p-5'
+      className='flex min-w-0 flex-col overflow-hidden rounded-[var(--r-lg)] border border-[color:var(--line)] bg-[color:var(--surface)]'
     >
-      <div className='flex flex-wrap items-center justify-between gap-2'>
+      <div className='flex flex-wrap items-center justify-between gap-2 border-b border-[color:var(--line)] px-4 py-3.5 sm:px-[18px]'>
         <div className='flex flex-wrap items-center gap-2'>
+          {/* parity cycle A3: per-block card-heading size (see
+              archive-search-filters.tsx's comment) — "검색 결과" measures
+              14.5px in the design, not the README §6 17px scale. */}
           <h2
-            className='m-0 scroll-mt-24 text-[17px] font-semibold text-[color:var(--text)] focus:outline-none'
+            className='m-0 scroll-mt-24 text-[14.5px] font-semibold text-[color:var(--text)] focus:outline-none'
             id='archive-results-heading'
             ref={resultsHeadingRef}
             tabIndex={-1}
@@ -222,17 +232,26 @@ function ArchiveResultsCard({
               {formatInteger(data.totalCount)}건
             </span>
           ) : null}
+          {/* D5: "1–20 / 46" range lives next to the results heading, not
+              beside the pager (see Pagination's own comment). */}
+          {data && data.totalCount > 0 ? (
+            <span className='mono text-[11.5px] text-[color:var(--text-faint)]'>
+              {(data.page - 1) * PAGE_SIZE + 1}–
+              {Math.min(data.page * PAGE_SIZE, data.totalCount)} /{' '}
+              {data.totalCount}
+            </span>
+          ) : null}
         </div>
         {isFetching && !isInitialLoading ? <RefetchBadge /> : null}
       </div>
 
       {isInitialLoading ? (
-        <>
+        <div className='flex min-w-0 flex-col gap-4 p-4 sm:p-[18px]'>
           <p className='m-0 text-[13.5px] text-[color:var(--text-soft)]'>
             결과를 불러오는 중입니다. 필터는 그대로 유지됩니다.
           </p>
           <SkeletonTableRows cols={4} rows={8} />
-        </>
+        </div>
       ) : data && rows.length > 0 ? (
         <ArchiveResultsTable
           filters={applied}
@@ -240,25 +259,26 @@ function ArchiveResultsCard({
           scrollSearch={searchParams.toString()}
         />
       ) : data && rows.length === 0 ? (
-        <EmptyState
-          actions={
-            <Button onClick={onReset} type='button' variant='ghost'>
-              필터 초기화
-            </Button>
-          }
-          description='선택한 기간과 상태 조건에 맞는 스냅샷이 없습니다. 필터를 조정하거나 초기화해 보세요.'
-          kind='search-results'
-          title='조건에 맞는 스냅샷이 없습니다'
-        />
+        <div className='p-4 sm:p-[18px]'>
+          <EmptyState
+            actions={
+              <Button onClick={onReset} type='button' variant='ghost'>
+                필터 초기화
+              </Button>
+            }
+            description='선택한 기간과 상태 조건에 맞는 스냅샷이 없습니다. 필터를 조정하거나 초기화해 보세요.'
+            kind='search-results'
+            title='조건에 맞는 스냅샷이 없습니다'
+          />
+        </div>
       ) : null}
 
       {data ? (
         <Pagination
+          className='px-4 py-3 sm:px-[18px]'
           onAnnounce={announce}
           onPageChange={onPageChange}
           page={data.page}
-          pageSize={PAGE_SIZE}
-          totalCount={data.totalCount}
           totalPages={data.totalPages}
         />
       ) : null}

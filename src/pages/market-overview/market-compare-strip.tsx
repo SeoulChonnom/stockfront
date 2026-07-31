@@ -8,10 +8,10 @@ import type { MarketSnapshot } from '@/lib/view-models';
  * `indices[0]`를 "대표"로 취급 — `docs/design_v2/handoff_v2/Market Brief
  * v2.dc.html`의 `compare` 계산 참고).
  *
- * 코드 라벨(`US`/`KR`)은 DTO의 `marketType`에서 오는데, 현재
- * `mappers.ts`/`view-models.ts`가 이 필드를 시장 view model에 남기지 않는다
- * (§13 표에도 없는 항목) — 임의로 지어내지 않고 생략했다. 자세한 내용은
- * 리포트의 "backend/데이터 계층 의존성" 항목 참고.
+ * B2 (parity cycle 2): 코드 칩(`US`/`KR`)은 DTO의 `marketType`에서 오며,
+ * `mappers.ts:295`가 이미 view model에 매핑해 두었다 — `market-section.tsx`의
+ * 섹션 헤더는 cycle 1(D8)에서 이미 이 칩을 받았고, 이 비교 스트립 타일에도
+ * 같은 칩이 필요하다.
  */
 
 function scrollToMarketSection(targetId: string) {
@@ -65,6 +65,13 @@ function MarketCompareTile({
   return (
     <div className='flex min-w-0 flex-col gap-2 rounded-[var(--r-md)] border border-[color:var(--line)] bg-[color:var(--surface-2)] p-3.5'>
       <div className='flex min-w-0 items-center gap-2'>
+        {/* B2: US/KR scope label before the market name — plain text, not
+            the bordered chip market-section.tsx's own header uses. */}
+        {market.marketType ? (
+          <span className='shrink-0 text-[11px] font-bold tracking-[0.07em] text-[color:var(--text-faint)] uppercase'>
+            {market.marketType}
+          </span>
+        ) : null}
         <span className='min-w-0 truncate text-[13.5px] font-semibold text-[color:var(--text)]'>
           {market.label}
         </span>

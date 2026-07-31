@@ -18,11 +18,20 @@ export function BatchAttentionBanner({
   onFilterPartial: () => void;
 }) {
   return (
-    <div className='flex min-w-0 flex-wrap items-center gap-3 rounded-[var(--r-lg)] border border-[color:var(--danger-line)] bg-[color:var(--danger-soft)] p-4 shadow-[inset_3px_0_0_var(--danger)]'>
-      <p className='wrap-anywhere m-0 flex-1 text-[13.5px] font-semibold text-[color:var(--danger)]'>
+    // C3: design is a `--surface` white card with a real 4px `--danger`
+    // left border, not a soft-red fill with a full border.
+    // M2 (parity cycle 4): design's message `<span>` carries no
+    // `flex-grow` and the button group has `margin-left:auto` — at 390 the
+    // message's own hypothetical width already fills the row on its own,
+    // so the button group (which doesn't fit alongside it) wraps whole
+    // onto the next line. The app's `flex-1` on the message forced it to
+    // share the row with the buttons at all widths, squeezing it into 3
+    // lines instead of 1.
+    <div className='flex min-w-0 flex-wrap items-center gap-2.5 rounded-[var(--r-lg)] border border-[color:var(--danger-line)] border-l-4 border-l-[color:var(--danger)] bg-[color:var(--surface)] px-4 py-3'>
+      <p className='wrap-anywhere m-0 text-[13.5px] font-semibold text-[color:var(--text)]'>
         {failedCount}건 실패, {partialCount}건 부분 실패 — 확인이 필요합니다.
       </p>
-      <div className='flex shrink-0 flex-wrap gap-2'>
+      <div className='ml-auto flex flex-wrap gap-2'>
         <Button
           onClick={onFilterFailed}
           size='sm'

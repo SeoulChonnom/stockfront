@@ -80,8 +80,11 @@ function IssueRow({
   const mirrorUrl = getSafeExternalUrl(representative?.mirrorUrl);
 
   return (
-    <article className='grid min-w-0 grid-cols-1 gap-3 border-b border-[color:var(--line)] px-4 py-3.5 last:border-b-0 sm:grid-cols-[minmax(0,1fr)_200px] sm:gap-4'>
-      <div className='flex min-w-0 flex-col gap-1.5'>
+    // U3 (parity cycle 5): design's gap is a fixed `10px 18px` (row/column)
+    // regardless of breakpoint, not a breakpoint-stepped uniform gap — and
+    // horizontal padding is 18px, not the shared 16px (`px-4`).
+    <article className='grid min-w-0 grid-cols-1 gap-x-[18px] gap-y-[10px] border-b border-[color:var(--line)] px-[18px] py-3.5 last:border-b-0 sm:grid-cols-[minmax(0,1fr)_200px]'>
+      <div className='flex min-w-0 flex-col gap-[7px]'>
         <a
           className='text-pretty wrap-anywhere text-[15px] font-semibold text-[color:var(--text)] no-underline hover:text-[color:var(--primary)] hover:underline'
           href={withBasePath(href)}

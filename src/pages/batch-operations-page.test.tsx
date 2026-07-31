@@ -294,7 +294,10 @@ describe('BatchOperationsPage — admin', () => {
 
     renderPage(new URLSearchParams('page=2'));
 
-    expect(screen.getByText('2 / 2')).toBeInTheDocument();
+    // E7 (parity cycle 2): design's ops pager has no trailing "N / M"
+    // indicator (unlike Archive's) — the range lives in the list header
+    // instead ("1–20 / 27", already covered by other tests in this file).
+    expect(screen.getByText('21–27 / 27')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: '1' }));
 
@@ -344,7 +347,10 @@ describe('BatchOperationsPage — admin', () => {
         '배치 목록을 불러오지 못했습니다. 필터와 이전 선택은 그대로 유지됩니다.'
       )
     ).toBeInTheDocument();
-    expect(screen.getByDisplayValue('FAILED · 생성 실패')).toBeInTheDocument();
+    // E1: the 시작일/종료일/상태 filter form is gone — the applied status
+    // filter is now shown as plain muted text in the list header (E3: always
+    // present, "· <label>") instead of a `<select>` value.
+    expect(screen.getByText('· FAILED · 생성 실패')).toBeInTheDocument();
     expect(
       screen.getByRole('heading', { level: 2, name: 'job 202' })
     ).toBeInTheDocument();

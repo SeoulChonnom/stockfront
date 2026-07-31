@@ -37,7 +37,11 @@ export interface TableProps extends TableHTMLAttributes<HTMLTableElement> {
 export function Table({ className, minWidth, style, ...props }: TableProps) {
   return (
     <table
-      className={cn('w-full caption-bottom text-sm', className)}
+      // 13px, no explicit leading — inherits the content root's 1.6
+      // line-height (parity cycle A4/A10: 13px/1.6 → 20.8px, matching the
+      // design). Tailwind's `text-sm` was 14px/20px (fixed 1.43 leading),
+      // not the design's 13px/20.8px.
+      className={cn('w-full caption-bottom text-[13px]', className)}
       style={{ ...style, minWidth }}
       {...props}
     />

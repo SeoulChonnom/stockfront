@@ -53,7 +53,7 @@ export function MarketOverviewPage({
   };
 
   return (
-    <div className='flex flex-col gap-4 sm:gap-5'>
+    <div className='flex flex-col gap-[var(--gap)]'>
       {mode === 'archive' ? (
         <ArchiveModeBand
           businessDate={snapshot.businessDate}

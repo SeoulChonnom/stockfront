@@ -44,8 +44,20 @@ const TONE_CLASSES: Readonly<Record<BadgeTone, string>> = {
     'text-[color:var(--neutral)] bg-[color:var(--neutral-soft)] border-[color:var(--neutral-line)]',
 };
 
+// A5: no explicit `leading-*` — design's badge lineHeight (19.2px) is just
+// 12px inheriting the content root's 1.6, not a bespoke 1.4.
 const BADGE_BASE_CLASSES =
-  'inline-flex items-center gap-1.5 rounded-[var(--r-sm)] border px-2 py-0.5 text-[12.5px] font-semibold leading-[1.4] whitespace-nowrap';
+  'inline-flex items-center gap-1.5 rounded-[var(--r-sm)] border px-[9px] py-1 text-[12px] font-semibold whitespace-nowrap';
+
+/**
+ * N2 (parity cycle 3): the design uses this smaller badge (11.5px,
+ * padding 3px/8px, gap 5px) for the archive results table's per-row status
+ * — one notch down from the 12px/4px-9px/6px badge used at the page level
+ * (e.g. the Latest/Archive header's own status, `decision-header-card.tsx`).
+ * Verified against the prototype markup directly (`data-tone` badges at
+ * `font-size:11.5px;gap:5px;padding:3px 8px`).
+ */
+const BADGE_SM_CLASSES = 'gap-[5px] px-2 py-[3px] text-[11.5px]';
 
 function normalizeStatus(status: string): string {
   return status.trim().toLowerCase();
@@ -57,15 +69,29 @@ export type StatusBadgeProps = {
   /** RUNNING/refetching처럼 진행 중임을 스피너 도트로 보여줘야 할 때. */
   spinner?: boolean;
   className?: string;
+  /** N2: `'sm'` matches the design's smaller row-level badge (see `BADGE_SM_CLASSES`). Defaults to the page-level size. */
+  size?: 'default' | 'sm';
 };
 
-export function StatusBadge({ status, spinner, className }: StatusBadgeProps) {
+export function StatusBadge({
+  status,
+  spinner,
+  className,
+  size = 'default',
+}: StatusBadgeProps) {
   const normalized = normalizeStatus(status);
   const label = STATUS_LABELS[normalized] ?? status;
   const tone = STATUS_TONES[normalized] ?? 'neutral';
 
   return (
-    <span className={cn(BADGE_BASE_CLASSES, TONE_CLASSES[tone], className)}>
+    <span
+      className={cn(
+        BADGE_BASE_CLASSES,
+        size === 'sm' && BADGE_SM_CLASSES,
+        TONE_CLASSES[tone],
+        className
+      )}
+    >
       <span
         aria-hidden='true'
         className={cn(

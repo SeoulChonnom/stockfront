@@ -69,7 +69,16 @@ export function StatusCard({
           {badge}
         </span>
         <h1
-          className='mt-3 mb-2 text-[22px] font-semibold text-[color:var(--text)]'
+          className={cn(
+            'mb-2 font-semibold text-[color:var(--text)]',
+            // parity cycle A8: the design's 404 h1 is 20px/margin-top 10px,
+            // distinct from the auth-bootstrap screens' 22px/12px — `fullScreen`
+            // already distinguishes 404 (false) from those screens (true), so
+            // it doubles as the hook for this size/spacing pair without a new
+            // prop. The auth-bootstrap screens aren't part of this parity
+            // cycle's measured findings, so their sizing is left as-is.
+            fullScreen ? 'mt-3 text-[22px]' : 'mt-[10px] text-[20px]'
+          )}
           id={titleId}
           tabIndex={-1}
         >

@@ -157,7 +157,8 @@ describe('TriggerDialog', () => {
     {
       status: 403,
       body: { code: 'FORBIDDEN' },
-      expectMessage: '수동 실행 권한이 없습니다. 관리자(ADMIN) 권한이 필요합니다.',
+      expectMessage:
+        '수동 실행 권한이 없습니다. 관리자(ADMIN) 권한이 필요합니다.',
     },
     {
       status: 422,

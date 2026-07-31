@@ -15,7 +15,6 @@ import {
   TableScrollWrapper,
 } from '@/components/ui/table';
 
-import { formatDateDots } from '../../lib/app-state';
 import { buildUrl, navigate, withBasePath } from '../../lib/router';
 import type { ArchiveRecord } from '../../lib/view-models';
 
@@ -114,13 +113,19 @@ export function ArchiveResultsTable({
 }) {
   return (
     <TableScrollWrapper>
+      {/* B6: the panel around this table now carries 0 padding, so each
+          cell owns its own horizontal inset (18px at the row edges, 12px
+          between columns — matches the design's per-cell padding). */}
       <Table aria-labelledby='archive-results-heading' minWidth={520}>
         <TableHeader>
           <TableRow>
-            <TableHead>기준일</TableHead>
-            <TableHead>글로벌 헤드라인</TableHead>
-            <TableHead>상태</TableHead>
-            <TableHead className='hidden text-right min-[1181px]:table-cell'>
+            <TableHead className='h-auto py-2 pr-3 pl-4 sm:pl-[18px]'>
+              기준일
+            </TableHead>
+            <TableHead className='h-auto py-2 px-3'>글로벌 헤드라인</TableHead>
+            <TableHead className='h-auto py-2 px-3'>상태</TableHead>
+            {/* D3: design left-aligns 생성 시각, the app right-aligned it. */}
+            <TableHead className='hidden h-auto py-2 pr-4 pl-3 text-left min-[1181px]:table-cell sm:pr-[18px]'>
               생성 시각
             </TableHead>
           </TableRow>
@@ -135,19 +140,22 @@ export function ArchiveResultsTable({
                 key={record.pageId}
                 tone={record.status === 'FAILED' ? 'danger' : undefined}
               >
-                <TableCell>
+                {/* D1: row pitch — design's body cell vertical padding is
+                    12px, not the shared `TableCell` default (18px). */}
+                <TableCell className='py-3 pr-3 pl-4 sm:pl-[18px]'>
                   <a
                     className='mono font-semibold text-[color:var(--primary)] underline-offset-2 hover:underline'
                     href={withBasePath(href)}
                     onClick={onOpen}
                   >
-                    {formatDateDots(record.businessDate)}
+                    {/* D1: ISO date, mono — not the ko-KR dotted format. */}
+                    {record.businessDate}
                   </a>
                   <div className='mono mt-1 text-[12px] text-[color:var(--text-faint)]'>
                     pageId {record.pageId}
                   </div>
                 </TableCell>
-                <TableCell>
+                <TableCell className='py-3 px-3'>
                   <a
                     className='wrap-anywhere text-pretty font-medium text-[color:var(--text)] underline-offset-2 hover:underline'
                     href={withBasePath(href)}
@@ -158,10 +166,12 @@ export function ArchiveResultsTable({
                   <ReasonSubline record={record} />
                   <GeneratedAtSubline record={record} />
                 </TableCell>
-                <TableCell>
-                  <StatusBadge status={record.status} />
+                <TableCell className='py-3 px-3'>
+                  {/* N2 (parity cycle 3): row-level badge is one notch
+                      smaller than the page-level badge in the design. */}
+                  <StatusBadge size='sm' status={record.status} />
                 </TableCell>
-                <TableCell className='mono hidden text-right whitespace-nowrap min-[1181px]:table-cell'>
+                <TableCell className='mono hidden py-3 pr-4 pl-3 text-left whitespace-nowrap min-[1181px]:table-cell sm:pr-[18px]'>
                   {record.generatedAt}
                 </TableCell>
               </TableRow>

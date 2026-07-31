@@ -19,6 +19,8 @@ function baseDetail(overrides: Partial<ClusterDetail> = {}): ClusterDetail {
     businessDate: '2026-07-26',
     marketLabel: '미국 증시',
     title: 'cluster title',
+    summary: 'cluster summary paragraph.',
+    analysisLead: 'cluster analysis lead paragraph.',
     tags: ['반도체', 'AI'],
     analysis: ['analysis paragraph one.', 'analysis paragraph two.'],
     articles: [
@@ -105,16 +107,17 @@ describe('ClusterDetailPage', () => {
 
     render(<ClusterDetailPage clusterId='cluster-1' />);
 
-    expect(screen.getByRole('link', { name: 'safe article' })).toHaveAttribute(
-      'href',
-      'https://example.com/original'
-    );
+    // C10: the title link's accessible name includes the trailing "↗"
+    // the design appends to linked article titles.
     expect(
-      screen.queryByRole('link', { name: 'unsafe article' })
+      screen.getByRole('link', { name: 'safe article ↗' })
+    ).toHaveAttribute('href', 'https://example.com/original');
+    expect(
+      screen.queryByRole('link', { name: /unsafe article/ })
     ).not.toBeInTheDocument();
     expect(screen.getByText('unsafe article')).toBeInTheDocument();
     expect(
-      screen.getByRole('link', { name: 'no mirror article' })
+      screen.getByRole('link', { name: 'no mirror article ↗' })
     ).toHaveAttribute('href', 'https://example.com/no-mirror');
 
     const mirrorLinks = screen.getAllByRole('link', { name: /네이버 미러/ });

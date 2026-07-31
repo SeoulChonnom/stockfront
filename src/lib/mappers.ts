@@ -10,13 +10,11 @@ import type {
   IndexCardResponse,
 } from './api/types';
 import {
-  formatDateTime,
   formatDurationSeconds,
   formatKstDateTime,
   formatNumericText,
   formatPercent,
   formatSignedNumber,
-  formatTime,
   toStatusTone,
 } from './formatters';
 import type {
@@ -271,7 +269,12 @@ export function mapDailyPageToSnapshot(
     pageId: asFiniteNumber(response.pageId, 0),
     businessDate: asString(response.businessDate, '-'),
     versionNo: asFiniteNumber(response.versionNo, 0),
-    generatedAt: formatDateTime(response.generatedAt),
+    // D2: absolute KST datetime, not the ko-KR locale string `formatDateTime`
+    // produced. `decision-header-card.tsx` prefers `generatedAtIso` (always
+    // set by the real API) formatted the same way — this field is only the
+    // fallback for callers/fixtures that predate `generatedAtIso` — but it
+    // must still match the design's format if it's ever the one rendered.
+    generatedAt: formatKstDateTime(response.generatedAt) ?? '-',
     generatedAtIso: asNullableString(response.generatedAt),
     status: toStatusTone(response.status),
     /**
@@ -339,12 +342,16 @@ export function mapArchiveListToView(
     rows: response.items.map((item) => ({
       pageId: asFiniteNumber(item.pageId, 0),
       businessDate: asString(item.businessDate, '-'),
+      // D4: `headlineSummary` null falls straight to the "not generated"
+      // copy — no longer backfilled with `pageTitle`, which made a FAILED
+      // (AI-summary-failed) row look like a normal successful one.
       headline:
         asOptionalString(item.headlineSummary) ??
-        asOptionalString(item.pageTitle) ??
-        '헤드라인 요약이 아직 생성되지 않았습니다.',
+        '헤드라인이 생성되지 않았습니다',
       status: toUpperStatus(item.status, ['READY', 'PARTIAL', 'FAILED']),
-      generatedAt: formatTime(item.generatedAt),
+      // D3: absolute KST datetime, not the time-only-with-seconds
+      // `formatTime` produced ("06:08:10").
+      generatedAt: formatKstDateTime(item.generatedAt) ?? '-',
       detail: asOptionalString(item.partialMessage) ?? null,
     })),
     page: asFiniteNumber(response.pagination.page, 1),
@@ -394,6 +401,15 @@ export function mapClusterDetailToView(
   const summaryShort = isRecord(response.summary)
     ? response.summary.short
     : undefined;
+  // F1 (parity cycle 2): `summary.long` is a distinct DTO field from
+  // `summary.short` above — not the same sentence rendered twice. Design's
+  // header lead (D11, cycle 1) is the SHORT summary; the "AI 심층 분석"
+  // panel's own lead paragraph is the LONG one, which continues past where
+  // the short one ends. Confirmed by reading the design fixtures: `short`
+  // is one sentence, `long` is that same opening sentence plus 1-2 more.
+  const summaryLong = isRecord(response.summary)
+    ? response.summary.long
+    : undefined;
   const clusterId = asString(response.clusterId, 'unknown-cluster');
   const representativeArticle: Record<string, unknown> = isRecord(
     response.representativeArticle
@@ -410,6 +426,8 @@ export function mapClusterDetailToView(
     businessDate: asString(response.businessDate, '-'),
     marketLabel: asString(response.marketLabel, '시장'),
     title: asString(response.title, '클러스터 제목이 없습니다.'),
+    summary: typeof summaryShort === 'string' ? summaryShort : null,
+    analysisLead: typeof summaryLong === 'string' ? summaryLong : null,
     tags: asStringArray(response.tags),
     analysis,
     articles: articles.map((article, index) =>
@@ -426,7 +444,9 @@ export function mapClusterDetailToView(
       response.articleCount,
       articles.length
     ),
-    updatedAt: formatDateTime(response.lastUpdatedAt),
+    // D2/D3: absolute KST datetime ("YYYY-MM-DD HH:mm KST"), not the ko-KR
+    // locale string ("2026. 07. 27. 06:12") `formatDateTime` produced.
+    updatedAt: formatKstDateTime(response.lastUpdatedAt) ?? '-',
   };
 }
 
@@ -440,8 +460,11 @@ function mapBatchListItemToRun(item: BatchJobListItemResponse): BatchRun {
     market: asString(item.marketScope, 'N/A'),
     businessDate: asString(item.businessDate, '-'),
     status,
-    startedAt: formatTime(item.startedAt),
-    finishedAt: formatTime(item.endedAt),
+    // D10: absolute KST datetime ("2026-07-27 06:10 KST"), not the
+    // time-only `formatTime` produced ("06:10:00") — the design's history
+    // list subline and the detail panel's 시작/종료 both use this format.
+    startedAt: formatKstDateTime(item.startedAt) ?? '-',
+    finishedAt: formatKstDateTime(item.endedAt) ?? '-',
     duration: formatDurationSeconds(
       asNullableFiniteNumber(item.durationSeconds)
     ),
@@ -520,8 +543,9 @@ export function mapBatchDetailToRun(
     market: 'N/A',
     businessDate: asString(response.businessDate, '-'),
     status: toUpperStatus(response.status, batchJobStatuses),
-    startedAt: formatTime(response.startedAt),
-    finishedAt: formatTime(response.endedAt),
+    // D10: see the matching comment in `mapBatchListItemToRun` above.
+    startedAt: formatKstDateTime(response.startedAt) ?? '-',
+    finishedAt: formatKstDateTime(response.endedAt) ?? '-',
     duration: formatDurationSeconds(
       asNullableFiniteNumber(response.durationSeconds)
     ),

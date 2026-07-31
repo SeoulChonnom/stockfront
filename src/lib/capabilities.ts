@@ -116,9 +116,7 @@ function deriveRoleFromRoleList(roles: readonly string[]): Role | null {
     return null;
   }
 
-  const isAdmin = roles.some(
-    (entry) => entry.trim().toLowerCase() === 'admin'
-  );
+  const isAdmin = roles.some((entry) => entry.trim().toLowerCase() === 'admin');
 
   return isAdmin ? 'admin' : 'user';
 }

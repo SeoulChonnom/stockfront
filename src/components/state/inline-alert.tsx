@@ -13,12 +13,19 @@ import { cn } from '@/lib/utils';
 
 export type AlertTone = 'danger' | 'warning' | 'info' | 'success';
 
+/**
+ * C4: `info` is the odd one out in the design — a soft blue fill + an "i"
+ * icon, no heavy left accent border (danger/warning/success all keep the
+ * 4px left border elsewhere in the app, e.g. the briefError/searchError/
+ * clusterError panels, so only `info`'s class set drops `border-l-4` — see
+ * the `border` variant below).
+ */
 const TONE_CLASSES: Readonly<Record<AlertTone, string>> = {
   danger:
     'border-[color:var(--danger-line)] bg-[color:var(--danger-soft)] border-l-[color:var(--danger)]',
   warning:
     'border-[color:var(--warning-line)] bg-[color:var(--warning-soft)] border-l-[color:var(--warning)]',
-  info: 'border-[color:var(--info-line)] bg-[color:var(--info-soft)] border-l-[color:var(--info)]',
+  info: 'border-[color:var(--info-line)] bg-[color:var(--info-soft)]',
   success:
     'border-[color:var(--success-line)] bg-[color:var(--success-soft)] border-l-[color:var(--success)]',
 };
@@ -51,17 +58,10 @@ export function InlineAlert({
   className,
 }: InlineAlertProps) {
   const resolvedRole = role ?? (tone === 'danger' ? 'alert' : undefined);
+  const isInfo = tone === 'info';
 
-  return (
-    <div
-      aria-live={ariaLive}
-      className={cn(
-        'min-w-0 rounded-[var(--r-md)] border border-l-4 p-4',
-        TONE_CLASSES[tone],
-        className
-      )}
-      role={resolvedRole}
-    >
+  const content = (
+    <>
       {title ? (
         <h3
           className={cn(
@@ -80,6 +80,31 @@ export function InlineAlert({
       {actions ? (
         <div className='mt-3 flex flex-wrap gap-2'>{actions}</div>
       ) : null}
+    </>
+  );
+
+  return (
+    <div
+      aria-live={ariaLive}
+      className={cn(
+        'min-w-0 rounded-[var(--r-md)] border',
+        // F8 (parity cycle 2): design's info banner padding is 12px/16px,
+        // not the shared 16px-all-sides default.
+        isInfo ? 'flex gap-2.5 py-3 px-4' : 'border-l-4 p-4',
+        TONE_CLASSES[tone],
+        className
+      )}
+      role={resolvedRole}
+    >
+      {isInfo ? (
+        <span
+          aria-hidden='true'
+          className='shrink-0 font-bold text-[color:var(--info)]'
+        >
+          i
+        </span>
+      ) : null}
+      {isInfo ? <div className='min-w-0'>{content}</div> : content}
     </div>
   );
 }

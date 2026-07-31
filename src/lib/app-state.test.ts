@@ -57,6 +57,26 @@ describe('parseListFilters', () => {
     }
   });
 
+  it('D6: defaults to the KST calendar date, not the UTC one, in the early-KST-morning boundary window', () => {
+    // 2026-07-27T00:30 KST == 2026-07-26T15:30:00Z — a naive
+    // `new Date().toISOString()` reads the UTC date and would default `to`
+    // to 2026-07-26 (yesterday in Korea) for this entire 00:00–09:00 KST
+    // window, every day. The default range must be anchored on 2026-07-27.
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-07-26T15:30:00Z'));
+
+    try {
+      expect(parseListFilters(new URLSearchParams())).toEqual({
+        from: '2026-07-13',
+        to: '2026-07-27',
+        status: '',
+        page: 1,
+      });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('normalizes invalid page values to the first page', () => {
     for (const page of ['-1', '2.5', 'Infinity', 'NaN']) {
       expect(parseListFilters(new URLSearchParams({ page })).page).toBe(1);

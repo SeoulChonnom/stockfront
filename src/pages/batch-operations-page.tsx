@@ -81,10 +81,10 @@ function AdminBatchOperations({
   });
 
   const rows = jobsQuery.data?.rows ?? [];
-  const fallbackJobId =
-    rows.find((row) => row.rawStatus.toUpperCase() === 'FAILED')?.id ??
-    rows[0]?.id ??
-    null;
+  // E2: default selection is the first (newest) row — matching the design
+  // — not the first FAILED row, which used to show a different job in the
+  // detail panel than what the list visually led with.
+  const fallbackJobId = rows[0]?.id ?? null;
   const selectedJobId = jobIdParam ?? fallbackJobId;
   const detailQuery = useBatchJobDetail(selectedJobId);
 
@@ -125,7 +125,7 @@ function AdminBatchOperations({
   const counts = jobsQuery.data?.counts ?? null;
 
   return (
-    <div className='flex min-w-0 flex-col gap-5'>
+    <div className='flex min-w-0 flex-col gap-[var(--gap)]'>
       <BatchHeader onOpenTrigger={() => setTriggerDialog({ open: true })} />
 
       {triggerBanner ? (
@@ -136,23 +136,31 @@ function AdminBatchOperations({
         />
       ) : null}
 
-      {counts && counts.failedCount + counts.partialCount > 0 ? (
-        <BatchAttentionBanner
-          failedCount={counts.failedCount}
-          onFilterFailed={() => goTo({ status: 'FAILED', page: 1 })}
-          onFilterPartial={() => goTo({ status: 'PARTIAL', page: 1 })}
-          partialCount={counts.partialCount}
+      {/* V3 (parity cycle 6): the design nests the attention banner and the
+          summary tiles inside a single `<section aria-label="배치 요약"
+          style="gap:12px">`, not as two flat siblings of this page's own
+          `--gap` stack (20px at desktop) — that 8px difference (20 vs 12
+          between the banner and the tiles) was the bulk of the
+          `title-to-first-block` gap mismatch. */}
+      <div aria-label='배치 요약' className='flex min-w-0 flex-col gap-3'>
+        {counts && counts.failedCount + counts.partialCount > 0 ? (
+          <BatchAttentionBanner
+            failedCount={counts.failedCount}
+            onFilterFailed={() => goTo({ status: 'FAILED', page: 1 })}
+            onFilterPartial={() => goTo({ status: 'PARTIAL', page: 1 })}
+            partialCount={counts.partialCount}
+          />
+        ) : null}
+
+        <BatchSummaryTiles
+          avgDurationSeconds={counts?.avgDurationSeconds ?? null}
+          failedCount={counts?.failedCount ?? 0}
+          partialCount={counts?.partialCount ?? 0}
+          successCount={counts?.successCount ?? 0}
         />
-      ) : null}
+      </div>
 
-      <BatchSummaryTiles
-        avgDurationSeconds={counts?.avgDurationSeconds ?? null}
-        failedCount={counts?.failedCount ?? 0}
-        partialCount={counts?.partialCount ?? 0}
-        successCount={counts?.successCount ?? 0}
-      />
-
-      <div className='grid min-w-0 grid-cols-1 gap-5 min-[1181px]:grid-cols-[minmax(0,1fr)_400px]'>
+      <div className='grid min-w-0 grid-cols-1 gap-[var(--gap)] min-[1181px]:grid-cols-[minmax(0,1fr)_400px]'>
         <BatchHistoryList
           applied={applied}
           hiddenOnNarrowView={isDetailView}
@@ -160,10 +168,8 @@ function AdminBatchOperations({
           isFetching={jobsQuery.isFetching}
           isLoading={jobsQuery.isLoading}
           onAnnounce={announce}
-          onApplyFilters={(next) => goTo({ ...next, page: 1 })}
           onClearStatusFilter={() => goTo({ status: '', page: 1 })}
           onPageChange={(page) => goTo({ page })}
-          onResetFilters={() => goTo({ from: '', to: '', status: '', page: 1 })}
           onRetry={() => {
             void jobsQuery.refetch();
           }}

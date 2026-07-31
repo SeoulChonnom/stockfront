@@ -648,7 +648,9 @@ describe('mappers', () => {
 
     expect(view.page).toBe(2);
     expect(view.totalPages).toBe(3);
-    expect(view.rows[0].headline).toBe('Title');
+    // D4: null `headlineSummary` no longer backfills with `pageTitle` — a
+    // FAILED (AI-summary-failed) row must not look like a normal one.
+    expect(view.rows[0].headline).toBe('헤드라인이 생성되지 않았습니다');
   });
 
   it('normalizes malformed archive item dates, text, status, and counts', () => {
@@ -680,7 +682,7 @@ describe('mappers', () => {
     expect(view.rows[0]).toMatchObject({
       pageId: 0,
       businessDate: '-',
-      headline: '헤드라인 요약이 아직 생성되지 않았습니다.',
+      headline: '헤드라인이 생성되지 않았습니다',
       status: 'FAILED',
       generatedAt: '-',
       detail: null,

@@ -10,8 +10,8 @@ import type { ClusterOriginQuery } from './navigation';
  * 시장 섹션 — README §7-2 item 3. `markets[]`의 DTO 순서(미국 → 한국)를
  * 그대로 유지해 map으로 순회한다.
  *
- * 시장 코드 배지(`US`/`KR`)는 `mappers.ts`가 DTO의 `marketType`을 view
- * model로 옮기지 않아 생략했다 — 리포트의 데이터 계층 의존성 참고.
+ * D8: 시장 코드 배지(`US`/`KR`)는 `mappers.ts:295`가 이미 `marketType`을
+ * view model로 매핑해 두었다 — 이 섹션이 렌더하지 않고 있었을 뿐이다.
  */
 
 const NO_NARRATIVE_COPY =
@@ -43,6 +43,12 @@ export function MarketSection({
       id={`mk-section-${index}`}
     >
       <div className='flex flex-wrap items-baseline gap-x-3 gap-y-2 border-b border-[color:var(--line)] px-4 py-4'>
+        {/* D8: US/KR market-scope chip before the market name. */}
+        {market.marketType ? (
+          <span className='mono rounded-[var(--r-sm)] border border-[color:var(--line-strong)] px-1.75 py-0.5 text-[11px] font-semibold tracking-[0.08em] text-[color:var(--text-soft)]'>
+            {market.marketType}
+          </span>
+        ) : null}
         <h2 className='m-0 text-[17px] font-semibold' id={headingId}>
           {market.label}
         </h2>

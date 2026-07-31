@@ -5,13 +5,31 @@ import type { ButtonHTMLAttributes } from 'react';
 
 import { cn } from '@/lib/utils';
 
+/*
+ * C1: design buttons are `border-radius:var(--r-md)` (8px, not the
+ * previous pill-ish 14px) at `font-weight:600` (not 700/`font-bold`).
+ * Font-size is explicit per size tier (13.5px default — matches the
+ * measured `trigger-btn`/`필터 적용`; 12.5px for the smaller `sm` tier —
+ * matches `실패만 보기`/`필터 해제`) rather than inheriting whatever the
+ * ambient text size happens to be.
+ */
 const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-[14px] border font-bold transition-transform duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--bg)] disabled:pointer-events-none disabled:opacity-45 [&_svg]:pointer-events-none [&_svg]:shrink-0',
+  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-[var(--r-md)] border font-semibold transition-transform duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--bg)] disabled:pointer-events-none disabled:opacity-45 [&_svg]:pointer-events-none [&_svg]:shrink-0',
   {
     variants: {
       variant: {
+        // C1: design is a flat `border:1px solid var(--accent);
+        // background:var(--accent)` — a solid fill, not a gradient. The
+        // previous gradient's two stops were already the same color (so it
+        // never looked different), but it meant `background-color`/
+        // `border-color` never showed up as the actual token value.
+        // U5 (parity cycle 5): design buttons carry no box-shadow at all —
+        // README §6 reserves shadow for sticky/overlay surfaces (`--sh2`/
+        // `--sh3`), not buttons. The previous drop shadow here was inline
+        // decoration invented past the design, not a value the reference
+        // ever expressed.
         primary:
-          'border-transparent text-white shadow-[0_16px_30px_color-mix(in_srgb,var(--primary)_24%,transparent)] bg-[linear-gradient(135deg,var(--primary),var(--primary))] hover:-translate-y-px',
+          'border-[color:var(--primary)] bg-[color:var(--primary)] text-white hover:-translate-y-px',
         secondary:
           'border-[color:var(--line-strong)] bg-[color:color-mix(in_srgb,var(--surface)_92%,transparent)] text-[color:var(--text)] hover:-translate-y-px',
         ghost:
@@ -24,9 +42,11 @@ const buttonVariants = cva(
           'border-[color:var(--danger-line)] bg-[color:var(--danger-soft)] text-[color:var(--danger)] hover:-translate-y-px',
       },
       size: {
-        default: 'min-h-11 px-4',
-        sm: 'min-h-10 px-3.5 text-sm',
-        lg: 'min-h-12 px-5',
+        // C1: design buttons consistently use 18px horizontal padding
+        // (trigger-btn/필터 적용/수동 실행/…), not 16/20px.
+        default: 'min-h-11 px-[18px] text-[13.5px]',
+        sm: 'min-h-10 px-3.5 text-[12.5px]',
+        lg: 'min-h-12 px-[18px] text-[13.5px]',
         icon: 'size-11',
       },
     },

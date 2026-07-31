@@ -230,6 +230,23 @@ body,
   min-height: 100vh;
 }
 
+/*
+ * Content root base type — parity cycle A1/A2. Design's [data-app] wrapper
+ * sets font-size:14px/line-height:1.6 on the div that wraps the whole
+ * rendered app (nav + main); `#root` is this app's equivalent scope-owning
+ * element. Deliberately NOT set on `:root`/`html` — that selector defines
+ * the `rem` reference for every Tailwind utility class (`p-4`, `gap-3`,
+ * `text-sm`, …) app-wide, so scoping the change there would silently shrink
+ * every rem-based spacing/sizing value by 14/16, not just inherited body
+ * text. Elements that already declare an explicit font-size (every
+ * Tailwind `text-[…]` class, `--fs-*` token consumer, etc.) are unaffected
+ * either way since an explicit declaration always wins over inheritance.
+ */
+#root {
+  font-size: 14px;
+  line-height: 1.6;
+}
+
 body {
   margin: 0;
   background: var(--bg);
@@ -240,10 +257,21 @@ body {
      that's a layout bug to fix at the source, not to paper over here. */
 }
 
+/*
+ * Only `font-family` — NOT the `font` shorthand. `font: inherit` also
+ * resets font-size/font-weight/line-height to inherit, and since this rule
+ * is plain CSS (not inside any Tailwind `@layer`), cascade-layer rules
+ * always lose to it regardless of specificity — every `text-[…]`/
+ * `font-semibold`/etc. utility on a button/input/select was silently being
+ * overridden back to the ambient inherited size/weight (discovered via the
+ * parity cycle's C1 button fix never taking visual effect). Native form
+ * controls still need the app's font-family (not the browser's UI font
+ * stack) — just not the rest of the shorthand.
+ */
 button,
 input,
 select {
-  font: inherit;
+  font-family: inherit;
 }
 
 a {
