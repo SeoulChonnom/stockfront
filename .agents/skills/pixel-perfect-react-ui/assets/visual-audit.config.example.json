@@ -1,0 +1,113 @@
+{
+  "outputDir": ".visual-audit/artifacts",
+  "failOnDiff": true,
+  "navigationTimeoutMs": 30000,
+  "settleTimeMs": 150,
+  "stableCss": "*, *::before, *::after { animation: none !important; transition: none !important; caret-color: transparent !important; } html { scroll-behavior: auto !important; }",
+  "styleProperties": [
+    "display",
+    "position",
+    "box-sizing",
+    "overflow",
+    "font-family",
+    "font-size",
+    "font-weight",
+    "font-style",
+    "line-height",
+    "letter-spacing",
+    "text-align",
+    "white-space",
+    "color",
+    "background-color",
+    "width",
+    "height",
+    "min-width",
+    "max-width",
+    "min-height",
+    "max-height",
+    "margin-top",
+    "margin-right",
+    "margin-bottom",
+    "margin-left",
+    "padding-top",
+    "padding-right",
+    "padding-bottom",
+    "padding-left",
+    "row-gap",
+    "column-gap",
+    "align-items",
+    "justify-content",
+    "border-top-width",
+    "border-right-width",
+    "border-bottom-width",
+    "border-left-width",
+    "border-top-color",
+    "border-right-color",
+    "border-bottom-color",
+    "border-left-color",
+    "border-radius",
+    "box-shadow",
+    "opacity",
+    "transform"
+  ],
+  "tolerances": {
+    "positionPx": 1,
+    "sizePx": 1,
+    "spacingPx": 1,
+    "pixelChannelThreshold": 0.1,
+    "maxDiffPixelRatio": 0.002
+  },
+  "viewports": [
+    { "name": "desktop", "width": 1440, "height": 1200, "deviceScaleFactor": 1 },
+    { "name": "mobile", "width": 390, "height": 844, "deviceScaleFactor": 1 }
+  ],
+  "pages": [
+    {
+      "id": "profile",
+      "referenceUrl": "./design/reference.html",
+      "candidateUrl": "http://127.0.0.1:5173/profile",
+      "referenceReadySelector": "body",
+      "candidateReadySelector": "#root",
+      "fullPageScreenshot": true,
+      "maskSelectors": {
+        "reference": [],
+        "candidate": []
+      },
+      "targets": [
+        {
+          "id": "page-root",
+          "reference": "body",
+          "candidate": "#root",
+          "screenshot": false
+        },
+        {
+          "id": "profile-header",
+          "reference": ".profile-header",
+          "candidate": "[data-visual-id='profile-header']",
+          "parentId": "page-root"
+        },
+        {
+          "id": "profile-title",
+          "reference": ".profile-header h1",
+          "candidate": "[data-visual-id='profile-title']",
+          "parentId": "profile-header"
+        },
+        {
+          "id": "profile-description",
+          "reference": ".profile-header p",
+          "candidate": "[data-visual-id='profile-description']",
+          "parentId": "profile-header"
+        }
+      ],
+      "gaps": [
+        {
+          "id": "title-to-description",
+          "from": "profile-title",
+          "to": "profile-description",
+          "axis": "vertical"
+        }
+      ],
+      "ignore": []
+    }
+  ]
+}

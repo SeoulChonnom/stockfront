@@ -1,0 +1,4 @@
+interface:
+  display_name: "Pixel-Perfect React UI"
+  short_description: "Match React pages to reference HTML with measured visual diffs"
+  default_prompt: "Use $pixel-perfect-react-ui to match this React UI to the reference HTML and verify every change with measured Playwright visual audits."
