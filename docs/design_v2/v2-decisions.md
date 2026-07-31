@@ -127,6 +127,7 @@ export function canAccessOps(role: Role = getCurrentRole()): boolean {
 | Archive 페이지 크기 | README 승인 기준(§16-4) "46건/20 → 3페이지" | `archive-search-page.tsx:34`에서 `size: 4`로 요청 중, Batch는 `size: 20`(`batch-operations-page.tsx:43`) | Archive도 20으로 통일(P6에서 수정) | (3) 승인된 acceptance criteria |
 | Primary nav 위치 결정 상태 | `09-scope-traceability-decisions.md` D-02가 "Design"(미확정) 상태로 남아 있음 | README §5가 이미 좌측 레일 단일 nav로 확정(픽셀·breakpoint까지 명시) | README 채택 | (4) design_v2 개선 제안이 09-decisions보다 최신이며 fidelity 확정 문서 |
 | 인증 토큰 엔드포인트(참고용, v2 범위 밖) | `AGENTS.md:20`이 `${VITE_API_HOST}/api/user/token`(단수)로 기술 | `auth-config.ts:56`은 `${host}/api/users/token`(복수). 최근 커밋(`fcdef25 fix: slcnapp 인증 호출 경로 수정`)이 코드를 바꾼 것으로 보임 | 코드(실제 실행 동작) 채택. `AGENTS.md`는 이번 작업 대상 파일이 아니므로 여기서는 수정하지 않고 기록만 남김 | (1) 실제 실행 동작 — v2 화면 작업과 무관하므로 별도 이슈로 후속 처리 권장 |
+| 카드 섹션 헤딩(`h2`) 크기 | README §6 타입 스케일 표가 `h2 (섹션) 17px / 600`으로 명시 | `Market Brief v2.dc.html` 프로토타입은 블록마다 14–15px를 씀(필터 14, 검색 결과 14.5, AI 심층 분석 15, 관련 기사 15, 실행 이력 14.5, ops 상세 14.5) — `--fs-h2:17px`은 어디에도 안 쓰임 | 프로토타입(실제 렌더 대상) 채택. 6개 헤딩을 각 블록의 실측값으로 개별 변경 | (4) design_v2 프로토타입이 §6 표보다 더 구체적이고 최신 — parity 사이클의 명시적 지침(A3)이 프로토타입을 우선하라고 지정 |
 
 ## 6. Open Decisions / Backend Dependencies
 
@@ -205,6 +206,41 @@ P4는 P1~P3과 파일이 겹치지 않으므로 병렬 진행 가능하다. P5~P
 - P2와 P3는 둘 다 `src/components/ui.tsx`/`app-shell.tsx` 인근을 건드릴 수 있다 — P2가 먼저 shell 골격을 확정한 뒤 P3가 `PageMessage` 분리를 진행한다(동시 착수 금지).
 - 각 화면 phase(P5~P8)는 자기 화면의 기존 `*.test.tsx`만 갱신한다(예: P5는 `market-overview-page.test.tsx`만). 전체 스위트에 걸친 a11y·포커스 회귀 테스트는 P9에서 한 번에 정리해 중복 수정 충돌을 막는다.
 - `src/lib/mappers.test.ts`·`query-hooks.test.tsx`는 P4 소유이며, 다른 phase가 view-model 필드를 임의로 추가하지 않는다.
+
+## 10. Parity cycle 3 — E6 파이프라인 단계 divergence (확정, 버그 아님)
+
+`findings-cycle-3.md`가 E6을 다시 짚었다 — composite 이미지만 보면 앱이
+디자인보다 "덜 완성돼" 보이기 때문에, 향후 세션이 이걸 다시 "고치려" 시도할
+위험이 있다. 여기 명시적으로 기록해 막는다.
+
+**증상**: 디자인은 실행 중인 job 1042에 대해 단계별 완료 상태와 소요 시간을
+전부 보여준다 — 작업 생성 성공/1초 · 뉴스 수집 성공/1분 36초 · 지수 수집
+성공/12초 · 중복 제거 실행 중. 앱은 1단계 완료만 표시하고 나머지는
+`세부 단계 진행률은 제공되지 않습니다`라는 문구로 대체한다.
+
+**판정**: 디자인 프로토타입의 이 블록 전체가 `PROPOSED · BACKEND`로
+태그돼 있다(`Market Brief v2.dc.html` 자체가 명시) — 즉 디자인도 "이건
+백엔드가 아직 안 주는 데이터를 가정한 것"이라고 인정하고 있다.
+`BatchJobDetailResponse` DTO(§4, `types.ts:154-173`)에는 단계별
+status/duration 필드가 아예 없다. 디자인의 픽스처는 이 없는 데이터를
+그럴듯하게 지어낸 것이고, 앱은 실제로 아는 것(job 전체 status만)만
+보여준다.
+
+**결정**: 앱의 현재 동작이 맞다. 이 프로젝트의 원칙(CLAUDE.md "Verify
+reality, not declarations" + README §14 capability boundary 규칙)은 없는
+백엔드 능력을 있는 것처럼 렌더링하지 않는 것이다. **되돌리지 않는다** —
+composite 이미지 차이는 실제 결함이 아니라 디자인 픽스처가 데이터를 지어낸
+결과다. 코드 쪽 근거는 `src/components/ui/pipeline-stages.tsx`의
+`deriveStages`(RUNNING/PENDING 분기)와 그 옆 duration 렌더 지점의 주석
+참조.
+
+**부수 결정 — 항상 `-`인 소요 컬럼**: 각 단계 행마다 상태어 아래 렌더되는
+per-stage duration 줄은 백엔드가 절대 값을 주지 않으므로 항상 `-`다.
+이 컬럼은 **의도적으로 유지**한다(삭제하지 않음) — 이유는 디자인의 단계
+행 모양(상태어 + 그 아래 소요 시간 줄, 두 줄 스택)과 레이아웃 패리티를
+맞추기 위해서다. 백엔드가 단계별 timing을 제공하게 되면
+`pipeline-stages.tsx`의 이 한 줄만 실제 값 렌더로 교체하면 된다 — 삭제
+후 재도입하는 것보다 비용이 낮다.
 
 ## 부록: 검증 방법
 
