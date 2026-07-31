@@ -19,6 +19,12 @@ const BASE_URL = `${HOST}/stock/`;
 
 export default defineConfig({
   testDir: 'e2e',
+  // `parity-capture.spec.ts` is a slower, purpose-built evidence generator
+  // for the design↔app parity harness (`docs/design_v2/parity/README.md`),
+  // not a regression gate — it shouldn't run (or slow down) the normal
+  // `pnpm e2e` suite. It has its own runner: `pnpm parity:app`, which uses
+  // `playwright.parity.config.ts` (no `testIgnore`) instead of this file.
+  testIgnore: ['**/parity-capture.spec.ts'],
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   // Local retries: this suite runs on a shared dev machine (other apps

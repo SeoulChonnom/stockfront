@@ -1,0 +1,695 @@
+{
+  "outputDir": ".visual-audit/artifacts",
+  "failOnDiff": true,
+  "navigationTimeoutMs": 30000,
+  "settleTimeMs": 250,
+  "colorScheme": "light",
+  "locale": "ko-KR",
+  "timezoneId": "Asia/Seoul",
+  "tolerances": {
+    "positionPx": 1,
+    "sizePx": 1,
+    "spacingPx": 1,
+    "pixelChannelThreshold": 0.1,
+    "maxDiffPixelRatio": 0.002
+  },
+  "viewports": [
+    {
+      "name": "desktop",
+      "width": 1440,
+      "height": 1200,
+      "deviceScaleFactor": 1
+    },
+    {
+      "name": "laptop",
+      "width": 1280,
+      "height": 900,
+      "deviceScaleFactor": 1
+    },
+    {
+      "name": "tablet",
+      "width": 768,
+      "height": 1024,
+      "deviceScaleFactor": 1
+    },
+    {
+      "name": "mobile",
+      "width": 390,
+      "height": 844,
+      "deviceScaleFactor": 1
+    }
+  ],
+  "pages": [
+    {
+      "id": "market-latest",
+      "referenceUrl": "http://127.0.0.1:4795/Market%20Brief%20v2.dc.html#/market/latest",
+      "candidateUrl": "http://127.0.0.1:4797/stock/market/latest",
+      "referenceReadySelector": "#page-title",
+      "candidateReadySelector": "#page-title",
+      "fullPageScreenshot": true,
+      "maskSelectors": {
+        "reference": [
+          "xpath=//main[@id='main']/preceding-sibling::div[1]",
+          "button:has-text('\uc0c1\ud0dc \uc2dc\ubbac\ub808\uc774\ud130')",
+          "aside div[style*='margin-top: auto'] > div:first-child > div:last-child > div:last-child",
+          "xpath=//h1[@id='page-title']/ancestor::section[1]/div[1]/span[last()]"
+        ],
+        "candidate": [
+          "aside > div:last-child p:last-child",
+          "xpath=//h1[@id='page-title']/ancestor::section[1]/div[1]/span[last()]"
+        ]
+      },
+      "targets": [
+        {
+          "id": "page-title",
+          "reference": "#page-title",
+          "candidate": "#page-title"
+        },
+        {
+          "id": "header-card",
+          "reference": "xpath=//h1[@id='page-title']/ancestor::section[1]",
+          "candidate": "xpath=//h1[@id='page-title']/ancestor::section[1]"
+        },
+        {
+          "id": "status-badge",
+          "reference": "xpath=(//h1[@id='page-title']/ancestor::section[1]//span[not(contains(concat(' ',normalize-space(@class),' '),' sc-interp '))])[1]",
+          "candidate": "xpath=(//h1[@id='page-title']/ancestor::section[1]//span[not(contains(concat(' ',normalize-space(@class),' '),' sc-interp '))])[1]",
+          "parentId": "header-card"
+        },
+        {
+          "id": "headline-p",
+          "reference": "xpath=//h1[@id='page-title']/following-sibling::p[1]",
+          "candidate": "xpath=//h1[@id='page-title']/following-sibling::p[1]",
+          "parentId": "header-card"
+        },
+        {
+          "id": "compare-strip",
+          "reference": "xpath=//h1[@id='page-title']/parent::div/following-sibling::div[contains(@style,'grid-template-columns: var(--g2)')]",
+          "candidate": "xpath=//h1[@id='page-title']/ancestor::section[1]//div[contains(concat(' ',normalize-space(@class),' '),' lg:grid-cols-2 ')]",
+          "parentId": "header-card"
+        },
+        {
+          "id": "main-landmark",
+          "reference": "#main",
+          "candidate": "#main-content",
+          "screenshot": false
+        },
+        {
+          "id": "mk-us-section",
+          "reference": "#mk-US",
+          "candidate": "#mk-section-0",
+          "parentId": "main-landmark"
+        },
+        {
+          "id": "mk-kr-section",
+          "reference": "#mk-KR",
+          "candidate": "#mk-section-1",
+          "parentId": "main-landmark"
+        },
+        {
+          "id": "mk-us-index-table",
+          "reference": "#mk-US table",
+          "candidate": "#mk-section-0 table",
+          "parentId": "mk-us-section"
+        },
+        {
+          "id": "mk-us-row-0",
+          "reference": "#mk-US table tbody tr:nth-child(1)",
+          "candidate": "#mk-section-0 table tbody tr:nth-child(1)",
+          "parentId": "mk-us-index-table"
+        },
+        {
+          "id": "mk-us-row-1",
+          "reference": "#mk-US table tbody tr:nth-child(2)",
+          "candidate": "#mk-section-0 table tbody tr:nth-child(2)",
+          "parentId": "mk-us-index-table"
+        },
+        {
+          "id": "mk-us-card-0",
+          "reference": "#mk-US article:nth-of-type(1)",
+          "candidate": "#mk-section-0 article:nth-of-type(1)",
+          "parentId": "mk-us-section"
+        },
+        {
+          "id": "mk-us-card-1",
+          "reference": "#mk-US article:nth-of-type(2)",
+          "candidate": "#mk-section-0 article:nth-of-type(2)",
+          "parentId": "mk-us-section"
+        }
+      ],
+      "gaps": [
+        {
+          "id": "title-to-headline",
+          "from": "page-title",
+          "to": "headline-p",
+          "axis": "vertical"
+        },
+        {
+          "id": "title-to-first-block",
+          "from": "page-title",
+          "to": "mk-us-section",
+          "axis": "vertical"
+        },
+        {
+          "id": "header-to-mk-us",
+          "from": "header-card",
+          "to": "mk-us-section",
+          "axis": "vertical"
+        },
+        {
+          "id": "mk-us-to-mk-kr",
+          "from": "mk-us-section",
+          "to": "mk-kr-section",
+          "axis": "vertical"
+        },
+        {
+          "id": "index-row-0-to-1",
+          "from": "mk-us-row-0",
+          "to": "mk-us-row-1",
+          "axis": "vertical"
+        },
+        {
+          "id": "issue-card-0-to-1",
+          "from": "mk-us-card-0",
+          "to": "mk-us-card-1",
+          "axis": "vertical"
+        }
+      ],
+      "ignore": [],
+      "layoutHideSelectors": {
+        "reference": [
+          "xpath=//main[@id='main']/preceding-sibling::div[1]"
+        ]
+      }
+    },
+    {
+      "id": "archive-detail",
+      "referenceUrl": "http://127.0.0.1:4795/Market%20Brief%20v2.dc.html#/market/archive/2026-07-21",
+      "candidateUrl": "http://127.0.0.1:4797/stock/market/archive/2026-07-21",
+      "referenceReadySelector": "#page-title",
+      "candidateReadySelector": "#page-title",
+      "fullPageScreenshot": true,
+      "maskSelectors": {
+        "reference": [
+          "xpath=//main[@id='main']/preceding-sibling::div[1]",
+          "button:has-text('\uc0c1\ud0dc \uc2dc\ubbac\ub808\uc774\ud130')",
+          "aside div[style*='margin-top: auto'] > div:first-child > div:last-child > div:last-child",
+          "xpath=//h1[@id='page-title']/ancestor::section[1]/div[1]/span[last()]"
+        ],
+        "candidate": [
+          "aside > div:last-child p:last-child",
+          "xpath=//h1[@id='page-title']/ancestor::section[1]/div[1]/span[last()]"
+        ]
+      },
+      "targets": [
+        {
+          "id": "page-title",
+          "reference": "#page-title",
+          "candidate": "#page-title"
+        },
+        {
+          "id": "header-card",
+          "reference": "xpath=//h1[@id='page-title']/ancestor::section[1]",
+          "candidate": "xpath=//h1[@id='page-title']/ancestor::section[1]"
+        },
+        {
+          "id": "status-badge",
+          "reference": "xpath=(//h1[@id='page-title']/ancestor::section[1]//span[not(contains(concat(' ',normalize-space(@class),' '),' sc-interp '))])[1]",
+          "candidate": "xpath=(//h1[@id='page-title']/ancestor::section[1]//span[not(contains(concat(' ',normalize-space(@class),' '),' sc-interp '))])[1]",
+          "parentId": "header-card"
+        },
+        {
+          "id": "headline-p",
+          "reference": "xpath=//h1[@id='page-title']/following-sibling::p[1]",
+          "candidate": "xpath=//h1[@id='page-title']/following-sibling::p[1]",
+          "parentId": "header-card"
+        },
+        {
+          "id": "compare-strip",
+          "reference": "xpath=//h1[@id='page-title']/parent::div/following-sibling::div[contains(@style,'grid-template-columns: var(--g2)')]",
+          "candidate": "xpath=//h1[@id='page-title']/ancestor::section[1]//div[contains(concat(' ',normalize-space(@class),' '),' lg:grid-cols-2 ')]",
+          "parentId": "header-card"
+        },
+        {
+          "id": "main-landmark",
+          "reference": "#main",
+          "candidate": "#main-content",
+          "screenshot": false
+        },
+        {
+          "id": "mk-us-section",
+          "reference": "#mk-US",
+          "candidate": "#mk-section-0",
+          "parentId": "main-landmark"
+        },
+        {
+          "id": "mk-kr-section",
+          "reference": "#mk-KR",
+          "candidate": "#mk-section-1",
+          "parentId": "main-landmark"
+        },
+        {
+          "id": "mk-us-index-table",
+          "reference": "#mk-US table",
+          "candidate": "#mk-section-0 table",
+          "parentId": "mk-us-section"
+        },
+        {
+          "id": "mk-us-row-0",
+          "reference": "#mk-US table tbody tr:nth-child(1)",
+          "candidate": "#mk-section-0 table tbody tr:nth-child(1)",
+          "parentId": "mk-us-index-table"
+        },
+        {
+          "id": "mk-us-row-1",
+          "reference": "#mk-US table tbody tr:nth-child(2)",
+          "candidate": "#mk-section-0 table tbody tr:nth-child(2)",
+          "parentId": "mk-us-index-table"
+        },
+        {
+          "id": "mk-us-card-0",
+          "reference": "#mk-US article:nth-of-type(1)",
+          "candidate": "#mk-section-0 article:nth-of-type(1)",
+          "parentId": "mk-us-section"
+        },
+        {
+          "id": "mk-us-card-1",
+          "reference": "#mk-US article:nth-of-type(2)",
+          "candidate": "#mk-section-0 article:nth-of-type(2)",
+          "parentId": "mk-us-section"
+        }
+      ],
+      "gaps": [
+        {
+          "id": "title-to-headline",
+          "from": "page-title",
+          "to": "headline-p",
+          "axis": "vertical"
+        },
+        {
+          "id": "title-to-first-block",
+          "from": "page-title",
+          "to": "mk-us-section",
+          "axis": "vertical"
+        },
+        {
+          "id": "header-to-mk-us",
+          "from": "header-card",
+          "to": "mk-us-section",
+          "axis": "vertical"
+        },
+        {
+          "id": "mk-us-to-mk-kr",
+          "from": "mk-us-section",
+          "to": "mk-kr-section",
+          "axis": "vertical"
+        },
+        {
+          "id": "index-row-0-to-1",
+          "from": "mk-us-row-0",
+          "to": "mk-us-row-1",
+          "axis": "vertical"
+        },
+        {
+          "id": "issue-card-0-to-1",
+          "from": "mk-us-card-0",
+          "to": "mk-us-card-1",
+          "axis": "vertical"
+        }
+      ],
+      "ignore": [],
+      "layoutHideSelectors": {
+        "reference": [
+          "xpath=//main[@id='main']/preceding-sibling::div[1]"
+        ]
+      }
+    },
+    {
+      "id": "archive-search",
+      "referenceUrl": "http://127.0.0.1:4795/Market%20Brief%20v2.dc.html#/market/archive/search",
+      "candidateUrl": "http://127.0.0.1:4797/stock/market/archive/search",
+      "referenceReadySelector": "#page-title",
+      "candidateReadySelector": "#page-title",
+      "fullPageScreenshot": true,
+      "maskSelectors": {
+        "reference": [
+          "xpath=//main[@id='main']/preceding-sibling::div[1]",
+          "button:has-text('\uc0c1\ud0dc \uc2dc\ubbac\ub808\uc774\ud130')",
+          "aside div[style*='margin-top: auto'] > div:first-child > div:last-child > div:last-child"
+        ],
+        "candidate": [
+          "aside > div:last-child p:last-child"
+        ]
+      },
+      "targets": [
+        {
+          "id": "page-title",
+          "reference": "#page-title",
+          "candidate": "#page-title"
+        },
+        {
+          "id": "title-section",
+          "reference": "xpath=//h1[@id='page-title']/parent::section",
+          "candidate": "xpath=//h1[@id='page-title']/parent::section"
+        },
+        {
+          "id": "intro-p",
+          "reference": "xpath=//h1[@id='page-title']/following-sibling::p[1]",
+          "candidate": "xpath=//h1[@id='page-title']/following-sibling::p[1]",
+          "parentId": "title-section"
+        },
+        {
+          "id": "filter-heading",
+          "reference": "#filter-h",
+          "candidate": "#archive-filter-heading"
+        },
+        {
+          "id": "filter-panel",
+          "reference": "section[aria-labelledby='filter-h']",
+          "candidate": "section[aria-labelledby='archive-filter-heading'] > div"
+        },
+        {
+          "id": "from-label",
+          "reference": "label[for='f-from']",
+          "candidate": "label[for='from']",
+          "parentId": "filter-panel"
+        },
+        {
+          "id": "from-input",
+          "reference": "#f-from",
+          "candidate": "#from",
+          "parentId": "filter-panel"
+        },
+        {
+          "id": "results-heading",
+          "reference": "#results-h",
+          "candidate": "#archive-results-heading"
+        },
+        {
+          "id": "results-panel",
+          "reference": "section[aria-labelledby='results-h']",
+          "candidate": "xpath=//*[@id='archive-results-heading']/ancestor::div[3]"
+        },
+        {
+          "id": "results-table",
+          "reference": "table",
+          "candidate": "table",
+          "parentId": "results-panel"
+        },
+        {
+          "id": "result-row-0",
+          "reference": "table tbody tr:nth-child(1)",
+          "candidate": "table tbody tr:nth-child(1)",
+          "parentId": "results-table"
+        },
+        {
+          "id": "result-row-1",
+          "reference": "table tbody tr:nth-child(2)",
+          "candidate": "table tbody tr:nth-child(2)",
+          "parentId": "results-table"
+        }
+      ],
+      "gaps": [
+        {
+          "id": "title-to-intro",
+          "from": "page-title",
+          "to": "intro-p",
+          "axis": "vertical"
+        },
+        {
+          "id": "title-to-first-block",
+          "from": "title-section",
+          "to": "filter-panel",
+          "axis": "vertical"
+        },
+        {
+          "id": "filter-to-results",
+          "from": "filter-panel",
+          "to": "results-panel",
+          "axis": "vertical"
+        },
+        {
+          "id": "from-label-to-input",
+          "from": "from-label",
+          "to": "from-input",
+          "axis": "vertical"
+        },
+        {
+          "id": "result-row-0-to-1",
+          "from": "result-row-0",
+          "to": "result-row-1",
+          "axis": "vertical"
+        }
+      ],
+      "ignore": [],
+      "layoutHideSelectors": {
+        "reference": [
+          "xpath=//main[@id='main']/preceding-sibling::div[1]"
+        ]
+      }
+    },
+    {
+      "id": "cluster-detail",
+      "referenceUrl": "http://127.0.0.1:4795/Market%20Brief%20v2.dc.html#/market/cluster/51f0d9a0-9fc5-4f15-a4f9-62856f128683",
+      "candidateUrl": "http://127.0.0.1:4797/stock/market/cluster/51f0d9a0-9fc5-4f15-a4f9-62856f128683",
+      "referenceReadySelector": "#page-title",
+      "candidateReadySelector": "#page-title",
+      "fullPageScreenshot": true,
+      "maskSelectors": {
+        "reference": [
+          "xpath=//main[@id='main']/preceding-sibling::div[1]",
+          "button:has-text('\uc0c1\ud0dc \uc2dc\ubbac\ub808\uc774\ud130')",
+          "aside div[style*='margin-top: auto'] > div:first-child > div:last-child > div:last-child"
+        ],
+        "candidate": [
+          "aside > div:last-child p:last-child"
+        ]
+      },
+      "targets": [
+        {
+          "id": "page-title",
+          "reference": "#page-title",
+          "candidate": "#page-title"
+        },
+        {
+          "id": "header-card",
+          "reference": "xpath=//h1[@id='page-title']/parent::*",
+          "candidate": "xpath=//h1[@id='page-title']/parent::*"
+        },
+        {
+          "id": "tag-row",
+          "reference": "xpath=//h1[@id='page-title']/following-sibling::div[contains(@style,'gap: 6px')]",
+          "candidate": "xpath=//h1[@id='page-title']/following-sibling::div[contains(concat(' ',normalize-space(@class),' '),' gap-1.5 ')]",
+          "parentId": "header-card"
+        },
+        {
+          "id": "action-row",
+          "reference": "xpath=//h1[@id='page-title']/following-sibling::div[contains(@style,'border-top')]",
+          "candidate": "xpath=//h1[@id='page-title']/following-sibling::div[contains(concat(' ',normalize-space(@class),' '),' border-t ')]",
+          "parentId": "header-card"
+        },
+        {
+          "id": "analysis-heading",
+          "reference": "#an-h",
+          "candidate": "#cluster-analysis-heading"
+        },
+        {
+          "id": "analysis-panel",
+          "reference": "section[aria-labelledby='an-h']",
+          "candidate": "section[aria-labelledby='cluster-analysis-heading']"
+        },
+        {
+          "id": "analysis-desc",
+          "reference": "xpath=//h2[@id='an-h']/following-sibling::p[1]",
+          "candidate": "xpath=//h2[@id='cluster-analysis-heading']/following-sibling::p[1]",
+          "parentId": "analysis-panel"
+        },
+        {
+          "id": "articles-heading",
+          "reference": "#ar-h",
+          "candidate": "#cluster-articles-heading"
+        },
+        {
+          "id": "articles-panel",
+          "reference": "section[aria-labelledby='ar-h']",
+          "candidate": "section[aria-labelledby='cluster-articles-heading']"
+        },
+        {
+          "id": "representative-heading",
+          "reference": "#rep-h",
+          "candidate": "#cluster-representative-heading"
+        },
+        {
+          "id": "representative-panel",
+          "reference": "section[aria-labelledby='rep-h']",
+          "candidate": "aside[aria-labelledby='cluster-representative-heading']"
+        }
+      ],
+      "gaps": [
+        {
+          "id": "analysis-heading-to-desc",
+          "from": "analysis-heading",
+          "to": "analysis-desc",
+          "axis": "vertical"
+        },
+        {
+          "id": "title-to-first-block",
+          "from": "header-card",
+          "to": "analysis-panel",
+          "axis": "vertical"
+        },
+        {
+          "id": "analysis-to-articles",
+          "from": "analysis-panel",
+          "to": "articles-panel",
+          "axis": "vertical"
+        },
+        {
+          "id": "tag-row-to-action-row",
+          "from": "tag-row",
+          "to": "action-row",
+          "axis": "vertical"
+        }
+      ],
+      "ignore": [],
+      "layoutHideSelectors": {
+        "reference": [
+          "xpath=//main[@id='main']/preceding-sibling::div[1]"
+        ]
+      }
+    },
+    {
+      "id": "ops-batches",
+      "referenceUrl": "http://127.0.0.1:4795/Market%20Brief%20v2.dc.html#/ops/batches",
+      "candidateUrl": "http://127.0.0.1:4797/stock/ops/batches",
+      "referenceReadySelector": "#page-title",
+      "candidateReadySelector": "#page-title",
+      "fullPageScreenshot": true,
+      "maskSelectors": {
+        "reference": [
+          "xpath=//main[@id='main']/preceding-sibling::div[1]",
+          "button:has-text('\uc0c1\ud0dc \uc2dc\ubbac\ub808\uc774\ud130')",
+          "aside div[style*='margin-top: auto'] > div:first-child > div:last-child > div:last-child",
+          "xpath=//h3[contains(., '\ud30c\uc774\ud504\ub77c\uc778 \ub2e8\uacc4')]/ancestor::div[2]"
+        ],
+        "candidate": [
+          "aside > div:last-child p:last-child",
+          "xpath=//h3[contains(., '\ud30c\uc774\ud504\ub77c\uc778 \ub2e8\uacc4')]/ancestor::div[2]"
+        ]
+      },
+      "targets": [
+        {
+          "id": "page-title",
+          "reference": "#page-title",
+          "candidate": "#page-title"
+        },
+        {
+          "id": "trigger-btn",
+          "reference": "#trigger-btn",
+          "candidate": "#trigger-btn"
+        },
+        {
+          "id": "summary-tiles",
+          "reference": "section[aria-label='\ubc30\uce58 \uc694\uc57d'] div[style*='grid-template-columns']",
+          "candidate": "[role='group'][aria-label='\ubc30\uce58 \uc2e4\ud589 \uc694\uc57d']"
+        },
+        {
+          "id": "tile-0",
+          "reference": "section[aria-label='\ubc30\uce58 \uc694\uc57d'] div[style*='grid-template-columns'] > div:nth-child(1)",
+          "candidate": "[role='group'][aria-label='\ubc30\uce58 \uc2e4\ud589 \uc694\uc57d'] > div:nth-child(1)",
+          "parentId": "summary-tiles"
+        },
+        {
+          "id": "tile-1",
+          "reference": "section[aria-label='\ubc30\uce58 \uc694\uc57d'] div[style*='grid-template-columns'] > div:nth-child(2)",
+          "candidate": "[role='group'][aria-label='\ubc30\uce58 \uc2e4\ud589 \uc694\uc57d'] > div:nth-child(2)",
+          "parentId": "summary-tiles"
+        },
+        {
+          "id": "tile-2",
+          "reference": "section[aria-label='\ubc30\uce58 \uc694\uc57d'] div[style*='grid-template-columns'] > div:nth-child(3)",
+          "candidate": "[role='group'][aria-label='\ubc30\uce58 \uc2e4\ud589 \uc694\uc57d'] > div:nth-child(3)",
+          "parentId": "summary-tiles"
+        },
+        {
+          "id": "list-heading",
+          "reference": "#ops-list-h",
+          "candidate": "xpath=//h2[normalize-space(text())='\uc2e4\ud589 \uc774\ub825']"
+        },
+        {
+          "id": "list-panel",
+          "reference": "section[aria-labelledby='ops-list-h']",
+          "candidate": "xpath=//h2[normalize-space(text())='\uc2e4\ud589 \uc774\ub825']/ancestor::div[4]"
+        },
+        {
+          "id": "history-table",
+          "reference": "table",
+          "candidate": "table",
+          "parentId": "list-panel"
+        },
+        {
+          "id": "history-row-0",
+          "reference": "table tbody tr:nth-child(1)",
+          "candidate": "table tbody tr:nth-child(1)",
+          "parentId": "history-table"
+        },
+        {
+          "id": "history-row-1",
+          "reference": "table tbody tr:nth-child(2)",
+          "candidate": "table tbody tr:nth-child(2)",
+          "parentId": "history-table"
+        },
+        {
+          "id": "detail-heading",
+          "reference": "#ops-detail-h",
+          "candidate": "xpath=//h2[starts-with(normalize-space(.),'job')]",
+          "screenshot": false
+        },
+        {
+          "id": "detail-summary",
+          "reference": "dl",
+          "candidate": "dl",
+          "screenshot": false
+        }
+      ],
+      "gaps": [
+        {
+          "id": "title-to-first-block",
+          "from": "page-title",
+          "to": "summary-tiles",
+          "axis": "vertical"
+        },
+        {
+          "id": "summary-to-list",
+          "from": "summary-tiles",
+          "to": "list-panel",
+          "axis": "vertical"
+        },
+        {
+          "id": "tile-0-to-1",
+          "from": "tile-0",
+          "to": "tile-1",
+          "axis": "horizontal"
+        },
+        {
+          "id": "tile-1-to-2",
+          "from": "tile-1",
+          "to": "tile-2",
+          "axis": "horizontal"
+        },
+        {
+          "id": "history-row-0-to-1",
+          "from": "history-row-0",
+          "to": "history-row-1",
+          "axis": "vertical"
+        }
+      ],
+      "ignore": [],
+      "layoutHideSelectors": {
+        "reference": [
+          "xpath=//main[@id='main']/preceding-sibling::div[1]"
+        ]
+      }
+    }
+  ]
+}

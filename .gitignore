@@ -27,3 +27,19 @@ playwright-report
 *.njsproj
 *.sln
 *.sw?
+
+# Design-parity harness output (regenerate with `pnpm parity` / `pnpm visual-audit`)
+docs/design_v2/parity/design/
+docs/design_v2/parity/app/
+docs/design_v2/parity/design-regions/
+docs/design_v2/parity/app-regions/
+docs/design_v2/parity/compare/
+docs/design_v2/parity/compare-regions/
+docs/design_v2/parity/style-diff.md
+docs/design_v2/parity/styles-*.json
+docs/design_v2/parity/manifest*.json
+docs/design_v2/v2-screenshots/
+.visual-audit/artifacts/
+.visual-audit/tmp-*
+.sisyphus/
+.visual-audit/servers/.run/

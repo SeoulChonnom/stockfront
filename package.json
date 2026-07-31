@@ -10,10 +10,16 @@
     "test": "vitest run",
     "preview": "vite preview",
     "e2e": "playwright test",
-    "knip": "knip"
+    "knip": "knip",
+    "parity:design": "node scripts/parity/capture-design.mjs",
+    "parity:app": "playwright test --config=playwright.parity.config.ts",
+    "parity:report": "node scripts/parity/build-report.mjs",
+    "parity": "pnpm run parity:design && pnpm run parity:app && pnpm run parity:report",
+    "visual-audit:servers": "node .visual-audit/servers/start.mjs",
+    "visual-audit:servers:stop": "node .visual-audit/servers/stop.mjs",
+    "visual-audit": "node .claude/skills/pixel-perfect-react-ui/scripts/visual-audit.mjs --config .visual-audit/config.json --mode all --no-fail-on-diff"
   },
   "dependencies": {
-    "@radix-ui/react-select": "^2.2.6",
     "@radix-ui/react-slot": "^1.2.4",
     "@tanstack/react-query": "^5.95.2",
     "class-variance-authority": "^0.7.1",
