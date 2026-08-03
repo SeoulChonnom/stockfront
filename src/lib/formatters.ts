@@ -158,46 +158,6 @@ export function formatInteger(value: unknown): string {
   return Math.trunc(numeric).toLocaleString('ko-KR');
 }
 
-export function formatDateTime(value: unknown) {
-  if (typeof value !== 'string' || value.length === 0) {
-    return '-';
-  }
-
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return '-';
-  }
-
-  return new Intl.DateTimeFormat('ko-KR', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  }).format(date);
-}
-
-export function formatTime(value: unknown) {
-  if (typeof value !== 'string' || value.length === 0) {
-    return '-';
-  }
-
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return '-';
-  }
-
-  return new Intl.DateTimeFormat('ko-KR', {
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: false,
-  }).format(date);
-}
-
 export function formatSignedNumber(
   value: string | number | null | undefined,
   digits = 2

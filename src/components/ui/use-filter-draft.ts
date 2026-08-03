@@ -39,7 +39,7 @@ export type FieldProps = {
   ref: (element: HTMLElement | null) => void;
 };
 
-export function fieldErrorId(name: string): string {
+function fieldErrorId(name: string): string {
   return `${name}-error`;
 }
 

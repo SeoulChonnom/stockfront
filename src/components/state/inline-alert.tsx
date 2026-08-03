@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils';
  * 본문은 `--measure-error`(62ch)로 폭을 제한한다(§6).
  */
 
-export type AlertTone = 'danger' | 'warning' | 'info' | 'success';
+type AlertTone = 'danger' | 'warning' | 'info' | 'success';
 
 /**
  * C4: `info` is the odd one out in the design — a soft blue fill + an "i"

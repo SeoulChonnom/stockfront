@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils';
  * 문구를 제공하되 `title`/`description`으로 덮어쓸 수 있게 한다.
  */
 
-export type EmptyStateKind = 'search-results' | 'no-data' | 'no-articles';
+type EmptyStateKind = 'search-results' | 'no-data' | 'no-articles';
 
 const DEFAULT_COPY: Readonly<
   Record<EmptyStateKind, { title: string; description: string }>

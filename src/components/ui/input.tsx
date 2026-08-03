@@ -1,4 +1,4 @@
-import type { InputHTMLAttributes, ReactNode } from 'react';
+import type { InputHTMLAttributes } from 'react';
 
 import { cn } from '@/lib/utils';
 
@@ -26,51 +26,5 @@ export function Input({
       type={type}
       {...props}
     />
-  );
-}
-
-export type InputHelpTextProps = {
-  id?: string;
-  children: ReactNode;
-  className?: string;
-};
-
-/** 12px 보조 설명. `aria-describedby`로 input과 연결한다. */
-export function InputHelpText({ id, children, className }: InputHelpTextProps) {
-  return (
-    <p
-      className={cn(
-        'wrap-anywhere m-0 mt-1 text-[12px] text-[color:var(--text-faint)]',
-        className
-      )}
-      id={id}
-    >
-      {children}
-    </p>
-  );
-}
-
-export type InputErrorTextProps = {
-  id?: string;
-  children: ReactNode;
-  className?: string;
-};
-
-/** 12px `--danger` 오류 메시지. `aria-describedby`로 input과 연결한다(README §7-4). */
-export function InputErrorText({
-  id,
-  children,
-  className,
-}: InputErrorTextProps) {
-  return (
-    <p
-      className={cn(
-        'wrap-anywhere m-0 mt-1 text-[12px] text-[color:var(--danger)]',
-        className
-      )}
-      id={id}
-    >
-      {children}
-    </p>
   );
 }

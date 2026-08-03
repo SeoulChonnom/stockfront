@@ -1,8 +1,7 @@
-import { type ReactNode, type RefObject, useId } from 'react';
+import type { ReactNode, RefObject } from 'react';
 
 import { cn } from '@/lib/utils';
 
-import { Button } from './button';
 import { useDismissable } from './use-dismissable';
 
 /**
@@ -75,61 +74,5 @@ export function Dialog({
         {children}
       </div>
     </div>
-  );
-}
-
-export type ConfirmDialogProps = {
-  isOpen: boolean;
-  onClose: () => void;
-  onConfirm: () => void;
-  title: ReactNode;
-  description?: ReactNode;
-  confirmLabel?: string;
-  cancelLabel?: string;
-  danger?: boolean;
-  confirmLoading?: boolean;
-};
-
-/** Generic yes/no confirmation built on `Dialog`. Not the Trigger dialog — see file comment above. */
-export function ConfirmDialog({
-  isOpen,
-  onClose,
-  onConfirm,
-  title,
-  description,
-  confirmLabel = '확인',
-  cancelLabel = '취소',
-  danger,
-  confirmLoading,
-}: ConfirmDialogProps) {
-  const titleId = useId();
-
-  return (
-    <Dialog isOpen={isOpen} labelledBy={titleId} onClose={onClose}>
-      <h2
-        className='m-0 mb-2 text-[17px] font-semibold text-[color:var(--text)]'
-        id={titleId}
-      >
-        {title}
-      </h2>
-      {description ? (
-        <p className='wrap-anywhere m-0 mb-4 text-[13.5px] text-[color:var(--text-soft)]'>
-          {description}
-        </p>
-      ) : null}
-      <div className='mt-2 flex justify-end gap-2'>
-        <Button onClick={onClose} type='button' variant='ghost'>
-          {cancelLabel}
-        </Button>
-        <Button
-          loading={confirmLoading}
-          onClick={onConfirm}
-          type='button'
-          variant={danger ? 'danger' : 'primary'}
-        >
-          {confirmLabel}
-        </Button>
-      </div>
-    </Dialog>
   );
 }
