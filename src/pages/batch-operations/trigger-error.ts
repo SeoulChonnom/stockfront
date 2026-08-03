@@ -1,4 +1,5 @@
 import { ApiError } from '@/lib/api/client';
+import { isRecord } from '@/lib/utils';
 
 /**
  * Maps a Trigger POST failure to the §7-7 error-state view. The per-status
@@ -18,10 +19,6 @@ export type TriggerErrorView = {
   isFieldError: boolean;
   existingJobId: number | null;
 };
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return value !== null && typeof value === 'object';
-}
 
 function extractExistingJobId(body: unknown): number | null {
   if (!isRecord(body)) {

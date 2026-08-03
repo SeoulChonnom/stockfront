@@ -1,4 +1,5 @@
 import { getAccessToken } from '../auth-bootstrap';
+import { isRecord } from '../utils';
 import type { ApiEnvelope } from './types';
 
 type QueryValue = string | number | boolean | null | undefined;
@@ -19,10 +20,6 @@ export class ApiError extends Error {
     this.status = status;
     this.body = body;
   }
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return value !== null && typeof value === 'object';
 }
 
 function formatValidationLocation(loc: unknown) {

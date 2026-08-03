@@ -17,6 +17,7 @@ import {
   formatSignedNumber,
   toStatusTone,
 } from './formatters';
+import { isRecord } from './utils';
 import type {
   ArchiveListView,
   ArticleLink,
@@ -35,10 +36,6 @@ import type {
 
 type DailyMarketResponse = DailyPageResponse['markets'][number];
 type DailyClusterResponse = DailyMarketResponse['topClusters'][number];
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return value !== null && typeof value === 'object';
-}
 
 function asStringArray(value: unknown): string[] {
   return Array.isArray(value)
