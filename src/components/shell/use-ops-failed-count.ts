@@ -55,7 +55,7 @@ export function useOpsFailedCount(): number | null {
     // cache stores the RAW `queryFn` result (`BatchJobListResponse`, i.e.
     // `{items, pagination, summary}` — see `src/lib/api/batch.ts`'s
     // `getBatchJobs`), never the post-`select` shape. `useBatchJobs`'s
-    // `select: enrichBatchJobsView` (`query-hooks.ts`) only transforms the
+    // `select: mapBatchJobsToView` (`query-hooks.ts`) only transforms the
     // value at the point a component reads it through `useQuery()` — it is
     // never written back into `query.state.data`. Reading
     // `query.state.data as BatchJobsView` and then `.rows.filter(...)` here

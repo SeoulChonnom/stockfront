@@ -121,7 +121,7 @@ describe('AppShell', () => {
     // `useBatchJobs`'s own `getBatchJobs()` returns (`{items, pagination,
     // summary}`, see `src/lib/api/types.ts`) — never the post-`select`
     // `BatchJobsViewWithCounts` shape (`{rows, counts, ...}`) a component
-    // sees after `useQuery()` applies `select: enrichBatchJobsView`. This
+    // sees after `useQuery()` applies `select: mapBatchJobsToView`. This
     // fixture previously seeded the cache with the SELECTED shape (`rows`/a
     // fabricated `summary.successRate` string), which the hook's old
     // `data.rows.filter(...)` read only "worked" against by coincidence in
