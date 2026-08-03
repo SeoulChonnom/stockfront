@@ -1,62 +1,9 @@
+import { parseKstAwareDate } from './kst-date';
+
 const KST_TIME_ZONE = 'Asia/Seoul';
-const KST_OFFSET_MS = 9 * 60 * 60_000;
 const MINUTE_MS = 60_000;
 const HOUR_MS = 60 * MINUTE_MS;
 const DAY_MS = 24 * HOUR_MS;
-
-// Matches a trailing `Z` or explicit `+HH:MM`/`-HH:MM` (or `+HHMM`) offset.
-const OFFSET_SUFFIX_REGEX = /(?:Z|[+-]\d{2}:?\d{2})$/;
-const NAIVE_DATETIME_REGEX =
-  /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})(?::(\d{2}))?/;
-
-/**
- * Parses a DTO timestamp into an absolute instant, honoring this backend's
- * datetime convention rather than assuming ISO-8601-with-UTC everywhere.
- *
- * Every timestamp in the real API contract (see
- * `docs/design_v2/handoff_v2/fixtures.js`, e.g. `NOW_KST = '2026-07-27T08:24:31'`
- * and every `generatedAt`/`publishedAt`/`startedAt` fixture) ships with NO
- * trailing `Z` or offset — it is a naive KST wall-clock string, not UTC.
- * Passing a naive string straight to `new Date(value)` parses it using the
- * *host runtime's local timezone*, which only happens to be correct when
- * that runtime is itself running in KST — silently wrong in CI, on a
- * non-KST dev machine, or in a browser outside Korea. So: a naive string is
- * read as literal KST wall-clock digits (converted to the matching absolute
- * instant); a string WITH an explicit offset/`Z` is a genuine absolute
- * instant and is parsed as such.
- */
-function parseKstAwareDate(value: unknown): Date | null {
-  if (typeof value !== 'string' || value.length === 0) {
-    return null;
-  }
-
-  if (OFFSET_SUFFIX_REGEX.test(value)) {
-    const date = new Date(value);
-    return Number.isNaN(date.getTime()) ? null : date;
-  }
-
-  const match = NAIVE_DATETIME_REGEX.exec(value);
-
-  if (!match) {
-    return null;
-  }
-
-  const [, year, month, day, hour, minute, second] = match;
-  // Build the epoch as if these fields were UTC, then subtract the KST
-  // offset — this yields the absolute instant whose Asia/Seoul wall clock
-  // is exactly the digits we parsed, independent of the host's local zone.
-  const epochAsIfUtc = Date.UTC(
-    Number(year),
-    Number(month) - 1,
-    Number(day),
-    Number(hour),
-    Number(minute),
-    second ? Number(second) : 0
-  );
-  const date = new Date(epochAsIfUtc - KST_OFFSET_MS);
-
-  return Number.isNaN(date.getTime()) ? null : date;
-}
 
 /**
  * Formats a DTO timestamp as an absolute KST wall-clock string:

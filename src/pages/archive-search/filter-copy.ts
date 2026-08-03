@@ -1,18 +1,8 @@
 import type { FilterErrors } from '@/components/ui/use-filter-draft';
+import { getRelativeIso, getTodayIso } from '@/lib/kst-date';
 
 /**
  * Archive Search filter copy + validation — README §7-4.
- *
- * Kept local to `archive-search/` (not `src/lib/**`, out of scope for this
- * phase) even though `getTodayIso`/`getRelativeIso` duplicate the private
- * helpers in `src/lib/app-state.ts` (`parseListFilters`'s defaults). They
- * aren't exported from there, and this phase's file ownership excludes
- * `app-state.ts` — duplicating ~4 lines of date math here is cheaper and
- * safer than widening that file's public surface from an unrelated phase.
- * Both copies use the same `toISOString().slice(0, 10)` (UTC date, not
- * host-local) convention so a "초기화" round-trip through the URL produces
- * the exact same `from`/`to` that `parseListFilters` itself would default
- * to.
  */
 
 export type ArchiveFilterDraft = {
@@ -41,29 +31,6 @@ export function getStatusSummaryLabel(status: string): string {
     STATUS_OPTIONS.find((option) => option.value === status)?.label ??
     '전체 상태'
   );
-}
-
-// D6 (parity cycle 2): KST calendar date, not UTC — see the matching fix +
-// comment in `src/lib/app-state.ts`'s `getTodayIso`/`getRelativeIso` (this
-// file duplicates those on purpose, per this file's header comment, to keep
-// `app-state.ts`'s public surface from widening for an unrelated phase; both
-// copies must stay bug-for-bug — or in this case fix-for-fix — identical so
-// a 초기화 round-trip through the URL produces the exact same `from`/`to`
-// `parseListFilters` itself would default to).
-const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
-
-function getKstNow(): Date {
-  return new Date(Date.now() + KST_OFFSET_MS);
-}
-
-export function getTodayIso(): string {
-  return getKstNow().toISOString().slice(0, 10);
-}
-
-function getRelativeIso(days: number): string {
-  const date = getKstNow();
-  date.setUTCDate(date.getUTCDate() - days);
-  return date.toISOString().slice(0, 10);
 }
 
 export function getDefaultArchiveFilters(): ArchiveFilterDraft {

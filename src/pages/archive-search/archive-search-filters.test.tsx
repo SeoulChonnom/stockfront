@@ -4,9 +4,9 @@ import type { ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
 import { AnnounceProvider } from '@/components/shell/announce-context';
+import { getTodayIso } from '@/lib/kst-date';
 
 import { ArchiveSearchFilters } from './archive-search-filters';
-import { getTodayIso } from './filter-copy';
 
 function renderWithAnnounce(ui: ReactNode) {
   return render(<AnnounceProvider pathname='/test'>{ui}</AnnounceProvider>);

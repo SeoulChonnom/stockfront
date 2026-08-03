@@ -1,5 +1,6 @@
 import type { MouseEvent } from 'react';
 
+import { getRelativeIso, getTodayIso } from './kst-date';
 import { navigate } from './router';
 
 export type ThemeMode = 'light' | 'dark';
@@ -61,31 +62,6 @@ function normalizeStatusParam(
   }
 
   return allowedStatuses.includes(value) ? value : '';
-}
-
-// D6 (parity cycle 2): this product is KST-only, but `new Date().toISOString()`
-// reads the UTC calendar date. Between 00:00 and 09:00 KST that is still
-// YESTERDAY in UTC, so the old implementation shifted every default
-// from/to range one day earlier for roughly a third of the day, every day —
-// a real user-facing bug, not just a parity mismatch. Shifting the instant
-// by the fixed +9h KST offset before reading its UTC calendar fields yields
-// the correct KST wall-clock date regardless of the host runtime's own
-// timezone (same technique `formatters.ts`'s `parseKstAwareDate` uses, just
-// applied to "now" instead of a parsed timestamp).
-const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
-
-function getKstNow(): Date {
-  return new Date(Date.now() + KST_OFFSET_MS);
-}
-
-function getTodayIso() {
-  return getKstNow().toISOString().slice(0, 10);
-}
-
-function getRelativeIso(days: number) {
-  const date = getKstNow();
-  date.setUTCDate(date.getUTCDate() - days);
-  return date.toISOString().slice(0, 10);
 }
 
 export function parseListFilters(
