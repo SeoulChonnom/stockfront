@@ -24,7 +24,6 @@ import {
   getAuthBootstrapState,
   subscribeToAuthBootstrap,
 } from './lib/auth-bootstrap';
-import { useArchiveMarketPage, useLatestMarketPage } from './lib/query-hooks';
 import { navigate, useUrlState } from './lib/router';
 import {
   applyTheme,
@@ -104,15 +103,6 @@ function App() {
     getAuthBootstrapState
   );
   const authResolved = isAuthResolved(authBootstrapState.status);
-  const latestMarketQuery = useLatestMarketPage(
-    authResolved && route.page === 'latest'
-  );
-  const archiveMarketQuery = useArchiveMarketPage(
-    route.page === 'archive-market'
-      ? { businessDate: route.businessDate, pageId: route.pageId }
-      : { businessDate: '', pageId: null },
-    authResolved && route.page === 'archive-market'
-  );
   const [theme, setThemeState] = useState<ThemeMode>(() =>
     resolveInitialTheme()
   );
@@ -285,8 +275,7 @@ function App() {
       theme={theme}
     >
       <AppPageContent
-        archiveMarketQuery={archiveMarketQuery}
-        latestMarketQuery={latestMarketQuery}
+        authResolved={authResolved}
         route={route}
         searchParams={url.searchParams}
       />

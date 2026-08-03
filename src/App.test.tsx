@@ -172,7 +172,11 @@ describe('App routing', () => {
     render(<App />);
 
     expect(window.location.pathname).toBe('/');
-    expect(mockUseLatestMarketPage).toHaveBeenCalledWith(false);
+    // The market-page queries are owned by `MarketOverviewRouteContent`
+    // (nested under the protected shell), which does not mount before
+    // auth resolves — so the hook simply hasn't been called yet, not
+    // called-with-`false`.
+    expect(mockUseLatestMarketPage).not.toHaveBeenCalled();
     expectProtectedShellToBeHidden();
     expect(screen.getByRole('status')).toHaveTextContent(
       '로그인 상태를 확인하고 있습니다'
