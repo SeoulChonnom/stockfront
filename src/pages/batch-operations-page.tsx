@@ -174,6 +174,7 @@ function AdminBatchOperations({
             void jobsQuery.refetch();
           }}
           onSelectRow={(jobId) => goTo({}, { jobId, view: 'detail' })}
+          pageSize={PAGE_SIZE}
           rows={rows}
           selectedJobId={selectedJobId}
           totalCount={jobsQuery.data?.totalCount ?? 0}

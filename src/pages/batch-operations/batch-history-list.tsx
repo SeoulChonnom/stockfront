@@ -39,6 +39,8 @@ export type BatchHistoryListProps = {
   applied: BatchFilters;
   rows: BatchRunRow[];
   totalCount: number;
+  /** Page size the owning page queried with — kept out of this component so a `PAGE_SIZE` change there can't silently desync pagination/the range label here. */
+  pageSize: number;
   isLoading: boolean;
   isError: boolean;
   isFetching: boolean;
@@ -62,6 +64,7 @@ export function BatchHistoryList({
   applied,
   rows,
   totalCount,
+  pageSize,
   isLoading,
   isError,
   isFetching,
@@ -74,7 +77,7 @@ export function BatchHistoryList({
   hiddenOnNarrowView,
 }: BatchHistoryListProps) {
   const retry = useRetryAnnounce(isFetching, isError, onAnnounce);
-  const totalPages = computeTotalPages(totalCount, 20);
+  const totalPages = computeTotalPages(totalCount, pageSize);
 
   return (
     // B6: this panel carries 0 padding — the header row, body, and
@@ -97,7 +100,7 @@ export function BatchHistoryList({
             <span className='mono text-[12.5px] font-semibold text-[color:var(--text-soft)]'>
               {totalCount === 0
                 ? '0 / 0'
-                : `${(applied.page - 1) * 20 + 1}–${Math.min(applied.page * 20, totalCount)} / ${totalCount}`}
+                : `${(applied.page - 1) * pageSize + 1}–${Math.min(applied.page * pageSize, totalCount)} / ${totalCount}`}
             </span>
             {/* E3: design always shows the applied status filter as plain
                 muted mono text ("· 전체 상태" when none is set), not a
