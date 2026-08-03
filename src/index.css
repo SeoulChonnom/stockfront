@@ -3,7 +3,4 @@
 
 @import "./styles/base.css";
 @import "./styles/app-shell.css";
-@import "./styles/page-layout.css";
-@import "./styles/data-display.css";
-@import "./styles/responsive.css";
 @import "./styles/components.css";
