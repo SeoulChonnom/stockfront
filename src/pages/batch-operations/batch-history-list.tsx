@@ -13,7 +13,7 @@ import {
   TableScrollWrapper,
 } from '@/components/ui/table';
 import type { BatchRunRow } from '@/lib/query-hooks';
-import { cn } from '@/lib/utils';
+import { cn, computeTotalPages } from '@/lib/utils';
 
 import type { BatchFilters } from './batch-url';
 import { useRetryAnnounce } from './use-retry-announce';
@@ -74,7 +74,7 @@ export function BatchHistoryList({
   hiddenOnNarrowView,
 }: BatchHistoryListProps) {
   const retry = useRetryAnnounce(isFetching, isError, onAnnounce);
-  const totalPages = Math.max(1, Math.ceil(totalCount / 20));
+  const totalPages = computeTotalPages(totalCount, 20);
 
   return (
     // B6: this panel carries 0 padding — the header row, body, and

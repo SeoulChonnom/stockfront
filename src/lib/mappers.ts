@@ -17,7 +17,7 @@ import {
   formatSignedNumber,
   toStatusTone,
 } from './formatters';
-import { isRecord } from './utils';
+import { computeTotalPages, isRecord } from './utils';
 import type {
   ArchiveListView,
   ArticleLink,
@@ -354,12 +354,9 @@ export function mapArchiveListToView(
     page: asFiniteNumber(response.pagination.page, 1),
     size: asFiniteNumber(response.pagination.size, 1),
     totalCount: asFiniteNumber(response.pagination.totalCount, 0),
-    totalPages: Math.max(
-      1,
-      Math.ceil(
-        asFiniteNumber(response.pagination.totalCount, 0) /
-          asFiniteNumber(response.pagination.size, 1)
-      )
+    totalPages: computeTotalPages(
+      asFiniteNumber(response.pagination.totalCount, 0),
+      asFiniteNumber(response.pagination.size, 1)
     ),
   };
 }
@@ -518,12 +515,9 @@ export function mapBatchJobsToView(
     page: asFiniteNumber(response.pagination.page, 1),
     size: asFiniteNumber(response.pagination.size, 1),
     totalCount: asFiniteNumber(response.pagination.totalCount, 0),
-    totalPages: Math.max(
-      1,
-      Math.ceil(
-        asFiniteNumber(response.pagination.totalCount, 0) /
-          asFiniteNumber(response.pagination.size, 1)
-      )
+    totalPages: computeTotalPages(
+      asFiniteNumber(response.pagination.totalCount, 0),
+      asFiniteNumber(response.pagination.size, 1)
     ),
     summary: mapBatchSummary(response),
   };

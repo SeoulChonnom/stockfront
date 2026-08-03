@@ -8,3 +8,7 @@ export function cn(...inputs: ClassValue[]) {
 export function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object';
 }
+
+export function computeTotalPages(totalCount: number, size: number): number {
+  return Math.max(1, Math.ceil(totalCount / size));
+}
