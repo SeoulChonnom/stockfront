@@ -1,3 +1,4 @@
+import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 
 import { formatDurationKo } from './format-batch';
@@ -36,11 +37,11 @@ function SummaryTile({
   tone: TileTone;
 }) {
   return (
-    <div
+    <Card
       className={cn(
         // U4 (parity cycle 5): design's tile padding is 14px top/bottom,
         // 16px left/right — not a uniform `p-4` (16px all sides).
-        'min-w-0 rounded-[var(--r-lg)] border border-[color:var(--line)] bg-[color:var(--surface)] px-4 py-3.5',
+        'min-w-0 px-4 py-3.5',
         TILE_BAR_CLASSES[tone]
       )}
     >
@@ -58,7 +59,7 @@ function SummaryTile({
       <p className='wrap-anywhere m-0 text-[12px] text-[color:var(--text-soft)]'>
         {supporting}
       </p>
-    </div>
+    </Card>
   );
 }
 

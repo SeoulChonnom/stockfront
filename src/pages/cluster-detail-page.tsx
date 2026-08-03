@@ -1,5 +1,6 @@
 import { InlineAlert, Skeleton, SkeletonText } from '@/components/state';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 
 import { ApiError } from '../lib/api/client';
 import { useClusterDetail } from '../lib/query-hooks';
@@ -85,26 +86,26 @@ function ClusterDetailSkeleton() {
   return (
     <div aria-busy='true' className='flex min-w-0 flex-col gap-[var(--gap)]'>
       <Skeleton className='h-4 w-64' />
-      <div className='flex min-w-0 flex-col gap-4 rounded-[var(--r-lg)] border border-[color:var(--line)] bg-[color:var(--surface)] p-5'>
+      <Card className='flex min-w-0 flex-col gap-4 p-5'>
         <Skeleton className='h-4 w-40' />
         <Skeleton className='h-8 w-3/4' />
         <SkeletonText lines={2} />
-      </div>
+      </Card>
       <p className='m-0 text-[13.5px] text-[color:var(--text-soft)]'>
         이슈 상세를 불러오는 중입니다.
       </p>
       <div className='grid min-w-0 grid-cols-1 gap-[var(--gap)] min-[1181px]:grid-cols-[minmax(0,1fr)_400px]'>
         <div className='flex min-w-0 flex-col gap-[var(--gap)]'>
-          <div className='rounded-[var(--r-lg)] border border-[color:var(--line)] bg-[color:var(--surface)] p-5'>
+          <Card className='p-5'>
             <SkeletonText lines={5} />
-          </div>
-          <div className='rounded-[var(--r-lg)] border border-[color:var(--line)] bg-[color:var(--surface)] p-5'>
+          </Card>
+          <Card className='p-5'>
             <SkeletonText lines={6} />
-          </div>
+          </Card>
         </div>
-        <div className='rounded-[var(--r-lg)] border border-[color:var(--line)] bg-[color:var(--surface)] p-5'>
+        <Card className='p-5'>
           <SkeletonText lines={4} />
-        </div>
+        </Card>
       </div>
     </div>
   );

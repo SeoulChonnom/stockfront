@@ -1,6 +1,7 @@
 import { Loader2 } from 'lucide-react';
 import type { AriaRole, ReactNode } from 'react';
 
+import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 
 /**
@@ -55,9 +56,9 @@ export function StatusCard({
         fullScreen && 'min-h-screen items-center bg-[color:var(--bg)]'
       )}
     >
-      <div
+      <Card
         aria-live={ariaLive}
-        className='mx-auto w-full max-w-[440px] rounded-[var(--r-lg)] border border-[color:var(--line)] bg-[color:var(--surface)] p-6 text-center'
+        className='mx-auto w-full max-w-[440px] p-6 text-center'
         role={role}
       >
         <span
@@ -96,7 +97,7 @@ export function StatusCard({
         {actions ? (
           <div className='flex flex-wrap justify-center gap-2'>{actions}</div>
         ) : null}
-      </div>
+      </Card>
     </div>
   );
 }

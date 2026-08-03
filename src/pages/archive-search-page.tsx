@@ -9,6 +9,7 @@ import {
   SkeletonTableRows,
 } from '@/components/state';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import { Pagination } from '@/components/ui/pagination';
 import { parseListFilters } from '../lib/app-state';
 import { formatInteger } from '../lib/formatters';
@@ -210,9 +211,9 @@ function ArchiveResultsCard({
   return (
     // B6: list panels (관련 기사/실행 이력/검색 결과) carry 0 padding on the
     // panel itself — the header row, body, and pagination each own theirs.
-    <div
+    <Card
       aria-busy={isInitialLoading || undefined}
-      className='flex min-w-0 flex-col overflow-hidden rounded-[var(--r-lg)] border border-[color:var(--line)] bg-[color:var(--surface)]'
+      className='flex min-w-0 flex-col overflow-hidden'
     >
       <div className='flex flex-wrap items-center justify-between gap-2 border-b border-[color:var(--line)] px-4 py-3.5 sm:px-[18px]'>
         <div className='flex flex-wrap items-center gap-2'>
@@ -282,6 +283,6 @@ function ArchiveResultsCard({
           totalPages={data.totalPages}
         />
       ) : null}
-    </div>
+    </Card>
   );
 }

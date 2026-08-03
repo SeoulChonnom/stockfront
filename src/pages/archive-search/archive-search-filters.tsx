@@ -1,4 +1,5 @@
 import { useAnnounce } from '@/components/shell/use-announce';
+import { Card } from '@/components/ui/card';
 import {
   FilterBar,
   FilterDirtyBadge,
@@ -68,7 +69,7 @@ export function ArchiveSearchFilters({
           18px horizontal at every measured width (390/768/1280) — not the
           previous `p-4 sm:p-5` (16px uniform on mobile, 20px uniform from
           640px up). */}
-      <div className='flex flex-col gap-4 rounded-[var(--r-lg)] border border-[color:var(--line)] bg-[color:var(--surface)] px-[18px] py-4'>
+      <Card className='flex flex-col gap-4 px-[18px] py-4'>
         {/* D2 (parity cycle 2): design keeps the heading and the applied
             summary on ONE row (single flex container, wrap only as a last
             resort) — the app previously split them into two stacked rows,
@@ -169,7 +170,7 @@ export function ArchiveSearchFilters({
             </select>
           </FilterField>
         </FilterBar>
-      </div>
+      </Card>
     </section>
   );
 }

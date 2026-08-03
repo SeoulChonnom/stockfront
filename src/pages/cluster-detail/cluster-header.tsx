@@ -1,6 +1,7 @@
 import { ArrowLeft } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 
 import { formatInteger } from '../../lib/formatters';
 import { navigate } from '../../lib/router';
@@ -32,7 +33,7 @@ export function ClusterHeader({
 
   return (
     // B4: header card gap is 14px in the design, not 16px.
-    <div className='flex min-w-0 flex-col gap-3.5 rounded-[var(--r-lg)] border border-[color:var(--line)] bg-[color:var(--surface)] p-5'>
+    <Card className='flex min-w-0 flex-col gap-3.5 p-5'>
       <div className='mono flex flex-wrap items-center gap-x-2 gap-y-1 text-[12.5px] text-[color:var(--text-soft)]'>
         <span className='rounded-[var(--r-sm)] border border-[color:var(--line-strong)] px-2 py-0.5 text-[11px] font-semibold text-[color:var(--text-faint)] uppercase'>
           {detail.marketLabel}
@@ -115,6 +116,6 @@ export function ClusterHeader({
           {detail.businessDate} 시장 브리프 보기
         </Button>
       </div>
-    </div>
+    </Card>
   );
 }

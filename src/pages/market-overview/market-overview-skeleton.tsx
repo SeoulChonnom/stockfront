@@ -1,4 +1,5 @@
 import { Skeleton, SkeletonTableRows, SkeletonText } from '@/components/state';
+import { Card } from '@/components/ui/card';
 
 /**
  * 최초 loading skeleton — README §8: "skeleton은 실제 레이아웃 골격을
@@ -13,7 +14,7 @@ export function MarketOverviewSkeleton({
   return (
     <div aria-busy='true' className='flex flex-col gap-4 sm:gap-5'>
       {mode === 'archive' ? <Skeleton className='h-11 w-full' /> : null}
-      <div className='flex flex-col gap-3.5 rounded-[var(--r-lg)] border border-[color:var(--line)] bg-[color:var(--surface)] p-5'>
+      <Card className='flex flex-col gap-3.5 p-5'>
         <Skeleton className='h-4 w-52' />
         <Skeleton className='h-4 w-36' />
         <Skeleton className='h-7 w-3/4' />
@@ -22,11 +23,11 @@ export function MarketOverviewSkeleton({
           <Skeleton className='h-28 w-full' />
         </div>
         <Skeleton className='h-4 w-2/3' />
-      </div>
-      <div className='flex flex-col gap-4 rounded-[var(--r-lg)] border border-[color:var(--line)] bg-[color:var(--surface)] p-5'>
+      </Card>
+      <Card className='flex flex-col gap-4 p-5'>
         <SkeletonText lines={4} />
         <SkeletonTableRows cols={6} rows={4} />
-      </div>
+      </Card>
       <p className='m-0 text-[13px] text-[color:var(--text-faint)]'>
         브리프를 불러오는 중입니다. 화면 구조는 그대로 유지됩니다.
       </p>
