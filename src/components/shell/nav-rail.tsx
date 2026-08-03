@@ -4,15 +4,11 @@ import { useCapabilities } from '@/lib/capabilities';
 
 import { DevRoleSimulator } from './dev-role-simulator';
 import { NavList } from './nav-list';
+import { ThemeToggleButton } from './theme-toggle';
 
 const ROLE_LABELS: Readonly<Record<'user' | 'admin', string>> = {
   user: 'User',
   admin: 'Admin',
-};
-
-const THEME_LABELS: Readonly<Record<ThemeMode, string>> = {
-  dark: '라이트 테마로 전환',
-  light: '다크 테마로 전환',
 };
 
 /**
@@ -74,17 +70,8 @@ export function NavRail({
               {ROLE_LABELS[role]}
             </p>
           </div>
+          <ThemeToggleButton onToggle={onToggleTheme} theme={theme} />
         </div>
-
-        {/* C6: design's rail footer is a full-width outline "다크 테마로
-            전환" text button, not a small circular icon button. */}
-        <button
-          className='flex min-h-9 items-center gap-2 rounded-[var(--r-md)] border border-[color:var(--line)] bg-transparent px-2.5 text-left text-[12.5px] text-[color:var(--text-soft)] hover:bg-[color:var(--surface-2)] hover:text-[color:var(--text)]'
-          onClick={onToggleTheme}
-          type='button'
-        >
-          {THEME_LABELS[theme]}
-        </button>
 
         {import.meta.env.DEV ? <DevRoleSimulator /> : null}
       </div>
