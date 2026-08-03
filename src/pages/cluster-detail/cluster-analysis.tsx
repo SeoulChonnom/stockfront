@@ -45,9 +45,13 @@ export function ClusterAnalysis({
         </p>
       ) : (
         <div className='flex flex-col gap-2.5'>
+          {/* `analysis` is a read-only paragraph list replaced wholesale on
+              each fetch. Two paragraphs can share the same opening 24 chars, so
+              the index is what keeps keys unique; the <p> holds no state. */}
           {analysis.map((paragraph, index) => (
             <p
               className='measure-analysis wrap-anywhere m-0 border-l-2 border-[color:var(--line-strong)] pl-3 text-[13.5px] leading-[1.65] text-[color:var(--text-soft)]'
+              // biome-ignore lint/suspicious/noArrayIndexKey: stateless read-only list, index disambiguates equal prefixes — see above
               key={`${index}-${paragraph.slice(0, 24)}`}
             >
               {paragraph}

@@ -81,11 +81,15 @@ export function MarketOverviewPage({
       {snapshot.markets.length === 0 ? (
         <EmptyMarketsPanel canViewOps={canViewOps} status={snapshot.status} />
       ) : (
+        // Position *is* the identity here — the same `index` is passed down as
+        // a prop and drives the `mk-section-{index}` anchor targets that the
+        // compare strip links to.
         snapshot.markets.map((market, index) => (
           <MarketSection
             currentPathname={url.pathname}
             currentSearch={currentSearch}
             index={index}
+            // biome-ignore lint/suspicious/noArrayIndexKey: position is the identity — see above
             key={`${market.label}-${index}`}
             market={market}
             originQuery={originQuery}

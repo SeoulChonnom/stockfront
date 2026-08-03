@@ -19,6 +19,10 @@ export function useRetryAnnounce(
 ) {
   const pendingRef = useRef(false);
 
+  // `onAnnounce` is deliberately excluded from the deps below: callers pass an
+  // inline closure, so including it would re-run the effect on every render and
+  // re-announce spuriously. It must fire only on an isFetching/isError change.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: `onAnnounce` intentionally excluded — see above
   useEffect(() => {
     if (isFetching || !pendingRef.current) {
       return;

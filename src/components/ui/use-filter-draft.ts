@@ -54,6 +54,7 @@ export function useFilterDraft<T extends Record<string, string>>({
   const [errors, setErrors] = useState<FilterErrors<T>>({});
   const fieldRefs = useRef(new Map<keyof T, HTMLElement | null>());
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: resync keys off `applied`'s value, not its identity — see the note at the end of the effect
   useEffect(() => {
     setDraft(applied);
     setErrors({});

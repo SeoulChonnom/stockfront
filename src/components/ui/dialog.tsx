@@ -46,18 +46,29 @@ export function Dialog({
   }
 
   return (
-    <div
-      className='fixed inset-0 z-(--z-dialog-overlay) flex items-center justify-center bg-[rgba(8,17,31,.55)] p-4'
-      onClick={onClose}
-    >
+    <div className='fixed inset-0 z-(--z-dialog-overlay) flex items-center justify-center p-4'>
+      {/* The backdrop is a real <button> rather than a click-handling <div>:
+          overlay-click-to-close is then keyboard-operable by construction
+          (Escape via `useDismissable` remains the primary path). `tabIndex={-1}`
+          keeps it out of the tab order so it never becomes a confusing focus
+          stop next to the trapped panel. Being a sibling of the panel — not its
+          parent — also removes the need for a `stopPropagation` click handler
+          on the panel itself. */}
+      <button
+        aria-hidden='true'
+        className='absolute inset-0 bg-[rgba(8,17,31,.55)]'
+        data-dismiss-overlay=''
+        onClick={onClose}
+        tabIndex={-1}
+        type='button'
+      />
       <div
         aria-labelledby={labelledBy}
         aria-modal='true'
         className={cn(
-          'z-(--z-dialog) flex max-h-[88vh] w-[min(520px,94vw)] flex-col overflow-y-auto rounded-[var(--r-lg)] border border-[color:var(--line)] bg-[color:var(--surface)] p-5 shadow-(--sh3)',
+          'relative z-(--z-dialog) flex max-h-[88vh] w-[min(520px,94vw)] flex-col overflow-y-auto rounded-[var(--r-lg)] border border-[color:var(--line)] bg-[color:var(--surface)] p-5 shadow-(--sh3)',
           className
         )}
-        onClick={(event) => event.stopPropagation()}
         ref={containerRef}
         role='dialog'
       >

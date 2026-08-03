@@ -216,6 +216,7 @@ function SkeletonRows() {
   return (
     <>
       {Array.from({ length: 5 }, (_, index) => (
+        // biome-ignore lint/suspicious/noArrayIndexKey: fixed 5-row aria-hidden placeholder, never reordered
         <TableRow aria-hidden='true' key={`skeleton-${index}`}>
           <TableCell>
             <Skeleton className='h-4 w-28' />

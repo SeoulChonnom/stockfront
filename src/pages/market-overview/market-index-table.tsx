@@ -61,7 +61,11 @@ export function MarketIndexTable({ indices }: { indices: MarketIndex[] }) {
           </TableRow>
         </TableHeader>
         <TableBody>
+          {/* `MarketIndex.code` is nullable and `label` is not guaranteed
+              unique, so the index is what keeps keys distinct. Rows are
+              stateless and the list is replaced on each snapshot fetch. */}
           {indices.map((item, index) => (
+            // biome-ignore lint/suspicious/noArrayIndexKey: stateless rows, no stable id available — see above
             <IndexRow item={item} key={`${item.label}-${index}`} />
           ))}
         </TableBody>

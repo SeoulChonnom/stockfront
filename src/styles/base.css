@@ -350,6 +350,11 @@ main[tabindex="-1"]:focus {
   }
 }
 
+/* biome-ignore-start lint/complexity/noImportantStyles: the reduced-motion
+   kill-switch must override every animation/transition declaration in the app,
+   including Tailwind utilities and inline styles it cannot outrank on
+   specificity alone. `!important` is the standard idiom here, and dropping it
+   would silently break the WCAG 2.3.3 opt-out. */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -360,3 +365,4 @@ main[tabindex="-1"]:focus {
     scroll-behavior: auto !important;
   }
 }
+/* biome-ignore-end lint/complexity/noImportantStyles: see above. */

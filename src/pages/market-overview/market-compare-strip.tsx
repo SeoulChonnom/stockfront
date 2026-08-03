@@ -42,8 +42,12 @@ export function MarketCompareStrip({
 
   return (
     <div className='grid grid-cols-1 gap-3 lg:grid-cols-2'>
+      {/* Position *is* the identity — `index` also builds the
+          `mk-section-{index}` anchor this tile scrolls to, so it has to match
+          the section list's ordering. */}
       {markets.map((market, index) => (
         <MarketCompareTile
+          // biome-ignore lint/suspicious/noArrayIndexKey: position is the identity — see above
           key={`${market.label}-${index}`}
           market={market}
           targetId={`mk-section-${index}`}

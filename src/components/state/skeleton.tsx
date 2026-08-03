@@ -56,6 +56,9 @@ export function SkeletonText({
         return (
           <Skeleton
             className={cn('h-3.5', isLast ? 'w-2/3' : 'w-full', lineClassName)}
+            // Placeholder rows come from a fixed `lines` count, carry no
+            // identity or state, and never reorder — index is the only key.
+            // biome-ignore lint/suspicious/noArrayIndexKey: fixed-length placeholder, never reordered
             key={index}
           />
         );
@@ -79,9 +82,12 @@ export function SkeletonTableRows({
   return (
     <Table aria-hidden='true' className={className}>
       <TableBody>
+        {/* A fixed rows×cols placeholder grid — no identity, no state, never reordered. */}
         {Array.from({ length: rows }, (_, rowIndex) => (
+          // biome-ignore lint/suspicious/noArrayIndexKey: fixed-length placeholder, never reordered
           <TableRow key={rowIndex}>
             {Array.from({ length: cols }, (_, colIndex) => (
+              // biome-ignore lint/suspicious/noArrayIndexKey: fixed-length placeholder, never reordered
               <TableCell key={colIndex}>
                 <Skeleton className='h-4 w-full' />
               </TableCell>

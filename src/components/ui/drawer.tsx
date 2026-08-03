@@ -40,10 +40,16 @@ export function Drawer({
   }
 
   return (
-    <div
-      className='fixed inset-0 z-(--z-drawer-overlay) bg-[rgba(8,17,31,.55)]'
-      onClick={onClose}
-    >
+    <div className='fixed inset-0 z-(--z-drawer-overlay)'>
+      {/* Backdrop as a real <button> — see the same note in `dialog.tsx`. */}
+      <button
+        aria-hidden='true'
+        className='absolute inset-0 bg-[rgba(8,17,31,.55)]'
+        data-dismiss-overlay=''
+        onClick={onClose}
+        tabIndex={-1}
+        type='button'
+      />
       <div
         aria-labelledby={labelledBy}
         aria-modal='true'
@@ -52,7 +58,6 @@ export function Drawer({
           'animate-[drawer-slide-in_200ms_var(--ease)]',
           className
         )}
-        onClick={(event) => event.stopPropagation()}
         ref={containerRef}
         role='dialog'
       >

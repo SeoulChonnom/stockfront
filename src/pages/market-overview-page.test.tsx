@@ -110,10 +110,14 @@ describe('MarketOverviewPage — PARTIAL 배너', () => {
       status: 'partial',
       partialMessage: '한국 증시 섹션이 일부 누락된 상태로 생성됐습니다.',
     });
+    const baseMetadata = snapshot.markets[0].metadata;
+    if (!baseMetadata) {
+      throw new Error('buildSnapshot fixture must define market metadata');
+    }
     snapshot.markets[0] = {
       ...snapshot.markets[0],
       metadata: {
-        ...snapshot.markets[0].metadata!,
+        ...baseMetadata,
         partialMessage: '뉴스 수집이 지연되어 일부 기사가 누락됐습니다.',
       },
     };

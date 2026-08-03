@@ -135,7 +135,7 @@ describe.each([
       const trigger = screen.getByRole('button', { name: triggerName });
       await user.click(trigger);
 
-      const overlay = container.querySelector('[role="dialog"]')?.parentElement;
+      const overlay = container.querySelector('[data-dismiss-overlay]');
       expect(overlay).toBeTruthy();
       if (overlay) {
         await user.click(overlay);

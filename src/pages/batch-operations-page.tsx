@@ -142,7 +142,7 @@ function AdminBatchOperations({
           `--gap` stack (20px at desktop) — that 8px difference (20 vs 12
           between the banner and the tiles) was the bulk of the
           `title-to-first-block` gap mismatch. */}
-      <div aria-label='배치 요약' className='flex min-w-0 flex-col gap-3'>
+      <section aria-label='배치 요약' className='flex min-w-0 flex-col gap-3'>
         {counts && counts.failedCount + counts.partialCount > 0 ? (
           <BatchAttentionBanner
             failedCount={counts.failedCount}
@@ -158,7 +158,7 @@ function AdminBatchOperations({
           partialCount={counts?.partialCount ?? 0}
           successCount={counts?.successCount ?? 0}
         />
-      </div>
+      </section>
 
       <div className='grid min-w-0 grid-cols-1 gap-[var(--gap)] min-[1181px]:grid-cols-[minmax(0,1fr)_400px]'>
         <BatchHistoryList

@@ -60,6 +60,7 @@ export function TriggerDialog({
   }));
   const [dateFieldFlagged, setDateFieldFlagged] = useState(false);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: `initialBusinessDate` is deliberately excluded — see the rationale at the end of the effect
   useEffect(() => {
     if (!isOpen) {
       return;

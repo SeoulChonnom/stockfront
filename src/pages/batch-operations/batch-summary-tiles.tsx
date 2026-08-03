@@ -74,6 +74,7 @@ export function BatchSummaryTiles({
   avgDurationSeconds: number | null;
 }) {
   return (
+    // biome-ignore lint/a11y/useSemanticElements: Biome suggests <fieldset>, but these are read-only status tiles, not grouped form controls
     <div
       aria-label='배치 실행 요약'
       // Found via the corrected `summary-tiles` probe (cycle 2, section 0):
