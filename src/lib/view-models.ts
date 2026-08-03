@@ -173,7 +173,14 @@ export type ClusterDetail = {
   updatedAt: string;
 };
 
-export type BatchRun = {
+/**
+ * Base batch-run shape. Nothing outside this file consumes it directly
+ * anymore — `mapBatchListItemToRun`/`mapBatchDetailToRun` (`mappers/batch.ts`)
+ * return the enriched `BatchRunRow` below — but it stays as the shared base
+ * for `BatchRunRow` so the §7-6/§7-7-only fields (`pageId`/`rawStatus`) are
+ * defined in exactly one place.
+ */
+type BatchRun = {
   id: number;
   jobName: string;
   market: string;
@@ -221,11 +228,44 @@ export type BatchSummaryView = {
   qualitySupporting: string;
 };
 
-export type BatchJobsView = {
+/** Base batch-jobs-list shape; see the `BatchRun` note above — only used here to define `BatchJobsViewWithCounts`. */
+type BatchJobsView = {
   rows: BatchRun[];
   page: number;
   size: number;
   totalCount: number;
   totalPages: number;
   summary: BatchSummaryView;
+};
+
+/**
+ * README §7-6/§7-7 배치 운영 화면이 필요로 하지만 `BatchRun`/`BatchJobsView`에는
+ * 없는 필드를 더한 확장 뷰모델. `mapBatchListItemToRun`/`mapBatchDetailToRun`이
+ * 이 모양을 직접 반환한다.
+ *
+ * - `pageId`: LIST/DETAIL 매퍼는 합쳐진 `pageVersion`(`v3`/`-`) 문자열만
+ *   만들고 숫자 `pageId` 자체는 갖고 있지 않지만, 상세 패널의 "스냅샷
+ *   `pageId N · vN`" 표시와 "스냅샷 열기" 액션은 원본 숫자 id가 필요하다.
+ * - `rawStatus`: `status`는 `toUpperStatus(value, batchJobStatuses)`를 거친
+ *   값인데, 이 함수의 fallback은 허용 목록에 없는 문자열을 전부 `FAILED`로
+ *   떨어뜨린다. 정상적으로 실행 중인 배치(RUNNING/PENDING)가 이 fallback을
+ *   맞으면 빨간 "생성 실패" 배지로 렌더되는 실사용자 노출 회귀였다 —
+ *   그래서 원본 상태 문자열을 그대로 보존해, 화면이 표시/파이프라인 단계
+ *   판단에는 `status` 대신 `rawStatus`를 읽도록 한다.
+ */
+export type BatchRunRow = BatchRun & {
+  pageId: number | null;
+  rawStatus: string;
+};
+
+type BatchSummaryCounts = {
+  successCount: number;
+  partialCount: number;
+  failedCount: number;
+  avgDurationSeconds: number | null;
+};
+
+export type BatchJobsViewWithCounts = Omit<BatchJobsView, 'rows'> & {
+  rows: BatchRunRow[];
+  counts: BatchSummaryCounts;
 };

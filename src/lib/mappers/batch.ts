@@ -5,7 +5,11 @@ import type {
 } from '../api/types';
 import { formatDurationSeconds, formatKstDateTime } from '../formatters';
 import { computeTotalPages } from '../utils';
-import type { BatchJobsView, BatchRun, BatchSummaryView } from '../view-models';
+import type {
+  BatchJobsViewWithCounts,
+  BatchRunRow,
+  BatchSummaryView,
+} from '../view-models';
 import {
   asFiniteNumber,
   asNullableFiniteNumber,
@@ -34,7 +38,11 @@ const batchJobStatuses = [
   'FAILED',
 ] as const;
 
-function mapBatchListItemToRun(item: BatchJobListItemResponse): BatchRun {
+function toRawStatus(value: unknown): string {
+  return typeof value === 'string' && value.length > 0 ? value : 'UNKNOWN';
+}
+
+function mapBatchListItemToRun(item: BatchJobListItemResponse): BatchRunRow {
   const jobName = asString(item.jobName, 'batch');
   const status = toUpperStatus(item.status, batchJobStatuses);
 
@@ -69,6 +77,10 @@ function mapBatchListItemToRun(item: BatchJobListItemResponse): BatchRun {
     logSummary: null,
     forceRun: null,
     rebuildPageOnly: null,
+    // §7-6/§7-7: see the `BatchRunRow` doc comment in view-models.ts for why
+    // these two ride along with every row.
+    pageId: item.pageId ?? null,
+    rawStatus: toRawStatus(item.status),
   };
 }
 
@@ -99,7 +111,7 @@ function mapBatchSummary(response: BatchJobListResponse): BatchSummaryView {
 
 export function mapBatchJobsToView(
   response: BatchJobListResponse
-): BatchJobsView {
+): BatchJobsViewWithCounts {
   return {
     rows: response.items.map(mapBatchListItemToRun),
     page: asFiniteNumber(response.pagination.page, 1),
@@ -110,12 +122,23 @@ export function mapBatchJobsToView(
       asFiniteNumber(response.pagination.size, 1)
     ),
     summary: mapBatchSummary(response),
+    // §7-6 실패 우선 요약 타일은 `mapBatchSummary`가 만드는 사전 포맷팅된
+    // 영문 문자열(successRate 등)이 아니라 원본 카운트 자체가 필요하다.
+    counts: {
+      successCount: response.summary.successCount,
+      partialCount: response.summary.partialCount,
+      failedCount: response.summary.failedCount,
+      avgDurationSeconds:
+        typeof response.summary.avgDurationSeconds === 'number'
+          ? response.summary.avgDurationSeconds
+          : null,
+    },
   };
 }
 
 export function mapBatchDetailToRun(
   response: BatchJobDetailResponse
-): BatchRun {
+): BatchRunRow {
   const jobName = asString(response.jobName, 'batch');
 
   return {
@@ -145,5 +168,7 @@ export function mapBatchDetailToRun(
     logSummary: asNullableString(response.logSummary),
     forceRun: asOptionalBoolean(response.forceRun),
     rebuildPageOnly: asOptionalBoolean(response.rebuildPageOnly),
+    pageId: response.pageId,
+    rawStatus: toRawStatus(response.status),
   };
 }
