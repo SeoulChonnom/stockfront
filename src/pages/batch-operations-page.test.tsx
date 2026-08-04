@@ -329,6 +329,32 @@ describe('BatchOperationsPage — admin', () => {
     ).toBeInTheDocument();
   });
 
+  it('clicking anywhere in a row (not just the 기준일 button) selects that job', async () => {
+    const user = userEvent.setup();
+    mockUseBatchJobs.mockReturnValue(
+      jobsReady({
+        rows: [
+          createRow({ id: 101 }),
+          createRow({ id: 202, businessDate: '2026-07-25' }),
+        ],
+      })
+    );
+    mockUseBatchJobDetail.mockReturnValue(detailReady(createRow({ id: 101 })));
+
+    renderPage();
+
+    const targetRow = screen
+      .getByRole('button', { name: 'job 202 상세 선택' })
+      .closest('tr') as HTMLTableRowElement;
+
+    // 기준일 버튼이 아닌, 같은 행의 소요 시간 셀을 클릭한다.
+    await user.click(within(targetRow).getByText('2m 15s'));
+
+    const params = new URLSearchParams(window.location.search);
+    expect(params.get('jobId')).toBe('202');
+    expect(params.get('view')).toBe('detail');
+  });
+
   it('list error keeps filters and the previous selection, while detail keeps working', () => {
     mockUseBatchJobs.mockReturnValue({
       data: undefined,

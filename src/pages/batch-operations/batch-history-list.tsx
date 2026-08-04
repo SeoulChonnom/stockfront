@@ -251,8 +251,14 @@ function BatchHistoryRow({
   const isFailed = row.rawStatus.trim().toUpperCase() === 'FAILED';
 
   return (
+    // 행 전체가 선택 히트 영역이다 — 기준일 버튼만 클릭 대상이던 시절에는
+    // 행의 나머지(상태/소요/카운트 셀)를 눌러도 아무 반응이 없었다. 버튼은
+    // 키보드/스크린리더용 접근 가능한 컨트롤로 그대로 남기고, 그 클릭은
+    // 아래 `stopPropagation`으로 이 핸들러와 중복 실행되지 않게 한다.
     <TableRow
       aria-selected={isSelected}
+      className='cursor-pointer'
+      onClick={onSelect}
       selected={isSelected}
       tone={isFailed ? 'danger' : undefined}
     >
@@ -267,7 +273,10 @@ function BatchHistoryRow({
           // (13.5*1.6=21.6 vs 14*1.6=22.4 line-height) drove ~0.8px of extra
           // height on every "normal" history row (15 of 20 measured rows).
           className='mono block min-w-0 rounded-[var(--r-sm)] text-left text-[13.5px] font-semibold text-[color:var(--text)] outline-none hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--focus)]'
-          onClick={onSelect}
+          onClick={(event) => {
+            event.stopPropagation();
+            onSelect();
+          }}
           type='button'
         >
           {row.businessDate}
