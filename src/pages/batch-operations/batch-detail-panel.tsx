@@ -2,6 +2,7 @@ import { ArrowLeft } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { EmptyState, InlineAlert, StatusBadge } from '@/components/state';
 import { SkeletonText } from '@/components/state/skeleton';
+import { BatchTypeBadge } from '@/components/ui/batch-type-badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { LogBox } from '@/components/ui/log-box';
@@ -13,6 +14,7 @@ import { cn } from '@/lib/utils';
 
 import {
   deriveUserImpact,
+  getSnapshotLabel,
   isRetryableStatus,
   isRunningStatus,
 } from './format-batch';
@@ -53,10 +55,13 @@ function Dl({ children }: { children: ReactNode }) {
 function DlItem({ label, value }: { label: string; value: ReactNode }) {
   return (
     <div className='min-w-0'>
-      <dt className='m-0 text-[11px] font-semibold tracking-[0.07em] text-[color:var(--text-faint)] uppercase'>
-        {label}
-      </dt>
-      <dd className='mono wrap-anywhere m-0 mt-0.5 text-[color:var(--text)]'>
+      {/* design's `dt` for this dl carries no size/weight/case override —
+          it inherits the dl's 12.5px and just gets the muted color +
+          2px margin-bottom (reference: `<dt style="color:var(--fg3);
+          margin-bottom:2px">`), unlike other dl instances in the app that
+          do use the uppercase/tracked label treatment. */}
+      <dt className='m-0 mb-0.5 text-[color:var(--text-faint)]'>{label}</dt>
+      <dd className='mono wrap-anywhere m-0 text-[color:var(--text)]'>
         {value}
       </dd>
     </div>
@@ -81,8 +86,13 @@ export function BatchDetailPanel({
     <Card
       className={cn('min-w-0', hiddenOnNarrowView && 'max-[1180px]:hidden')}
     >
+      {/* design's detail panel content padding is 16px vertical / 18px
+          horizontal (`<div style="padding:16px 18px">` around the detail
+          body in the reference), not the shared `CardContent` default's
+          uniform 16px — the 2px-per-side horizontal shortfall was pushing
+          every measured child (heading, dl) 2px left and 4px narrower. */}
       <CardContent
-        className='flex min-w-0 flex-col gap-4 p-4'
+        className='flex min-w-0 flex-col gap-4 px-[18px] py-4'
         aria-busy={isLoading}
       >
         <div className='flex items-center gap-2 min-[1181px]:hidden'>
@@ -155,16 +165,39 @@ function BatchDetailContent({
     run.pageId !== null
       ? buildUrl(`/market/archive/${run.businessDate}`, { pageId: run.pageId })
       : null;
+  // NEWS_COLLECTION 작업은 `snapshot`이 애초에 null이라(스펙상 그 잡타입은
+  // 스냅샷을 만들지 않는다) `mapBatchDetailToRun`이 원문/정제/이슈·실행
+  // 옵션을 0/0/0·force=false로 채운다 — 실제 값이 아니라 coerce 헬퍼의
+  // "값이 없을 때의" fallback이므로, 이 잡타입에서는 두 행 자체를
+  // 렌더하지 않는다(plan step 7 — 값을 숨기지 않고 그리면 없는 데이터를
+  // 있는 것처럼 보여주는 셈이다).
+  const hasSnapshot = run.jobType !== 'NEWS_COLLECTION';
 
   return (
     <div className='flex min-w-0 flex-col gap-4'>
-      <div className='flex flex-wrap items-center gap-2'>
+      {/* 참조 889행: 이 헤더 바는 본문(16px/18px, `CardContent`의 앰비언트
+          padding)과 별개로 자기 몫의 `padding:14px 18px` +
+          `border-bottom:1px solid var(--line)`을 갖는다(목록 패널 헤더와
+          같은 패턴, `batch-history-list.tsx` 참고). `CardContent`가
+          모든 자식에 균일한 18px/16px padding을 주는 구조라, 음수 마진으로
+          카드 가장자리까지 뺀 뒤 이 행만 자기 padding·구분선을 다시
+          그린다 — divider가 부모 padding에 막혀 18px씩 짧아지지 않게
+          하려면 가로 방향도 카드 가장자리까지 닿아야 한다. */}
+      {/* 참조 889행 `gap:8px 10px`(row 8px / column 10px) — 균일한 8px이
+          아니다. 이 행의 4개 아이템(제목·타입 배지·상태 배지·날짜) 사이
+          가로 간격이 정확히 2px씩 밀려나던 원인이 이 근사치였다. */}
+      <div className='-mx-[18px] -mt-4 flex flex-wrap items-center gap-x-[10px] gap-y-2 border-b border-[color:var(--line)] px-[18px] py-[14px]'>
         {/* parity cycle A3: per-block card-heading size (see
             archive-search-filters.tsx's comment) — the ops detail heading
-            measures 14.5px in the design, not the README §6 17px scale. */}
-        <h2 className='mono m-0 text-[14.5px] font-semibold text-[color:var(--text)]'>
+            measures 14.5px in the design, not the README §6 17px scale.
+            It also isn't mono — design's `#ops-detail-h` (`{{ dJobId }}`)
+            has no font-family override and inherits the page's sans stack;
+            only the numeric IDs elsewhere in this panel are mono. */}
+        <h2 className='m-0 text-[14.5px] font-semibold text-[color:var(--text)]'>
           job {run.id}
         </h2>
+        {/* 참조(893-896행) 헤더 순서: jobId · 타입 · 상태 · 기준일. */}
+        <BatchTypeBadge jobType={run.jobType} />
         <StatusBadge status={run.rawStatus} />
         <span className='mono text-[12.5px] text-[color:var(--text-soft)]'>
           {run.businessDate}
@@ -180,22 +213,24 @@ function BatchDetailContent({
         <DlItem label='소요' value={run.duration} />
         {/* O4 (parity cycle 3): match batch-history-list.tsx's slash label
             — this call site still had the old middle-dot copy. */}
-        <DlItem label='원문/정제/이슈' value={run.counts} />
-        <DlItem
-          label='스냅샷'
-          value={
-            run.pageId !== null
-              ? `pageId ${run.pageId} · ${run.pageVersion}`
-              : '스냅샷 없음'
-          }
-        />
-        <DlItem
-          label='실행 옵션'
-          value={`force=${run.forceRun ?? false} · rebuildPageOnly=${run.rebuildPageOnly ?? false}`}
-        />
+        {hasSnapshot ? (
+          <DlItem label='원문/정제/이슈' value={run.counts} />
+        ) : null}
+        <DlItem label='스냅샷' value={getSnapshotLabel(run)} />
+        {hasSnapshot ? (
+          <DlItem
+            label='실행 옵션'
+            value={`force=${run.forceRun ?? false} · rebuildPageOnly=${run.rebuildPageOnly ?? false}`}
+          />
+        ) : null}
       </Dl>
 
-      <PipelineStages errorCode={run.errorCode} jobStatus={run.rawStatus} />
+      <PipelineStages
+        currentStep={run.currentStep}
+        errorCode={run.errorCode}
+        jobStatus={run.rawStatus}
+        jobType={run.jobType}
+      />
 
       {impacts.length > 0 ? (
         <div className='min-w-0'>

@@ -136,9 +136,13 @@ export type ClusterDetailResponse = {
 
 export type BatchJobListItemResponse = {
   jobId: number;
+  /** `BatchJobType`: `'NEWS_COLLECTION' | 'MARKET_SNAPSHOT'` (docs/api_spec.json). Kept as a plain string, not a union, so an unrecognized value is preserved and shown rather than dropped — see `src/lib/batch-type.ts`. */
+  jobType: string;
   jobName: string;
   businessDate: string;
   status: string;
+  /** Current/last pipeline step name, or `null`. New in `docs/api_spec.json` — the old contract had no per-stage signal at all (see `src/components/ui/pipeline-stages.tsx`). */
+  currentStep: string | null;
   startedAt: string;
   endedAt: string | null;
   durationSeconds: number | null;
@@ -151,25 +155,71 @@ export type BatchJobListItemResponse = {
   partialMessage: string | null;
 };
 
-export type BatchJobDetailResponse = {
-  jobId: number;
-  jobName: string;
-  businessDate: string;
-  status: string;
+/**
+ * `docs/api_spec.json`'s `BatchJobSnapshotDetail` — only non-null on a
+ * `MARKET_SNAPSHOT` job's detail response. `ai*Count` ×6 exist on the real
+ * schema but are out of scope (unused by this app) and deliberately
+ * omitted here, same as `runMode`/`sourceJobId`/`sourcePageId`/`queuedAt`/
+ * `attemptCount`/`maxAttempts` on `BatchJobDetailResponse` below.
+ */
+export type BatchJobSnapshotDetail = {
   forceRun: boolean | null;
   rebuildPageOnly: boolean | null;
-  startedAt: string;
-  endedAt: string | null;
-  durationSeconds: number | null;
   rawNewsCount: number;
   processedNewsCount: number;
   clusterCount: number;
   pageId: number | null;
   pageVersionNo: number | null;
+};
+
+/**
+ * `docs/api_spec.json`'s `BatchJobNewsCollectionDetail` — only non-null on
+ * a `NEWS_COLLECTION` job's detail response. Typed for wire-shape fidelity;
+ * no mapper/UI reads it yet (out of scope for the jobType-wiring pass that
+ * added it — see `docs/design_v2/v2-decisions.md` §10).
+ */
+export type BatchJobNewsCollectionDetail = {
+  runId: number;
+  providerName: string;
+  windowStartAt: string;
+  windowEndAt: string;
+  queryStartAt: string;
+  queryEndAt: string;
+  totalKeywordCount: number;
+  completedKeywordCount: number;
+  fetchedCount: number;
+  matchedCount: number;
+  insertedCount: number;
+  coverageComplete: boolean;
+};
+
+/**
+ * `docs/api_spec.json`'s `BatchJobDetailResponse`. Was flat (mirroring the
+ * old `docs/api_spec_doc.md` §4 single-batch model) — the real contract
+ * nests the snapshot-producing fields under `snapshot` and the
+ * news-collection fields under `newsCollection`, both independently
+ * nullable by jobType. `mapBatchDetailToRun` (`src/lib/mappers/batch.ts`)
+ * used to read `rawNewsCount`/`processedNewsCount`/`clusterCount`/`pageId`/
+ * `pageVersionNo`/`forceRun`/`rebuildPageOnly` straight off this type's top
+ * level, which no longer exist there — that was a live data bug against the
+ * real API (every one of those rendered a wrong value), not a style choice.
+ */
+export type BatchJobDetailResponse = {
+  jobId: number;
+  jobName: string;
+  jobType: string;
+  businessDate: string;
+  status: string;
+  currentStep: string | null;
+  startedAt: string;
+  endedAt: string | null;
+  durationSeconds: number | null;
   partialMessage: string | null;
   errorCode: string | null;
   errorMessage: string | null;
   logSummary: string | null;
+  snapshot: BatchJobSnapshotDetail | null;
+  newsCollection: BatchJobNewsCollectionDetail | null;
 };
 
 export type BatchJobListResponse = {

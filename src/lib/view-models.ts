@@ -183,6 +183,10 @@ export type ClusterDetail = {
 type BatchRun = {
   id: number;
   jobName: string;
+  /** `BatchJobType` 원본 문자열(`NEWS_COLLECTION`/`MARKET_SNAPSHOT`) — 알 수 없는 값도 그대로 보존한다. 라벨/톤/파이프라인 단계 해석은 `src/lib/batch-type.ts`가 담당한다. */
+  jobType: string;
+  /** 현재/마지막 파이프라인 단계명, 또는 `null`. LIST/DETAIL 응답 모두에 존재(§14 갱신 — 더 이상 job 전체 status만 아는 게 아니다). */
+  currentStep?: string | null;
   market: string;
   businessDate: string;
   /**

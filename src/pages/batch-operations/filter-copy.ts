@@ -27,7 +27,7 @@ export const BATCH_STATUSES = ['SUCCESS', 'PARTIAL', 'FAILED', 'RUNNING'];
  *
  * **중요한 결정**: design v2 프로토타입의 fixture(`fixtures.js`)는 배치 타입
  * 값으로 `SEARCH_SAVE`/`SNAPSHOT_BUILD`를 쓰지만, 실제 API 계약
- * (`docs/api-spec.json`의 `BatchJobType` enum, `/stock/api/batch/jobs`의
+ * (`docs/api_spec.json`의 `BatchJobType` enum, `/stock/api/batch/jobs`의
  * `jobType` 쿼리 파라미터)은 `NEWS_COLLECTION`/`MARKET_SNAPSHOT`이다.
  * 이 앱은 **API enum을 정본**으로 삼는다 — URL 쿼리 값과 실제 API 호출 값
  * 모두 `NEWS_COLLECTION`/`MARKET_SNAPSHOT`을 쓰고, 화면에 보이는 라벨

@@ -180,6 +180,36 @@ export function formatDurationSeconds(value: number | null | undefined) {
   return `${minutes}m ${seconds}s`;
 }
 
+/**
+ * 한국어 소요 시간 ("2분 32초" / "48초" / "-").
+ *
+ * design v2 레퍼런스(`Market Brief v2.dc.html`의 `dur()`, 1422-1426행)는
+ * 목록 행의 소요(2113행)와 상세의 소요(2148행)를 모두 이 형식으로 그린다.
+ * 위 `formatDurationSeconds`의 영문 형식("2m 32s")은 배치 화면에서 요약
+ * 타일(한글)과 테이블(영문)이 서로 다른 단위를 쓰는 원인이었다.
+ *
+ * 원래 이 함수는 `src/pages/batch-operations/format-batch.ts`에 있었다 —
+ * 그 파일의 주석대로 "`src/lib/**`가 당시 phase의 파일 소유권 밖"이었기
+ * 때문이며, 기능적 이유는 아니었다. `src/lib/mappers/batch.ts`가 이 포맷을
+ * 써야 하는데 `lib`가 `pages`를 import할 수는 없으므로 이리로 옮겼다.
+ */
+export function formatDurationKo(seconds: number | null | undefined): string {
+  if (typeof seconds !== 'number' || !Number.isFinite(seconds) || seconds < 0) {
+    return '-';
+  }
+
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = Math.round(seconds % 60);
+
+  if (minutes <= 0) {
+    return `${remainingSeconds}초`;
+  }
+
+  return remainingSeconds > 0
+    ? `${minutes}분 ${remainingSeconds}초`
+    : `${minutes}분`;
+}
+
 export function toStatusTone(value: string | null | undefined) {
   if (typeof value !== 'string') {
     return 'failed';

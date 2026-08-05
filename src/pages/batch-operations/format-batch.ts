@@ -8,22 +8,13 @@
  * keeps its own small formatter.
  */
 
-export function formatDurationKo(seconds: number | null | undefined): string {
-  if (typeof seconds !== 'number' || !Number.isFinite(seconds) || seconds < 0) {
-    return '-';
-  }
-
-  const minutes = Math.floor(seconds / 60);
-  const remainingSeconds = Math.round(seconds % 60);
-
-  if (minutes <= 0) {
-    return `${remainingSeconds}초`;
-  }
-
-  return remainingSeconds > 0
-    ? `${minutes}분 ${remainingSeconds}초`
-    : `${minutes}분`;
-}
+/**
+ * `src/lib/formatters.ts`로 옮겼다 — `src/lib/mappers/batch.ts`(목록/상세 행의
+ * 소요)도 같은 포맷을 써야 하는데 `lib`가 `pages`를 import할 수 없기 때문.
+ * 이 화면 안의 기존 호출부(`batch-summary-tiles.tsx`)가 계속 이 모듈에서
+ * 가져다 쓸 수 있게 re-export만 남긴다.
+ */
+export { formatDurationKo } from '@/lib/formatters';
 
 export function isRunningStatus(rawStatus: string): boolean {
   return rawStatus.trim().toUpperCase() === 'RUNNING';
@@ -32,6 +23,27 @@ export function isRunningStatus(rawStatus: string): boolean {
 export function isRetryableStatus(rawStatus: string): boolean {
   const normalized = rawStatus.trim().toUpperCase();
   return normalized === 'FAILED' || normalized === 'PARTIAL';
+}
+
+/**
+ * "스냅샷" 라벨 3분기 — 히스토리 목록의 job-id subline과 상세 패널의 스냅샷
+ * `DlItem`이 공유한다(design v2 2115행 `r.pageLabel`). `pageId`가 있으면
+ * 항상 `pageId N · vN`. 없을 때는 두 가지를 구분해야 한다: NEWS_COLLECTION
+ * 작업은애초에 스냅샷을 만들지 않는 job type이므로 "스냅샷 대상 아님"(이
+ * 값이 나올 일이 없는 게 정상), MARKET_SNAPSHOT 작업인데 없으면 그 작업이
+ * 아직/끝내 스냅샷을 만들지 못한 것이므로 "스냅샷 없음"(비정상/미완료를
+ * 암시).
+ */
+export function getSnapshotLabel(run: {
+  jobType: string;
+  pageId: number | null;
+  pageVersion: string;
+}): string {
+  if (run.pageId !== null) {
+    return `pageId ${run.pageId} · ${run.pageVersion}`;
+  }
+
+  return run.jobType === 'NEWS_COLLECTION' ? '스냅샷 대상 아님' : '스냅샷 없음';
 }
 
 /**

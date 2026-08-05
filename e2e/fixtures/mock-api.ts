@@ -6,10 +6,13 @@
  * it is never imported or edited from here). The factory functions
  * (`pageFixture`, `archiveFixture`, `clusterFixture`, `batchListFixture`,
  * `batchDetailFixture`, `triggerResult`, `ERRORS`, `LONG_SAMPLES`, `NOW_KST`,
- * `TODAY`, `shiftDate`, `BATCH_STAGES`) are kept structurally identical to
- * the original (same field names/shapes), because that file already follows
- * the real DTO contract (`docs/api_spec_doc.md` §4) — only the language
- * changed JS -> TS.
+ * `TODAY`, `shiftDate`) are kept structurally identical to the original
+ * (same field names/shapes) where the original still matches the real DTO
+ * contract. The `Batch` section is the one deliberate exception: it now
+ * follows `docs/api_spec.json` (the real OpenAPI spec, jobType-split model)
+ * instead of `docs/api_spec_doc.md` §4 (the old single-batch model the
+ * design fixture still uses) — see the `Batch` section's own comments for
+ * what changed and why. Everything else is still JS -> TS only.
  *
  * `installMockApi(page, options)` is the actual Playwright integration: it
  * intercepts every request the app makes via `page.route()` and responds
@@ -183,11 +186,23 @@ export type ClusterDetail = {
 
 export type BatchJobStatus = 'RUNNING' | 'SUCCESS' | 'PARTIAL' | 'FAILED';
 
+/**
+ * `docs/api_spec.json`'s `BatchJobType` enum. Batches used to be a single
+ * unified `market_daily_batch` job (the shape this file ported before);
+ * the real backend now splits every run into one of these two independent
+ * job types, each with its own 6-stage pipeline and its own detail
+ * sub-object (`BatchSnapshotDetail`/`BatchNewsCollectionDetail` below).
+ */
+export type BatchJobType = 'NEWS_COLLECTION' | 'MARKET_SNAPSHOT';
+
 export type BatchListItem = {
   jobId: number;
+  jobType: BatchJobType;
   jobName: string;
   businessDate: string;
   status: BatchJobStatus;
+  /** Current/last pipeline step name (see `BATCH_STAGE_KEYS` below), or `null`. New in `docs/api_spec.json` — the old model had no per-stage signal at all. */
+  currentStep: string | null;
   startedAt: string;
   endedAt: string | null;
   durationSeconds: number | null;
@@ -211,22 +226,69 @@ export type BatchList = {
   };
 };
 
-export type BatchStage = {
-  label: string;
-  status: string;
-  durationSeconds: number | null;
-  note: string | null;
+/**
+ * `docs/api_spec.json`'s `BatchJobSnapshotDetail` — only present (non-null)
+ * on a `MARKET_SNAPSHOT` job's detail response.
+ */
+export type BatchSnapshotDetail = {
+  forceRun: boolean | null;
+  rebuildPageOnly: boolean | null;
+  rawNewsCount: number;
+  processedNewsCount: number;
+  clusterCount: number;
+  pageId: number | null;
+  pageVersionNo: number | null;
 };
 
-export type BatchDetail = BatchListItem & {
-  forceRun: boolean;
-  rebuildPageOnly: boolean;
+/**
+ * `docs/api_spec.json`'s `BatchJobNewsCollectionDetail` — only present
+ * (non-null) on a `NEWS_COLLECTION` job's detail response. The app doesn't
+ * consume this sub-object yet (out of scope for the jobType-wiring pass
+ * that added it here); it's typed/populated for wire-shape fidelity only.
+ */
+export type BatchNewsCollectionDetail = {
+  runId: number;
+  providerName: string;
+  windowStartAt: string;
+  windowEndAt: string;
+  queryStartAt: string;
+  queryEndAt: string;
+  totalKeywordCount: number;
+  completedKeywordCount: number;
+  fetchedCount: number;
+  matchedCount: number;
+  insertedCount: number;
+  coverageComplete: boolean;
+};
+
+/**
+ * `docs/api_spec.json`'s `BatchJobDetailResponse`. Deliberately NOT
+ * `BatchListItem & {...}` any more — the real detail response nests the
+ * snapshot/news-collection fields under `snapshot`/`newsCollection` instead
+ * of carrying them flat, and drops `marketScope` entirely. Also drops the
+ * old `stages: BatchStage[]`/`impact`/`retryable` fields this file used to
+ * fabricate: none of those three ever existed in any real API contract
+ * (old or new) and the app never read them from the wire — `PipelineStages`
+ * derives its own stage view from `jobType`/`status`/`errorCode`/
+ * `currentStep`, and `format-batch.ts` derives impact/retryable from the
+ * mapped `BatchRunRow` client-side.
+ */
+export type BatchDetail = {
+  jobId: number;
+  jobType: BatchJobType;
+  jobName: string;
+  businessDate: string;
+  status: BatchJobStatus;
+  currentStep: string | null;
+  startedAt: string;
+  endedAt: string | null;
+  durationSeconds: number | null;
+  partialMessage: string | null;
   errorCode: string | null;
   errorMessage: string | null;
-  logSummary: string;
-  stages: BatchStage[];
-  impact: string[];
-  retryable: boolean;
+  logSummary: string | null;
+  snapshot: BatchSnapshotDetail | null;
+  newsCollection: BatchNewsCollectionDetail | null;
 };
 
 export type TriggerSuccess = {
@@ -943,69 +1005,156 @@ export function clusterFixture(mode: string, clusterId: string): ClusterDetail {
 // Batch
 // ---------------------------------------------------------------------------
 
-export const BATCH_STAGES: readonly { key: string; label: string }[] = [
-  { key: 'create_job', label: '작업 생성' },
-  { key: 'collect_news', label: '뉴스 수집' },
-  { key: 'collect_market_indices', label: '지수 수집' },
-  { key: 'dedupe_articles', label: '중복 제거' },
-  { key: 'build_clusters', label: '클러스터 구성' },
-  { key: 'generate_ai_summaries', label: 'AI 요약 생성' },
-  { key: 'build_page_snapshot', label: '페이지 스냅샷' },
-  { key: 'finalize_job', label: '작업 종료' },
-];
+/**
+ * Per-jobType pipeline stage KEYS — the snake_case identifiers from the
+ * design source (`docs/design_v2/handoff_v2/fixtures.js:418-434`'s
+ * `BATCH_STAGES`, whose entries carry both a `key` and a Korean `label`).
+ * Kept as a second, independent copy on purpose (see this file's header
+ * comment on why it's an "independent port," not an import).
+ *
+ * Deliberately the `key` form, not the Korean `label`: the OpenAPI spec
+ * gives `currentStep` no enum/example, but the same design source's log
+ * fixtures print `step=load_search_result`, so a snake_case key is the more
+ * likely real wire value. `src/lib/batch-type.ts` matches `currentStep`
+ * against BOTH key and label, and the unit tests cover the label path — so
+ * emitting keys here makes the visual-audit harness exercise the path the
+ * real backend most likely takes. Still a best-effort stand-in, not a
+ * confirmed wire value.
+ */
+const BATCH_STAGE_KEYS: Readonly<Record<BatchJobType, readonly string[]>> = {
+  NEWS_COLLECTION: [
+    'create_job',
+    'collect_news',
+    'collect_market_indices',
+    'dedupe_articles',
+    'persist_search_result',
+    'finalize_job',
+  ],
+  MARKET_SNAPSHOT: [
+    'create_job',
+    'load_search_result',
+    'build_clusters',
+    'generate_ai_summaries',
+    'build_page_snapshot',
+    'finalize_job',
+  ],
+};
 
-function jobStatusFor(i: number): BatchJobStatus {
-  if (i === 0) return 'RUNNING';
-  const c = i % 9;
-  if (c === 2) return 'PARTIAL';
-  if (c === 5) return 'FAILED';
+function jobStatusFor(i: number, jobType: BatchJobType): BatchJobStatus {
+  // Offset the two types' cycles so a NEWS_COLLECTION and MARKET_SNAPSHOT
+  // job for the same businessDate don't always land on the same status —
+  // otherwise every jobType-filtered view would look identical apart from
+  // the label, which would defeat the point of testing the filter.
+  const isSnapshot = jobType === 'MARKET_SNAPSHOT';
+  if (i === 0) return isSnapshot ? 'RUNNING' : 'SUCCESS';
+  const cycle = (isSnapshot ? i : i + 4) % 9;
+  if (cycle === 2) return 'PARTIAL';
+  if (cycle === 5) return 'FAILED';
   return 'SUCCESS';
 }
 
-function batchItem(i: number): BatchListItem {
+/**
+ * `currentStep` for a generated item. RUNNING lands mid-pipeline (never the
+ * first/last stage, so the "실행 중" dot in `PipelineStages` has something
+ * real to point at); a finished job reports its last stage; a FAILED job
+ * reports `null` — the app's FAILED path still infers the failed stage from
+ * `errorCode` keywords (`pipeline-stages.tsx`'s `inferFailedStageIndex`),
+ * unchanged by this jobType pass, so `currentStep` is never consulted there.
+ */
+function currentStepFor(
+  status: BatchJobStatus,
+  jobType: BatchJobType,
+  i: number
+): string | null {
+  const stages = BATCH_STAGE_KEYS[jobType];
+  if (status === 'RUNNING' || status === 'PARTIAL') {
+    return stages[1 + (i % (stages.length - 2))];
+  }
+  if (status === 'SUCCESS') {
+    return stages[stages.length - 1];
+  }
+  return null;
+}
+
+function batchItem(
+  i: number,
+  jobType: BatchJobType,
+  jobId: number
+): BatchListItem {
   const businessDate = shiftDate('2026-07-26', -i);
-  const status = jobStatusFor(i);
+  const status = jobStatusFor(i, jobType);
+  const isSnapshot = jobType === 'MARKET_SNAPSHOT';
   const failed = status === 'FAILED';
   const running = status === 'RUNNING';
   const partial = status === 'PARTIAL';
-  const startedAt = `${shiftDate(businessDate, 1)}T06:${pad(10 + (i % 20))}:00`;
+  const hh = isSnapshot ? '07' : '06';
+  const mm = 10 + (i % 20);
   const duration = running
     ? null
     : failed
-      ? 69
+      ? isSnapshot
+        ? 14
+        : 69
       : partial
-        ? 372
-        : 135 + ((i * 17) % 90);
-  const endMinute = 10 + (i % 20) + Math.floor((duration ?? 0) / 60);
+        ? isSnapshot
+          ? 268
+          : 372
+        : (isSnapshot ? 96 : 152) + ((i * 17) % 80);
+  const endMinute = mm + Math.floor((duration ?? 0) / 60);
   return {
-    jobId: 1042 - i,
-    jobName: 'market_daily_batch',
+    jobId,
+    jobType,
+    jobName: isSnapshot ? 'market_snapshot_batch' : 'news_collection_batch',
     businessDate,
     status,
-    startedAt,
+    currentStep: currentStepFor(status, jobType, i),
+    startedAt: `${shiftDate(businessDate, 1)}T${hh}:${pad(mm)}:00`,
     endedAt: running
       ? null
-      : `${shiftDate(businessDate, 1)}T06:${pad(endMinute)}:${pad((duration ?? 0) % 60)}`,
+      : `${shiftDate(businessDate, 1)}T${hh}:${pad(endMinute)}:${pad((duration ?? 0) % 60)}`,
     durationSeconds: duration,
     marketScope: 'GLOBAL',
-    rawNewsCount: failed ? 21 : partial ? 126 : 174 - (i % 30),
+    // `BatchJobListItemResponse` (docs/api_spec.json) declares all three
+    // count fields as non-nullable required integers — unlike the design
+    // source (`fixtures.js:466-470`), which uses `null` for the field that
+    // doesn't apply to a given jobType. Mirrored here with 0 instead of
+    // null to stay spec-accurate: NEWS_COLLECTION collects raw/processed
+    // news and never clusters (clusterCount stays 0); MARKET_SNAPSHOT
+    // consumes already-collected news (processedNewsCount = input count
+    // read) and never touches raw articles (rawNewsCount stays 0).
+    rawNewsCount: isSnapshot ? 0 : failed ? 21 : partial ? 126 : 174 - (i % 30),
     processedNewsCount: failed ? 0 : partial ? 74 : 114 - (i % 22),
-    clusterCount: failed ? 0 : partial ? 15 : 21 - (i % 6),
-    pageId: failed ? null : 501 - i,
-    pageVersionNo: failed ? null : 3 - (i % 2),
+    clusterCount: isSnapshot ? (failed ? 0 : partial ? 15 : 21 - (i % 6)) : 0,
+    pageId: isSnapshot && !failed ? 501 - i : null,
+    pageVersionNo: isSnapshot && !failed ? 3 - (i % 2) : null,
     partialMessage: partial
-      ? '한국 지수 2종 수집 실패, 미국 AI 요약 1건 미생성'
+      ? isSnapshot
+        ? '미국 클러스터 1건 AI 요약 미생성'
+        : '한국 지수 2종 수집 실패 (원문 저장은 완료)'
       : null,
   };
 }
 
-const BATCH_ALL: BatchListItem[] = rep(27, batchItem);
+// 같은 기준일에 검색 결과 저장(NEWS_COLLECTION) → 스냅샷 생성
+// (MARKET_SNAPSHOT) 순으로 실행되므로 목록은 스냅샷이 위에 온다 — 디자인
+// 소스(`fixtures.js:480-490`)와 동일한 interleaving.
+const BATCH_ALL: BatchListItem[] = (() => {
+  const out: BatchListItem[] = [];
+  let id = 1042;
+  for (let i = 0; i < 27; i += 1) {
+    out.push(batchItem(i, 'MARKET_SNAPSHOT', id));
+    out.push(batchItem(i, 'NEWS_COLLECTION', id - 1));
+    id -= 2;
+  }
+  return out;
+})();
 
 export function batchListFixture(
   mode: string,
   page: number,
   size = 20,
-  status = ''
+  status = '',
+  jobType = ''
 ): BatchList {
   if (mode === 'empty') {
     return {
@@ -1019,11 +1168,17 @@ export function batchListFixture(
       },
     };
   }
-  const filtered = status
-    ? BATCH_ALL.filter((r) => r.status === status)
+  // `scoped` = jobType-filtered but NOT status-filtered — the summary tiles
+  // count statuses WITHIN the applied type scope, matching the design
+  // source's own `batchListFixture` (`fixtures.js:498-511`, its `scoped`
+  // var). Filtering `scoped` again by status before counting statuses
+  // would make every summary count read as either 0 or "all of them."
+  const scoped = jobType
+    ? BATCH_ALL.filter((r) => r.jobType === jobType)
     : BATCH_ALL;
+  const filtered = status ? scoped.filter((r) => r.status === status) : scoped;
   const start = (page - 1) * size;
-  const done = BATCH_ALL.filter(
+  const done = scoped.filter(
     (r): r is BatchListItem & { durationSeconds: number } =>
       r.durationSeconds !== null
   );
@@ -1031,12 +1186,14 @@ export function batchListFixture(
     items: filtered.slice(start, start + size),
     pagination: { page, size, totalCount: filtered.length },
     summary: {
-      successCount: BATCH_ALL.filter((r) => r.status === 'SUCCESS').length,
-      partialCount: BATCH_ALL.filter((r) => r.status === 'PARTIAL').length,
-      failedCount: BATCH_ALL.filter((r) => r.status === 'FAILED').length,
-      avgDurationSeconds: Math.round(
-        done.reduce((a, r) => a + r.durationSeconds, 0) / done.length
-      ),
+      successCount: scoped.filter((r) => r.status === 'SUCCESS').length,
+      partialCount: scoped.filter((r) => r.status === 'PARTIAL').length,
+      failedCount: scoped.filter((r) => r.status === 'FAILED').length,
+      avgDurationSeconds: done.length
+        ? Math.round(
+            done.reduce((a, r) => a + r.durationSeconds, 0) / done.length
+          )
+        : 0,
     },
   };
 }
@@ -1068,83 +1225,6 @@ const LONG_LOG = (() => {
   return out;
 })();
 
-function stagesFor(status: string): BatchStage[] {
-  const done = (label: string, sec: number): BatchStage => ({
-    label,
-    status: 'SUCCESS',
-    durationSeconds: sec,
-    note: null,
-  });
-  if (status === 'RUNNING') {
-    return [
-      done('작업 생성', 1),
-      done('뉴스 수집', 96),
-      done('지수 수집', 12),
-      {
-        label: '중복 제거',
-        status: 'RUNNING',
-        durationSeconds: null,
-        note: '진행 중',
-      },
-      ...BATCH_STAGES.slice(4).map((s) => ({
-        label: s.label,
-        status: 'PENDING',
-        durationSeconds: null,
-        note: null,
-      })),
-    ];
-  }
-  if (status === 'FAILED') {
-    return [
-      done('작업 생성', 1),
-      {
-        label: '뉴스 수집',
-        status: 'FAILED',
-        durationSeconds: 68,
-        note: 'provider 응답 타임아웃 (재시도 3회 소진)',
-      },
-      ...BATCH_STAGES.slice(2).map((s) => ({
-        label: s.label,
-        status: 'SKIPPED',
-        durationSeconds: null,
-        note: '이전 단계 실패로 건너뜀',
-      })),
-    ];
-  }
-  if (status === 'PARTIAL') {
-    return [
-      done('작업 생성', 1),
-      done('뉴스 수집', 148),
-      {
-        label: '지수 수집',
-        status: 'PARTIAL',
-        durationSeconds: 31,
-        note: 'KRX 300, USD/KRW 2종 실패',
-      },
-      done('중복 제거', 22),
-      done('클러스터 구성', 41),
-      {
-        label: 'AI 요약 생성',
-        status: 'PARTIAL',
-        durationSeconds: 118,
-        note: '미국 클러스터 1건 요약 미생성',
-      },
-      done('페이지 스냅샷', 9),
-      done('작업 종료', 2),
-    ];
-  }
-  return [
-    done('작업 생성', 1),
-    done('뉴스 수집', 92),
-    done('지수 수집', 14),
-    done('중복 제거', 9),
-    done('클러스터 구성', 12),
-    done('AI 요약 생성', 63),
-    done('페이지 스냅샷', 6),
-    done('작업 종료', 1),
-  ];
-}
-
 /**
  * A job just created by `POST /stock/api/batch/market-daily` (mock
  * `jobId: 1043`, see `triggerResult()`) isn't one of `BATCH_ALL`'s 27 seeded
@@ -1155,14 +1235,21 @@ function stagesFor(status: string): BatchStage[] {
  * job) while being served FOR a request that asked for 1043. Synthesizing a
  * plausible RUNNING record for any unseeded jobId instead keeps the
  * response's own `jobId` truthful for §16-10's "작업 상세 보기"/"작업 보기"
- * navigation after a successful Trigger.
+ * navigation after a successful Trigger. Always MARKET_SNAPSHOT: the only
+ * in-scope trigger endpoint (`/batch/market-daily`) has no jobType concept
+ * of its own (`BatchRunResponse` carries no `jobType` field — confirmed
+ * against `docs/api_spec.json`); `POST /batch/news-collection` is a
+ * separate, out-of-scope trigger this mock doesn't wire up.
  */
 function syntheticRunningJob(jobId: number): BatchListItem {
+  const jobType: BatchJobType = 'MARKET_SNAPSHOT';
   return {
     jobId,
+    jobType,
     jobName: 'market_daily_batch',
     businessDate: TODAY,
     status: 'RUNNING',
+    currentStep: BATCH_STAGE_KEYS[jobType][1],
     startedAt: NOW_KST,
     endedAt: null,
     durationSeconds: null,
@@ -1181,36 +1268,76 @@ export function batchDetailFixture(jobId: number, mode?: string): BatchDetail {
     BATCH_ALL.find((r) => r.jobId === jobId) ?? syntheticRunningJob(jobId);
   const failed = item.status === 'FAILED';
   const partial = item.status === 'PARTIAL';
+  const isSnapshot = item.jobType === 'MARKET_SNAPSHOT';
+  // Distinct per-type errorCode so `pipeline-stages.tsx`'s errorCode->stage
+  // keyword table (unchanged by this pass) actually resolves to a stage
+  // that exists in THIS job's 6-stage list: /NEWS/ -> '뉴스 수집' (only in
+  // NEWS_COLLECTION's list), /SUMMARY|AI|LLM|GPT/ -> 'AI 요약 생성' (only
+  // in MARKET_SNAPSHOT's list).
+  const errorCode = failed
+    ? isSnapshot
+      ? 'AI_SUMMARY_TIMEOUT'
+      : 'NEWS_SOURCE_TIMEOUT'
+    : null;
+  const errorMessage = failed
+    ? isSnapshot
+      ? 'AI 요약 생성 단계에서 응답 제한 시간을 초과했습니다. 재시도 3회를 모두 소진한 뒤 작업이 중단됐습니다.'
+      : '원문 공급자 응답 제한 시간을 초과했습니다. 재시도 3회를 모두 소진한 뒤 작업이 중단됐습니다.'
+    : null;
+
   return {
-    ...item,
-    forceRun: item.jobId % 4 === 0,
-    rebuildPageOnly: false,
-    errorCode: failed ? 'NEWS_SOURCE_TIMEOUT' : null,
-    errorMessage: failed
-      ? '원문 공급자 응답 제한 시간을 초과했습니다. 재시도 3회를 모두 소진한 뒤 작업이 중단됐습니다.'
-      : null,
+    jobId: item.jobId,
+    jobType: item.jobType,
+    jobName: item.jobName,
+    businessDate: item.businessDate,
+    status: item.status,
+    currentStep: item.currentStep,
+    startedAt: item.startedAt,
+    endedAt: item.endedAt,
+    durationSeconds: item.durationSeconds,
+    partialMessage: item.partialMessage,
+    errorCode,
+    errorMessage,
     logSummary: failed
       ? mode === 'longLog'
         ? LONG_LOG
         : LONG_LOG.slice(0, 1200)
       : partial
-        ? '지수 2종과 AI 요약 1건이 누락된 상태로 페이지 스냅샷을 생성했습니다. 재실행 시 rebuildPageOnly=false 권장.'
-        : '정상 처리. 시장 데이터, 기사 수집, 클러스터링이 SLA 안에서 종료됐습니다.',
-    stages: stagesFor(item.status),
-    impact: failed
-      ? [
-          '미국·한국 시장 스냅샷 미생성',
-          `${item.businessDate} 아카이브 항목 없음`,
-          '해당 날짜 클러스터 상세 진입 불가',
-        ]
-      : partial
-        ? [
-            '한국 지수 카드 2종 누락',
-            '미국 클러스터 요약 1건 누락',
-            '아카이브 상태 PARTIAL로 표시',
-          ]
-        : [],
-    retryable: failed || partial,
+        ? isSnapshot
+          ? '미국 클러스터 1건 AI 요약이 누락된 상태로 페이지 스냅샷을 생성했습니다.'
+          : '한국 지수 2종 수집에 실패했지만 원문 저장은 완료했습니다.'
+        : '정상 처리. SLA 안에서 종료됐습니다.',
+    // `docs/api_spec.json`의 `BatchJobDetailResponse`는 이 둘을 서로
+    // 배타적인 nullable 중첩 객체로 정의한다 — MARKET_SNAPSHOT 작업은
+    // snapshot만, NEWS_COLLECTION 작업은 newsCollection만 채워진다(둘 다
+    // null인 경우는 이 픽스처에서 만들지 않는다).
+    snapshot: isSnapshot
+      ? {
+          forceRun: item.jobId % 4 === 0,
+          rebuildPageOnly: false,
+          rawNewsCount: item.rawNewsCount,
+          processedNewsCount: item.processedNewsCount,
+          clusterCount: item.clusterCount,
+          pageId: item.pageId,
+          pageVersionNo: item.pageVersionNo,
+        }
+      : null,
+    newsCollection: isSnapshot
+      ? null
+      : {
+          runId: item.jobId,
+          providerName: 'naver',
+          windowStartAt: item.startedAt,
+          windowEndAt: item.endedAt ?? item.startedAt,
+          queryStartAt: item.startedAt,
+          queryEndAt: item.endedAt ?? item.startedAt,
+          totalKeywordCount: 40,
+          completedKeywordCount: failed ? 12 : 40,
+          fetchedCount: item.rawNewsCount,
+          matchedCount: item.processedNewsCount,
+          insertedCount: item.processedNewsCount,
+          coverageComplete: !failed,
+        },
   };
 }
 
@@ -1621,10 +1748,11 @@ export async function installMockApi(
       const page_ = queryNumber(url, 'page', 1);
       const size = queryNumber(url, 'size', 20);
       const status = url.searchParams.get('status') ?? '';
+      const jobType = url.searchParams.get('jobType') ?? '';
       await fulfillJson(
         route,
         200,
-        envelope(batchListFixture('ready', page_, size, status))
+        envelope(batchListFixture('ready', page_, size, status, jobType))
       );
       return;
     }

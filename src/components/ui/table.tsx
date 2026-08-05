@@ -52,24 +52,14 @@ export function TableHeader({
   className,
   ...props
 }: HTMLAttributes<HTMLTableSectionElement>) {
-  return (
-    <thead
-      className={cn(
-        '[&_tr]:border-b [&_tr]:border-[color:var(--line)]',
-        className
-      )}
-      {...props}
-    />
-  );
+  return <thead className={className} {...props} />;
 }
 
 export function TableBody({
   className,
   ...props
 }: HTMLAttributes<HTMLTableSectionElement>) {
-  return (
-    <tbody className={cn('[&_tr:last-child]:border-0', className)} {...props} />
-  );
+  return <tbody className={className} {...props} />;
 }
 
 export interface TableRowProps extends HTMLAttributes<HTMLTableRowElement> {
@@ -88,7 +78,7 @@ export function TableRow({
   return (
     <tr
       className={cn(
-        'min-w-0 border-b border-[color:var(--line)] hover:bg-[color:var(--surface-2)]',
+        'min-w-0 hover:bg-[color:var(--surface-2)]',
         selected &&
           'bg-[color:var(--primary-soft)] shadow-[inset_3px_0_0_var(--primary)] hover:bg-[color:var(--primary-soft)]',
         !selected &&
@@ -108,7 +98,13 @@ export function TableHead({
   return (
     <th
       className={cn(
-        'h-12 px-0 text-left align-middle text-[0.74rem] uppercase tracking-[0.16em] text-[color:var(--text-faint)] font-semibold',
+        // Every `<th scope="col">` in the reference (market-latest,
+        // archive-search, ops-batches — verified by grepping all of them)
+        // is `font-size:11px;letter-spacing:.06em`, not the previous
+        // `0.74rem`(11.84px)/`0.16em` — a small but systemic mismatch that
+        // only surfaced once a per-`<th>` visual-audit target existed
+        // (ops-batches' new 타입 column header) to measure it directly.
+        'h-12 border-b border-[color:var(--line)] px-0 text-left align-middle text-[11px] uppercase tracking-[0.06em] text-[color:var(--text-faint)] font-semibold',
         className
       )}
       {...props}
@@ -122,7 +118,10 @@ export function TableCell({
 }: TdHTMLAttributes<HTMLTableCellElement>) {
   return (
     <td
-      className={cn('min-w-0 px-0 py-[18px] align-middle', className)}
+      className={cn(
+        'min-w-0 border-b border-[color:var(--line)] px-0 py-[18px] align-middle',
+        className
+      )}
       {...props}
     />
   );

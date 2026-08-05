@@ -3,17 +3,32 @@
  * Values here are FINAL per the handoff doc: colors, type scale, spacing,
  * radius, shadow, motion, breakpoints, z-index and content measures.
  *
- * Font decision (README §3-1 / Phase 2 task):
+ * Font decision (README §3-1 / Phase 2 task, revisited during the
+ * pixel-perfect-react-ui pass on /ops/batches):
  * The repo previously declared --font-sans: Inter and --font-display: Manrope,
- * but no font asset, @font-face, or CDN link ever backed those names — every
- * user has always rendered this app in their system UI font. Declaring a
- * font family that never loads is a broken promise, not a design decision.
- * Verified via `grep -rn "@font-face|Inter|Manrope" src/ index.html` → no
- * matches, and `ls src/assets public/` → no font files.
- * Decision: go with the honest system stack (Segoe UI/Apple SD Gothic Neo/
- * Noto Sans KR fallbacks matter — this is a Korean-language UI). Numbers,
- * IDs, timestamps and logs use --font-mono + tabular-nums via .mono /
- * [data-mono] (see bottom of this file).
+ * but no font asset, @font-face, or CDN link ever backed those names, so it
+ * was switched to the honest system stack below (no font claimed that
+ * doesn't load). That reasoning still holds for Inter/Manrope. It does NOT
+ * mean the app's declared stack should diverge from the design reference's
+ * own stack, though: `docs/design_v2/handoff_v2/Market Brief v2.dc.html`
+ * itself declares `font-family:'IBM Plex Sans KR',system-ui,-apple-system,
+ * 'Segoe UI',sans-serif` and *also* ships no @font-face/font asset for
+ * "IBM Plex Sans KR" — verified via Playwright against the running
+ * reference page: `document.fonts` is empty (no registered font faces) and
+ * `canvas.measureText()` with `font: 'IBM Plex Sans KR'` returns the exact
+ * same width as a guaranteed-nonexistent font name, i.e. the reference
+ * itself is already falling back through its stack, not rendering real
+ * Plex glyphs. So matching this literal stack doesn't assert a font that
+ * loads; it reproduces the reference's own (already-fallback) declaration
+ * so both sides resolve through an IDENTICAL fallback chain in the same
+ * browser — the two candidate stacks previously diverged enough (this
+ * app's included explicit `Noto Sans KR`/`Apple SD Gothic Neo`/
+ * `Malgun Gothic` entries the reference's stack lacks) that Korean glyphs
+ * were resolving to a different actual system font on each side, which
+ * showed up as real measured row-height/column-width deltas in the
+ * ops-batches audit, not just a cosmetic string mismatch.
+ * Numbers, IDs, timestamps and logs use --font-mono + tabular-nums via
+ * .mono / [data-mono] (see bottom of this file).
  */
 
 :root {
@@ -61,13 +76,9 @@
 
   /* ---- Typography ---- */
   --font-sans:
-    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
-    "Helvetica Neue", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic",
-    sans-serif;
+    "IBM Plex Sans KR", system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-display: var(--font-sans);
-  --font-mono:
-    ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono",
-    monospace;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 
   /* type scale — §6 Typography table (>640px values; ≤640 step below) */
   --fs-display: 26px;

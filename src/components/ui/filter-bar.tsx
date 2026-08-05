@@ -79,8 +79,19 @@ export function FilterField({
 }: FilterFieldProps) {
   return (
     <div className={cn('min-w-0', className)}>
+      {/* 참조의 필터 라벨은 두 화면 모두 동일하게
+          `font-size:12px;font-weight:600;color:var(--fg2)`이며 uppercase도
+          letter-spacing도 없다 — archive-search 480/485/490행, ops-batches
+          743/748/753/758행. 여기가 11px + `tracking-[.07em]` + uppercase +
+          `--text-faint`로 되어 있어서 라벨 높이가 17.6px(11×1.6)로 잡혔고,
+          참조의 19.2px(12×1.6)보다 1.6px 낮았다. 그 1.6px이 라벨 행 수만큼
+          누적돼(desktop 1행 → -1.6px, tablet 2행 → -3.2px) 조회 조건 카드
+          아래 모든 블록의 y를 밀고 있었다. `--fg2`는 이 앱의 `--text-soft`
+          (#4a6180 = rgb(74,97,128))에 대응한다 — 감사가 기대값으로 리포트하는
+          값과 정확히 같다. 라벨-입력 간격(margin-bottom)은 화면마다 다르므로
+          (batch는 `[&_label]:mb-[5px]`로 override) 여기서 건드리지 않는다. */}
       <label
-        className='mb-1 block text-[11px] font-semibold tracking-[0.07em] text-[color:var(--text-faint)] uppercase'
+        className='mb-1 block text-[12px] font-semibold text-[color:var(--text-soft)]'
         htmlFor={htmlFor}
       >
         {label}

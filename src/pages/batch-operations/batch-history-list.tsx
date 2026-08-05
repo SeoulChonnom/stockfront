@@ -1,5 +1,6 @@
 import { EmptyState, InlineAlert, StatusBadge } from '@/components/state';
 import { Skeleton } from '@/components/state/skeleton';
+import { BatchTypeBadge } from '@/components/ui/batch-type-badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Pagination } from '@/components/ui/pagination';
@@ -20,6 +21,7 @@ import {
   getBatchStatusSummaryLabel,
   getBatchTypeSummaryLabel,
 } from './filter-copy';
+import { getSnapshotLabel } from './format-batch';
 import { useRetryAnnounce } from './use-retry-announce';
 
 /**
@@ -162,19 +164,34 @@ export function BatchHistoryList({
           </div>
         ) : (
           <TableScrollWrapper>
-            <Table aria-busy={isLoading} minWidth={480}>
+            {/* design's table carries `min-width:520px` (reference:
+                `<table style="...min-width:520px...">`), not 480. */}
+            <Table aria-busy={isLoading} minWidth={520}>
               <TableHeader>
                 <TableRow>
-                  <TableHead className='h-auto py-2 pl-4 sm:pl-[18px]'>
+                  {/* 참조 846-850행: 이 표의 th는 모두 `padding:9px ...` —
+                      `table.tsx`의 다른 페이지(예: 지수 표)가 쓰는 8px과는
+                      다른 페이지별 값이라 여기 콜사이트에서 덮어쓴다. */}
+                  <TableHead className='h-auto py-[9px] pl-4 sm:pl-[18px]'>
                     작업 · 기준일
                   </TableHead>
-                  <TableHead className='h-auto py-2 px-3'>상태</TableHead>
-                  <TableHead className='h-auto py-2 px-3 text-right'>
+                  {/* 새 5번째 컬럼(타입) — 참조의 `--tc2`는 `--tc3`(원문/정제/이슈)와
+                      다른 브레이크포인트를 쓴다: `--tc2`/`--tc2i`는
+                      `@media(max-width:640px)`에서만 전환되고(참조 62행),
+                      `--tc3`/`--tc3i`는 `@media(max-width:1180px)`에서
+                      전환된다(참조 60행). 즉 타입 컬럼은 모바일(≤640px)에서만
+                      첫 셀 안의 배지(`--tc2i`)로 접히고, 태블릿/랩톱 폭에서는
+                      실제 컬럼으로 남아 있어야 한다. */}
+                  <TableHead className='hidden h-auto py-[9px] px-3 min-[641px]:table-cell'>
+                    타입
+                  </TableHead>
+                  <TableHead className='h-auto py-[9px] px-3'>상태</TableHead>
+                  <TableHead className='h-auto py-[9px] px-3 text-right'>
                     소요
                   </TableHead>
                   {/* E4: design text is "원문/정제/이슈" (slashes), and the
                       column must not wrap the header or the values. */}
-                  <TableHead className='hidden h-auto py-2 pr-4 text-right whitespace-nowrap min-[1181px]:table-cell sm:pr-[18px]'>
+                  <TableHead className='hidden h-auto py-[9px] pr-4 text-right whitespace-nowrap min-[1181px]:table-cell sm:pr-[18px]'>
                     원문/정제/이슈
                   </TableHead>
                 </TableRow>
@@ -184,7 +201,7 @@ export function BatchHistoryList({
                   <SkeletonRows />
                 ) : rows.length === 0 ? (
                   <TableRow>
-                    <TableCell className='p-4 sm:p-[18px]' colSpan={4}>
+                    <TableCell className='p-4 sm:p-[18px]' colSpan={5}>
                       {/* design v2 836행: exact empty-state copy + a 필터
                           해제 action, always offered here (unlike the header
                           button above, which is conditional on
@@ -258,6 +275,9 @@ function SkeletonRows() {
           <TableCell>
             <Skeleton className='h-4 w-28' />
           </TableCell>
+          <TableCell className='hidden min-[641px]:table-cell'>
+            <Skeleton className='h-4 w-16' />
+          </TableCell>
           <TableCell>
             <Skeleton className='h-4 w-20' />
           </TableCell>
@@ -297,8 +317,14 @@ function BatchHistoryRow({
       tone={isFailed ? 'danger' : undefined}
     >
       {/* E5: row pitch — design's body cell vertical padding is 10px, not
-          the shared `TableCell` default (18px). */}
-      <TableCell className='py-2.5 pl-4 sm:pl-[18px]'>
+          the shared `TableCell` default (18px).
+          모든 셀이 `vertical-align:top`이다(참조 856/862/865/869/870행) —
+          `TableCell`의 기본값(`align-middle`)을 이 표의 다섯 셀 전부에서
+          덮어쓴다. 이 첫 셀은 행에서 가장 키가 크므로 top/middle 차이가
+          시각적으로 드러나지 않지만, 짧은 셀(타입/상태/소요)은 middle일
+          때 세로 중앙으로 떠 배지가 셀 안에서 10px가 아니라 훨씬 아래에서
+          시작한다. */}
+      <TableCell className='py-2.5 pl-4 align-top sm:pl-[18px]'>
         <button
           aria-label={`job ${row.id} 상세 선택`}
           // X1 (parity cycle 8): design's row button is 13.5px
@@ -337,16 +363,33 @@ function BatchHistoryRow({
             design's own wrapped height — an overcorrection past the
             reference, not a fix. */}
         <div className='mono text-[11px] text-[color:var(--text-faint)]'>
-          job {row.id} ·{' '}
-          {row.pageId !== null
-            ? `pageId ${row.pageId} · ${row.pageVersion}`
-            : '스냅샷 없음'}
+          job {row.id} · {getSnapshotLabel(row)}
         </div>
-        <div className='min-[1181px]:hidden text-[11px] text-[color:var(--text-faint)]'>
+        {/* 모바일(≤640px)에서는 타입 컬럼 자체가 접히므로(`--tc2`, 참조
+            62행), 참조의 `--tc2i` 배지를 이 첫 셀 안에 대신 렌더한다 —
+            원문/정제/이슈 subline(`--tc3i`, 1180px)과는 다른, 더 좁은
+            브레이크포인트다. */}
+        <BatchTypeBadge
+          className='mt-1 px-[7px] py-0.5 text-[11px] min-[641px]:hidden'
+          jobType={row.jobType}
+        />
+        {/* 참조 860행의 `--tc3i` span은 `font-family:var(--mono)`다 — 이
+            `mono`가 빠져 있어서 mobile(390px)에서 후보만 한 줄에 들어가고
+            (자연 폭 122.9px < 가용 152.4px) 레퍼런스는 두 줄로 넘어갔다
+            (156.4px > 138.3px). 그 17.6px가 mobile 행 높이 차(123 vs
+            140.6)의 전부였다. 위 jobId subline은 이미 `mono`를 쓰고 있어
+            이 줄만 누락된 상태였다. */}
+        <div className='mono min-[1181px]:hidden text-[11px] text-[color:var(--text-faint)]'>
           원문/정제/이슈 {row.counts}
         </div>
       </TableCell>
-      <TableCell className='py-2.5 px-3'>
+      <TableCell className='hidden py-2.5 px-3 align-top min-[641px]:table-cell'>
+        {/* 참조의 td 배지(863행)는 `padding:2px 8px`로, 상세 헤더 배지의
+            기본 3px 8px(894행)보다 세로 padding이 1px 작다 — 이 컬럼
+            인스턴스에서만 `py-0.5`(2px)로 덮어쓴다. */}
+        <BatchTypeBadge className='py-0.5' jobType={row.jobType} />
+      </TableCell>
+      <TableCell className='py-2.5 px-3 align-top'>
         {/* X1 (parity cycle 8): the design's per-row ops badge is the same
             11.5px/3px-8px pill already used for the archive-results table
             (N2, parity cycle 3) — `size='sm'`, not the page-level default
@@ -361,7 +404,7 @@ function BatchHistoryRow({
           </div>
         ) : null}
       </TableCell>
-      <TableCell className='py-2.5 px-3 text-right'>
+      <TableCell className='py-2.5 px-3 text-right align-top'>
         <div className='mono text-[13px] text-[color:var(--text)]'>
           {row.duration}
         </div>
@@ -377,7 +420,7 @@ function BatchHistoryRow({
           {row.startedAt}
         </div>
       </TableCell>
-      <TableCell className='mono hidden py-2.5 pr-4 text-right whitespace-nowrap min-[1181px]:table-cell sm:pr-[18px]'>
+      <TableCell className='mono hidden py-2.5 pr-4 text-right align-top whitespace-nowrap min-[1181px]:table-cell sm:pr-[18px]'>
         {row.counts}
       </TableCell>
     </TableRow>

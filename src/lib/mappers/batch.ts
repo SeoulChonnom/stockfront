@@ -3,7 +3,11 @@ import type {
   BatchJobListItemResponse,
   BatchJobListResponse,
 } from '../api/types';
-import { formatDurationSeconds, formatKstDateTime } from '../formatters';
+import {
+  formatDurationKo,
+  formatDurationSeconds,
+  formatKstDateTime,
+} from '../formatters';
 import { computeTotalPages } from '../utils';
 import type {
   BatchJobsViewWithCounts,
@@ -49,6 +53,8 @@ function mapBatchListItemToRun(item: BatchJobListItemResponse): BatchRunRow {
   return {
     id: asFiniteNumber(item.jobId, 0),
     jobName,
+    jobType: asString(item.jobType, ''),
+    currentStep: asNullableString(item.currentStep),
     market: asString(item.marketScope, 'N/A'),
     businessDate: asString(item.businessDate, '-'),
     status,
@@ -57,9 +63,10 @@ function mapBatchListItemToRun(item: BatchJobListItemResponse): BatchRunRow {
     // list subline and the detail panel's 시작/종료 both use this format.
     startedAt: formatKstDateTime(item.startedAt) ?? '-',
     finishedAt: formatKstDateTime(item.endedAt) ?? '-',
-    duration: formatDurationSeconds(
-      asNullableFiniteNumber(item.durationSeconds)
-    ),
+    // 레퍼런스 `dur()`(1422행)는 소요를 한국어로 그린다 — 목록 행(2113행)
+    // 상세(2148행) 모두. 영문 `formatDurationSeconds`를 쓰던 탓에 같은 화면
+    // 안에서 요약 타일만 한글이고 테이블은 영문인 상태였다.
+    duration: formatDurationKo(asNullableFiniteNumber(item.durationSeconds)),
     counts: `${asFiniteNumber(item.rawNewsCount, 0)} / ${asFiniteNumber(item.processedNewsCount, 0)} / ${asFiniteNumber(item.clusterCount, 0)}`,
     detail:
       asOptionalString(item.partialMessage) ??
@@ -136,39 +143,57 @@ export function mapBatchJobsToView(
   };
 }
 
+/**
+ * BUG FIX: this used to read rawNewsCount/processedNewsCount/clusterCount/
+ * pageId/pageVersionNo/forceRun/rebuildPageOnly off the TOP LEVEL of the
+ * response. Per `docs/api_spec.json` (the real contract —
+ * `docs/api_spec_doc.md` is the old, no-longer-accurate single-batch model),
+ * all seven moved into a nullable `snapshot` sub-object
+ * (`BatchJobSnapshotDetail`) — reading them flat always produced 0/0/0,
+ * '스냅샷 없음', and force=false against the real API, regardless of the
+ * actual job. `snapshot` is `null` for a NEWS_COLLECTION job (it never
+ * produces one); the coerce helpers below fall back safely on that
+ * `undefined`, and the DETAIL PANEL (not this mapper) is responsible for not
+ * rendering the resulting counts/실행 옵션 rows for that jobType — see
+ * `batch-detail-panel.tsx`'s 3-way snapshot label branch.
+ */
 export function mapBatchDetailToRun(
   response: BatchJobDetailResponse
 ): BatchRunRow {
   const jobName = asString(response.jobName, 'batch');
+  const snapshot = response.snapshot;
 
   return {
     id: asFiniteNumber(response.jobId, 0),
     jobName,
+    jobType: asString(response.jobType, ''),
+    currentStep: asNullableString(response.currentStep),
     market: 'N/A',
     businessDate: asString(response.businessDate, '-'),
     status: toUpperStatus(response.status, batchJobStatuses),
     // D10: see the matching comment in `mapBatchListItemToRun` above.
     startedAt: formatKstDateTime(response.startedAt) ?? '-',
     finishedAt: formatKstDateTime(response.endedAt) ?? '-',
-    duration: formatDurationSeconds(
+    // 목록 행과 동일 — 위 `mapBatchListItemToRun`의 주석 참고.
+    duration: formatDurationKo(
       asNullableFiniteNumber(response.durationSeconds)
     ),
-    counts: `${asFiniteNumber(response.rawNewsCount, 0)} / ${asFiniteNumber(response.processedNewsCount, 0)} / ${asFiniteNumber(response.clusterCount, 0)}`,
+    counts: `${asFiniteNumber(snapshot?.rawNewsCount, 0)} / ${asFiniteNumber(snapshot?.processedNewsCount, 0)} / ${asFiniteNumber(snapshot?.clusterCount, 0)}`,
     detail:
       asOptionalString(response.logSummary) ??
       asOptionalString(response.errorMessage) ??
       asOptionalString(response.partialMessage) ??
       `${jobName} 배치 상세 메시지가 없습니다.`,
     pageVersion:
-      asNullableFiniteNumber(response.pageVersionNo) === null
+      asNullableFiniteNumber(snapshot?.pageVersionNo) === null
         ? '-'
-        : `v${asNullableFiniteNumber(response.pageVersionNo)}`,
+        : `v${asNullableFiniteNumber(snapshot?.pageVersionNo)}`,
     errorCode: asNullableString(response.errorCode),
     errorMessage: asNullableString(response.errorMessage),
     logSummary: asNullableString(response.logSummary),
-    forceRun: asOptionalBoolean(response.forceRun),
-    rebuildPageOnly: asOptionalBoolean(response.rebuildPageOnly),
-    pageId: response.pageId,
+    forceRun: asOptionalBoolean(snapshot?.forceRun),
+    rebuildPageOnly: asOptionalBoolean(snapshot?.rebuildPageOnly),
+    pageId: snapshot?.pageId ?? null,
     rawStatus: toRawStatus(response.status),
   };
 }

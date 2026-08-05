@@ -7,9 +7,11 @@ describe('mappers - batch', () => {
       items: [
         {
           jobId: 1,
+          jobType: 'MARKET_SNAPSHOT',
           jobName: 'daily',
           businessDate: '2026-03-31',
           status: { value: 'SUCCESS' },
+          currentStep: '작업 종료',
           startedAt: '2026-03-31T06:12:00Z',
           endedAt: null,
           durationSeconds: null,
@@ -37,23 +39,28 @@ describe('mappers - batch', () => {
 
     const detail = mapBatchDetailToRun({
       jobId: 1,
+      jobType: 'MARKET_SNAPSHOT',
       jobName: 'daily',
       businessDate: '2026-03-31',
       status: { value: 'FAILED' },
-      forceRun: false,
-      rebuildPageOnly: false,
+      currentStep: null,
       startedAt: '2026-03-31T06:12:00Z',
       endedAt: null,
       durationSeconds: null,
-      rawNewsCount: 77,
-      processedNewsCount: 32,
-      clusterCount: 9,
-      pageId: 1,
-      pageVersionNo: null,
       partialMessage: null,
       errorCode: null,
       errorMessage: null,
       logSummary: null,
+      snapshot: {
+        forceRun: false,
+        rebuildPageOnly: false,
+        rawNewsCount: 77,
+        processedNewsCount: 32,
+        clusterCount: 9,
+        pageId: 1,
+        pageVersionNo: null,
+      },
+      newsCollection: null,
     } as unknown as Parameters<typeof mapBatchDetailToRun>[0]);
 
     expect(jobsView.rows[0].status).toBe('FAILED');
@@ -65,9 +72,11 @@ describe('mappers - batch', () => {
       items: [
         {
           jobId: { id: 1 },
+          jobType: { value: 'MARKET_SNAPSHOT' },
           jobName: { text: 'daily' },
           businessDate: { date: '2026-03-31' },
           status: { value: 'SUCCESS' },
+          currentStep: { value: '작업 종료' },
           startedAt: { iso: '2026-03-31T06:12:00Z' },
           endedAt: { iso: '2026-03-31T06:26:11Z' },
           durationSeconds: { seconds: 851 },
@@ -95,23 +104,26 @@ describe('mappers - batch', () => {
 
     const detail = mapBatchDetailToRun({
       jobId: { id: 1 },
+      jobType: { value: 'MARKET_SNAPSHOT' },
       jobName: { text: 'daily' },
       businessDate: { date: '2026-03-31' },
       status: { value: 'FAILED' },
-      forceRun: false,
-      rebuildPageOnly: false,
+      currentStep: { value: 'x' },
       startedAt: { iso: '2026-03-31T06:12:00Z' },
       endedAt: { iso: '2026-03-31T06:26:11Z' },
       durationSeconds: { seconds: 851 },
-      rawNewsCount: { count: 77 },
-      processedNewsCount: { count: 32 },
-      clusterCount: { count: 9 },
-      pageId: { id: 1 },
-      pageVersionNo: { version: 2 },
       partialMessage: { text: 'partial' },
       errorCode: { code: 'X' },
       errorMessage: { text: 'failure' },
       logSummary: { text: 'log' },
+      snapshot: {
+        rawNewsCount: { count: 77 },
+        processedNewsCount: { count: 32 },
+        clusterCount: { count: 9 },
+        pageId: { id: 1 },
+        pageVersionNo: { version: 2 },
+      },
+      newsCollection: null,
     } as unknown as Parameters<typeof mapBatchDetailToRun>[0]);
 
     expect(jobsView).toMatchObject({
@@ -130,6 +142,8 @@ describe('mappers - batch', () => {
     expect(jobsView.rows[0]).toMatchObject({
       id: 0,
       jobName: 'batch',
+      jobType: '',
+      currentStep: null,
       market: 'N/A',
       businessDate: '-',
       status: 'FAILED',
@@ -143,26 +157,32 @@ describe('mappers - batch', () => {
     expect(detail).toMatchObject({
       id: 0,
       jobName: 'batch',
+      jobType: '',
+      currentStep: null,
       market: 'N/A',
       businessDate: '-',
       status: 'FAILED',
       startedAt: '-',
       finishedAt: '-',
       duration: '-',
+      // snapshot 안 필드도 malformed면 같은 방식으로 fallback한다 —
+      // 최상위 필드가 malformed일 때와 동일한 '0 / 0 / 0'.
       counts: '0 / 0 / 0',
       detail: 'batch 배치 상세 메시지가 없습니다.',
       pageVersion: '-',
     });
   });
 
-  it('maps batch list and detail responses', () => {
+  it('maps batch list and detail responses, including jobType/currentStep', () => {
     const jobsView = mapBatchJobsToView({
       items: [
         {
           jobId: 1,
+          jobType: 'NEWS_COLLECTION',
           jobName: 'daily',
           businessDate: '2026-03-31',
           status: 'SUCCESS',
+          currentStep: '작업 종료',
           startedAt: '2026-03-31T06:12:00Z',
           endedAt: '2026-03-31T06:26:11Z',
           durationSeconds: 851,
@@ -190,27 +210,35 @@ describe('mappers - batch', () => {
 
     const detail = mapBatchDetailToRun({
       jobId: 1,
+      jobType: 'MARKET_SNAPSHOT',
       jobName: 'daily',
       businessDate: '2026-03-31',
       status: 'FAILED',
-      forceRun: false,
-      rebuildPageOnly: false,
+      currentStep: null,
       startedAt: '2026-03-31T06:12:00Z',
       endedAt: '2026-03-31T06:26:11Z',
       durationSeconds: 851,
-      rawNewsCount: 77,
-      processedNewsCount: 32,
-      clusterCount: 9,
-      pageId: 1,
-      pageVersionNo: 2,
       partialMessage: null,
       errorCode: 'X',
       errorMessage: 'failure',
       logSummary: null,
+      snapshot: {
+        forceRun: false,
+        rebuildPageOnly: false,
+        rawNewsCount: 77,
+        processedNewsCount: 32,
+        clusterCount: 9,
+        pageId: 1,
+        pageVersionNo: 2,
+      },
+      newsCollection: null,
     });
 
     expect(jobsView.summary.successRate).toBe('100.0%');
+    expect(jobsView.rows[0].jobType).toBe('NEWS_COLLECTION');
+    expect(jobsView.rows[0].currentStep).toBe('작업 종료');
     expect(detail.detail).toBe('failure');
+    expect(detail.jobType).toBe('MARKET_SNAPSHOT');
   });
 });
 
@@ -220,23 +248,28 @@ describe('restored batch detail fields (README §13)', () => {
   it('maps errorCode, errorMessage, logSummary, forceRun, and rebuildPageOnly from the batch detail response', () => {
     const detail = mapBatchDetailToRun({
       jobId: 999,
+      jobType: 'MARKET_SNAPSHOT',
       jobName: 'market_daily_batch',
       businessDate: '2026-07-21',
       status: 'FAILED',
-      forceRun: true,
-      rebuildPageOnly: false,
+      currentStep: null,
       startedAt: '2026-07-22T06:10:00',
       endedAt: '2026-07-22T06:11:09',
       durationSeconds: 69,
-      rawNewsCount: 21,
-      processedNewsCount: 0,
-      clusterCount: 0,
-      pageId: null,
-      pageVersionNo: null,
       partialMessage: null,
       errorCode: 'NEWS_SOURCE_TIMEOUT',
       errorMessage: '원문 공급자 응답 제한 시간을 초과했습니다.',
       logSummary: LONG_LOG,
+      snapshot: {
+        forceRun: true,
+        rebuildPageOnly: false,
+        rawNewsCount: 21,
+        processedNewsCount: 0,
+        clusterCount: 0,
+        pageId: null,
+        pageVersionNo: null,
+      },
+      newsCollection: null,
     });
 
     expect(detail.errorCode).toBe('NEWS_SOURCE_TIMEOUT');
@@ -253,9 +286,11 @@ describe('restored batch detail fields (README §13)', () => {
       items: [
         {
           jobId: 1042,
+          jobType: 'MARKET_SNAPSHOT',
           jobName: 'market_daily_batch',
           businessDate: '2026-07-26',
           status: 'SUCCESS',
+          currentStep: '작업 종료',
           startedAt: '2026-07-27T06:10:00',
           endedAt: '2026-07-27T06:12:15',
           durationSeconds: 135,
@@ -289,26 +324,188 @@ describe('restored batch detail fields (README §13)', () => {
   it('falls back to null when forceRun/rebuildPageOnly are malformed (non-boolean)', () => {
     const detail = mapBatchDetailToRun({
       jobId: 1,
+      jobType: 'MARKET_SNAPSHOT',
       jobName: 'daily',
       businessDate: '2026-03-31',
       status: 'FAILED',
-      forceRun: 'yes',
-      rebuildPageOnly: 1,
+      currentStep: null,
       startedAt: '2026-03-31T06:12:00Z',
       endedAt: null,
       durationSeconds: null,
-      rawNewsCount: 0,
-      processedNewsCount: 0,
-      clusterCount: 0,
-      pageId: null,
-      pageVersionNo: null,
       partialMessage: null,
       errorCode: null,
       errorMessage: null,
       logSummary: null,
+      snapshot: {
+        forceRun: 'yes',
+        rebuildPageOnly: 1,
+        rawNewsCount: 0,
+        processedNewsCount: 0,
+        clusterCount: 0,
+        pageId: null,
+        pageVersionNo: null,
+      },
+      newsCollection: null,
     } as unknown as Parameters<typeof mapBatchDetailToRun>[0]);
 
     expect(detail.forceRun).toBeNull();
     expect(detail.rebuildPageOnly).toBeNull();
+  });
+});
+
+describe('mapBatchDetailToRun — jobType-split detail DTO (docs/api_spec.json)', () => {
+  it('reads counts/pageVersion/pageId/forceRun/rebuildPageOnly from the nested `snapshot` object for a MARKET_SNAPSHOT job (highest-severity fix)', () => {
+    const detail = mapBatchDetailToRun({
+      jobId: 1042,
+      jobType: 'MARKET_SNAPSHOT',
+      jobName: 'market_snapshot_batch',
+      businessDate: '2026-07-26',
+      status: 'SUCCESS',
+      currentStep: '작업 종료',
+      startedAt: '2026-07-27T07:10:00',
+      endedAt: '2026-07-27T07:11:36',
+      durationSeconds: 96,
+      partialMessage: null,
+      errorCode: null,
+      errorMessage: null,
+      logSummary: '정상 처리.',
+      snapshot: {
+        forceRun: true,
+        rebuildPageOnly: false,
+        rawNewsCount: 174,
+        processedNewsCount: 114,
+        clusterCount: 21,
+        pageId: 501,
+        pageVersionNo: 3,
+      },
+      newsCollection: null,
+    });
+
+    // Before this fix, the mapper read these 7 fields off the response's
+    // TOP LEVEL (which no longer has them per the real spec) and always
+    // produced 0/0/0, '-', force=false — regardless of the real snapshot.
+    expect(detail.counts).toBe('174 / 114 / 21');
+    expect(detail.pageVersion).toBe('v3');
+    expect(detail.pageId).toBe(501);
+    expect(detail.forceRun).toBe(true);
+    expect(detail.rebuildPageOnly).toBe(false);
+  });
+
+  it('does not fabricate 0/0/0 or force=false when `snapshot` is null (a NEWS_COLLECTION job never produces one)', () => {
+    const detail = mapBatchDetailToRun({
+      jobId: 1041,
+      jobType: 'NEWS_COLLECTION',
+      jobName: 'news_collection_batch',
+      businessDate: '2026-07-26',
+      status: 'SUCCESS',
+      currentStep: '작업 종료',
+      startedAt: '2026-07-27T06:10:00',
+      endedAt: '2026-07-27T06:12:32',
+      durationSeconds: 152,
+      partialMessage: null,
+      errorCode: null,
+      errorMessage: null,
+      logSummary: '정상 처리.',
+      snapshot: null,
+      newsCollection: {
+        runId: 1041,
+        providerName: 'naver',
+        windowStartAt: '2026-07-27T06:10:00',
+        windowEndAt: '2026-07-27T06:12:32',
+        queryStartAt: '2026-07-27T06:10:00',
+        queryEndAt: '2026-07-27T06:12:32',
+        totalKeywordCount: 40,
+        completedKeywordCount: 40,
+        fetchedCount: 174,
+        matchedCount: 114,
+        insertedCount: 114,
+        coverageComplete: true,
+      },
+    });
+
+    // The mapper still falls back to '0 / 0 / 0'/'-'/null/false (the coerce
+    // helpers' documented behavior for a missing value) — the point of this
+    // test is that `jobType` is threaded through so the DETAIL PANEL (not
+    // this mapper) can tell a NEWS_COLLECTION job apart from a
+    // MARKET_SNAPSHOT job that genuinely has no snapshot yet, and hide the
+    // counts/실행 옵션 rows instead of rendering the fallback as if it were
+    // real data (see `batch-detail-panel.tsx`'s `hasSnapshot`).
+    expect(detail.jobType).toBe('NEWS_COLLECTION');
+    expect(detail.counts).toBe('0 / 0 / 0');
+    expect(detail.pageVersion).toBe('-');
+    expect(detail.pageId).toBeNull();
+    expect(detail.forceRun).toBeNull();
+    expect(detail.rebuildPageOnly).toBeNull();
+  });
+});
+
+describe('mapBatchListItemToRun — jobType/currentStep (docs/api_spec.json)', () => {
+  it('carries jobType through verbatim, including an unrecognized value', () => {
+    const jobsView = mapBatchJobsToView({
+      items: [
+        {
+          jobId: 1,
+          jobType: 'SOME_FUTURE_TYPE',
+          jobName: 'daily',
+          businessDate: '2026-03-31',
+          status: 'RUNNING',
+          currentStep: '뉴스 수집',
+          startedAt: '2026-03-31T06:12:00Z',
+          endedAt: null,
+          durationSeconds: null,
+          marketScope: 'GLOBAL',
+          rawNewsCount: 10,
+          processedNewsCount: 5,
+          clusterCount: 0,
+          pageId: null,
+          pageVersionNo: null,
+          partialMessage: null,
+        },
+      ],
+      pagination: { page: 1, size: 20, totalCount: 1 },
+      summary: {
+        successCount: 0,
+        partialCount: 0,
+        failedCount: 0,
+        avgDurationSeconds: 0,
+      },
+    });
+
+    expect(jobsView.rows[0].jobType).toBe('SOME_FUTURE_TYPE');
+    expect(jobsView.rows[0].currentStep).toBe('뉴스 수집');
+  });
+
+  it('maps a null currentStep to null (not "null" or undefined)', () => {
+    const jobsView = mapBatchJobsToView({
+      items: [
+        {
+          jobId: 1,
+          jobType: 'NEWS_COLLECTION',
+          jobName: 'daily',
+          businessDate: '2026-03-31',
+          status: 'FAILED',
+          currentStep: null,
+          startedAt: '2026-03-31T06:12:00Z',
+          endedAt: '2026-03-31T06:13:09Z',
+          durationSeconds: 69,
+          marketScope: 'GLOBAL',
+          rawNewsCount: 21,
+          processedNewsCount: 0,
+          clusterCount: 0,
+          pageId: null,
+          pageVersionNo: null,
+          partialMessage: null,
+        },
+      ],
+      pagination: { page: 1, size: 20, totalCount: 1 },
+      summary: {
+        successCount: 0,
+        partialCount: 0,
+        failedCount: 1,
+        avgDurationSeconds: 69,
+      },
+    });
+
+    expect(jobsView.rows[0].currentStep).toBeNull();
   });
 });

@@ -13,9 +13,15 @@ import { formatDurationKo } from './format-batch';
 
 type TileTone = 'danger' | 'warning' | 'neutral';
 
+// Design uses a real `border-left:3px solid var(--tone)` override on top of
+// the card's own 1px `--line` border on the other three sides (reference:
+// `border:1px solid var(--line);...;border-left:3px solid var(--danger)`),
+// not a box-shadow — a shadow leaves `border-left-width` computed at the
+// card's shared 1px and paints the tone color as a second, overlapping
+// layer instead of replacing the edge.
 const TILE_BAR_CLASSES: Readonly<Record<TileTone, string>> = {
-  danger: 'shadow-[inset_3px_0_0_var(--danger)]',
-  warning: 'shadow-[inset_3px_0_0_var(--warning)]',
+  danger: 'border-l-[3px] border-l-[color:var(--danger)]',
+  warning: 'border-l-[3px] border-l-[color:var(--warning)]',
   neutral: '',
 };
 

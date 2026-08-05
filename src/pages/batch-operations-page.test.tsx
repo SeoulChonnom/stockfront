@@ -74,6 +74,8 @@ function createRow(overrides: Partial<BatchRunRow> = {}): BatchRunRow {
   return {
     id: 101,
     jobName: 'market_daily_batch',
+    jobType: 'MARKET_SNAPSHOT',
+    currentStep: '페이지 스냅샷',
     market: 'N/A',
     businessDate: '2026-07-26',
     status: 'SUCCESS',
