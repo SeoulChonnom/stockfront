@@ -211,18 +211,70 @@ describe('BatchOperationsPage — admin', () => {
     setRoleOverride('admin');
   });
 
-  it('renders the header, and passes page/status/size through to the batch query', () => {
+  it('renders the header, and passes page/status/jobType/size through to the batch query', () => {
     mockUseBatchJobs.mockReturnValue(jobsReady());
     mockUseBatchJobDetail.mockReturnValue(detailReady(createRow()));
 
-    renderPage(new URLSearchParams('page=2&status=FAILED'));
+    renderPage(
+      new URLSearchParams('page=2&status=FAILED&type=MARKET_SNAPSHOT')
+    );
 
     expect(
       screen.getByRole('heading', { level: 1, name: '배치 운영' })
     ).toBeInTheDocument();
     expect(mockUseBatchJobs).toHaveBeenLastCalledWith(
-      expect.objectContaining({ page: 2, status: 'FAILED', size: 20 })
+      expect.objectContaining({
+        page: 2,
+        status: 'FAILED',
+        jobType: 'MARKET_SNAPSHOT',
+        size: 20,
+      })
     );
+  });
+
+  it('an unknown/invalid ?type= value is ignored (falls back to 전체 타입, jobType omitted from the query)', () => {
+    mockUseBatchJobs.mockReturnValue(jobsReady());
+    mockUseBatchJobDetail.mockReturnValue(detailReady(createRow()));
+
+    renderPage(new URLSearchParams('type=NOT_A_REAL_TYPE'));
+
+    expect(mockUseBatchJobs).toHaveBeenLastCalledWith(
+      expect.objectContaining({ jobType: undefined })
+    );
+    expect(
+      screen.getByText(/적용됨 · .* · 전체 상태 · 전체 타입/)
+    ).toBeInTheDocument();
+  });
+
+  it('조회 조건 카드에서 조회를 제출하면 page=1로, jobType을 포함해 URL이 갱신된다', async () => {
+    const user = userEvent.setup();
+    mockUseBatchJobs.mockReturnValue(jobsReady());
+    mockUseBatchJobDetail.mockReturnValue(detailReady(createRow()));
+
+    renderPage(new URLSearchParams('page=3'));
+
+    const typeSelect = screen.getByLabelText('배치 타입');
+    await user.selectOptions(typeSelect, 'NEWS_COLLECTION');
+    await user.click(screen.getByRole('button', { name: '조회' }));
+
+    const params = new URLSearchParams(window.location.search);
+    expect(params.get('type')).toBe('NEWS_COLLECTION');
+    expect(params.get('page')).toBe('1');
+  });
+
+  it('조회 조건 카드에서 초기화를 누르면 bare `/ops/batches`로 이동한다 (jobId/view/type 모두 해제)', async () => {
+    const user = userEvent.setup();
+    mockUseBatchJobs.mockReturnValue(jobsReady());
+    mockUseBatchJobDetail.mockReturnValue(detailReady(createRow()));
+
+    renderPage(
+      new URLSearchParams('type=MARKET_SNAPSHOT&jobId=101&view=detail')
+    );
+
+    await user.click(screen.getByRole('button', { name: '초기화' }));
+
+    expect(window.location.pathname).toBe('/ops/batches');
+    expect(window.location.search).toBe('');
   });
 
   it('renders the 3 summary tiles in failure-first order (실패 → 부분 실패 → 성공)', () => {
@@ -373,13 +425,53 @@ describe('BatchOperationsPage — admin', () => {
         '배치 목록을 불러오지 못했습니다. 필터와 이전 선택은 그대로 유지됩니다.'
       )
     ).toBeInTheDocument();
-    // E1: the 시작일/종료일/상태 filter form is gone — the applied status
-    // filter is now shown as plain muted text in the list header (E3: always
-    // present, "· <label>") instead of a `<select>` value.
-    expect(screen.getByText('· FAILED · 생성 실패')).toBeInTheDocument();
+    // E3: the applied status (+ type) filter is shown as plain muted text in
+    // the list header ("· <status label> · <type label>", always present)
+    // rather than a `<select>` value — the actual filter FORM now lives in
+    // the "조회 조건" card above (`batch-filters.tsx`), covered separately
+    // in `batch-filters.test.tsx`.
+    expect(
+      screen.getByText('· FAILED · 생성 실패 · 전체 타입')
+    ).toBeInTheDocument();
     expect(
       screen.getByRole('heading', { level: 2, name: 'job 202' })
     ).toBeInTheDocument();
+  });
+
+  it('실행 이력 헤더의 필터 해제는 status와 type을 모두 해제하고 announce한다 (design v2 2055행)', async () => {
+    const user = userEvent.setup();
+    mockUseBatchJobs.mockReturnValue(jobsReady());
+    mockUseBatchJobDetail.mockReturnValue(detailReady(createRow()));
+
+    renderPage(new URLSearchParams('status=FAILED&type=MARKET_SNAPSHOT'));
+
+    const liveRegion = document.querySelector('[aria-live="polite"]');
+    await user.click(screen.getByRole('button', { name: '필터 해제' }));
+
+    const params = new URLSearchParams(window.location.search);
+    // Empty string values are omitted from the querystring entirely (see
+    // `buildUrl`'s `buildSearchParams`), so a cleared filter reads back as
+    // an absent param, not an empty one.
+    expect(params.get('status')).toBeNull();
+    expect(params.get('type')).toBeNull();
+    expect(params.get('page')).toBe('1');
+    expect(liveRegion?.textContent).toBe('상태와 타입 조건을 해제했습니다.');
+  });
+
+  it('빈 상태의 필터 해제는 해제할 조건이 없으면 announce하지 않는다', async () => {
+    const user = userEvent.setup();
+    mockUseBatchJobs.mockReturnValue(jobsReady({ rows: [], totalCount: 0 }));
+    mockUseBatchJobDetail.mockReturnValue(detailReady(undefined));
+
+    // status/type 없는 기본 URL — 빈 상태의 필터 해제 버튼은 프로토타입과
+    // 동일하게 무조건 렌더되지만, 실제로 해제할 조건이 없으므로 "해제했습니다"
+    // 라고 알리면 일어나지 않은 상태 변화를 announce하는 셈이 된다.
+    renderPage(new URLSearchParams());
+
+    const liveRegion = document.querySelector('[aria-live="polite"]');
+    await user.click(screen.getByRole('button', { name: '필터 해제' }));
+
+    expect(liveRegion?.textContent ?? '').toBe('');
   });
 
   it('detail error keeps the list working and offers 상세 다시 시도', () => {

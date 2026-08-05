@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { useAnnounce } from '@/components/shell/use-announce';
 import { PermissionState } from '@/components/state';
@@ -13,6 +13,7 @@ import { navigate } from '@/lib/router';
 
 import { BatchAttentionBanner } from './batch-operations/batch-attention-banner';
 import { BatchDetailPanel } from './batch-operations/batch-detail-panel';
+import { BatchFilters } from './batch-operations/batch-filters';
 import { BatchHeader } from './batch-operations/batch-header';
 import { BatchHistoryList } from './batch-operations/batch-history-list';
 import { BatchSummaryTiles } from './batch-operations/batch-summary-tiles';
@@ -21,14 +22,23 @@ import {
   type TriggerBannerState,
 } from './batch-operations/batch-trigger-banner';
 import {
+  type BatchFilters as BatchFiltersState,
   buildBatchOperationsUrl,
   isDetailViewParam,
   parseJobIdParam,
+  parseJobTypeParam,
 } from './batch-operations/batch-url';
+import {
+  BATCH_STATUSES,
+  type BatchFilterDraft,
+} from './batch-operations/filter-copy';
 import { TriggerDialog } from './batch-operations/trigger-dialog';
 
-const BATCH_STATUSES = ['SUCCESS', 'PARTIAL', 'FAILED'];
 const PAGE_SIZE = 20;
+
+function buildFiltersKey(filters: BatchFiltersState) {
+  return `${filters.from}:${filters.to}:${filters.status}:${filters.type}:${filters.page}`;
+}
 
 /**
  * `/ops/batches` (README §7-6/§7-7/§10/§16-11).
@@ -66,9 +76,17 @@ function AdminBatchOperations({
   searchParams: URLSearchParams;
 }) {
   const announce = useAnnounce();
-  const applied = parseListFilters(searchParams, {
-    allowedStatuses: BATCH_STATUSES,
-  });
+  const applied: BatchFiltersState = {
+    ...parseListFilters(searchParams, { allowedStatuses: BATCH_STATUSES }),
+    type: parseJobTypeParam(searchParams),
+  };
+  const appliedKey = buildFiltersKey(applied);
+  // §7-6 조회 조건 카드의 "조회 결과 N건을 찾았습니다." announce는 Archive
+  // Search(`archive-search-page.tsx`)와 동일한 패턴을 쓴다: 검증을 통과한
+  // 필터 적용 직후 목표 키를 기록해 두고, 그 키에 대한 쿼리가 (성공적으로)
+  // 로딩을 마쳤을 때만 한 번 announce한다 — TanStack Query가 비동기라
+  // navigate 시점에는 아직 새 totalCount를 알 수 없기 때문.
+  const pendingApplyAnnounceKeyRef = useRef<string | null>(null);
   const jobIdParam = parseJobIdParam(searchParams);
   const isDetailView = isDetailViewParam(searchParams);
 
@@ -76,9 +94,32 @@ function AdminBatchOperations({
     fromDate: applied.from,
     toDate: applied.to,
     status: applied.status || undefined,
+    jobType: applied.type || undefined,
     page: applied.page,
     size: PAGE_SIZE,
   });
+
+  useEffect(() => {
+    if (pendingApplyAnnounceKeyRef.current !== appliedKey) {
+      return;
+    }
+
+    if (jobsQuery.isLoading) {
+      return;
+    }
+
+    pendingApplyAnnounceKeyRef.current = null;
+
+    if (!jobsQuery.isError) {
+      announce(`조회 결과 ${jobsQuery.data?.totalCount ?? 0}건을 찾았습니다.`);
+    }
+  }, [
+    appliedKey,
+    jobsQuery.isLoading,
+    jobsQuery.data,
+    jobsQuery.isError,
+    announce,
+  ]);
 
   const rows = jobsQuery.data?.rows ?? [];
   // E2: default selection is the first (newest) row — matching the design
@@ -102,6 +143,7 @@ function AdminBatchOperations({
       from: string;
       to: string;
       status: string;
+      type: string;
       page: number;
     }>,
     extra: { jobId?: number | null; view?: 'detail' | null } = {}
@@ -112,6 +154,7 @@ function AdminBatchOperations({
           from: filters.from ?? applied.from,
           to: filters.to ?? applied.to,
           status: filters.status ?? applied.status,
+          type: filters.type ?? applied.type,
           page: filters.page ?? applied.page,
         },
         {
@@ -120,6 +163,33 @@ function AdminBatchOperations({
         }
       )
     );
+  }
+
+  // 조회 조건 카드의 조회/초기화 — page는 항상 1로 리셋한다(§7-4/§7-6 공통
+  // 규칙). 초기화는 bare URL로 이동해 `parseListFilters`/`parseJobTypeParam`
+  // 이 자기 자신의 기본값을 다시 계산하게 한다 — 기본값 계산을 여기서
+  // 중복하지 않는다(Archive Search의 `handleReset`과 동일한 이유).
+  function handleFilterApply(next: BatchFilterDraft) {
+    const target: BatchFiltersState = { ...next, page: 1 };
+    pendingApplyAnnounceKeyRef.current = buildFiltersKey(target);
+    goTo(target);
+  }
+
+  /**
+   * 조회 이외의 경로로 필터가 바뀔 때(초기화·필터 해제·주의 배너의 빠른 필터)
+   * 대기 중인 "조회 결과 N건" announce를 취소한다. 이 경로들은 각자 자기
+   * announce를 갖고 있고, ref는 액션 종류가 아니라 필터 값 조합(`appliedKey`)
+   * 만으로 매칭되기 때문에 — 조회 직후 결과가 도착하기 전에 이 버튼들을 누르고
+   * 필터를 왕복시켜 같은 조합으로 되돌아오면 — 엉뚱한 시점에 조회 announce가
+   * 뒤늦게 터질 수 있다.
+   */
+  function cancelPendingApplyAnnounce() {
+    pendingApplyAnnounceKeyRef.current = null;
+  }
+
+  function handleFilterReset() {
+    cancelPendingApplyAnnounce();
+    navigate('/ops/batches');
   }
 
   const counts = jobsQuery.data?.counts ?? null;
@@ -136,6 +206,12 @@ function AdminBatchOperations({
         />
       ) : null}
 
+      <BatchFilters
+        applied={applied}
+        onApply={handleFilterApply}
+        onReset={handleFilterReset}
+      />
+
       {/* V3 (parity cycle 6): the design nests the attention banner and the
           summary tiles inside a single `<section aria-label="배치 요약"
           style="gap:12px">`, not as two flat siblings of this page's own
@@ -146,8 +222,14 @@ function AdminBatchOperations({
         {counts && counts.failedCount + counts.partialCount > 0 ? (
           <BatchAttentionBanner
             failedCount={counts.failedCount}
-            onFilterFailed={() => goTo({ status: 'FAILED', page: 1 })}
-            onFilterPartial={() => goTo({ status: 'PARTIAL', page: 1 })}
+            onFilterFailed={() => {
+              cancelPendingApplyAnnounce();
+              goTo({ status: 'FAILED', page: 1 });
+            }}
+            onFilterPartial={() => {
+              cancelPendingApplyAnnounce();
+              goTo({ status: 'PARTIAL', page: 1 });
+            }}
             partialCount={counts.partialCount}
           />
         ) : null}
@@ -168,7 +250,10 @@ function AdminBatchOperations({
           isFetching={jobsQuery.isFetching}
           isLoading={jobsQuery.isLoading}
           onAnnounce={announce}
-          onClearStatusFilter={() => goTo({ status: '', page: 1 })}
+          onClearFilters={() => {
+            cancelPendingApplyAnnounce();
+            goTo({ status: '', type: '', page: 1 });
+          }}
           onPageChange={(page) => goTo({ page })}
           onRetry={() => {
             void jobsQuery.refetch();

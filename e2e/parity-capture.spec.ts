@@ -138,10 +138,19 @@ async function measureFontProbe(page: Page) {
     const el = document.querySelector('#page-title') || document.body;
     const cs = window.getComputedStyle(el);
     const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d')!;
-    ctx.font = `${cs.fontWeight} 16px ${cs.fontFamily}`;
+    const ctx = canvas.getContext('2d');
     const sample = '가나다라마바사 ABCDEFG 0123456789 시장 브리프 배치 운영';
-    const measuredWidth = ctx.measureText(sample).width;
+    // `getContext` is nullable by type (it returns null when the canvas was
+    // already bound to a different context kind). That can't happen for a
+    // freshly created element, but measure defensively rather than assert:
+    // a probe that returns 0 is readable in the report, a thrown TypeError
+    // inside `page.evaluate` just fails the whole capture.
+    let measuredWidth = 0;
+
+    if (ctx) {
+      ctx.font = `${cs.fontWeight} 16px ${cs.fontFamily}`;
+      measuredWidth = ctx.measureText(sample).width;
+    }
     return {
       declaredFontFamily: cs.fontFamily,
       computedFontWeight: cs.fontWeight,

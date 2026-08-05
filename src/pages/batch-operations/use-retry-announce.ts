@@ -32,7 +32,6 @@ export function useRetryAnnounce(
     onAnnounce(
       isError ? '다시 불러오지 못했습니다.' : '데이터를 다시 불러왔습니다.'
     );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isFetching, isError]);
 
   function retry(refetch: () => void) {

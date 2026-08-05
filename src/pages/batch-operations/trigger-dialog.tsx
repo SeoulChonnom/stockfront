@@ -76,7 +76,6 @@ export function TriggerDialog({
     // intentionally NOT re-running on `initialBusinessDate` alone (a parent
     // re-render with the same open dialog shouldn't clobber in-progress
     // edits).
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
   function handleClose() {

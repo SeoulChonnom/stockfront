@@ -10,6 +10,8 @@ export type BatchJobsParams = {
   fromDate?: string;
   toDate?: string;
   status?: string;
+  /** API `BatchJobType` enum value (`NEWS_COLLECTION` | `MARKET_SNAPSHOT`) — see `src/pages/batch-operations/filter-copy.ts`'s `BATCH_TYPES` note. */
+  jobType?: string;
   page?: number;
   size?: number;
 };

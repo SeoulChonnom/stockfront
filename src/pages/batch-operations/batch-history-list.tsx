@@ -16,6 +16,10 @@ import type { BatchRunRow } from '@/lib/query-hooks';
 import { cn, computeTotalPages } from '@/lib/utils';
 
 import type { BatchFilters } from './batch-url';
+import {
+  getBatchStatusSummaryLabel,
+  getBatchTypeSummaryLabel,
+} from './filter-copy';
 import { useRetryAnnounce } from './use-retry-announce';
 
 /**
@@ -25,14 +29,14 @@ import { useRetryAnnounce } from './use-retry-announce';
  * error rendering only replaces the table body area, not the header or
  * the page around it.
  *
- * E1: the 시작일/종료일/상태 filter FORM (`BatchFilterBar`) is deliberately
- * not rendered here — neither the design prototype nor README §7-6 has one;
- * §7-6.5 specifies exactly the header this component renders (실행 이력 +
- * mono range + applied status filter + 필터 해제). The `from`/`to` URL
- * params still work (still parsed by `parseListFilters` upstream), they
- * just have no dedicated UI control on this screen anymore — only `status`
- * is settable from this page (the attention banner's quick filters, and
- * 필터 해제 below).
+ * E1 (superseded): this file's header comment used to say the
+ * 시작일/종료일/상태/타입 filter FORM is deliberately absent from this
+ * screen. That's no longer true — design v2's "조회 조건" card
+ * (`batch-filters.tsx`, rendered by the owning page above the 배치 요약
+ * section) now owns all four fields. This component keeps its own
+ * read-only summary (applied status/type label + 필터 해제), which is a
+ * DIFFERENT thing from the filter form: it reflects the currently
+ * *applied* (URL) state, not a draft.
  */
 
 export type BatchHistoryListProps = {
@@ -47,17 +51,12 @@ export type BatchHistoryListProps = {
   onRetry: () => void;
   selectedJobId: number | null;
   onSelectRow: (jobId: number) => void;
-  onClearStatusFilter: () => void;
+  /** design v2 2055행: 필터 해제 clears BOTH status and type in one action ("상태와 타입 조건을 해제했습니다."), not status alone. */
+  onClearFilters: () => void;
   onPageChange: (page: number) => void;
   onAnnounce: (message: string) => void;
   /** Hidden below the master-detail breakpoint while `view=detail` is active (README §7-6 drill-in). */
   hiddenOnNarrowView: boolean;
-};
-
-const STATUS_FILTER_LABEL: Readonly<Record<string, string>> = {
-  SUCCESS: 'SUCCESS · 성공',
-  PARTIAL: 'PARTIAL · 부분 생성',
-  FAILED: 'FAILED · 생성 실패',
 };
 
 export function BatchHistoryList({
@@ -71,11 +70,27 @@ export function BatchHistoryList({
   onRetry,
   selectedJobId,
   onSelectRow,
-  onClearStatusFilter,
+  onClearFilters,
   onPageChange,
   onAnnounce,
   hiddenOnNarrowView,
 }: BatchHistoryListProps) {
+  const hasAppliedFilter = Boolean(applied.status || applied.type);
+
+  function clearFilters() {
+    // 빈 상태의 필터 해제 버튼은 (헤더 버튼과 달리) 조건 없이 항상 렌더되므로
+    // — 프로토타입의 무조건적인 `onFilterAll` 배선과 동일 — 실제로 해제할
+    // 조건이 없을 때도 눌릴 수 있다. 그 경우까지 "해제했습니다"라고 announce
+    // 하면 스크린리더 사용자에게 일어나지 않은 상태 변화를 사실로 알리게 되어
+    // live region의 신뢰가 깨진다. announce만 조건부로 두고 네비게이션은 그대로
+    // 흘려보낸다(같은 URL로의 이동이라 사실상 no-op).
+    if (hasAppliedFilter) {
+      onAnnounce('상태와 타입 조건을 해제했습니다.');
+    }
+
+    onClearFilters();
+  }
+
   const retry = useRetryAnnounce(isFetching, isError, onAnnounce);
   const totalPages = computeTotalPages(totalCount, pageSize);
 
@@ -104,17 +119,19 @@ export function BatchHistoryList({
             </span>
             {/* E3: design always shows the applied status filter as plain
                 muted mono text ("· 전체 상태" when none is set), not a
-                conditional badge chip. */}
+                conditional badge chip. design v2 2059행 `appliedFilterLabel`
+                appends the applied type label after the status label
+                ("... · 전체 타입" when none is set) — mirrored here via the
+                shared `filter-copy.ts` summary label helpers so the wording
+                stays identical to the 조회 조건 card's own applied summary. */}
             <span className='mono text-[11.5px] text-[color:var(--text-faint)]'>
-              ·{' '}
-              {applied.status
-                ? (STATUS_FILTER_LABEL[applied.status] ?? applied.status)
-                : '전체 상태'}
+              · {getBatchStatusSummaryLabel(applied.status)} ·{' '}
+              {getBatchTypeSummaryLabel(applied.type)}
             </span>
           </div>
-          {applied.status ? (
+          {hasAppliedFilter ? (
             <Button
-              onClick={onClearStatusFilter}
+              onClick={clearFilters}
               size='sm'
               type='button'
               variant='ghost'
@@ -168,9 +185,26 @@ export function BatchHistoryList({
                 ) : rows.length === 0 ? (
                   <TableRow>
                     <TableCell className='p-4 sm:p-[18px]' colSpan={4}>
+                      {/* design v2 836행: exact empty-state copy + a 필터
+                          해제 action, always offered here (unlike the header
+                          button above, which is conditional on
+                          `hasAppliedFilter`) — clicking it is a no-op UX-wise
+                          when no status/type filter is applied, matching the
+                          prototype's unconditional `onFilterAll` wiring. */}
                       <EmptyState
-                        description='조건에 맞는 배치 실행 이력이 없습니다. 필터를 조정한 뒤 다시 시도해 주세요.'
+                        actions={
+                          <Button
+                            onClick={clearFilters}
+                            size='sm'
+                            type='button'
+                            variant='secondary'
+                          >
+                            필터 해제
+                          </Button>
+                        }
+                        description='선택한 기간·상태·타입 조건에 해당하는 작업이 없습니다. 상태와 타입 조건을 해제하면 같은 기간의 전체 이력을 볼 수 있습니다.'
                         kind='search-results'
+                        title='표시할 실행 이력이 없습니다'
                       />
                     </TableCell>
                   </TableRow>

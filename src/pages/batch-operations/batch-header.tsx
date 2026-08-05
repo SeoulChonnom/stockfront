@@ -28,11 +28,15 @@ export function BatchHeader({ onOpenTrigger }: { onOpenTrigger: () => void }) {
         >
           배치 운영
         </h1>
-        {/* E1: exact design copy. */}
+        {/* E1: exact design copy — design v2 `Market Brief v2.dc.html`
+            719행. Updated alongside the "조회 조건" filter card: the
+            prototype's copy now explicitly calls out 기간·상태·타입 조회,
+            replacing the older "일간 통합 배치" wording from before jobType
+            filtering existed on this screen. */}
         <p className='wrap-anywhere mt-1 max-w-[70ch] text-[13.5px] text-[color:var(--text-soft)]'>
-          일간 통합 배치의 단계별 진행, 실패 지점, 영향 범위를 확인합니다.
-          목록과 상세는 독립적으로 조회되며 한쪽이 실패해도 다른 쪽 문맥은
-          유지됩니다.
+          검색 결과 저장과 스냅샷 생성 배치는 각각 독립적으로 실행됩니다.
+          기간·상태·타입으로 이력을 조회하고 단계별 진행, 실패 지점, 영향 범위를
+          확인합니다.
         </p>
       </div>
       {/* C1 / O1 (parity cycle 3): this button no longer needs `self-start`

@@ -60,7 +60,6 @@ export function useFilterDraft<T extends Record<string, string>>({
     setErrors({});
     // Only resync when the URL-derived `applied` value itself changes —
     // intentionally excludes `applied` object identity churn from re-render.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(applied)]);
 
   const setField = useCallback((name: keyof T, value: string) => {
