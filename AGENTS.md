@@ -3,7 +3,7 @@
 ## Commands
 
 - Use `pnpm`; this is a single-package repo with `pnpm-lock.yaml` and no workspace file.
-- `pnpm dev` starts Vite, `pnpm test` runs `vitest run`, and `pnpm lint` runs `eslint .`.
+- `pnpm dev` starts Vite, `pnpm test` runs `vitest run`, and `pnpm lint` runs `biome check` (`pnpm lint:fix` applies the safe fixes).
 - `pnpm build` is the only typecheck script: it runs `tsc -b && vite build`.
 - There is no CI, pre-commit hook, task runner, or codegen config in the repo.
 
@@ -25,7 +25,7 @@
 
 - Use the `@/` alias for `src` imports when it improves clarity; Vite and TS both define it.
 - TypeScript uses strict bundler-mode settings, `verbatimModuleSyntax`, `allowImportingTsExtensions`, `erasableSyntaxOnly`, and `noUnused*`; keep imports ESM-friendly.
-- ESLint is type-aware via `typescript-eslint` `recommendedTypeChecked` and `projectService: true`.
+- Linting and formatting are both Biome (`biome.json`); ESLint has been removed. Biome does not do type-aware linting, so `pnpm build` (`tsc -b`) is the only thing that catches type-level problems — run it, not just the linter.
 - Vitest runs in `jsdom` with globals and loads `src/test/setup.ts` for `@testing-library/jest-dom/vitest`.
-- Biome is configured in `biome.json`. Before commit, please run `npx @biomejs/biome check --write` for formatting and linting.
+- Biome is configured in `biome.json`. Before commit, please run `pnpm lint:fix` for formatting and linting. (Do not run `npx biome` — the bare `biome` name on npm is an unrelated package; use the `@biomejs/biome` devDependency via the pnpm scripts.)
 - Before commit, please run `pnpm run knip` for checking unused files, dependencies, and exports. It is configured and executable, but currently reports known existing unused files, dependencies, and exports. Do not treat those as newly introduced unless a change adds to them.

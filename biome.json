@@ -19,6 +19,29 @@
     "indentStyle": "space",
     "indentWidth": 2
   },
+  "linter": {
+    "enabled": true,
+    "domains": {
+      "react": "recommended"
+    },
+    "rules": {
+      "style": {
+        "useComponentExportOnlyModules": "warn"
+      }
+    }
+  },
+  "overrides": [
+    {
+      "includes": ["**/*.test.ts", "**/*.test.tsx", "src/test/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "useComponentExportOnlyModules": "off"
+          }
+        }
+      }
+    }
+  ],
   "javascript": {
     "formatter": {
       "semicolons": "always",
