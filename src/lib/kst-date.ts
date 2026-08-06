@@ -80,7 +80,7 @@ export function isValidIsoDate(value: unknown): value is string {
  * its UTC calendar/clock fields yields KST wall-clock values regardless of
  * the host runtime's own timezone. `now` is injectable for tests.
  */
-export function getKstNow(now: Date = new Date()): Date {
+function getKstNow(now: Date = new Date()): Date {
   return new Date(now.getTime() + KST_OFFSET_MS);
 }
 

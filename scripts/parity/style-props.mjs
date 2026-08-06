@@ -74,29 +74,3 @@ export const APP_TOKENS = [
   '--fs-sm',
   '--fs-label',
 ];
-
-/**
- * Extracts computed style + bounding box for one element handle, browser-side.
- * Call via `page.evaluate(extractElementStyleSource, propNames)` — kept as a
- * plain function (not a closure) so it can be serialized across the
- * Playwright evaluate boundary from either capture script.
- */
-export function extractComputedStyleInPage(el, propNames) {
-  const cs = window.getComputedStyle(el);
-  const out = {};
-  for (const prop of propNames) {
-    out[prop] = cs[prop];
-  }
-  const rect = el.getBoundingClientRect();
-  out.__rect = { width: rect.width, height: rect.height };
-  return out;
-}
-
-export function extractTokensInPage(el, tokenNames) {
-  const cs = window.getComputedStyle(el);
-  const out = {};
-  for (const name of tokenNames) {
-    out[name] = cs.getPropertyValue(name).trim();
-  }
-  return out;
-}

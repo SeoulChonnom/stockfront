@@ -13,8 +13,7 @@
  *   (Playwright's `baseURL` already includes `/stock/`, so specs should
  *   `page.goto(appRoute)` with a *relative* path, no leading slash needed
  *   beyond what `appRoute` already has — see the spec for the exact call).
- * - `viewports`: widths in CSS px; every viewport in this matrix uses the
- *   SAME height, `VIEWPORT_HEIGHT`.
+ * - `viewports`: widths in CSS px.
  * - `mockMode`: the fixture/scenario mode for BOTH sides under normal
  *   circumstances (`ready` by default). If a route cannot render real
  *   content under `ready` on one side, the capture script for that side
@@ -24,8 +23,6 @@
  *   comparable content.
  * - `theme`: defaults to `'light'`; only the `-dark` entry overrides it.
  */
-
-export const VIEWPORT_HEIGHT = 900;
 
 /** @typedef {{ key: string, designHash: string, appRoute: string, viewports: number[], mockMode: string, theme: 'light'|'dark' }} MatrixEntry */
 
@@ -91,6 +88,3 @@ export const MATRIX = [
 
 /** Fixed instant both fixture sets pin `NOW_KST`/`TODAY` to (KST, UTC+9). */
 export const FIXED_NOW_KST = '2026-07-27T08:24:31+09:00';
-
-/** The cluster id seeded identically in `fixtures.js` and `mock-api.ts`. */
-export const CLUSTER_ID = '51f0d9a0-9fc5-4f15-a4f9-62856f128683';

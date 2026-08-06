@@ -162,7 +162,7 @@ export type BatchJobListItemResponse = {
  * omitted here, same as `runMode`/`sourceJobId`/`sourcePageId`/`queuedAt`/
  * `attemptCount`/`maxAttempts` on `BatchJobDetailResponse` below.
  */
-export type BatchJobSnapshotDetail = {
+type BatchJobSnapshotDetail = {
   forceRun: boolean | null;
   rebuildPageOnly: boolean | null;
   rawNewsCount: number;
@@ -178,7 +178,7 @@ export type BatchJobSnapshotDetail = {
  * no mapper/UI reads it yet (out of scope for the jobType-wiring pass that
  * added it — see `docs/design_v2/v2-decisions.md` §10).
  */
-export type BatchJobNewsCollectionDetail = {
+type BatchJobNewsCollectionDetail = {
   runId: number;
   providerName: string;
   windowStartAt: string;

@@ -294,7 +294,7 @@ const notFoundProbes = [
   },
 ];
 
-export const PROBES = {
+const PROBES = {
   'market-latest': marketPageProbes,
   'market-latest-dark': marketPageProbes,
   'archive-detail': marketPageProbes,

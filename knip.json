@@ -1,6 +1,9 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema.json",
   "entry": [
+    ".claude/skills/pixel-perfect-react-ui/scripts/visual-audit.mjs",
+    ".visual-audit/servers/mock-api-server.mjs",
+    ".visual-audit/servers/reference-server.mjs",
     "e2e/fixtures/mock-api.ts",
     "e2e/utils/overflow.ts",
     "e2e/utils/viewports.ts"
@@ -8,6 +11,7 @@
   "ignore": [
     "docs/design_v2/capture-screenshots.cjs",
     "docs/design_v2/handoff_v2/fixtures.js",
-    "docs/design_v2/handoff_v2/support.js"
+    "docs/design_v2/handoff_v2/support.js",
+    "scripts/parity/probes.d.mts"
   ]
 }
