@@ -1,14 +1,9 @@
 import { getAccessToken } from '../auth-bootstrap';
+import { getApiOrigin } from '../auth-config';
 import { isRecord } from '../utils';
 import type { ApiEnvelope } from './types';
 
 type QueryValue = string | number | boolean | null | undefined;
-
-function readEnvString(name: string) {
-  const value = (import.meta.env as Record<string, unknown>)[name];
-
-  return typeof value === 'string' ? value : undefined;
-}
 
 export class ApiError extends Error {
   status: number;
@@ -53,16 +48,6 @@ function formatFastApiValidationDetail(detail: unknown) {
     })
     .filter((message) => message.length > 0)
     .join('; ');
-}
-
-function getApiHost() {
-  const host = readEnvString('VITE_API_HOST');
-
-  if (typeof host !== 'string' || host.trim().length === 0) {
-    throw new Error('VITE_API_HOST is not configured.');
-  }
-
-  return host.replace(/\/+$/, '');
 }
 
 function getAuthToken() {
@@ -140,10 +125,11 @@ export async function apiRequest<T>(
     headers.set('Content-Type', 'application/json');
   }
 
+  const apiOrigin = getApiOrigin();
   let response: Response;
   try {
     response = await fetch(
-      `${getApiHost()}${path}${buildQueryString(options.query)}`,
+      `${apiOrigin}${path}${buildQueryString(options.query)}`,
       {
         method: options.method ?? 'GET',
         headers,

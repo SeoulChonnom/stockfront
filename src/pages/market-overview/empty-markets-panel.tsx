@@ -20,7 +20,7 @@ export function EmptyMarketsPanel({
   return (
     <section
       aria-labelledby='empty-markets-heading'
-      className='rounded-[var(--r-lg)] border border-dashed border-[color:var(--line-strong)] bg-[color:var(--surface)] p-6'
+      className='rounded-[var(--r-lg)] border border-dashed border-[color:var(--line-strong)] bg-[color:var(--surface)] px-[22px] py-7'
     >
       <h2
         className='m-0 mb-2 text-[16px] font-semibold'

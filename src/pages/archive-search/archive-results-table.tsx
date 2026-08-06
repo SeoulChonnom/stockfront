@@ -96,7 +96,7 @@ function ReasonSubline({ record }: { record: ArchiveRecord }) {
  */
 function GeneratedAtSubline({ record }: { record: ArchiveRecord }) {
   return (
-    <div className='mono mt-1 text-[12px] text-[color:var(--text-faint)] min-[1181px]:hidden'>
+    <div className='mono mt-1 text-[11.5px] text-[color:var(--text-faint)] min-[1181px]:hidden'>
       생성 {record.generatedAt}
     </div>
   );
@@ -119,13 +119,15 @@ export function ArchiveResultsTable({
       <Table aria-labelledby='archive-results-heading' minWidth={520}>
         <TableHeader>
           <TableRow>
-            <TableHead className='h-auto py-2 pr-3 pl-4 sm:pl-[18px]'>
+            <TableHead className='h-auto py-[9px] pr-3 pl-[18px]'>
               기준일
             </TableHead>
-            <TableHead className='h-auto py-2 px-3'>글로벌 헤드라인</TableHead>
-            <TableHead className='h-auto py-2 px-3'>상태</TableHead>
+            <TableHead className='h-auto py-[9px] px-3'>
+              글로벌 헤드라인
+            </TableHead>
+            <TableHead className='h-auto py-[9px] px-3'>상태</TableHead>
             {/* D3: design left-aligns 생성 시각, the app right-aligned it. */}
-            <TableHead className='hidden h-auto py-2 pr-4 pl-3 text-left min-[1181px]:table-cell sm:pr-[18px]'>
+            <TableHead className='hidden h-auto py-[9px] pr-[18px] pl-3 text-left min-[1181px]:table-cell'>
               생성 시각
             </TableHead>
           </TableRow>
@@ -142,22 +144,22 @@ export function ArchiveResultsTable({
               >
                 {/* D1: row pitch — design's body cell vertical padding is
                     12px, not the shared `TableCell` default (18px). */}
-                <TableCell className='py-3 pr-3 pl-4 sm:pl-[18px]'>
+                <TableCell className='py-3 pr-3 pl-[18px] align-top'>
                   <a
-                    className='mono font-semibold text-[color:var(--primary)] underline-offset-2 hover:underline'
+                    className='mono text-[13.5px] font-semibold text-[color:var(--text)] underline-offset-2 hover:text-[color:var(--primary)] hover:underline'
                     href={withBasePath(href)}
                     onClick={onOpen}
                   >
                     {/* D1: ISO date, mono — not the ko-KR dotted format. */}
                     {record.businessDate}
                   </a>
-                  <div className='mono mt-1 text-[12px] text-[color:var(--text-faint)]'>
+                  <div className='mono mt-0 text-[11px] text-[color:var(--text-faint)]'>
                     pageId {record.pageId}
                   </div>
                 </TableCell>
-                <TableCell className='py-3 px-3'>
+                <TableCell className='py-3 px-3 align-top'>
                   <a
-                    className='wrap-anywhere text-pretty font-medium text-[color:var(--text)] underline-offset-2 hover:underline'
+                    className='wrap-anywhere text-pretty font-normal text-[color:var(--text)] underline-offset-2 hover:text-[color:var(--primary)] hover:underline'
                     href={withBasePath(href)}
                     onClick={onOpen}
                   >
@@ -166,12 +168,12 @@ export function ArchiveResultsTable({
                   <ReasonSubline record={record} />
                   <GeneratedAtSubline record={record} />
                 </TableCell>
-                <TableCell className='py-3 px-3'>
+                <TableCell className='py-3 px-3 align-top'>
                   {/* N2 (parity cycle 3): row-level badge is one notch
                       smaller than the page-level badge in the design. */}
                   <StatusBadge size='sm' status={record.status} />
                 </TableCell>
-                <TableCell className='mono hidden py-3 pr-4 pl-3 text-left whitespace-nowrap min-[1181px]:table-cell sm:pr-[18px]'>
+                <TableCell className='mono hidden py-3 pr-[18px] pl-3 text-left text-[12px] whitespace-nowrap text-[color:var(--text-soft)] min-[1181px]:table-cell'>
                   {record.generatedAt}
                 </TableCell>
               </TableRow>

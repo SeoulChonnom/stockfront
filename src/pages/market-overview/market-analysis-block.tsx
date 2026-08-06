@@ -43,7 +43,7 @@ export function MarketAnalysisBlock({
             <div className='flex flex-wrap gap-1.5'>
               {keyThemes.map((theme) => (
                 <span
-                  className='rounded-[var(--r-sm)] border border-[color:var(--line)] bg-[color:var(--surface-2)] px-2.5 py-1 text-[12.5px] text-[color:var(--text-soft)]'
+                  className='rounded-[var(--r-sm)] border border-[color:var(--line)] bg-[color:var(--surface-2)] px-[9px] py-[3px] text-[12.5px] text-[color:var(--text-soft)]'
                   key={theme}
                 >
                   {theme}

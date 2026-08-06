@@ -97,6 +97,41 @@ describe('apiRequest', () => {
     );
   });
 
+  it('reuses the normalized API origin for every request', async () => {
+    vi.stubEnv('VITE_API_HOST', 'http://localhost:8000/');
+    const fetchMock = vi
+      .fn<(input: RequestInfo | URL, init?: RequestInit) => Promise<Response>>()
+      .mockImplementation(() =>
+        Promise.resolve(
+          createJsonResponse({
+            success: true,
+            data: { id: 1 },
+          })
+        )
+      );
+    vi.stubGlobal('fetch', fetchMock);
+
+    await apiRequest('/first');
+    await apiRequest('/second');
+
+    expect(fetchMock.mock.calls.map(([input]) => input)).toEqual([
+      'http://localhost:8000/first',
+      'http://localhost:8000/second',
+    ]);
+  });
+
+  it('rejects an invalid API origin before making a development bypass request', async () => {
+    vi.stubEnv('VITE_APP_ENV', 'development');
+    vi.stubEnv('VITE_API_HOST', 'ftp://localhost:8000');
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+
+    await expect(apiRequest('/first')).rejects.toThrow(
+      'VITE_API_HOST must use the http or https protocol.'
+    );
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it('preserves caller-supplied authorization headers', async () => {
     vi.stubEnv('VITE_API_HOST', 'http://localhost:8000');
     const fetchMock = vi

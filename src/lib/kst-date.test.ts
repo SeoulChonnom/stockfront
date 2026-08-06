@@ -4,8 +4,23 @@ import {
   getRelativeIso,
   getTodayBusinessDateKst,
   getTodayIso,
+  isValidIsoDate,
   parseKstAwareDate,
 } from './kst-date';
+
+describe('isValidIsoDate', () => {
+  it('accepts exact calendar dates, including leap day', () => {
+    expect(isValidIsoDate('2024-02-29')).toBe(true);
+    expect(isValidIsoDate('2026-07-27')).toBe(true);
+  });
+
+  it('rejects malformed and impossible calendar dates', () => {
+    expect(isValidIsoDate('2026-2-07')).toBe(false);
+    expect(isValidIsoDate('2026-02-30')).toBe(false);
+    expect(isValidIsoDate('2026-04-31')).toBe(false);
+    expect(isValidIsoDate('2023-02-29')).toBe(false);
+  });
+});
 
 describe('parseKstAwareDate', () => {
   it('reads a naive (no offset/Z) timestamp as literal KST wall-clock digits', () => {

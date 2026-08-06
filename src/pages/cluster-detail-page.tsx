@@ -1,6 +1,5 @@
-import { InlineAlert, Skeleton, SkeletonText } from '@/components/state';
+import { Skeleton } from '@/components/state';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 
 import { ApiError } from '../lib/api/client';
 import { useClusterDetail } from '../lib/query-hooks';
@@ -84,29 +83,15 @@ export function ClusterDetailPage({ clusterId }: { clusterId: string }) {
 
 function ClusterDetailSkeleton() {
   return (
-    <div aria-busy='true' className='flex min-w-0 flex-col gap-[var(--gap)]'>
-      <Skeleton className='h-4 w-64' />
-      <Card className='flex min-w-0 flex-col gap-4 p-5'>
-        <Skeleton className='h-4 w-40' />
-        <Skeleton className='h-8 w-3/4' />
-        <SkeletonText lines={2} />
-      </Card>
-      <p className='m-0 text-[13.5px] text-[color:var(--text-soft)]'>
-        이슈 상세를 불러오는 중입니다.
-      </p>
-      <div className='grid min-w-0 grid-cols-1 gap-[var(--gap)] min-[1181px]:grid-cols-[minmax(0,1fr)_400px]'>
-        <div className='flex min-w-0 flex-col gap-[var(--gap)]'>
-          <Card className='p-5'>
-            <SkeletonText lines={5} />
-          </Card>
-          <Card className='p-5'>
-            <SkeletonText lines={6} />
-          </Card>
-        </div>
-        <Card className='p-5'>
-          <SkeletonText lines={4} />
-        </Card>
-      </div>
+    <div
+      aria-busy='true'
+      aria-label='이슈 상세를 불러오는 중입니다.'
+      className='flex min-w-0 flex-col gap-3'
+      role='status'
+    >
+      <Skeleton className='h-[96px] w-full' />
+      <Skeleton className='h-[200px] w-full' />
+      <Skeleton className='h-[160px] w-full' />
     </div>
   );
 }
@@ -118,36 +103,88 @@ function ClusterDetailErrorState({
   error: unknown;
   onRetry: () => void;
 }) {
-  const is404 = error instanceof ApiError && error.status === 404;
-
-  if (is404) {
-    return (
-      <InlineAlert
-        actions={
-          <Button onClick={() => navigate('/market/latest')} type='button'>
-            최신 브리프로 이동
-          </Button>
-        }
-        title='이 이슈를 찾을 수 없습니다'
-        tone='danger'
-      >
-        주소가 바뀌었거나 이슈가 삭제됐을 수 있습니다. 최신 브리프에서 다시
-        시작하세요.
-      </InlineAlert>
-    );
-  }
+  const status = error instanceof ApiError ? error.status : null;
+  const code = getClusterErrorCode(error);
+  const message =
+    error instanceof Error
+      ? error.message
+      : '이슈 상세를 불러오는 중 오류가 발생했습니다.';
+  const back = getErrorBackLink();
 
   return (
-    <InlineAlert
-      actions={
-        <Button onClick={onRetry} type='button'>
+    <section
+      aria-labelledby='page-title'
+      className='min-w-0 rounded-[var(--r-lg)] border border-[color:var(--danger-line)] border-l-4 border-l-[color:var(--danger)] bg-[color:var(--surface)] p-5'
+      role='alert'
+    >
+      <span className='mono inline-flex rounded-[var(--r-sm)] border border-[color:var(--danger-line)] bg-[color:var(--danger-soft)] px-2 py-0.5 text-[11.5px] font-semibold text-[color:var(--danger)]'>
+        {status === null ? code : `${status} · ${code}`}
+      </span>
+      <h1
+        className='m-0 mt-2 mb-1.5 text-[19px] font-semibold text-[color:var(--text)]'
+        id='page-title'
+        tabIndex={-1}
+      >
+        {status === 404
+          ? '이 이슈를 찾을 수 없습니다'
+          : '이슈 상세를 불러오지 못했습니다'}
+      </h1>
+      <p className='measure-error wrap-anywhere m-0 mb-4 text-[13.5px] text-[color:var(--text-soft)]'>
+        {message}
+      </p>
+      <div className='flex flex-wrap gap-2'>
+        <Button onClick={onRetry} type='button' variant='primary'>
           다시 시도
         </Button>
-      }
-      title='이슈 상세를 불러오지 못했습니다'
-      tone='danger'
-    >
-      잠시 후 다시 시도해 주세요.
-    </InlineAlert>
+        <Button
+          onClick={() => navigate(back.href)}
+          type='button'
+          variant='secondary'
+        >
+          {back.label}
+        </Button>
+      </div>
+    </section>
   );
+}
+
+function getClusterErrorCode(error: unknown) {
+  if (error instanceof ApiError) {
+    if (
+      error.body &&
+      typeof error.body === 'object' &&
+      'code' in error.body &&
+      typeof error.body.code === 'string' &&
+      error.body.code.length > 0
+    ) {
+      return error.body.code;
+    }
+
+    if (error.status === 0) {
+      return 'NETWORK_ERROR';
+    }
+
+    if (error.status >= 500) {
+      return 'INTERNAL_ERROR';
+    }
+  }
+
+  return 'REQUEST_FAILED';
+}
+
+function getErrorBackLink() {
+  const origin = new URLSearchParams(window.location.search).get('origin');
+
+  if (origin === 'latest') {
+    return { href: '/market/latest', label: '최신 브리프로 돌아가기' };
+  }
+
+  if (origin && /^\d{4}-\d{2}-\d{2}$/.test(origin)) {
+    return {
+      href: `/market/archive/${origin}`,
+      label: `${origin} 브리프로 돌아가기`,
+    };
+  }
+
+  return { href: '/market/latest', label: '최신 브리프로 이동' };
 }

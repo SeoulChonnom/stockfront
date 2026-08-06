@@ -57,6 +57,29 @@ describe('parseListFilters', () => {
     }
   });
 
+  it('falls back for dates with valid shape but impossible calendar days', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-04-22T00:00:00Z'));
+
+    try {
+      expect(
+        parseListFilters(
+          new URLSearchParams({
+            from: '2026-02-30',
+            to: '2026-03-01',
+          })
+        )
+      ).toEqual({
+        from: '2026-03-01',
+        to: '2026-04-08',
+        status: '',
+        page: 1,
+      });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('D6: defaults to the KST calendar date, not the UTC one, in the early-KST-morning boundary window', () => {
     // 2026-07-27T00:30 KST == 2026-07-26T15:30:00Z — a naive
     // `new Date().toISOString()` reads the UTC date and would default `to`
@@ -137,6 +160,20 @@ describe('parseRoute', () => {
     });
     expect(parseRoute('/market/cluster/not-a-uuid')).toEqual({
       page: 'not-found',
+    });
+  });
+
+  it('returns not-found for archive paths with impossible calendar days', () => {
+    expect(parseRoute('/market/archive/2026-02-30')).toEqual({
+      page: 'not-found',
+    });
+  });
+
+  it('keeps valid leap-day archive paths', () => {
+    expect(parseRoute('/market/archive/2024-02-29')).toEqual({
+      page: 'archive-market',
+      businessDate: '2024-02-29',
+      pageId: null,
     });
   });
 

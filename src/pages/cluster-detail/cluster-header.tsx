@@ -44,7 +44,7 @@ export function ClusterHeader({
         </span>
         <span aria-hidden='true'>·</span>
         <span>기사 {formatInteger(detail.articleCount)}건</span>
-        <span aria-hidden='true'>·</span>
+        <span aria-hidden='true'>|</span>
         <span>갱신 {detail.updatedAt}</span>
       </div>
 

@@ -23,7 +23,7 @@ function ClusterArticleRow({ article }: { article: ClusterArticle }) {
   // publisher/date/원문 배지/네이버 미러 all inline on the line below. The
   // app previously pulled the 원문 badge up next to the title (3 lines).
   return (
-    <li className='min-w-0 border-b border-[color:var(--line)] pb-3 last:border-0 last:pb-0'>
+    <li className='min-w-0 border-b border-[color:var(--line)] px-[18px] py-3'>
       {originalUrl ? (
         <a
           className='wrap-anywhere font-medium text-[color:var(--text)] underline-offset-2 hover:underline'
@@ -99,31 +99,31 @@ export function ClusterArticlesList({
         <span className='mono text-[11.5px] text-[color:var(--text-faint)]'>
           관련 기사 {articles.length}건
         </span>
-      </div>
-
-      <div className='flex min-w-0 flex-col gap-3 p-[18px]'>
-        {articles.length === 0 ? (
-          <EmptyState kind='no-articles' />
-        ) : (
-          <ul className='m-0 flex list-none flex-col gap-3 p-0'>
-            {visible.map((article) => (
-              <ClusterArticleRow article={article} key={article.id} />
-            ))}
-          </ul>
-        )}
-
         {remaining > 0 ? (
           <Button
             aria-expanded={expanded}
-            className='self-start'
+            className='ml-auto'
             onClick={() => setExpanded((current) => !current)}
+            size='sm'
             type='button'
-            variant='ghost'
+            variant='secondary'
           >
             {expanded ? '간략히 보기' : `남은 ${remaining}건 더 보기`}
           </Button>
         ) : null}
       </div>
+
+      {articles.length === 0 ? (
+        <div className='p-[18px]'>
+          <EmptyState kind='no-articles' />
+        </div>
+      ) : (
+        <ul className='m-0 list-none p-0'>
+          {visible.map((article) => (
+            <ClusterArticleRow article={article} key={article.id} />
+          ))}
+        </ul>
+      )}
     </section>
   );
 }

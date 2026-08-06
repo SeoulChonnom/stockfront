@@ -70,8 +70,9 @@ export function NavRail({
               {ROLE_LABELS[role]}
             </p>
           </div>
-          <ThemeToggleButton onToggle={onToggleTheme} theme={theme} />
         </div>
+
+        <ThemeToggleButton onToggle={onToggleTheme} showLabel theme={theme} />
 
         {import.meta.env.DEV ? <DevRoleSimulator /> : null}
       </div>

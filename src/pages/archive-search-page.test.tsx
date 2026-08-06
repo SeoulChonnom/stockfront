@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { AnnounceProvider } from '@/components/shell/announce-context';
 
 import type { ArchiveListParams } from '../lib/api/archive';
+import { ApiError } from '../lib/api/client';
 import { withBasePath } from '../lib/router';
 import { ArchiveSearchPage } from './archive-search-page';
 
@@ -255,6 +256,29 @@ describe('ArchiveSearchPage', () => {
     expect(refetch).toHaveBeenCalled();
   });
 
+  it('renders the design error title, HTTP code, message, and retry action for a 500 response', () => {
+    const refetch = vi.fn();
+    mockUseArchiveList.mockReturnValue({
+      data: undefined,
+      error: new ApiError('API request failed with status 500.', 500, null),
+      isLoading: false,
+      isFetching: false,
+      refetch,
+    });
+
+    renderPage(new URLSearchParams());
+
+    const alert = screen.getByRole('alert');
+    expect(alert).toHaveTextContent('데이터를 불러오지 못했습니다');
+    expect(alert).toHaveTextContent('500 · INTERNAL_ERROR');
+    expect(alert).toHaveTextContent(
+      '서버가 요청을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.'
+    );
+    expect(
+      screen.getByRole('button', { name: '다시 시도' })
+    ).toBeInTheDocument();
+  });
+
   it('shows the empty-results state with a reset action when the query resolves with zero rows', () => {
     mockUseArchiveList.mockReturnValue(
       ready({ rows: [], totalCount: 0, totalPages: 1 })
@@ -267,6 +291,11 @@ describe('ArchiveSearchPage', () => {
     ).toBeInTheDocument();
     expect(
       screen.getByRole('button', { name: '필터 초기화' })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        '선택한 기간에 생성된 브리프가 없거나, 상태 필터가 결과를 모두 제외했습니다. 기간을 넓히거나 상태 필터를 해제해 보세요.'
+      )
     ).toBeInTheDocument();
   });
 });

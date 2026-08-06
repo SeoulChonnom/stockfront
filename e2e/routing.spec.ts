@@ -115,6 +115,7 @@ test.describe('§16-7 route focus', () => {
   test('a pathname navigation focuses #page-title', async ({ page }) => {
     await installMockApi(page, { scenario: 'ready' });
     await page.goto('market/latest');
+    await expect(page.locator('#page-title')).toBeVisible();
     await expect(page.locator('#page-title')).toBeFocused();
 
     // Click a real primary-nav link (pathname change) rather than page.goto —

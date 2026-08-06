@@ -23,11 +23,57 @@
 
 const KST_TIME_ZONE = 'Asia/Seoul';
 const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
+const ISO_DATE_REGEX = /^(\d{4})-(\d{2})-(\d{2})$/;
 
 // Matches a trailing `Z` or explicit `+HH:MM`/`-HH:MM` (or `+HHMM`) offset.
 const OFFSET_SUFFIX_REGEX = /(?:Z|[+-]\d{2}:?\d{2})$/;
 const NAIVE_DATETIME_REGEX =
   /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})(?::(\d{2}))?/;
+
+/**
+ * Returns whether `value` is an exact `YYYY-MM-DD` calendar date.
+ *
+ * Parsing a date-shaped string with `Date` normalizes overflow values (for
+ * example, April 31 becomes May 1), so validate the parsed calendar fields
+ * against the month's actual length instead.
+ */
+export function isValidIsoDate(value: unknown): value is string {
+  if (typeof value !== 'string') {
+    return false;
+  }
+
+  const match = ISO_DATE_REGEX.exec(value);
+
+  if (!match) {
+    return false;
+  }
+
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+
+  if (month < 1 || month > 12 || day < 1) {
+    return false;
+  }
+
+  const isLeapYear = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+  const daysInMonth = [
+    31,
+    isLeapYear ? 29 : 28,
+    31,
+    30,
+    31,
+    30,
+    31,
+    31,
+    30,
+    31,
+    30,
+    31,
+  ];
+
+  return day <= daysInMonth[month - 1];
+}
 
 /**
  * Returns the current instant shifted by the fixed KST offset, so reading

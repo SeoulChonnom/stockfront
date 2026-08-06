@@ -1,5 +1,5 @@
 import { expect, test } from './fixtures/console-guard';
-import { installMockApi } from './fixtures/mock-api';
+import { installMockApi, shiftDate, TODAY } from './fixtures/mock-api';
 
 /**
  * Phase 9 §16 items 2 (filter apply/reset), 3 (validation), 4 (Archive
@@ -38,10 +38,14 @@ test.describe('§16-3 validation', () => {
     page,
   }) => {
     await installMockApi(page, { scenario: 'ready' });
+    // Keep this validation assertion independent of the day the suite runs.
+    // The app validates against the browser's KST clock, so freeze it to the
+    // same fixture date used by the mock and submit the following day.
+    await page.clock.setFixedTime(new Date(`${TODAY}T08:24:31+09:00`));
     await page.goto('market/archive/search');
     const urlBefore = page.url();
 
-    await page.locator('#to').fill('2026-08-01'); // after TODAY (2026-07-27)
+    await page.locator('#to').fill(shiftDate(TODAY, 1));
     await page.getByRole('button', { name: '필터 적용' }).click();
 
     expect(page.url()).toBe(urlBefore);
@@ -120,20 +124,26 @@ test.describe('§16-5 browser Back (Archive Search)', () => {
 
     await page.evaluate(() => window.scrollTo(0, 500));
     await page.waitForTimeout(50);
+    const scrollYBeforeNavigation = await page.evaluate(() => window.scrollY);
+    expect(scrollYBeforeNavigation).toBeGreaterThan(0);
 
     const firstRowLink = page
       .locator('table tbody tr')
       .first()
       .locator('a')
       .first();
-    await firstRowLink.click();
+    // The row is above the current viewport; Playwright's click action would
+    // scroll it into view before dispatching the event and overwrite the
+    // position this test is meant to verify. Dispatch the click in place so
+    // the app sees the true pre-navigation offset.
+    await firstRowLink.dispatchEvent('click');
     await expect(page.locator('#page-title')).toHaveText(/시장 브리프/);
 
     await page.goBack();
     await expect(page).toHaveURL(/page=2/);
     await expect
       .poll(() => page.evaluate(() => window.scrollY))
-      .toBeGreaterThan(400);
+      .toBe(scrollYBeforeNavigation);
   });
 
   test('Back after applying a filter restores the applied filter', async ({

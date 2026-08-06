@@ -8,21 +8,31 @@ export function ThemeToggleButton({
   theme,
   onToggle,
   className,
+  showLabel = false,
 }: {
   theme: ThemeMode;
   onToggle: () => void;
   className?: string;
+  showLabel?: boolean;
 }) {
+  const label = theme === 'dark' ? '라이트 테마로 전환' : '다크 테마로 전환';
+
   return (
     <Button
-      aria-label={theme === 'dark' ? '라이트 모드로 전환' : '다크 모드로 전환'}
-      className={cn('shrink-0', className)}
+      aria-label={label}
+      className={cn(
+        'shrink-0',
+        showLabel && 'min-h-9 w-full justify-start px-2.5 text-[12.5px]',
+        className
+      )}
       onClick={onToggle}
-      size='icon'
+      size={showLabel ? 'sm' : 'icon'}
       type='button'
       variant='ghost'
     >
-      {theme === 'dark' ? (
+      {showLabel ? (
+        label
+      ) : theme === 'dark' ? (
         <SunMedium aria-hidden='true' size={18} />
       ) : (
         <MoonStar aria-hidden='true' size={18} />

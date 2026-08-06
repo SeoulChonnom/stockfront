@@ -10,9 +10,10 @@ import { Button } from './button';
  * Select + error text) stays with the caller, wired through
  * `useFilterDraft`'s `getFieldProps(name)` — this keeps FilterBar generic
  * enough for both Archive Search and Batch Operations to compose with their
- * own field sets. 3-column grid ≥640px, 1 column below it (§6). Inputs must
- * be given `min-h-11` (44px) by the caller via `getFieldProps`+Input/Select,
- * consistent with the rest of the touch-target rule.
+ * own field sets. Archive's 3-column grid becomes 2 columns at 1180px and
+ * 1 column at 640px (§6). Inputs must be given `min-h-11` (44px) by the
+ * caller via `getFieldProps`+Input/Select, consistent with the touch-target
+ * rule.
  */
 
 export type FilterBarProps = {
@@ -46,14 +47,14 @@ export function FilterBar({
       onSubmit={handleSubmit}
     >
       {summary}
-      <div className='grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-3'>
+      <div className='grid min-w-0 grid-cols-1 gap-3 min-[641px]:grid-cols-2 min-[1181px]:grid-cols-3'>
         {children}
       </div>
       <div className='flex flex-wrap gap-2'>
         <Button size='default' type='submit'>
           {applyLabel}
         </Button>
-        <Button onClick={onReset} type='button' variant='ghost'>
+        <Button onClick={onReset} type='button' variant='secondary'>
           {resetLabel}
         </Button>
       </div>

@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -409,6 +409,77 @@ describe('BatchOperationsPage — admin', () => {
     expect(params.get('view')).toBe('detail');
   });
 
+  it('keeps desktop selection in master-detail without adding view=detail to the URL', async () => {
+    const user = userEvent.setup();
+    const innerWidthSpy = vi
+      .spyOn(window, 'innerWidth', 'get')
+      .mockReturnValue(1440);
+    mockUseBatchJobs.mockReturnValue(
+      jobsReady({
+        rows: [createRow({ id: 101 }), createRow({ id: 202 })],
+      })
+    );
+    mockUseBatchJobDetail.mockReturnValue(detailReady(createRow({ id: 101 })));
+
+    renderPage();
+    await user.click(screen.getByRole('button', { name: 'job 202 상세 선택' }));
+
+    const params = new URLSearchParams(window.location.search);
+    expect(params.get('jobId')).toBe('202');
+    expect(params.get('view')).toBeNull();
+    innerWidthSpy.mockRestore();
+  });
+
+  it('moves focus to the detail heading on drill-in and restores the selected row on return', async () => {
+    const user = userEvent.setup();
+    mockUseBatchJobs.mockReturnValue(
+      jobsReady({
+        rows: [
+          createRow({ id: 101 }),
+          createRow({ id: 202, businessDate: '2026-07-25' }),
+        ],
+      })
+    );
+    mockUseBatchJobDetail.mockImplementation((jobId) =>
+      detailReady(
+        createRow({
+          id: jobId ?? 101,
+          businessDate: jobId === 202 ? '2026-07-25' : '2026-07-26',
+        })
+      )
+    );
+
+    const { rerender } = renderPage();
+    await user.click(screen.getByRole('button', { name: 'job 202 상세 선택' }));
+
+    rerender(
+      <AnnounceProvider pathname='/test'>
+        <BatchOperationsPage
+          searchParams={new URLSearchParams('jobId=202&view=detail')}
+        />
+      </AnnounceProvider>
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('heading', { level: 2, name: 'job 202' })
+      ).toHaveFocus();
+    });
+
+    await user.click(screen.getByRole('button', { name: '목록' }));
+    rerender(
+      <AnnounceProvider pathname='/test'>
+        <BatchOperationsPage searchParams={new URLSearchParams('jobId=202')} />
+      </AnnounceProvider>
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('button', { name: 'job 202 상세 선택' })
+      ).toHaveFocus();
+    });
+  });
+
   it('list error keeps filters and the previous selection, while detail keeps working', () => {
     mockUseBatchJobs.mockReturnValue({
       data: undefined,
@@ -514,6 +585,56 @@ describe('BatchOperationsPage — admin', () => {
     ).toBeInTheDocument();
   });
 
+  it('renders NEWS_COLLECTION list/detail behavior without snapshot-only fields', () => {
+    const newsRun = createRow({
+      id: 201,
+      jobType: 'NEWS_COLLECTION',
+      currentStep: 'collect_news',
+      rawStatus: 'RUNNING',
+      status: 'RUNNING',
+      pageId: null,
+      pageVersion: '-',
+    });
+    mockUseBatchJobs.mockReturnValue(jobsReady({ rows: [], totalCount: 0 }));
+    mockUseBatchJobDetail.mockReturnValue(detailReady(newsRun));
+
+    renderPage(new URLSearchParams('jobId=201'));
+
+    expect(screen.getAllByText('검색 결과 저장')).not.toHaveLength(0);
+    expect(screen.getByText('스냅샷 대상 아님')).toBeInTheDocument();
+    expect(screen.getByText('뉴스 수집').closest('li')).toHaveTextContent(
+      '실행 중'
+    );
+    expect(screen.queryByText('174 / 114 / 21')).not.toBeInTheDocument();
+    expect(screen.queryByText('실행 옵션')).not.toBeInTheDocument();
+  });
+
+  it('preserves an unknown type but does not treat it as MARKET_SNAPSHOT', () => {
+    const unknownRun = createRow({
+      id: 303,
+      jobType: 'SOME_FUTURE_TYPE',
+      currentStep: null,
+      rawStatus: 'FAILED',
+      status: 'FAILED',
+      pageId: null,
+      pageVersion: '-',
+      detail: '',
+    });
+    mockUseBatchJobs.mockReturnValue(jobsReady({ rows: [], totalCount: 0 }));
+    mockUseBatchJobDetail.mockReturnValue(detailReady(unknownRun));
+
+    renderPage(new URLSearchParams('jobId=303'));
+
+    expect(screen.getByText('SOME_FUTURE_TYPE')).toBeInTheDocument();
+    expect(screen.getByText('스냅샷 정보 확인 불가')).toBeInTheDocument();
+    expect(screen.queryByText('174 / 114 / 21')).not.toBeInTheDocument();
+    expect(screen.queryByText('실행 옵션')).not.toBeInTheDocument();
+    expect(screen.queryByText('파이프라인 단계')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('2026-07-26 시장 스냅샷이 생성되지 않았습니다.')
+    ).not.toBeInTheDocument();
+  });
+
   it('opens the Manual Trigger dialog from the header button', async () => {
     const user = userEvent.setup();
     mockUseBatchJobs.mockReturnValue(jobsReady());
@@ -524,7 +645,7 @@ describe('BatchOperationsPage — admin', () => {
     await user.click(screen.getByRole('button', { name: '수동 실행' }));
 
     expect(
-      screen.getByRole('dialog', { name: '수동 실행' })
+      screen.getByRole('dialog', { name: '배치 수동 실행' })
     ).toBeInTheDocument();
     expect(screen.getByLabelText('기준일 (KST)')).toBeInTheDocument();
   });

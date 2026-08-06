@@ -1,3 +1,5 @@
+import { type Ref, useEffect, useRef } from 'react';
+
 import { EmptyState, InlineAlert, StatusBadge } from '@/components/state';
 import { Skeleton } from '@/components/state/skeleton';
 import { BatchTypeBadge } from '@/components/ui/batch-type-badge';
@@ -78,6 +80,17 @@ export function BatchHistoryList({
   hiddenOnNarrowView,
 }: BatchHistoryListProps) {
   const hasAppliedFilter = Boolean(applied.status || applied.type);
+  const selectedRowButtonRef = useRef<HTMLButtonElement>(null);
+  const wasHiddenRef = useRef(hiddenOnNarrowView);
+
+  useEffect(() => {
+    const wasHidden = wasHiddenRef.current;
+    wasHiddenRef.current = hiddenOnNarrowView;
+
+    if (wasHidden && !hiddenOnNarrowView) {
+      selectedRowButtonRef.current?.focus({ preventScroll: true });
+    }
+  }, [hiddenOnNarrowView]);
 
   function clearFilters() {
     // 빈 상태의 필터 해제 버튼은 (헤더 버튼과 달리) 조건 없이 항상 렌더되므로
@@ -228,6 +241,11 @@ export function BatchHistoryList({
                 ) : (
                   rows.map((row) => (
                     <BatchHistoryRow
+                      buttonRef={
+                        row.id === selectedJobId
+                          ? selectedRowButtonRef
+                          : undefined
+                      }
                       isSelected={row.id === selectedJobId}
                       key={row.id}
                       onSelect={() => {
@@ -294,10 +312,12 @@ function SkeletonRows() {
 }
 
 function BatchHistoryRow({
+  buttonRef,
   row,
   isSelected,
   onSelect,
 }: {
+  buttonRef?: Ref<HTMLButtonElement>;
   row: BatchRunRow;
   isSelected: boolean;
   onSelect: () => void;
@@ -333,6 +353,7 @@ function BatchHistoryRow({
           // (13.5*1.6=21.6 vs 14*1.6=22.4 line-height) drove ~0.8px of extra
           // height on every "normal" history row (15 of 20 measured rows).
           className='mono block min-w-0 rounded-[var(--r-sm)] text-left text-[13.5px] font-semibold text-[color:var(--text)] outline-none hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--focus)]'
+          ref={buttonRef}
           onClick={(event) => {
             event.stopPropagation();
             onSelect();

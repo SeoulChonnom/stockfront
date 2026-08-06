@@ -36,7 +36,7 @@ import { Button } from './button';
  *   parity pass — the capture itself is known-wrong here.
  * - 페이지 이동 시 "N페이지를 불러옵니다."를 **자체 live region 없이**
  *   호출부가 준 `onAnnounce`로만 알린다(§15: 화면당 단일 live region).
- * - 버튼은 최소 40×44px.
+ * - 버튼은 최소 44×40px.
  */
 
 const WINDOW_SIZE = 5;
@@ -91,10 +91,10 @@ export function Pagination({
   }
 
   return (
-    <div className={cn('flex flex-wrap items-center gap-3', className)}>
-      <nav aria-label={navLabel} className='flex items-center gap-1'>
+    <div className={cn('flex flex-wrap items-center gap-2', className)}>
+      <nav aria-label={navLabel} className='flex flex-wrap items-center gap-2'>
         <Button
-          className='min-h-11 min-w-[40px] px-2'
+          className='min-h-10 min-w-11 border-[color:var(--line-strong)] bg-[color:var(--surface)] px-3 text-[13px] font-normal text-[color:var(--text)]'
           disabled={page <= 1}
           onClick={() => goTo(page - 1)}
           size='sm'
@@ -107,7 +107,7 @@ export function Pagination({
           <Button
             aria-current={candidate === page ? 'page' : undefined}
             className={cn(
-              'mono min-h-11 min-w-[40px] px-2',
+              'mono min-h-10 min-w-11 bg-[color:var(--surface)] px-2.5 text-[13px] text-[color:var(--text-soft)]',
               candidate === page &&
                 'border-[color:var(--primary-line)] bg-[color:var(--primary-soft)] text-[color:var(--primary)]'
             )}
@@ -121,7 +121,7 @@ export function Pagination({
           </Button>
         ))}
         <Button
-          className='min-h-11 min-w-[40px] px-2'
+          className='min-h-10 min-w-11 border-[color:var(--line-strong)] bg-[color:var(--surface)] px-3 text-[13px] font-normal text-[color:var(--text)]'
           disabled={page >= safeTotalPages}
           onClick={() => goTo(page + 1)}
           size='sm'
@@ -132,7 +132,7 @@ export function Pagination({
         </Button>
       </nav>
       {showPageIndicator ? (
-        <span className='mono ml-auto text-[12.5px] font-semibold text-[color:var(--text-soft)]'>
+        <span className='mono ml-auto text-[12px] text-[color:var(--text-faint)]'>
           {page} / {safeTotalPages}
         </span>
       ) : null}

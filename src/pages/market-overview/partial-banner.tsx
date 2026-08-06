@@ -37,7 +37,7 @@ export function PartialBanner({
   return (
     <section
       aria-labelledby='partial-banner-heading'
-      className='rounded-[var(--r-lg)] border border-[color:var(--warning-line)] border-l-4 border-l-[color:var(--warning)] bg-[color:var(--surface)] p-4 sm:p-[18px]'
+      className='rounded-[var(--r-lg)] border border-[color:var(--warning-line)] border-l-4 border-l-[color:var(--warning)] bg-[color:var(--surface)] px-[18px] py-4'
     >
       <h2
         className='m-0 mb-1.5 text-[14.5px] font-semibold'

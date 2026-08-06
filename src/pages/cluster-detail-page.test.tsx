@@ -202,12 +202,16 @@ describe('ClusterDetailPage', () => {
 
     render(<ClusterDetailPage clusterId='cluster-1' />);
 
-    expect(
-      screen.getByText('이슈 상세를 불러오는 중입니다.')
-    ).toBeInTheDocument();
+    const status = screen.getByRole('status', {
+      name: '이슈 상세를 불러오는 중입니다.',
+    });
+    expect(status.children).toHaveLength(3);
+    expect(status.children[0]).toHaveClass('h-[96px]');
+    expect(status.children[1]).toHaveClass('h-[200px]');
+    expect(status.children[2]).toHaveClass('h-[160px]');
   });
 
-  it('shows a 404-specific message and a 최신 브리프로 이동 action for a 404 response', () => {
+  it('shows the HTTP/code badge, actual API message, retry, and origin back action for an error', () => {
     setLocation('?origin=latest');
     mockUseClusterDetail.mockReturnValue({
       isLoading: false,
@@ -219,8 +223,16 @@ describe('ClusterDetailPage', () => {
     render(<ClusterDetailPage clusterId='cluster-1' />);
 
     expect(screen.getByText('이 이슈를 찾을 수 없습니다')).toBeInTheDocument();
+    expect(screen.getByRole('alert')).toHaveTextContent('404 · REQUEST_FAILED');
+    expect(screen.getByRole('alert')).toHaveTextContent('not found');
     expect(
-      screen.getByRole('button', { name: '최신 브리프로 이동' })
+      screen.getByRole('heading', { name: '이 이슈를 찾을 수 없습니다' })
+    ).toHaveAttribute('tabindex', '-1');
+    expect(
+      screen.getByRole('button', { name: '다시 시도' })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: '최신 브리프로 돌아가기' })
     ).toBeInTheDocument();
   });
 

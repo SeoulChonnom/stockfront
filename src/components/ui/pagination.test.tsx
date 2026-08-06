@@ -97,4 +97,19 @@ describe('Pagination', () => {
     expect(screen.getByRole('navigation')).toHaveAttribute('aria-label');
     expect(document.querySelector('[aria-live]')).not.toBeInTheDocument();
   });
+
+  it('uses the reference target size and subdued page indicator typography', () => {
+    render(<Pagination onPageChange={vi.fn()} page={2} totalPages={3} />);
+
+    expect(screen.getByRole('button', { name: '이전' }).className).toContain(
+      'min-w-11'
+    );
+    expect(screen.getByRole('button', { name: '이전' }).className).toContain(
+      'min-h-10'
+    );
+    expect(screen.getByText('2 / 3').className).toContain('text-[12px]');
+    expect(screen.getByText('2 / 3').className).toContain(
+      'text-[color:var(--text-faint)]'
+    );
+  });
 });

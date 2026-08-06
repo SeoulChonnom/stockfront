@@ -63,11 +63,23 @@ export function useDismissable<T extends HTMLElement>({
     const container = containerRef.current;
     const triggerElement = document.activeElement as HTMLElement | null;
 
-    const initialTarget =
-      initialFocusRef?.current ??
-      (container ? getFocusableElements(container)[0] : undefined) ??
-      container;
-    initialTarget?.focus();
+    if (!container) {
+      return;
+    }
+    const activeContainer = container;
+
+    function focusInitialTarget() {
+      const initialTarget =
+        (initialFocusRef?.current &&
+        activeContainer.contains(initialFocusRef.current)
+          ? initialFocusRef.current
+          : undefined) ??
+        getFocusableElements(activeContainer)[0] ??
+        activeContainer;
+      initialTarget.focus();
+    }
+
+    focusInitialTarget();
 
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === 'Escape') {
@@ -76,11 +88,11 @@ export function useDismissable<T extends HTMLElement>({
         return;
       }
 
-      if (event.key !== 'Tab' || !container) {
+      if (event.key !== 'Tab') {
         return;
       }
 
-      const focusable = getFocusableElements(container);
+      const focusable = getFocusableElements(activeContainer);
       if (focusable.length === 0) {
         event.preventDefault();
         return;
@@ -90,7 +102,10 @@ export function useDismissable<T extends HTMLElement>({
       const last = focusable[focusable.length - 1];
       const active = document.activeElement;
 
-      if (event.shiftKey && active === first) {
+      if (!activeContainer.contains(active)) {
+        event.preventDefault();
+        (event.shiftKey ? last : first).focus();
+      } else if (event.shiftKey && active === first) {
         event.preventDefault();
         last.focus();
       } else if (!event.shiftKey && active === last) {
@@ -101,6 +116,17 @@ export function useDismissable<T extends HTMLElement>({
 
     document.addEventListener('keydown', handleKeyDown);
 
+    const observer =
+      typeof MutationObserver === 'undefined'
+        ? null
+        : new MutationObserver(() => {
+            const active = document.activeElement;
+            if (!active || !activeContainer.contains(active)) {
+              focusInitialTarget();
+            }
+          });
+    observer?.observe(activeContainer, { childList: true, subtree: true });
+
     const previousOverflow = document.body.style.overflow;
     if (lockScroll) {
       document.body.style.overflow = 'hidden';
@@ -108,6 +134,7 @@ export function useDismissable<T extends HTMLElement>({
 
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
+      observer?.disconnect();
       if (lockScroll) {
         document.body.style.overflow = previousOverflow;
       }

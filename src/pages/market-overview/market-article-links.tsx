@@ -20,7 +20,7 @@ export function MarketArticleLinks({ links }: { links: ArticleLink[] }) {
   const needsToggle = links.length > 4;
 
   return (
-    <div className='border-t border-[color:var(--line)] px-4 py-3.5'>
+    <div className='border-t border-[color:var(--line)] px-[18px] py-3.5'>
       <div className='mb-2.5 flex flex-wrap items-center gap-2.5'>
         <h3 className='m-0 text-[13.5px] font-semibold'>근거 원문</h3>
         <span className='mono text-[11.5px] text-[color:var(--text-faint)]'>
@@ -52,7 +52,7 @@ function ArticleLinkRow({ link }: { link: ArticleLink }) {
   const meta = `${link.source ?? '언론사 미확인'} · ${link.publishedAt ?? '-'}`;
 
   return (
-    <li className='flex min-w-0 flex-wrap items-baseline gap-x-2.5 gap-y-1.5 border-b border-[color:var(--line)] pb-2 last:border-b-0'>
+    <li className='flex min-w-0 flex-wrap items-baseline gap-x-2.5 gap-y-1.5 border-b border-[color:var(--line)] pb-2'>
       {originalUrl ? (
         <a
           className='wrap-anywhere text-[13.5px] font-medium text-[color:var(--text)] no-underline hover:text-[color:var(--primary)] hover:underline'

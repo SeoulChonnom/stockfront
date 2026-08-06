@@ -104,6 +104,11 @@ export function getBatchTypeInfo(jobType: string): BatchTypeInfo {
   );
 }
 
+/** True only when snapshot-specific fields are part of the API contract. */
+export function isMarketSnapshotJobType(jobType: string): boolean {
+  return jobType === 'MARKET_SNAPSHOT';
+}
+
 // Small local class map, same pattern as `batch-summary-tiles.tsx`'s
 // `TILE_BAR_CLASSES` — the type badge has no status dot (unlike
 // `StatusBadge`), so it isn't built from that component's tone table.

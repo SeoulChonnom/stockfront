@@ -258,7 +258,12 @@ function AdminBatchOperations({
           onRetry={() => {
             void jobsQuery.refetch();
           }}
-          onSelectRow={(jobId) => goTo({}, { jobId, view: 'detail' })}
+          onSelectRow={(jobId) =>
+            goTo(
+              {},
+              { jobId, view: window.innerWidth <= 1180 ? 'detail' : null }
+            )
+          }
           pageSize={PAGE_SIZE}
           rows={rows}
           selectedJobId={selectedJobId}
@@ -280,6 +285,7 @@ function AdminBatchOperations({
             void detailQuery.refetch();
           }}
           run={detailQuery.data ?? null}
+          selectedJobId={selectedJobId}
         />
       </div>
 

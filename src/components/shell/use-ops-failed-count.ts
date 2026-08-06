@@ -1,7 +1,29 @@
 import { QueryClientContext } from '@tanstack/react-query';
 import { useCallback, useContext, useSyncExternalStore } from 'react';
 
-import type { BatchJobListResponse } from '@/lib/api/types';
+function readFailedCount(data: unknown): number | null {
+  if (typeof data !== 'object' || data === null || !('summary' in data)) {
+    return null;
+  }
+
+  const summary = data.summary;
+
+  if (
+    typeof summary !== 'object' ||
+    summary === null ||
+    !('failedCount' in summary)
+  ) {
+    return null;
+  }
+
+  const failedCount = summary.failedCount;
+
+  return typeof failedCount === 'number' &&
+    Number.isSafeInteger(failedCount) &&
+    failedCount >= 0
+    ? failedCount
+    : null;
+}
 
 /**
  * Feeds the 배치 운영 nav item's failed-count pill (README §5) WITHOUT ever
@@ -51,42 +73,24 @@ export function useOpsFailedCount(): number | null {
       .getQueryCache()
       .findAll({ queryKey: ['batch-jobs'] });
 
-    // BUG FIX (§16 acceptance suite, `e2e/routing.spec.ts`): TanStack Query's
-    // cache stores the RAW `queryFn` result (`BatchJobListResponse`, i.e.
-    // `{items, pagination, summary}` — see `src/lib/api/batch.ts`'s
-    // `getBatchJobs`), never the post-`select` shape. `useBatchJobs`'s
-    // `select: mapBatchJobsToView` (`query-hooks.ts`) only transforms the
-    // value at the point a component reads it through `useQuery()` — it is
-    // never written back into `query.state.data`. Reading
-    // `query.state.data as BatchJobsView` and then `.rows.filter(...)` here
-    // was therefore always reading `.rows` off a raw response that only ever
-    // has `.items`, throwing `TypeError: Cannot read properties of undefined
-    // (reading 'filter')` inside this hook's `useSyncExternalStore` selector
-    // the moment ANY `batch-jobs` query resolved — which crashed the whole
-    // render tree (this hook runs unconditionally in `AppShell`, for every
-    // route) as soon as a user opened `/ops/batches` once. Fixed by reading
-    // the RAW response shape directly and using its own pre-computed
-    // `summary.failedCount` instead of re-deriving it from a `rows` field
-    // that was never actually there.
-    let newest: { updatedAt: number; data: BatchJobListResponse } | null = null;
+    // TanStack Query stores the RAW queryFn result, not the post-select view
+    // model. Treat that cache as untrusted: a partial or malformed entry must
+    // not take down AppShell, which reads this hook on every route.
+    let newest: { updatedAt: number; failedCount: number } | null = null;
 
     for (const query of queries) {
-      const data = query.state.data as BatchJobListResponse | undefined;
+      const failedCount = readFailedCount(query.state.data);
 
-      if (!data) {
+      if (failedCount === null) {
         continue;
       }
 
       if (!newest || query.state.dataUpdatedAt > newest.updatedAt) {
-        newest = { updatedAt: query.state.dataUpdatedAt, data };
+        newest = { updatedAt: query.state.dataUpdatedAt, failedCount };
       }
     }
 
-    if (!newest) {
-      return null;
-    }
-
-    return newest.data.summary.failedCount;
+    return newest?.failedCount ?? null;
   }, [queryClient]);
 
   return useSyncExternalStore(subscribe, getSnapshot, () => null);

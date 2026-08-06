@@ -1,5 +1,5 @@
 import type { FilterErrors } from '@/components/ui/use-filter-draft';
-import { getRelativeIso, getTodayIso } from '@/lib/kst-date';
+import { getRelativeIso, getTodayIso, isValidIsoDate } from '@/lib/kst-date';
 
 /**
  * Batch Operations 조회 조건 필터 copy + validation — design v2
@@ -35,8 +35,6 @@ export const BATCH_STATUSES = ['SUCCESS', 'PARTIAL', 'FAILED', 'RUNNING'];
  * 가져온다. 즉 fixture 값 자체는 재현하지 않는다.
  */
 export const BATCH_TYPES = ['NEWS_COLLECTION', 'MARKET_SNAPSHOT'];
-
-const DATE_FORMAT_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 
 const STATUS_OPTIONS: ReadonlyArray<{ value: string; label: string }> = [
   { value: '', label: '전체 상태' },
@@ -101,7 +99,7 @@ export function validateBatchFilters(
   (['from', 'to'] as const).forEach((key) => {
     const value = draft[key];
 
-    if (!DATE_FORMAT_REGEX.test(value)) {
+    if (!isValidIsoDate(value)) {
       errors[key] =
         '날짜 형식이 올바르지 않습니다. YYYY-MM-DD 형식으로 입력해 주세요.';
       return;

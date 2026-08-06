@@ -1,5 +1,5 @@
 import { act, render, screen, waitFor } from '@testing-library/react';
-import { StrictMode } from 'react';
+import { StrictMode, useState } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import App from './App';
@@ -61,6 +61,39 @@ function createDeferredResponse() {
       resolve?.(response);
     },
   };
+}
+
+type MockLatestSnapshot = {
+  pageId: number;
+  businessDate: string;
+  versionNo: number;
+  generatedAt: string;
+  status: 'ready';
+  globalHeadline: string;
+  markets: [];
+};
+
+type MockLatestQueryResult = {
+  data: MockLatestSnapshot | undefined;
+  error: null;
+  isFetching: boolean;
+  isLoading: boolean;
+  refetch: () => Promise<unknown>;
+};
+
+let setMockLatestQuery: ((next: MockLatestQueryResult) => void) | undefined;
+
+function useLatestMarketPageMock(): MockLatestQueryResult {
+  const [query, setQuery] = useState<MockLatestQueryResult>({
+    data: undefined,
+    error: null,
+    isFetching: false,
+    isLoading: true,
+    refetch: () => Promise.resolve(),
+  });
+
+  setMockLatestQuery = setQuery;
+  return query;
 }
 
 function mockMatchMedia(matches: boolean) {
@@ -148,6 +181,7 @@ describe('App routing', () => {
   });
 
   afterEach(() => {
+    setMockLatestQuery = undefined;
     resetAuthBootstrapForTesting();
     resetScrollPositionsForTesting();
     vi.restoreAllMocks();
@@ -534,6 +568,57 @@ describe('App routing', () => {
       expect(window.location.search).toBe('?page=2');
     });
     expect(document.activeElement?.id).not.toBe('page-title');
+  });
+
+  it('focuses a title mounted by a child rerender after the route skeleton (§9)', async () => {
+    vi.stubEnv('VITE_API_HOST', 'http://localhost:8000');
+    vi.stubEnv('VITE_APP_ENV', 'development');
+    vi.stubGlobal(
+      'fetch',
+      vi
+        .fn<
+          (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>
+        >()
+        .mockResolvedValue(createJsonResponse({ accessToken: '' }))
+    );
+    mockUseLatestMarketPage.mockImplementation(useLatestMarketPageMock);
+    window.history.replaceState(null, '', '/market/latest');
+
+    await act(async () => {
+      render(<App />);
+      await Promise.resolve();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByRole('main')).toHaveFocus();
+      expect(
+        screen.queryByRole('heading', { name: '최신 시장 브리프' })
+      ).not.toBeInTheDocument();
+    });
+
+    act(() => {
+      setMockLatestQuery?.({
+        data: {
+          businessDate: '2026-03-17',
+          generatedAt: '2026. 03. 17. 09:30',
+          globalHeadline: 'headline',
+          markets: [],
+          pageId: 501,
+          status: 'ready',
+          versionNo: 3,
+        },
+        error: null,
+        isFetching: false,
+        isLoading: false,
+        refetch: () => Promise.resolve(),
+      });
+    });
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('heading', { name: '최신 시장 브리프' })
+      ).toHaveFocus();
+    });
   });
 
   it('scrolls a brand-new URL to the top, and restores a saved scroll position when returning to a visited one (§7-1, §9)', async () => {

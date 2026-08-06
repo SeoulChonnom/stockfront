@@ -1,4 +1,6 @@
 import { Loader2 } from 'lucide-react';
+import type { RefObject } from 'react';
+
 import { StatusBadge } from '@/components/state';
 import { Button } from '@/components/ui/button';
 import type { BatchRunResponse } from '@/lib/api/types';
@@ -7,11 +9,17 @@ import { formatKstDateTime } from '@/lib/formatters';
 import type { TriggerErrorView } from './trigger-error';
 
 /** README §7-7 "pending": the form is replaced entirely, so duplicate submit is structurally impossible. */
-export function TriggerPendingState() {
+export function TriggerPendingState({
+  statusRef,
+}: {
+  statusRef: RefObject<HTMLDivElement | null>;
+}) {
   return (
     <div
       className='flex flex-col items-center gap-3 py-6 text-center'
+      ref={statusRef}
       role='status'
+      tabIndex={-1}
     >
       <Loader2
         aria-hidden='true'

@@ -14,6 +14,8 @@
  * 이 화면 안의 기존 호출부(`batch-summary-tiles.tsx`)가 계속 이 모듈에서
  * 가져다 쓸 수 있게 re-export만 남긴다.
  */
+import { isMarketSnapshotJobType } from '@/lib/batch-type';
+
 export { formatDurationKo } from '@/lib/formatters';
 
 export function isRunningStatus(rawStatus: string): boolean {
@@ -28,11 +30,13 @@ export function isRetryableStatus(rawStatus: string): boolean {
 /**
  * "스냅샷" 라벨 3분기 — 히스토리 목록의 job-id subline과 상세 패널의 스냅샷
  * `DlItem`이 공유한다(design v2 2115행 `r.pageLabel`). `pageId`가 있으면
- * 항상 `pageId N · vN`. 없을 때는 두 가지를 구분해야 한다: NEWS_COLLECTION
+ * 항상 `pageId N · vN`. 없을 때는 세 가지를 구분해야 한다: NEWS_COLLECTION
  * 작업은애초에 스냅샷을 만들지 않는 job type이므로 "스냅샷 대상 아님"(이
  * 값이 나올 일이 없는 게 정상), MARKET_SNAPSHOT 작업인데 없으면 그 작업이
  * 아직/끝내 스냅샷을 만들지 못한 것이므로 "스냅샷 없음"(비정상/미완료를
- * 암시).
+ * 암시). 알려지지 않은 타입은 스냅샷 생성 계약이 있다고 추측하지
+ * 않고 "스냅샷 정보 확인 불가"로 남겨 새 타입을 MARKET_SNAPSHOT처럼
+ * 잘못 표시하지 않는다.
  */
 export function getSnapshotLabel(run: {
   jobType: string;
@@ -43,7 +47,13 @@ export function getSnapshotLabel(run: {
     return `pageId ${run.pageId} · ${run.pageVersion}`;
   }
 
-  return run.jobType === 'NEWS_COLLECTION' ? '스냅샷 대상 아님' : '스냅샷 없음';
+  if (run.jobType === 'NEWS_COLLECTION') {
+    return '스냅샷 대상 아님';
+  }
+
+  return isMarketSnapshotJobType(run.jobType)
+    ? '스냅샷 없음'
+    : '스냅샷 정보 확인 불가';
 }
 
 /**
@@ -59,11 +69,18 @@ export function getSnapshotLabel(run: {
  * fact we don't have" rule applied to pipeline stages.
  */
 export function deriveUserImpact(run: {
+  jobType: string;
   rawStatus: string;
   pageId: number | null;
   businessDate: string;
   detail: string;
 }): string[] {
+  // The available impact copy is specifically about a generated market
+  // snapshot. NEWS_COLLECTION and future job types must not inherit it.
+  if (!isMarketSnapshotJobType(run.jobType)) {
+    return [];
+  }
+
   const status = run.rawStatus.trim().toUpperCase();
 
   if (status === 'FAILED') {

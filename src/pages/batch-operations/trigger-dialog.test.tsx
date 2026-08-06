@@ -97,6 +97,9 @@ describe('TriggerDialog', () => {
 
     renderDialog({ onTriggered });
 
+    expect(
+      screen.getByRole('dialog', { name: '배치 수동 실행' })
+    ).toBeInTheDocument();
     expect(screen.getByLabelText('기준일 (KST)')).toBeInTheDocument();
     await submit(user);
 
@@ -124,6 +127,121 @@ describe('TriggerDialog', () => {
     expect(
       screen.getByRole('button', { name: '작업 상세 보기' })
     ).toBeInTheDocument();
+  });
+
+  it('closes while pending without resetting the request, then reopens as pending', async () => {
+    const user = userEvent.setup();
+    let resolveRequest: (value: BatchRunResponse) => void = () => {};
+    mockStartBatchRun.mockReturnValue(
+      new Promise<BatchRunResponse>((resolve) => {
+        resolveRequest = resolve;
+      })
+    );
+
+    const view = renderDialog();
+    await submit(user);
+
+    const closeButton = screen.getByRole('button', { name: '닫기' });
+    await waitFor(() => {
+      expect(screen.getByRole('status')).toHaveFocus();
+    });
+
+    await user.click(closeButton);
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(mockStartBatchRun).toHaveBeenCalledTimes(1);
+
+    await user.click(screen.getByRole('button', { name: '수동 실행' }));
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeInTheDocument();
+      expect(screen.getByRole('status')).toHaveFocus();
+    });
+    expect(
+      screen.queryByRole('button', { name: '실행' })
+    ).not.toBeInTheDocument();
+    expect(mockStartBatchRun).toHaveBeenCalledTimes(1);
+
+    await user.keyboard('{Escape}');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: '수동 실행' }));
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeInTheDocument();
+      expect(screen.getByRole('status')).toHaveFocus();
+    });
+
+    const overlay = view.container.querySelector('[data-dismiss-overlay]');
+    expect(overlay).toBeTruthy();
+    if (overlay) {
+      await user.click(overlay);
+    }
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(mockStartBatchRun).toHaveBeenCalledTimes(1);
+
+    await user.click(screen.getByRole('button', { name: '수동 실행' }));
+    await waitFor(() => {
+      expect(screen.getByRole('status')).toHaveFocus();
+    });
+
+    resolveRequest({
+      jobId: 1043,
+      jobName: 'market_daily_batch',
+      businessDate: '2026-07-27',
+      status: 'RUNNING',
+      startedAt: '2026-07-27T08:24:31',
+    });
+
+    expect(await screen.findByText('job 1043')).toBeInTheDocument();
+  });
+
+  it('preserves the submitted date when reopened while pending and then failing', async () => {
+    const user = userEvent.setup();
+    let rejectRequest: (reason: unknown) => void = () => {};
+    mockStartBatchRun.mockReturnValue(
+      new Promise<BatchRunResponse>((_resolve, reject) => {
+        rejectRequest = reject;
+      })
+    );
+
+    renderDialog();
+    const dateInput = screen.getByLabelText<HTMLInputElement>('기준일 (KST)');
+    await user.clear(dateInput);
+    await user.type(dateInput, '2026-07-20');
+    await submit(user);
+
+    expect(mockStartBatchRun).toHaveBeenCalledWith(
+      expect.objectContaining({ businessDate: '2026-07-20' })
+    );
+    await screen.findByRole('status');
+    await user.click(screen.getByRole('button', { name: '닫기' }));
+    await user.click(screen.getByRole('button', { name: '수동 실행' }));
+    await screen.findByRole('status');
+
+    rejectRequest(
+      new ApiError('failed', 500, { code: 'INTERNAL_BATCH_ERROR' })
+    );
+    await screen.findByRole('alert');
+    await user.click(screen.getByRole('button', { name: '입력으로 돌아가기' }));
+
+    expect(screen.getByLabelText<HTMLInputElement>('기준일 (KST)').value).toBe(
+      '2026-07-20'
+    );
+  });
+
+  it('restores focus to the date field when returning from an error to input', async () => {
+    const user = userEvent.setup();
+    mockStartBatchRun.mockRejectedValue(
+      new ApiError('failed', 422, { code: 'INVALID_BUSINESS_DATE' })
+    );
+
+    renderDialog();
+    await submit(user);
+    await screen.findByRole('alert');
+
+    await user.click(screen.getByRole('button', { name: '입력으로 돌아가기' }));
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('기준일 (KST)')).toHaveFocus();
+    });
   });
 
   it('opening 작업 상세 보기 from success closes the dialog and navigates to the job', async () => {

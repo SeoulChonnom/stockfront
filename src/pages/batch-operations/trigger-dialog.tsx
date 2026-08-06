@@ -24,10 +24,11 @@ import { toTriggerErrorView } from './trigger-error';
  * closing so the list page's persistent success banner (§7-6 point 2) can
  * read it.
  *
- * `mutation.reset()` runs on every close (Escape/overlay/✕/취소/닫기) so the
- * NEXT open always starts idle rather than resuming a stale success/error —
- * the parent is expected to have already captured whatever it needed from
- * a success via the mutation's own `onSuccess` before the user closes.
+ * `mutation.reset()` runs on every close (Escape/overlay/✕/취소/닫기) once a
+ * request has settled, so the NEXT open starts idle rather than resuming a
+ * stale success/error. A pending request may be dismissed, but its mutation
+ * state is preserved so reopening the dialog shows the same pending request
+ * instead of allowing a second POST.
  */
 
 export type TriggerMutation = ReturnType<typeof useStartBatchRunMutation>;
@@ -53,6 +54,7 @@ export function TriggerDialog({
   const titleId = useId();
   const announce = useAnnounce();
   const dateInputRef = useRef<HTMLInputElement>(null);
+  const pendingStateRef = useRef<HTMLDivElement>(null);
   const [values, setValues] = useState<TriggerFormValues>(() => ({
     businessDate: initialBusinessDate ?? getTodayKstDateString(),
     force: false,
@@ -62,7 +64,7 @@ export function TriggerDialog({
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: `initialBusinessDate` is deliberately excluded — see the rationale at the end of the effect
   useEffect(() => {
-    if (!isOpen) {
+    if (!isOpen || mutation.isPending) {
       return;
     }
 
@@ -79,7 +81,10 @@ export function TriggerDialog({
   }, [isOpen]);
 
   function handleClose() {
-    mutation.reset();
+    if (!mutation.isPending) {
+      mutation.reset();
+    }
+
     onClose();
   }
 
@@ -128,17 +133,17 @@ export function TriggerDialog({
 
   return (
     <Dialog
-      initialFocusRef={dateInputRef}
+      initialFocusRef={mutation.isPending ? pendingStateRef : dateInputRef}
       isOpen={isOpen}
       labelledBy={titleId}
       onClose={handleClose}
     >
       <div className='mb-4 flex items-start justify-between gap-3'>
         <h2
-          className='m-0 text-[17px] font-semibold text-[color:var(--text)]'
+          className='m-0 text-[16px] font-semibold text-[color:var(--text)]'
           id={titleId}
         >
-          수동 실행
+          배치 수동 실행
         </h2>
         <Button
           aria-label='닫기'
@@ -152,7 +157,7 @@ export function TriggerDialog({
       </div>
 
       {mutation.isPending ? (
-        <TriggerPendingState />
+        <TriggerPendingState statusRef={pendingStateRef} />
       ) : mutation.isSuccess && mutation.data ? (
         <TriggerSuccessState
           onClose={handleClose}

@@ -1,5 +1,5 @@
 import { ArrowLeft } from 'lucide-react';
-import type { ReactNode } from 'react';
+import { type ReactNode, type RefObject, useEffect, useRef } from 'react';
 import { EmptyState, InlineAlert, StatusBadge } from '@/components/state';
 import { SkeletonText } from '@/components/state/skeleton';
 import { BatchTypeBadge } from '@/components/ui/batch-type-badge';
@@ -8,6 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { LogBox } from '@/components/ui/log-box';
 import { PipelineStages } from '@/components/ui/pipeline-stages';
 import { createNavigateHandler } from '@/lib/app-state';
+import { isMarketSnapshotJobType } from '@/lib/batch-type';
 import type { BatchRunRow } from '@/lib/query-hooks';
 import { buildUrl, withBasePath } from '@/lib/router';
 import { cn } from '@/lib/utils';
@@ -33,6 +34,7 @@ export type BatchDetailPanelProps = {
   isError: boolean;
   isFetching: boolean;
   hasSelection: boolean;
+  selectedJobId: number | null;
   onRetry: () => void;
   onAnnounce: (message: string) => void;
   onBackToList: () => void;
@@ -74,6 +76,7 @@ export function BatchDetailPanel({
   isError,
   isFetching,
   hasSelection,
+  selectedJobId,
   onRetry,
   onAnnounce,
   onBackToList,
@@ -81,6 +84,32 @@ export function BatchDetailPanel({
   hiddenOnNarrowView,
 }: BatchDetailPanelProps) {
   const retry = useRetryAnnounce(isFetching, isError, onAnnounce);
+  const detailHeadingRef = useRef<HTMLHeadingElement>(null);
+  const wasHiddenRef = useRef(hiddenOnNarrowView);
+  const shouldFocusDetailRef = useRef(false);
+
+  useEffect(() => {
+    const wasHidden = wasHiddenRef.current;
+    wasHiddenRef.current = hiddenOnNarrowView;
+
+    if (wasHidden && !hiddenOnNarrowView) {
+      shouldFocusDetailRef.current = true;
+    }
+
+    if (
+      !shouldFocusDetailRef.current ||
+      hiddenOnNarrowView ||
+      isLoading ||
+      !run ||
+      selectedJobId === null ||
+      run.id !== selectedJobId
+    ) {
+      return;
+    }
+
+    detailHeadingRef.current?.focus({ preventScroll: true });
+    shouldFocusDetailRef.current = false;
+  }, [hiddenOnNarrowView, isLoading, run, selectedJobId]);
 
   return (
     <Card
@@ -138,7 +167,11 @@ export function BatchDetailPanel({
             title='선택된 작업이 없습니다'
           />
         ) : (
-          <BatchDetailContent onReRun={onReRun} run={run} />
+          <BatchDetailContent
+            detailHeadingRef={detailHeadingRef}
+            onReRun={onReRun}
+            run={run}
+          />
         )}
       </CardContent>
     </Card>
@@ -146,15 +179,18 @@ export function BatchDetailPanel({
 }
 
 function BatchDetailContent({
+  detailHeadingRef,
   run,
   onReRun,
 }: {
+  detailHeadingRef: RefObject<HTMLHeadingElement | null>;
   run: BatchRunRow;
   onReRun: (businessDate: string) => void;
 }) {
   const running = isRunningStatus(run.rawStatus);
   const retryable = isRetryableStatus(run.rawStatus);
   const impacts = deriveUserImpact({
+    jobType: run.jobType,
     rawStatus: run.rawStatus,
     pageId: run.pageId,
     businessDate: run.businessDate,
@@ -171,7 +207,7 @@ function BatchDetailContent({
   // "값이 없을 때의" fallback이므로, 이 잡타입에서는 두 행 자체를
   // 렌더하지 않는다(plan step 7 — 값을 숨기지 않고 그리면 없는 데이터를
   // 있는 것처럼 보여주는 셈이다).
-  const hasSnapshot = run.jobType !== 'NEWS_COLLECTION';
+  const hasSnapshot = isMarketSnapshotJobType(run.jobType);
 
   return (
     <div className='flex min-w-0 flex-col gap-4'>
@@ -193,7 +229,11 @@ function BatchDetailContent({
             It also isn't mono — design's `#ops-detail-h` (`{{ dJobId }}`)
             has no font-family override and inherits the page's sans stack;
             only the numeric IDs elsewhere in this panel are mono. */}
-        <h2 className='m-0 text-[14.5px] font-semibold text-[color:var(--text)]'>
+        <h2
+          className='m-0 text-[14.5px] font-semibold text-[color:var(--text)] outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--focus)]'
+          ref={detailHeadingRef}
+          tabIndex={-1}
+        >
           job {run.id}
         </h2>
         {/* 참조(893-896행) 헤더 순서: jobId · 타입 · 상태 · 기준일. */}

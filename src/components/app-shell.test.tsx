@@ -81,6 +81,37 @@ describe('AppShell', () => {
     expect(inactive).not.toHaveAttribute('aria-current');
   });
 
+  it('renders the rail theme control as a full-width text button and keeps the mobile control icon-only', async () => {
+    const user = userEvent.setup();
+    const onToggleTheme = vi.fn();
+    renderShell({ onToggleTheme, theme: 'dark' });
+
+    const railToggle = within(screen.getByRole('complementary')).getByRole(
+      'button',
+      { name: '라이트 테마로 전환' }
+    );
+    expect(railToggle).toHaveTextContent('라이트 테마로 전환');
+    expect(railToggle).toHaveClass('w-full');
+
+    const mobileToggle = within(screen.getByRole('banner')).getByRole(
+      'button',
+      { name: '라이트 테마로 전환' }
+    );
+    expect(mobileToggle).not.toHaveTextContent('라이트 테마로 전환');
+
+    await user.click(railToggle);
+    await user.click(mobileToggle);
+    expect(onToggleTheme).toHaveBeenCalledTimes(2);
+  });
+
+  it('uses the next theme in the accessible toggle copy', () => {
+    renderShell({ theme: 'light' });
+
+    expect(
+      screen.getAllByRole('button', { name: '다크 테마로 전환' })
+    ).toHaveLength(2);
+  });
+
   it('never renders the 운영 nav group for a non-admin user — not even hidden (§10, §16-11)', () => {
     setRoleOverride('user');
     const { container } = renderShell();
@@ -171,14 +202,44 @@ describe('AppShell', () => {
     expect(cachedQueries[0].state.fetchStatus).toBe('idle');
   });
 
+  it('ignores malformed batch-jobs cache data without crashing the shell', () => {
+    setRoleOverride('admin');
+    const queryClient = new QueryClient();
+    queryClient.setQueryData(['batch-jobs', { page: 1, size: 20 }], {
+      summary: null,
+    });
+
+    expect(() =>
+      render(
+        <QueryClientProvider client={queryClient}>
+          <AppShell
+            onToggleTheme={() => undefined}
+            pathname='/ops/batches'
+            searchParams={new URLSearchParams()}
+            theme='dark'
+          >
+            <div>content</div>
+          </AppShell>
+        </QueryClientProvider>
+      )
+    ).not.toThrow();
+
+    expect(
+      screen.queryByTestId('ops-failed-count-badge')
+    ).not.toBeInTheDocument();
+  });
+
   it('opens the mobile drawer from the menu button, and Escape closes it and returns focus to the menu button', async () => {
     const user = userEvent.setup();
+    setRoleOverride('admin');
     renderShell();
 
     const menuButton = screen.getByRole('button', { name: '주요 메뉴 열기' });
     await user.click(menuButton);
 
-    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    const drawer = screen.getByRole('dialog', { name: 'Market Brief' });
+    expect(drawer).toBeInTheDocument();
+    expect(within(drawer).getByText('Admin · ops.analyst')).toBeInTheDocument();
     // The drawer renders its own copy of the nav — now there should be two
     // "최신 브리프" links (rail + drawer).
     expect(screen.getAllByRole('link', { name: '최신 브리프' }).length).toBe(2);

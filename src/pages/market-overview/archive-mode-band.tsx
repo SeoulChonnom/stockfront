@@ -28,7 +28,7 @@ export function ArchiveModeBand({
   nextDisabled,
 }: ArchiveModeBandProps) {
   return (
-    <div className='flex flex-wrap items-center gap-x-3.5 gap-y-2.5 rounded-[var(--r-lg)] border border-[color:var(--warning-line)] border-l-4 border-l-[color:var(--warning)] bg-[color:var(--warning-soft)] p-3 sm:px-4'>
+    <div className='flex flex-wrap items-center gap-x-3.5 gap-y-2.5 rounded-[var(--r-lg)] border border-[color:var(--warning-line)] border-l-4 border-l-[color:var(--warning)] bg-[color:var(--warning-soft)] px-4 py-3'>
       <span className='text-[11.5px] font-bold tracking-[0.07em] text-[color:var(--warning)] uppercase'>
         아카이브 스냅샷
       </span>

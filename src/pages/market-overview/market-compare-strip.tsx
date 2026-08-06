@@ -23,12 +23,19 @@ function scrollToMarketSection(targetId: string) {
 
   const prefersReducedMotion =
     typeof window !== 'undefined' &&
+    typeof window.matchMedia === 'function' &&
     window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  target.scrollIntoView({
-    behavior: prefersReducedMotion ? 'auto' : 'smooth',
-    block: 'start',
-  });
+  const headingId = target.getAttribute('aria-labelledby');
+  const heading = headingId ? document.getElementById(headingId) : null;
+  heading?.focus({ preventScroll: true });
+
+  if (typeof target.scrollIntoView === 'function') {
+    target.scrollIntoView({
+      behavior: prefersReducedMotion ? 'auto' : 'smooth',
+      block: 'start',
+    });
+  }
 }
 
 export function MarketCompareStrip({
@@ -102,7 +109,9 @@ function MarketCompareTile({
               'mono text-[14px] font-semibold',
               lead.direction === 'up'
                 ? 'text-[color:var(--up)]'
-                : 'text-[color:var(--down)]'
+                : lead.direction === 'down'
+                  ? 'text-[color:var(--down)]'
+                  : 'text-[color:var(--text-faint)]'
             )}
           >
             {lead.change} ({lead.changeRate})

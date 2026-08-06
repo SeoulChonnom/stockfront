@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
   resetRoleOverrideForTesting,
@@ -101,6 +101,54 @@ describe('MarketOverviewPage — 대표 지수 표', () => {
     // exist in the DOM regardless of viewport, per README §11 ("같은 값을
     // 우선순위 행의 보조 줄로 노출한다").
     expect(screen.getByText('고 5,499.80 · 저 5,455.22')).toBeInTheDocument();
+  });
+
+  it('scrolls to and focuses the destination market heading from 섹션 이동', async () => {
+    const user = userEvent.setup();
+    const scrollIntoView = vi.fn();
+    const previousScrollIntoView = Object.getOwnPropertyDescriptor(
+      HTMLElement.prototype,
+      'scrollIntoView'
+    );
+    Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
+      configurable: true,
+      value: scrollIntoView,
+      writable: true,
+    });
+
+    try {
+      render(
+        <MarketOverviewPage
+          mode='latest'
+          now={FIXED_NOW}
+          snapshot={buildSnapshot()}
+        />
+      );
+
+      await user.click(screen.getByRole('button', { name: '섹션 이동' }));
+
+      const heading = screen.getByRole('heading', {
+        level: 2,
+        name: '미국 증시',
+      });
+      expect(heading).toHaveAttribute('tabindex', '-1');
+      expect(heading).toHaveFocus();
+      expect(scrollIntoView).toHaveBeenCalledWith({
+        behavior: 'smooth',
+        block: 'start',
+      });
+    } finally {
+      if (previousScrollIntoView) {
+        Object.defineProperty(
+          HTMLElement.prototype,
+          'scrollIntoView',
+          previousScrollIntoView
+        );
+      } else {
+        delete (HTMLElement.prototype as { scrollIntoView?: unknown })
+          .scrollIntoView;
+      }
+    }
   });
 });
 

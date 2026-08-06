@@ -29,7 +29,7 @@ const buttonVariants = cva(
         // decoration invented past the design, not a value the reference
         // ever expressed.
         primary:
-          'border-[color:var(--primary)] bg-[color:var(--primary)] text-white hover:-translate-y-px',
+          'border-[color:var(--primary)] bg-[color:var(--primary)] text-[color:var(--primary-fg)] hover:-translate-y-px',
         secondary:
           'border-[color:var(--line-strong)] bg-[color:color-mix(in_srgb,var(--surface)_92%,transparent)] text-[color:var(--text)] hover:-translate-y-px',
         ghost:

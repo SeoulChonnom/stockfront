@@ -166,15 +166,11 @@ function App() {
   const focusedPathnameRef = useRef<string | null>(null);
   const focusedFallbackRef = useRef(false);
 
-  // Why this is not a plain `[authResolved, url.pathname]` effect:
-  // on a cold navigation the route's query is still loading when the effect
+  // On a cold navigation the route's query is still loading when this effect
   // first commits, so the page renders a skeleton and then swaps in the real
-  // subtree once data arrives. That swap remounts the `<h1 id="page-title">`,
-  // silently dropping focus back to <body> — so §16-7
-  // (`document.activeElement === #page-title`) failed on essentially every
-  // navigation that wasn't served from cache. Instead we mark the route as
-  // "focus pending" on pathname change and settle it on whichever render
-  // first actually has the heading in the DOM.
+  // subtree once data arrives. That swap can happen in a child React Query
+  // rerender without re-running App, so a pending route watches only
+  // #main-content for the late heading mount.
   useEffect(() => {
     if (!authResolved) {
       return;
@@ -188,9 +184,24 @@ function App() {
       return;
     }
 
-    const heading = document.getElementById('page-title');
+    const mainContent = document.getElementById('main-content');
+    let observer: MutationObserver | null = null;
 
-    if (heading) {
+    const settleFocus = () => {
+      const heading = mainContent?.querySelector<HTMLElement>('#page-title');
+
+      if (!heading) {
+        // Heading not rendered yet (loading state). Park focus on the main
+        // landmark once so keyboard users aren't stranded at <body>, and stay
+        // "pending" so the heading still wins as soon as it mounts.
+        if (!focusedFallbackRef.current) {
+          focusedFallbackRef.current = true;
+          mainContent?.focus({ preventScroll: true });
+        }
+
+        return false;
+      }
+
       // Heading was there on arrival: focus it unconditionally. The active
       // element at this moment is whatever the user activated to navigate
       // (a nav link, a table row button) — moving off it to the new page's
@@ -213,17 +224,23 @@ function App() {
         heading.focus({ preventScroll: true });
       }
 
-      return;
+      observer?.disconnect();
+      return true;
+    };
+
+    if (
+      !settleFocus() &&
+      mainContent &&
+      typeof MutationObserver !== 'undefined'
+    ) {
+      observer = new MutationObserver(() => {
+        settleFocus();
+      });
+      observer.observe(mainContent, { childList: true, subtree: true });
     }
 
-    // Heading not rendered yet (loading state). Park focus on the main
-    // landmark once so keyboard users aren't stranded at <body>, and stay
-    // "pending" so the heading still wins as soon as it mounts.
-    if (!focusedFallbackRef.current) {
-      focusedFallbackRef.current = true;
-      document.getElementById('main-content')?.focus({ preventScroll: true });
-    }
-  });
+    return () => observer?.disconnect();
+  }, [authResolved, url.pathname]);
 
   // Scroll restoration stays keyed on pathname+search (routeKey): §9 still
   // wants a scroll change (to top, or restored) for several query-only

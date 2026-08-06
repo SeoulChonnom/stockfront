@@ -3,7 +3,6 @@ import { useEffect, useRef } from 'react';
 
 import { useAnnounce } from '@/components/shell/use-announce';
 import {
-  EmptyState,
   InlineAlert,
   RefetchBadge,
   SkeletonTableRows,
@@ -11,6 +10,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Pagination } from '@/components/ui/pagination';
+import { ApiError } from '@/lib/api/client';
 import { parseListFilters } from '../lib/app-state';
 import { formatInteger } from '../lib/formatters';
 import { useArchiveList } from '../lib/query-hooks';
@@ -25,6 +25,56 @@ import {
 import { useLastGoodData } from './archive-search/use-last-good-data';
 
 const PAGE_SIZE = 20;
+
+type ArchiveSearchErrorPresentation = {
+  code: string;
+  title: string;
+  message: string;
+};
+
+function getArchiveSearchErrorPresentation(
+  error: Error
+): ArchiveSearchErrorPresentation {
+  if (error instanceof ApiError) {
+    if (error.status === 0) {
+      return {
+        code: 'NETWORK_ERROR',
+        title: '네트워크에 연결할 수 없습니다',
+        message:
+          '연결을 확인한 뒤 다시 시도해 주세요. 필터와 마지막 검색 결과는 그대로 유지됩니다.',
+      };
+    }
+
+    if (error.status === 429) {
+      return {
+        code: '429 · RATE_LIMITED',
+        title: '요청이 너무 많습니다',
+        message: '잠시 기다린 뒤 다시 시도해 주세요.',
+      };
+    }
+
+    if (error.status >= 500) {
+      return {
+        code: `${error.status} · INTERNAL_ERROR`,
+        title: '데이터를 불러오지 못했습니다',
+        message:
+          '서버가 요청을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.',
+      };
+    }
+
+    return {
+      code: `${error.status} · REQUEST_FAILED`,
+      title: '아카이브 검색 요청을 처리하지 못했습니다',
+      message: error.message,
+    };
+  }
+
+  return {
+    code: 'REQUEST_FAILED',
+    title: '아카이브 검색 요청을 처리하지 못했습니다',
+    message: error.message || '알 수 없는 오류가 발생했습니다.',
+  };
+}
 
 function buildArchiveSearchUrl(filters: ArchiveFilterDraft & { page: number }) {
   return buildUrl('/market/archive/search', filters);
@@ -67,6 +117,9 @@ export function ArchiveSearchPage({
   const displayData = useLastGoodData(archiveQuery.data);
   const hasData = displayData !== null;
   const isInitialLoading = archiveQuery.isLoading && !hasData;
+  const errorPresentation = archiveQuery.error
+    ? getArchiveSearchErrorPresentation(archiveQuery.error)
+    : null;
 
   useEffect(() => {
     if (pendingApplyAnnounceKeyRef.current !== appliedKey) {
@@ -152,25 +205,38 @@ export function ArchiveSearchPage({
         </p>
       </section>
 
-      {archiveQuery.error ? (
-        <InlineAlert
-          actions={
-            <Button onClick={() => void archiveQuery.refetch()} type='button'>
-              다시 시도
-            </Button>
-          }
-          title='아카이브 검색 결과를 불러오지 못했습니다'
-          tone='danger'
-        >
-          필터와 이전 검색 결과는 그대로 유지됩니다. 잠시 후 다시 시도해 주세요.
-        </InlineAlert>
-      ) : null}
-
       <ArchiveSearchFilters
         applied={{ from: applied.from, to: applied.to, status: applied.status }}
         onApply={handleApply}
         onReset={handleReset}
       />
+
+      {errorPresentation ? (
+        <InlineAlert
+          actions={
+            <Button
+              className='px-4 text-[13px]'
+              onClick={() => void archiveQuery.refetch()}
+              size='sm'
+              type='button'
+            >
+              다시 시도
+            </Button>
+          }
+          className='bg-[color:var(--surface)] px-[18px] py-4 [&_h3]:mb-1.5 [&_h3]:text-[14.5px] [&_h3]:text-[color:var(--text)]'
+          title={
+            <span className='flex flex-wrap items-center gap-2.5'>
+              <span>{errorPresentation.title}</span>
+              <span className='mono rounded-[var(--r-sm)] border border-[color:var(--danger-line)] bg-[color:var(--danger-soft)] px-2 py-0.5 text-[11.5px] font-semibold text-[color:var(--danger)]'>
+                {errorPresentation.code}
+              </span>
+            </span>
+          }
+          tone='danger'
+        >
+          {errorPresentation.message}
+        </InlineAlert>
+      ) : null}
 
       <ArchiveResultsCard
         applied={applied}
@@ -215,8 +281,8 @@ function ArchiveResultsCard({
       aria-busy={isInitialLoading || undefined}
       className='flex min-w-0 flex-col overflow-hidden'
     >
-      <div className='flex flex-wrap items-center justify-between gap-2 border-b border-[color:var(--line)] px-4 py-3.5 sm:px-[18px]'>
-        <div className='flex flex-wrap items-center gap-2'>
+      <div className='flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-[color:var(--line)] px-[18px] py-3.5'>
+        <div className='flex flex-wrap items-center gap-x-3 gap-y-2'>
           {/* parity cycle A3: per-block card-heading size (see
               archive-search-filters.tsx's comment) — "검색 결과" measures
               14.5px in the design, not the README §6 17px scale. */}
@@ -229,7 +295,7 @@ function ArchiveResultsCard({
             검색 결과
           </h2>
           {data ? (
-            <span className='mono text-[12.5px] font-semibold text-[color:var(--text-soft)]'>
+            <span className='mono text-[12.5px] font-semibold text-[color:var(--text)]'>
               {formatInteger(data.totalCount)}건
             </span>
           ) : null}
@@ -247,11 +313,11 @@ function ArchiveResultsCard({
       </div>
 
       {isInitialLoading ? (
-        <div className='flex min-w-0 flex-col gap-4 p-4 sm:p-[18px]'>
-          <p className='m-0 text-[13.5px] text-[color:var(--text-soft)]'>
+        <div className='flex min-w-0 flex-col gap-2.5 p-[18px]' role='status'>
+          <SkeletonTableRows cols={4} rows={8} />
+          <p className='m-0 text-[12.5px] text-[color:var(--text-faint)]'>
             결과를 불러오는 중입니다. 필터는 그대로 유지됩니다.
           </p>
-          <SkeletonTableRows cols={4} rows={8} />
         </div>
       ) : data && rows.length > 0 ? (
         <ArchiveResultsTable
@@ -260,23 +326,29 @@ function ArchiveResultsCard({
           scrollSearch={searchParams.toString()}
         />
       ) : data && rows.length === 0 ? (
-        <div className='p-4 sm:p-[18px]'>
-          <EmptyState
-            actions={
-              <Button onClick={onReset} type='button' variant='ghost'>
-                필터 초기화
-              </Button>
-            }
-            description='선택한 기간과 상태 조건에 맞는 스냅샷이 없습니다. 필터를 조정하거나 초기화해 보세요.'
-            kind='search-results'
-            title='조건에 맞는 스냅샷이 없습니다'
-          />
+        <div className='px-5 py-8 text-left'>
+          <h3 className='m-0 mb-2 text-[15.5px] font-semibold text-[color:var(--text)]'>
+            조건에 맞는 스냅샷이 없습니다
+          </h3>
+          <p className='wrap-anywhere m-0 mb-3.5 max-w-[60ch] text-[13.5px] text-[color:var(--text-soft)]'>
+            선택한 기간에 생성된 브리프가 없거나, 상태 필터가 결과를 모두
+            제외했습니다. 기간을 넓히거나 상태 필터를 해제해 보세요.
+          </p>
+          <Button
+            className='px-4 text-[13px]'
+            onClick={onReset}
+            size='sm'
+            type='button'
+            variant='secondary'
+          >
+            필터 초기화
+          </Button>
         </div>
       ) : null}
 
       {data ? (
         <Pagination
-          className='px-4 py-3 sm:px-[18px]'
+          className='px-[18px] py-3'
           onAnnounce={announce}
           onPageChange={onPageChange}
           page={data.page}

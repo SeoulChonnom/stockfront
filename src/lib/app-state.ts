@@ -1,6 +1,6 @@
 import type { MouseEvent } from 'react';
 
-import { getRelativeIso, getTodayIso } from './kst-date';
+import { getRelativeIso, getTodayIso, isValidIsoDate } from './kst-date';
 import { navigate } from './router';
 
 export type ThemeMode = 'light' | 'dark';
@@ -33,7 +33,7 @@ function normalizeDateParam(value: string | null, fallback: string) {
     return fallback;
   }
 
-  return /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : fallback;
+  return isValidIsoDate(value) ? value : fallback;
 }
 
 function normalizePositiveIntegerParam(value: string | null) {
@@ -104,7 +104,7 @@ export function parseRoute(
   if (pathname.startsWith('/market/archive/')) {
     const businessDate = pathname.match(archiveMarketRoutePattern)?.[1];
 
-    if (!businessDate) {
+    if (!businessDate || !isValidIsoDate(businessDate)) {
       return { page: 'not-found' };
     }
 

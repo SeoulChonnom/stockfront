@@ -23,7 +23,7 @@ function buildLoginUrl(host: string) {
   return `${host}${devicePrefix}/login?${searchParams.toString()}`;
 }
 
-function normalizeHost(host: string) {
+function normalizeApiOrigin(host: string) {
   const trimmed = host.trim();
 
   if (trimmed.length === 0) {
@@ -38,6 +38,10 @@ function normalizeHost(host: string) {
     throw new Error('VITE_API_HOST must be a valid absolute URL.');
   }
 
+  if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+    throw new Error('VITE_API_HOST must use the http or https protocol.');
+  }
+
   if (url.pathname !== '/' || url.search.length > 0 || url.hash.length > 0) {
     throw new Error(
       'VITE_API_HOST must be an origin without path, query, or hash.'
@@ -47,8 +51,12 @@ function normalizeHost(host: string) {
   return url.origin;
 }
 
+export function getApiOrigin() {
+  return normalizeApiOrigin(readEnvString('VITE_API_HOST') ?? '');
+}
+
 export function getAuthConfig() {
-  const host = normalizeHost(readEnvString('VITE_API_HOST') ?? '');
+  const host = getApiOrigin();
 
   return {
     host,

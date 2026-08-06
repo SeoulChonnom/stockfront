@@ -3,6 +3,7 @@ import { type ComponentType, type Ref, type RefObject, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Input, type InputProps } from '@/components/ui/input';
+import { cn } from '@/lib/utils';
 
 /**
  * README §7-7 "idle" form. Advanced options (`force`/`rebuildPageOnly`) are
@@ -73,6 +74,10 @@ export function TriggerIdleForm({
         </label>
         <RefInput
           aria-describedby={dateFieldInvalid ? 'trigger-date-error' : undefined}
+          className={cn(
+            'mono min-h-11 rounded-[var(--r-md)] bg-[color:var(--surface)] px-3 py-0 text-[14px]',
+            !dateFieldInvalid && 'border-[color:var(--line-strong)]'
+          )}
           id='trigger-date'
           invalid={dateFieldInvalid}
           onChange={(event) =>

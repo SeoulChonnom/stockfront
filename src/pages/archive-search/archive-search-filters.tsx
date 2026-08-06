@@ -69,7 +69,7 @@ export function ArchiveSearchFilters({
           18px horizontal at every measured width (390/768/1280) — not the
           previous `p-4 sm:p-5` (16px uniform on mobile, 20px uniform from
           640px up). */}
-      <Card className='flex flex-col gap-4 px-[18px] py-4'>
+      <Card className='flex flex-col gap-3 px-[18px] py-4'>
         {/* D2 (parity cycle 2): design keeps the heading and the applied
             summary on ONE row (single flex container, wrap only as a last
             resort) — the app previously split them into two stacked rows,
@@ -85,14 +85,14 @@ export function ArchiveSearchFilters({
           >
             필터
           </h2>
-          <span className='mono wrap-anywhere text-[12.5px] text-[color:var(--text-soft)]'>
+          <span className='mono wrap-anywhere text-[11.5px] text-[color:var(--text-faint)]'>
             적용됨 · {applied.from} ~ {applied.to} ·{' '}
             {getStatusSummaryLabel(applied.status)}
           </span>
           <FilterDirtyBadge isDirty={isDirty} />
         </div>
 
-        <FilterBar onReset={reset} onSubmit={handleSubmit}>
+        <FilterBar className='gap-3.5' onReset={reset} onSubmit={handleSubmit}>
           {/* No native `max`/`min` here on purpose: an HTML5
               constraint-violating value makes the browser (and jsdom)
               silently block the form's `submit` event before it ever

@@ -3,9 +3,10 @@ import { ApiError } from '@/lib/api/client';
 /**
  * Maps a query error into the scoped, region-local presentation README §8
  * requires for Latest/Archive Detail's FAILED/5xx/offline/401/429/malformed
- * equivalence classes. Copy is taken verbatim from the design reference's
- * error catalog (`docs/design_v2/handoff_v2/fixtures.js` `ERRORS`), which is
- * the closest thing to a confirmed string for these states — README's prose
+ * equivalence classes. Copy follows the design reference's error catalog
+ * (`docs/design_v2/handoff_v2/fixtures.js` `ERRORS`) where it matches the
+ * implemented behavior; the 429 message explicitly asks for a manual retry
+ * because this client does not schedule automatic retries. README's prose
  * only spells out the Archive-404 case in full for this screen.
  *
  * `ApiError.status` (from `src/lib/api/client.ts`) is `0` for a network
@@ -56,7 +57,7 @@ export function buildFetchErrorPresentation(
       return {
         code: '429 · RATE_LIMITED',
         title: '요청이 너무 많습니다',
-        message: '60초 후 자동으로 다시 시도합니다.',
+        message: '잠시 기다린 뒤 다시 시도해 주세요.',
         actionLabel: '지금 다시 시도',
         isNotFound: false,
         actionKind: 'retry',

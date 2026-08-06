@@ -650,12 +650,70 @@
           "reference": "dl",
           "candidate": "dl",
           "screenshot": false
+        },
+        {
+          "id": "filter-heading",
+          "reference": "#ops-filter-h",
+          "candidate": "#ops-filter-heading"
+        },
+        {
+          "id": "filter-section",
+          "reference": "section[aria-labelledby='ops-filter-h']",
+          "candidate": "section[aria-labelledby='ops-filter-heading'] > div"
+        },
+        {
+          "id": "filter-header-row",
+          "reference": "xpath=//h2[@id='ops-filter-h']/parent::div",
+          "candidate": "xpath=//h2[@id='ops-filter-heading']/parent::div",
+          "parentId": "filter-section"
+        },
+        {
+          "id": "filter-field-grid",
+          "reference": "xpath=//h2[@id='ops-filter-h']/parent::div/following-sibling::div[1]",
+          "candidate": "xpath=//h2[@id='ops-filter-heading']/parent::div/following-sibling::form//div[contains(concat(' ',normalize-space(@class),' '),' grid ')][1]",
+          "parentId": "filter-section"
+        },
+        {
+          "id": "filter-field-from",
+          "reference": "xpath=//label[@for='o-from']/parent::div",
+          "candidate": "xpath=//label[@for='from']/parent::div",
+          "parentId": "filter-field-grid"
+        },
+        {
+          "id": "filter-field-to",
+          "reference": "xpath=//label[@for='o-to']/parent::div",
+          "candidate": "xpath=//label[@for='to']/parent::div",
+          "parentId": "filter-field-grid"
+        },
+        {
+          "id": "filter-field-status",
+          "reference": "xpath=//label[@for='o-status']/parent::div",
+          "candidate": "xpath=//label[@for='status']/parent::div",
+          "parentId": "filter-field-grid"
+        },
+        {
+          "id": "filter-field-type",
+          "reference": "xpath=//label[@for='o-type']/parent::div",
+          "candidate": "xpath=//label[@for='type']/parent::div",
+          "parentId": "filter-field-grid"
+        },
+        {
+          "id": "filter-button-row",
+          "reference": "xpath=//h2[@id='ops-filter-h']/parent::div/following-sibling::div[2]",
+          "candidate": "xpath=//h2[@id='ops-filter-heading']/parent::div/following-sibling::form//div[contains(concat(' ',normalize-space(@class),' '),' grid ')][1]/following-sibling::div[1]",
+          "parentId": "filter-section"
         }
       ],
       "gaps": [
         {
           "id": "title-to-first-block",
           "from": "page-title",
+          "to": "filter-section",
+          "axis": "vertical"
+        },
+        {
+          "id": "filter-to-summary",
+          "from": "filter-section",
           "to": "summary-tiles",
           "axis": "vertical"
         },
@@ -682,6 +740,24 @@
           "from": "history-row-0",
           "to": "history-row-1",
           "axis": "vertical"
+        },
+        {
+          "id": "filter-heading-to-grid",
+          "from": "filter-header-row",
+          "to": "filter-field-grid",
+          "axis": "vertical"
+        },
+        {
+          "id": "filter-grid-to-buttons",
+          "from": "filter-field-grid",
+          "to": "filter-button-row",
+          "axis": "vertical"
+        },
+        {
+          "id": "filter-field-from-to-to",
+          "from": "filter-field-from",
+          "to": "filter-field-to",
+          "axis": "horizontal"
         }
       ],
       "ignore": [],

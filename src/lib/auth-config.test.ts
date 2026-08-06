@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { getAuthConfig } from './auth-config';
+import { getApiOrigin, getAuthConfig } from './auth-config';
 
 const DESKTOP_USER_AGENT =
   'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36';
@@ -47,6 +47,38 @@ describe('getAuthConfig', () => {
     vi.stubEnv('VITE_APP_ENV', 'development');
 
     expect(getAuthConfig().isDevelopmentBypassEnabled).toBe(true);
+  });
+
+  it.each(['ftp://localhost:8000', 'data:text/plain,hello', 'file:///tmp/api'])(
+    'rejects non-http(s) API origins: %s',
+    (host) => {
+      vi.stubEnv('VITE_API_HOST', host);
+
+      expect(() => getApiOrigin()).toThrow(
+        'VITE_API_HOST must use the http or https protocol.'
+      );
+    }
+  );
+
+  it.each([
+    'http://localhost:8000/api',
+    'http://localhost:8000?tenant=demo',
+    'http://localhost:8000#section',
+  ])('rejects API hosts with a path, query, or hash: %s', (host) => {
+    vi.stubEnv('VITE_API_HOST', host);
+
+    expect(() => getApiOrigin()).toThrow(
+      'VITE_API_HOST must be an origin without path, query, or hash.'
+    );
+  });
+
+  it('validates the API origin even when development bypass is enabled', () => {
+    vi.stubEnv('VITE_APP_ENV', 'development');
+    vi.stubEnv('VITE_API_HOST', 'ftp://localhost:8000');
+
+    expect(() => getAuthConfig()).toThrow(
+      'VITE_API_HOST must use the http or https protocol.'
+    );
   });
 
   it('treats malformed host input deterministically', () => {

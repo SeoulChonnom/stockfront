@@ -6,14 +6,10 @@ import { installMockApi } from './fixtures/mock-api';
  * scroll), 9 (Retry — list/detail independence), 12 (live region — the
  * subset this screen owns).
  *
- * `BATCH_ALL` (mock-api.ts) seeds 27 jobs; `jobStatusFor(i)`: i=0 -> RUNNING,
- * i%9===2 -> PARTIAL, i%9===5 -> FAILED, else SUCCESS. `jobId = 1042 - i`.
- * Page 1 (first 20, i=0..19) contains exactly one FAILED row at i=5 ->
- * jobId 1037. Design parity cycle 1 (E2) changed the page's default-selection
- * fallback from "first FAILED, else first row" to just "first row" — with no
- * `?jobId=` in the URL the detail panel now shows the first (newest) row,
- * jobId 1042 (i=0, RUNNING), not 1037. Tests below that care which job is
- * selected pass an explicit `?jobId=` rather than relying on the fallback.
+ * `BATCH_ALL` (mock-api.ts) seeds 27 business dates × 2 job types = 54 jobs,
+ * interleaved newest-first. The list page size is 20, so the unfiltered list
+ * has 3 pages. Tests that care which job is selected pass an explicit
+ * `?jobId=` rather than relying on the first-row fallback.
  *
  * Design parity cycle 1 (E1) also removed the 시작일/종료일/상태 filter FORM
  * (`BatchFilterBar`) — there is no `#batch-status-trigger`/필터 적용 flow
@@ -22,8 +18,8 @@ import { installMockApi } from './fixtures/mock-api';
  * `batch-attention-banner.tsx`) or the list header's 필터 해제 button.
  */
 
-test.describe('§16-4 pagination (Batch: 27/20 -> 2 pages)', () => {
-  test('paginates through both pages and reflects `page` in the URL', async ({
+test.describe('§16-4 pagination (Batch: 54/20 -> 3 pages)', () => {
+  test('paginates through all pages and reflects `page` in the URL', async ({
     page,
   }) => {
     await installMockApi(page, { scenario: 'ready' });
@@ -34,12 +30,16 @@ test.describe('§16-4 pagination (Batch: 27/20 -> 2 pages)', () => {
     // range next to the pager. E7 (cycle 2): Ops's pager also has no
     // trailing "N / M" indicator at all (unlike Archive's, which does) —
     // this screen only has the range in the header, nothing beside 다음.
-    await expect(page.getByText('1–20 / 27', { exact: true })).toBeVisible();
+    await expect(page.getByText('1–20 / 54', { exact: true })).toBeVisible();
     await expect(page.getByText(/^\d+ \/ \d+$/)).not.toBeVisible();
 
     await page.getByRole('button', { name: '다음' }).click();
     await expect(page).toHaveURL(/page=2/);
-    await expect(page.getByText('21–27 / 27', { exact: true })).toBeVisible();
+    await expect(page.getByText('21–40 / 54', { exact: true })).toBeVisible();
+
+    await page.getByRole('button', { name: '다음' }).click();
+    await expect(page).toHaveURL(/page=3/);
+    await expect(page.getByText('41–54 / 54', { exact: true })).toBeVisible();
     await expect(page.getByRole('button', { name: '다음' })).toBeDisabled();
   });
 });

@@ -26,7 +26,7 @@ import type { MarketIndex } from '@/lib/view-models';
 export function MarketIndexTable({ indices }: { indices: MarketIndex[] }) {
   if (indices.length === 0) {
     return (
-      <p className='m-0 px-4 py-4 text-[13px] text-[color:var(--text-faint)]'>
+      <p className='m-0 px-[18px] py-4 text-[13px] text-[color:var(--text-faint)]'>
         지수 데이터가 수집되지 않았습니다. provider 응답 실패 시 부분 실패로
         처리되며, 재수집은 배치 운영에서 같은 기준일로 실행합니다.
       </p>
@@ -35,27 +35,25 @@ export function MarketIndexTable({ indices }: { indices: MarketIndex[] }) {
 
   return (
     <TableScrollWrapper>
-      <Table className='text-[13px]' minWidth={380}>
+      <Table className='border-collapse text-[13px]' minWidth={380}>
         <TableHeader>
           <TableRow>
-            <TableHead className='h-auto px-4 py-2 text-[11px]'>지수</TableHead>
+            <TableHead className='h-auto px-[18px] py-2 text-[11px]'>
+              지수
+            </TableHead>
             <TableHead className='h-auto px-3 py-2 text-right text-[11px]'>
               종가
             </TableHead>
-            {/* C1: `w-[1%]` shrinks 등락/등락률 to their own content width
-                instead of claiming a disproportionate share of the table's
-                auto-layout surplus space at 고가/저가's expense — same total
-                table width, closer to the design's even column distribution. */}
-            <TableHead className='h-auto w-[1%] px-3 py-2 text-right text-[11px] whitespace-nowrap'>
+            <TableHead className='h-auto px-3 py-2 text-right text-[11px] whitespace-nowrap'>
               등락
             </TableHead>
-            <TableHead className='h-auto w-[1%] px-3 py-2 text-right text-[11px] whitespace-nowrap'>
+            <TableHead className='h-auto px-3 py-2 text-right text-[11px] whitespace-nowrap'>
               등락률
             </TableHead>
             <TableHead className='hidden h-auto px-3 py-2 text-right text-[11px] whitespace-nowrap sm:table-cell'>
               고가
             </TableHead>
-            <TableHead className='hidden h-auto px-4 py-2 text-right text-[11px] whitespace-nowrap sm:table-cell'>
+            <TableHead className='hidden h-auto px-[18px] py-2 text-right text-[11px] whitespace-nowrap sm:table-cell'>
               저가
             </TableHead>
           </TableRow>
@@ -78,21 +76,23 @@ function IndexRow({ item }: { item: MarketIndex }) {
   const directionClass =
     item.direction === 'up'
       ? 'text-[color:var(--up)]'
-      : 'text-[color:var(--down)]';
+      : item.direction === 'down'
+        ? 'text-[color:var(--down)]'
+        : 'text-[color:var(--text-faint)]';
 
   return (
     <TableRow>
-      <TableCell className='min-w-0 px-4 py-[9px] font-semibold'>
+      <TableCell className='min-w-0 px-[18px] py-[9px] font-semibold'>
         {item.label}
         {item.code ? (
-          <div className='mono mt-0.5 text-[11px] font-normal text-[color:var(--text-faint)]'>
+          <div className='mono text-[11px] font-normal text-[color:var(--text-faint)]'>
             {item.code}
           </div>
         ) : null}
       </TableCell>
       <TableCell className='mono px-3 py-[9px] text-right font-semibold'>
         {item.value}
-        <div className='mt-1 text-[10.5px] font-normal text-[color:var(--text-faint)] sm:hidden'>
+        <div className='text-[10.5px] font-normal whitespace-nowrap text-[color:var(--text-faint)] sm:hidden'>
           {`고 ${item.high} · 저 ${item.low}`}
         </div>
       </TableCell>
@@ -115,7 +115,7 @@ function IndexRow({ item }: { item: MarketIndex }) {
       <TableCell className='mono hidden px-3 py-[9px] text-right text-[color:var(--text-soft)] sm:table-cell'>
         {item.high}
       </TableCell>
-      <TableCell className='mono hidden px-4 py-[9px] text-right text-[color:var(--text-soft)] sm:table-cell'>
+      <TableCell className='mono hidden px-[18px] py-[9px] text-right text-[color:var(--text-soft)] sm:table-cell'>
         {item.low}
       </TableCell>
     </TableRow>

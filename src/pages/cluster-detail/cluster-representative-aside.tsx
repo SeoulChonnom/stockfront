@@ -50,13 +50,15 @@ export function ClusterRepresentativeAside({
       <p className='m-0 mb-2 text-[14.5px] font-semibold text-[color:var(--text)]'>
         {representative.title}
       </p>
-      <div className='mono mb-3 text-[12px] text-[color:var(--text-faint)]'>
-        {displaySource(representative.source)} ·{' '}
-        {displayPublishedAt(representative.publishedAt)}
+      <div className='mono mb-3 flex flex-col gap-0.5 text-[11.5px] text-[color:var(--text-faint)]'>
+        <span>{displaySource(representative.source)}</span>
+        <span>{displayPublishedAt(representative.publishedAt)}</span>
+        {representative.sourceSummary ? (
+          <span className='font-sans text-[13.5px] text-[color:var(--text-soft)]'>
+            {representative.sourceSummary}
+          </span>
+        ) : null}
       </div>
-      <p className='wrap-anywhere m-0 mb-3 text-[13.5px] text-[color:var(--text-soft)]'>
-        {representative.sourceSummary}
-      </p>
       {/* C8: design shows the two actions as inline auto-width buttons side
           by side, not stacked full-width. */}
       <div className='flex flex-wrap gap-2'>

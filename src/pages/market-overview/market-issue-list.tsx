@@ -36,7 +36,7 @@ export function MarketIssueList({
 }) {
   if (clusters.length === 0) {
     return (
-      <p className='m-0 px-4 py-4 text-[13px] text-[color:var(--text-faint)]'>
+      <p className='m-0 px-[18px] py-4 text-[13px] text-[color:var(--text-faint)]'>
         묶인 이슈가 없습니다. 수집 기사 수가 부족해 클러스터가 만들어지지 않은
         경우이며, 원문 목록이 있으면 아래에서 직접 확인할 수 있습니다.
       </p>

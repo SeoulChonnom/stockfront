@@ -32,7 +32,11 @@ export function PermissionState({
       <span className='inline-flex items-center gap-1.5 rounded-[var(--r-sm)] border border-[color:var(--danger-line)] bg-[color:var(--danger-soft)] px-2 py-0.5 text-[12.5px] font-semibold text-[color:var(--danger)]'>
         403 · FORBIDDEN
       </span>
-      <h1 className='mt-3 mb-2 text-[22px] font-semibold text-[color:var(--text)]'>
+      <h1
+        className='mt-3 mb-2 text-[22px] font-semibold text-[color:var(--text)]'
+        id='page-title'
+        tabIndex={-1}
+      >
         이 화면에 접근할 권한이 없습니다
       </h1>
       <p className='wrap-anywhere mb-5 text-[13.5px] text-[color:var(--text-soft)]'>
