@@ -16,21 +16,6 @@ import {
 } from './trigger-dialog-states';
 import { toTriggerErrorView } from './trigger-error';
 
-/**
- * README §7-7 Manual Trigger dialog. States are driven directly by the
- * `useStartBatchRunMutation()` instance the parent owns (not duplicated
- * into local state) so the parent can keep the mutation alive across the
- * dialog's own open/close — e.g. a success needs to survive the dialog
- * closing so the list page's persistent success banner (§7-6 point 2) can
- * read it.
- *
- * `mutation.reset()` runs on every close (Escape/overlay/✕/취소/닫기) once a
- * request has settled, so the NEXT open starts idle rather than resuming a
- * stale success/error. A pending request may be dismissed, but its mutation
- * state is preserved so reopening the dialog shows the same pending request
- * instead of allowing a second POST.
- */
-
 export type TriggerMutation = ReturnType<typeof useStartBatchRunMutation>;
 
 export function TriggerDialog({
@@ -48,7 +33,6 @@ export function TriggerDialog({
   canUseAdvancedOptions: boolean;
   initialBusinessDate?: string;
   onOpenJobDetail: (jobId: number) => void;
-  /** Lets the parent leave a persistent success banner on the list page (README §7-6 point 2) even after this dialog closes. */
   onTriggered: (result: BatchRunResponse) => void;
 }) {
   const titleId = useId();
@@ -74,10 +58,7 @@ export function TriggerDialog({
       rebuildPageOnly: false,
     });
     setDateFieldFlagged(false);
-    // Reset to a fresh form every time the dialog transitions closed→open —
-    // intentionally NOT re-running on `initialBusinessDate` alone (a parent
-    // re-render with the same open dialog shouldn't clobber in-progress
-    // edits).
+    // Reset only on closed→open; changing the initial date must not clobber edits.
   }, [isOpen]);
 
   function handleClose() {

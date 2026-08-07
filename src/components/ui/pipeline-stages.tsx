@@ -1,39 +1,7 @@
 import { type BatchStage, getBatchTypeInfo } from '@/lib/batch-type';
 import { cn } from '@/lib/utils';
 
-/**
- * PipelineStages — README §7-6 + §14 "파이프라인 단계 상태" backend gap.
- *
- * **2026-08 갱신**: 아래 원래 주석("백엔드는 단계별 status/duration을 반환
- * 하지 않는다 — 우리가 아는 건 job 전체의 status와 errorCode뿐이다")은 이제
- * 절반만 맞다. `docs/api_spec.json`의 `BatchJobListItemResponse`/
- * `BatchJobDetailResponse`가 둘 다 `currentStep`(현재/마지막 단계명, 또는
- * `null`)을 제공한다는 게 확인됐다 — 예전에는 없던 필드다. 그래서 RUNNING/
- * PENDING 상태의 "어느 단계가 실행 중인가"는 더 이상 추측이 아니라
- * `currentStep`을 단계명과 매칭해 직접 읽는다(아래 `findCurrentStageIndex`).
- * 이 프리미스 변경과 예전 "정직한 추측" 블록을 왜 지웠는지는
- * `docs/design_v2/v2-decisions.md` §10에 기록했다 — 여기서 지우지 않고
- * 남겨둔 이유 그대로.
- *
- * 바뀌지 않은 것: **소요 시간(duration)은 여전히 없다.** `currentStep`은
- * 단계 "이름"만 알려줄 뿐 단계별 timing은 스펙 어디에도 없으므로, 이
- * 컴포넌트는 여전히 소요 시간을 지어내지 않는다(§14/§10 결정 그대로 유지).
- * 헤더 옆의 `PROPOSED · BACKEND` 배지도 유지한다 — "이건 백엔드가 준 값 그대로
- * 가 아니라 우리가 단계명을 매칭해 구성한 뷰"라는 사실은 currentStep이
- * 생겨도 바뀌지 않는다.
- *
- * 단계 목록은 더 이상 8개 고정이 아니라 jobType별 6개다 — 두 배치 타입
- * (`NEWS_COLLECTION`/`MARKET_SNAPSHOT`)이 서로 다른 파이프라인을 돈다
- * (`src/lib/batch-type.ts`). `jobType`이 알려진 값이 아니면 어떤 단계
- * 목록도 지어내지 않고 이 블록 전체를 렌더하지 않는다.
- *
- * FAILED일 때 실패 stage 추정은 그대로 `errorCode`의 키워드로 최선 추정
- * 한다(이번 pass는 손대지 않았다 — jobType별 단계 목록으로 갈라지면서
- * "키워드 → 이 타입 목록에 있는 stage 이름"으로 조회 방식만 바뀌었다).
- * 매칭되는 키워드가 없거나, 매칭된 stage가 이 jobType의 목록에 없으면
- * "어느 단계인지 알 수 없음"을 그대로 노출한다(허구의 stage를 FAILED로
- * 찍지 않는다).
- */
+/** Uses currentStep/errorCode signals without inventing stage timing or unknown type lists. */
 
 type PipelineStageTone =
   | 'success'
@@ -76,13 +44,7 @@ const NOTE_CLASSES: Readonly<Record<PipelineStageTone, string>> = {
   unknown: 'text-[color:var(--text-faint)]',
 };
 
-// errorCode 키워드 → stage LABEL(index가 아니라 이름). jobType별 6단계
-// 목록으로 갈라지면서 예전의 고정 index(1~6, 8단계 기준) 방식은 더 이상
-// 안전하지 않다 — 같은 키워드라도 타입에 따라 그 단계가 목록에 아예 없을
-// 수 있다(예: NEWS_COLLECTION에는 '클러스터 구성'이 없다). 그래서 이름으로
-// 매칭한 뒤, 호출부에서 "이 jobType의 실제 목록에 그 이름이 있는지"를
-// `stageNames.indexOf`로 재확인한다 — 없으면 매칭 실패로 취급(§14 최선
-// 추정 원칙 그대로).
+// Match error keywords to labels, then verify the label exists in this job type's stages.
 const STAGE_KEYWORD_TABLE: ReadonlyArray<readonly [RegExp, string]> = [
   [/NEWS/, '뉴스 수집'],
   [/INDEX|PRICE|MARKET_DATA|QUOTE/, '지수 수집'],
@@ -111,16 +73,7 @@ function inferFailedStageIndex(
   return index === -1 ? null : index;
 }
 
-/**
- * `currentStep`을 이 jobType의 단계 목록과 매칭한다.
- *
- * `docs/api_spec.json`이 `currentStep`의 wire 형식을 enum/example로 명시하지
- * 않으므로, 문서화된 두 후보 — snake_case `key`(`load_search_result`)와 한글
- * `label`(`검색 결과 적재`) — 를 **모두** 인정한다. 근거는 `BatchStage`의
- * 주석 참고. 대소문자와 앞뒤 공백만 무시하고, 그 외 느슨한 매칭(부분 일치
- * 등)은 하지 않는다 — 어느 후보와도 안 맞으면 잘못 추측하는 대신 그대로
- * "확인 불가"로 떨어뜨린다.
- */
+/** Match either the documented stage key or label; unknown values remain unconfirmed. */
 function findCurrentStageIndex(
   stages: readonly BatchStage[],
   currentStep: string | null | undefined
@@ -186,11 +139,7 @@ function deriveRunningStages(
   const runningIndex = findCurrentStageIndex(stages, currentStep);
 
   if (runningIndex === null) {
-    // currentStep이 없거나 알려진 단계(key/label 어느 쪽과도) 안 맞는 경우:
-    // 어느 단계도 "실행 중"으로 찍지 않는다(§14 — 없는 신호를 지어내지
-    // 않는다). 작업이 존재하고 RUNNING/PENDING 상태라는 것 자체가 최소한
-    // 시작은 됐다는 뜻이므로 1단계(작업 생성)만 성공으로 보고, 나머지는
-    // "확인 불가"로 남긴다.
+    // Without a known currentStep, do not guess a running stage.
     return stages.map((stage, index) => ({
       name: stage.label,
       tone: index === 0 ? 'success' : 'unknown',
@@ -225,15 +174,12 @@ function deriveStages(
     return deriveRunningStages(stages, currentStep);
   }
 
-  // SUCCESS / READY / PARTIAL 등 — job이 끝까지 실행됐다고 간주.
   return stages.map((stage) => ({ name: stage.label, tone: 'success' }));
 }
 
 export type PipelineStagesProps = {
   jobStatus: string;
-  /** `BatchJobType` 원본 문자열 — 알려지지 않은 값이면 컴포넌트가 아무것도 렌더하지 않는다(파이프라인 목록을 지어낼 수 없으므로). */
   jobType: string;
-  /** 현재/마지막 파이프라인 단계명, 또는 `null`/미제공. */
   currentStep?: string | null;
   errorCode?: string | null;
   className?: string;

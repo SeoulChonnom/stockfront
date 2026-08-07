@@ -1,14 +1,4 @@
-/**
- * Primary navigation data + active-route rules — README §5.
- *
- * Single source of truth for the nav tree so the desktop rail
- * (`nav-rail.tsx`) and the mobile drawer (`nav-drawer.tsx`) can never drift
- * from each other. The "운영" (admin-only) leaf is intentionally kept out
- * of this module's exported groups — `nav-list.tsx` renders it from a
- * separate export and gates it with `can('ops.view')` so it can be omitted
- * from the DOM entirely for non-admin users (§10, §16-11), not merely
- * hidden.
- */
+/** Shared nav source; the admin-only item is gated before it reaches the DOM. */
 
 export type NavLeaf = {
   href: string;
@@ -34,7 +24,6 @@ export const OPS_NAV_ITEM: NavLeaf = {
   label: '배치 운영',
 };
 
-/** `/market/latest` itself, or a Cluster Detail entered from Latest (`origin=latest`). */
 export function isLatestActive(
   pathname: string,
   searchParams: URLSearchParams
@@ -50,12 +39,6 @@ export function isLatestActive(
   return false;
 }
 
-/**
- * `/market/archive/*`, or a Cluster Detail entered from anywhere other than
- * Latest (§5: "`/market/cluster/*`는 진입 원점에 따라 최신 브리프 또는
- * 아카이브를 활성으로 표시" — the two are mutually exclusive, so "not
- * latest" defaults here, including a missing `origin`).
- */
 export function isArchiveActive(
   pathname: string,
   searchParams: URLSearchParams
@@ -80,7 +63,6 @@ export type NavContext = {
   itemLabel: string;
 };
 
-/** Drives the mobile compact header's "section label / current route" pair (§5). */
 export function getActiveNavContext(
   pathname: string,
   searchParams: URLSearchParams

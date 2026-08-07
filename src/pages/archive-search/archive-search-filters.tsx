@@ -17,15 +17,6 @@ import {
   validateArchiveFilters,
 } from './filter-copy';
 
-/**
- * Archive Search filter card — README §7-4.
- *
- * Draft/applied separation is delegated entirely to `useFilterDraft`
- * (`src/components/ui/use-filter-draft.ts`): typing here only ever updates
- * local `draft` state. The only path to the URL is `onApply`, invoked from
- * `apply()` after validation passes — the parent page is the one that
- * actually calls `navigate()` (this component has no router dependency).
- */
 export function ArchiveSearchFilters({
   applied,
   onApply,
@@ -49,9 +40,6 @@ export function ArchiveSearchFilters({
     });
 
   function handleSubmit() {
-    // Computed independently of `apply()`'s internal validation so the
-    // failure announcement can report an exact error count — the hook only
-    // exposes success/failure as a boolean, not the error tally.
     const validationErrors = validateArchiveFilters(draft);
     const succeeded = apply();
 

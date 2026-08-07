@@ -93,9 +93,7 @@ function App() {
   const url = useUrlState();
   const route = parseRoute(url.pathname, url.searchParams);
   const search = url.searchParams.toString();
-  // §7-1: the route-change effect key must include BOTH pathname and search
-  // (previously `pageFocusKey` here was `url.pathname` alone — a query-only
-  // change like `?page=2` never re-focused/re-scrolled).
+  // Scroll restoration includes pathname and search; focus below intentionally does not.
   const routeKey = buildScrollKey(url.pathname, search);
   const authBootstrapState = useSyncExternalStore(
     subscribeToAuthBootstrap,
@@ -112,10 +110,7 @@ function App() {
   }, [theme]);
 
   useEffect(() => {
-    // README §6: "테마 선택은 localStorage에 저장하고 없으면
-    // prefers-color-scheme을 따른다." — that fallback should stay live: if
-    // the user never made an explicit choice, an OS-level scheme change
-    // should keep updating the app, not just the initial resolve.
+    // Keep following the OS theme until the user stores an explicit choice.
     return subscribeToSystemTheme((systemTheme) => {
       if (getStoredTheme() !== null) {
         return;
@@ -143,34 +138,12 @@ function App() {
     document.title = pageMeta.title;
   }, [pageMeta.title]);
 
-  // §9 focus contract — the shell's half:
-  //
-  // "primary route (pathname change) → focus #page-title" is the ONLY
-  // transition this effect owns. It deliberately depends on `url.pathname`
-  // alone, NOT on `routeKey`/search. Query-only transitions on the same
-  // pathname (Archive 필터 적용, Archive pagination, 필터 검증 실패, Batch
-  // `jobId` 행 선택, …) must NOT refocus `#page-title` — the owning page
-  // moves focus to its own target (results heading / first invalid field /
-  // detail heading) instead. This matters because `App.tsx` is the parent:
-  // its effects commit after the page's own effects in the same commit, so
-  // if this effect fired on every search change too, it would always win
-  // and steal focus back from whatever the page just tried to do. Keying on
-  // pathname only means this effect simply never runs for those
-  // transitions, so there's nothing to steal.
-  //
-  // Page owners: use `useFocusOnChange` (`components/shell/use-focus-on-change.ts`)
-  // to implement your own query-driven focus target — see that file's doc
-  // comment for the contract and `archive-search-page.tsx`'s
-  // `resultsHeadingRef` for the pattern it formalizes.
-  // Route-focus bookkeeping (see the effect below).
+  // Focus only on pathname changes. Including search would steal focus from page-owned
+  // targets during filter, pagination, validation, or row-selection updates.
   const focusedPathnameRef = useRef<string | null>(null);
   const focusedFallbackRef = useRef(false);
 
-  // On a cold navigation the route's query is still loading when this effect
-  // first commits, so the page renders a skeleton and then swaps in the real
-  // subtree once data arrives. That swap can happen in a child React Query
-  // rerender without re-running App, so a pending route watches only
-  // #main-content for the late heading mount.
+  // Observe #main-content because a late query result can mount the heading without rerunning App.
   useEffect(() => {
     if (!authResolved) {
       return;
@@ -191,9 +164,7 @@ function App() {
       const heading = mainContent?.querySelector<HTMLElement>('#page-title');
 
       if (!heading) {
-        // Heading not rendered yet (loading state). Park focus on the main
-        // landmark once so keyboard users aren't stranded at <body>, and stay
-        // "pending" so the heading still wins as soon as it mounts.
+        // Park focus on the main landmark until the loading heading mounts.
         if (!focusedFallbackRef.current) {
           focusedFallbackRef.current = true;
           mainContent?.focus({ preventScroll: true });
@@ -202,16 +173,7 @@ function App() {
         return false;
       }
 
-      // Heading was there on arrival: focus it unconditionally. The active
-      // element at this moment is whatever the user activated to navigate
-      // (a nav link, a table row button) — moving off it to the new page's
-      // title is exactly the §9 contract.
-      //
-      // But if we already had to PARK on #main-content and wait for a late
-      // heading, the user may have tabbed onward in the meantime (the skip
-      // link is the very first stop). Yanking focus out from under them
-      // mid-interaction is worse than never moving it, so in that case only
-      // take focus back if nobody has claimed it.
+      // Do not pull focus back from a user who continued tabbing while the heading loaded.
       const active = document.activeElement;
       const focusIsUnclaimed =
         active === null ||
@@ -242,11 +204,7 @@ function App() {
     return () => observer?.disconnect();
   }, [authResolved, url.pathname]);
 
-  // Scroll restoration stays keyed on pathname+search (routeKey): §9 still
-  // wants a scroll change (to top, or restored) for several query-only
-  // transitions (Archive filter apply/pagination scroll results to top) —
-  // that's an orthogonal contract from focus ownership above and keeps
-  // working the same way for both pathname and query-only changes.
+  // Scroll restoration is independent from pathname-only focus ownership.
   useEffect(() => {
     if (!authResolved) {
       return;

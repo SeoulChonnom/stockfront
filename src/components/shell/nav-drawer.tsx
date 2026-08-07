@@ -13,15 +13,7 @@ const ROLE_LABELS: Readonly<Record<'user' | 'admin', string>> = {
   admin: 'Admin',
 };
 
-/**
- * Mobile nav drawer — README §5. Opened by `MobileHeader`'s menu button.
- * Built on the shared `Drawer` primitive (`src/components/ui/drawer.tsx`),
- * which already owns the focus trap / Escape / overlay-click / scroll-lock /
- * return-focus contract and never touches history — opening/closing this
- * never hijacks browser Back (§5 explicit requirement).
- *
- * Items get the 48px mobile touch target (`min-h-12`) vs the rail's 40px.
- */
+/** Drawer owns focus/scroll behavior and must not intercept browser history. */
 export function NavDrawer({
   isOpen,
   onClose,

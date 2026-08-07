@@ -2,14 +2,6 @@ import { StatusBadge } from '@/components/state';
 import { Button } from '@/components/ui/button';
 import { formatKstDateTime } from '@/lib/formatters';
 
-/**
- * README §7-6 point 2: the persistent success banner left on the list page
- * after a Manual Trigger succeeds (§7-7 "닫으면 목록 상단에 성공 배너가
- * 남고"). Lives above the master-detail grid regardless of `view=detail`
- * drill-in, and is dismissed manually rather than timed out (state changes
- * shouldn't vanish under a screen-reader user before they notice it).
- */
-
 export type TriggerBannerState = {
   jobId: number;
   status: string;

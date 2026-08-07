@@ -2,13 +2,6 @@ import type { ReactNode } from 'react';
 
 import { cn } from '@/lib/utils';
 
-/**
- * EmptyState — README §8 "빈 상태 문구는 세 가지를 구분한다: 검색 결과
- * 없음 / 생성된 데이터 없음 / 연결된 기사 없음." 점선 박스 안에 제목 +
- * 설명 + (선택) 액션을 보여준다. 화면마다 상세 사유가 다르므로 기본
- * 문구를 제공하되 `title`/`description`으로 덮어쓸 수 있게 한다.
- */
-
 type EmptyStateKind = 'search-results' | 'no-data' | 'no-articles';
 
 const DEFAULT_COPY: Readonly<

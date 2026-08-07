@@ -1,11 +1,4 @@
-/**
- * Theme resolution/persistence for Market Brief UI v2 (README §6, §7-1).
- *
- * Source of truth for `document.documentElement.dataset.theme`,
- * `color-scheme`, and the `<meta name="theme-color">` tags. Kept isolated
- * from React so it can be called during app bootstrap (before render) and
- * from any component without prop-drilling.
- */
+/** Source of truth for document theme attributes, color-scheme, and theme-color metadata. */
 
 export type Theme = 'light' | 'dark';
 
@@ -17,7 +10,6 @@ function isTheme(value: string | null): value is Theme {
   return value === 'light' || value === 'dark';
 }
 
-/** Reads the persisted theme choice, if any. SSR/no-storage safe. */
 export function getStoredTheme(): Theme | null {
   if (typeof window === 'undefined') {
     return null;
@@ -32,7 +24,6 @@ export function getStoredTheme(): Theme | null {
   }
 }
 
-/** Reads the OS/browser theme preference. Defaults to 'light' on SSR. */
 function getSystemTheme(): Theme {
   if (
     typeof window === 'undefined' ||
@@ -46,7 +37,6 @@ function getSystemTheme(): Theme {
     : 'light';
 }
 
-/** Stored choice wins; otherwise falls back to system preference (README §6). */
 export function resolveInitialTheme(): Theme {
   return getStoredTheme() ?? getSystemTheme();
 }
@@ -72,10 +62,7 @@ function updateThemeColorMeta(theme: Theme): void {
   }
 }
 
-/**
- * Applies a theme to the current document: `dataset.theme`, `color-scheme`,
- * and both `theme-color` meta tags. Does not persist — see `setTheme`.
- */
+/** Applies theme attributes; persistence is handled by setTheme. */
 export function applyTheme(theme: Theme): void {
   if (typeof document === 'undefined') {
     return;
@@ -86,7 +73,6 @@ export function applyTheme(theme: Theme): void {
   updateThemeColorMeta(theme);
 }
 
-/** Persists the choice to localStorage and applies it immediately. */
 export function setTheme(theme: Theme): void {
   if (typeof window !== 'undefined') {
     try {
@@ -99,11 +85,7 @@ export function setTheme(theme: Theme): void {
   applyTheme(theme);
 }
 
-/**
- * Calls `callback` whenever the OS-level color scheme preference changes.
- * Returns an unsubscribe function. No-op (returns a no-op unsubscribe) when
- * matchMedia isn't available (SSR).
- */
+/** Subscribes to OS theme changes, or returns a no-op unsubscribe without matchMedia. */
 export function subscribeToSystemTheme(
   callback: (theme: Theme) => void
 ): () => void {

@@ -1,17 +1,6 @@
 import { useEffect, useRef } from 'react';
 
-/**
- * README §8 "retrying" contract, used independently by the list and detail
- * regions of `/ops/batches` (§7-6 point 5: their loading/error states don't
- * share state). A manual retry announces "다시 불러오는 중입니다."
- * immediately, then — once that retry's fetch settles — "데이터를 다시
- * 불러왔습니다." on success or a failure announcement on error.
- *
- * `pendingRef` only flips true inside `retry()` itself, so the region's
- * ordinary initial load (which also transitions `isFetching` true→false)
- * never fires a spurious "다시 불러왔습니다." — only a fetch the user
- * actually triggered via the retry button does.
- */
+/** Announces only user-triggered refetches; initial/background fetches stay silent. */
 export function useRetryAnnounce(
   isFetching: boolean,
   isError: boolean,
@@ -19,9 +8,7 @@ export function useRetryAnnounce(
 ) {
   const pendingRef = useRef(false);
 
-  // `onAnnounce` is deliberately excluded from the deps below: callers pass an
-  // inline closure, so including it would re-run the effect on every render and
-  // re-announce spuriously. It must fire only on an isFetching/isError change.
+  // Keep the callback out of deps so inline callers do not re-announce on render.
   // biome-ignore lint/correctness/useExhaustiveDependencies: `onAnnounce` intentionally excluded — see above
   useEffect(() => {
     if (isFetching || !pendingRef.current) {

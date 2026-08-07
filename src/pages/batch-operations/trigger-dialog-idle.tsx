@@ -5,24 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Input, type InputProps } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 
-/**
- * README §7-7 "idle" form. Advanced options (`force`/`rebuildPageOnly`) are
- * gated by `canUseAdvancedOptions` (`can('ops.advancedTriggerOptions')`,
- * README §10/§14 D-11) — the whole toggle+box is omitted, not merely
- * disabled, when the capability is false.
- */
-
-/**
- * `Input` (`src/components/ui/input.tsx`, shared/off-limits for this phase)
- * is a plain function component whose destructure spreads every prop it
- * doesn't explicitly name straight onto the underlying `<input>` — so a
- * `ref` prop DOES flow through to the real DOM node at runtime (React 19
- * passes `ref` through function components like any other prop, no
- * `forwardRef` required). `InputProps`, though, was never updated to
- * *declare* `ref` in its type, so TS rejects `<Input ref={...} />` even
- * though it works. This local, ref-aware alias documents that gap instead
- * of silently `as any`-ing the call site.
- */
+/** Advanced options are omitted entirely when the capability is unavailable. */
+/** React 19 forwards `ref` at runtime; this alias supplies the missing local type. */
 const RefInput = Input as ComponentType<
   InputProps & { ref?: Ref<HTMLInputElement> }
 >;

@@ -1,10 +1,4 @@
-/**
- * URL context strip — README §7-1 ("선택, 개발/QA에 유용"), resolved in
- * `docs/design_v2/v2-decisions.md` A-05 as dev-build-only (never rendered in
- * a production build). Shows the current `pathname` + query string in mono
- * so QA can confirm what the app believes the URL/contract state is without
- * opening devtools.
- */
+/** Development-only URL context for QA. */
 export function DevUrlStrip({
   pathname,
   search,

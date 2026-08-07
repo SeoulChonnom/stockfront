@@ -105,15 +105,7 @@ export function ArchiveSearchPage({
     size: PAGE_SIZE,
   });
 
-  // `useArchiveList` has no `placeholderData: keepPreviousData` option (its
-  // signature is fixed in `src/lib/query-hooks.ts`, out of this phase's file
-  // ownership) — every filter/page change is a distinct query key, so
-  // TanStack Query itself would drop `data` back to `undefined` while the
-  // new key loads or errors. §8 requires the opposite ("loading은 필터 카드를
-  // 유지... refetching(이전 결과 유지)... error(필터 위에 alert + 필터와 이전
-  // 결과 유지"), so the last successful page is retained locally here and
-  // used as the display fallback whenever the live query has no data of its
-  // own yet.
+  // Keep the last successful page while a new query key loads or errors.
   const displayData = useLastGoodData(archiveQuery.data);
   const hasData = displayData !== null;
   const isInitialLoading = archiveQuery.isLoading && !hasData;
@@ -148,9 +140,7 @@ export function ArchiveSearchPage({
   function focusAndScrollToResults() {
     const heading = resultsHeadingRef.current;
     heading?.focus({ preventScroll: true });
-    // Guarded rather than called unconditionally: jsdom (this repo's test
-    // environment) has no `scrollIntoView` implementation at all, unlike a
-    // real browser.
+    // jsdom does not implement scrollIntoView.
     if (typeof heading?.scrollIntoView === 'function') {
       heading.scrollIntoView({ block: 'start' });
     }
@@ -165,9 +155,6 @@ export function ArchiveSearchPage({
 
   function handleReset() {
     focusAndScrollToResults();
-    // Bare URL (no from/to/status/page) lets `parseListFilters` recompute
-    // its own defaults — the single source of truth for "default range",
-    // rather than duplicating that computation here.
     navigate('/market/archive/search');
   }
 
@@ -275,8 +262,6 @@ function ArchiveResultsCard({
   const rows = data?.rows ?? [];
 
   return (
-    // B6: list panels (관련 기사/실행 이력/검색 결과) carry 0 padding on the
-    // panel itself — the header row, body, and pagination each own theirs.
     <Card
       aria-busy={isInitialLoading || undefined}
       className='flex min-w-0 flex-col overflow-hidden'

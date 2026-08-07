@@ -11,12 +11,6 @@ const ROLE_LABELS: Readonly<Record<'user' | 'admin', string>> = {
   admin: 'Admin',
 };
 
-/**
- * Desktop left rail — README §5. `≥1025px`: 248px, `position: sticky; top:0;
- * height:100vh`, 1px right border, `--surface` background. Hidden entirely
- * (not just visually) below 1025px via the `hidden min-[1025px]:flex`
- * pair — `NavDrawer` is the mobile equivalent.
- */
 export function NavRail({
   pathname,
   searchParams,

@@ -1,10 +1,6 @@
 import type { FilterErrors } from '@/components/ui/use-filter-draft';
 import { getRelativeIso, getTodayIso, isValidIsoDate } from '@/lib/kst-date';
 
-/**
- * Archive Search filter copy + validation — README §7-4.
- */
-
 export type ArchiveFilterDraft = {
   from: string;
   to: string;
@@ -39,14 +35,7 @@ export function getDefaultArchiveFilters(): ArchiveFilterDraft {
   };
 }
 
-/**
- * README §7-4 validation, in the exact three categories the handoff spec
- * calls out: date format, future date, and start-after-end ordering. Applied
- * to both `from` and `to` individually first (format, then future-date);
- * the range check only runs once both fields are individually valid, and is
- * attached to `from` (the field a user would naturally fix first, and the
- * one `useFilterDraft.focusFirstInvalid` will therefore focus).
- */
+/** Validates format, future dates, then start-after-end ordering. */
 export function validateArchiveFilters(
   draft: ArchiveFilterDraft
 ): FilterErrors<ArchiveFilterDraft> {

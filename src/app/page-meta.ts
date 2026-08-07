@@ -4,13 +4,6 @@ type PageMeta = {
   title: string;
 };
 
-/**
- * `document.title` per route. Used to carry `topSearchPlaceholder` for the
- * old topbar's global search field — that field had no owner or backing
- * search implementation and was deleted outright (README §5, and the
- * "Won't" list in `docs/design_v2/09-scope-traceability-decisions.md`), so
- * the plumbing for it is removed here too rather than left dangling.
- */
 const STATIC_PAGE_META: Record<
   Exclude<AppRoute['page'], 'archive-market'>,
   PageMeta

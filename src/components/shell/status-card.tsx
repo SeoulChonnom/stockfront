@@ -4,17 +4,6 @@ import type { AriaRole, ReactNode } from 'react';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 
-/**
- * StatusCard — README §7-8 Auth Bootstrap · 404. "셸 없이 중앙 정렬 카드
- * (max-width 440px): tone 배지 + h1 + 설명 + (loading·redirecting) spinner +
- * 액션."
- *
- * Shared by `App.tsx`'s three auth-bootstrap states (rendered before the
- * shell exists at all — `fullScreen`, the default) and `not-found-page.tsx`'s
- * 404 (rendered inside `AppShell`'s `<main>`, so `fullScreen={false}` so it
- * doesn't fight the shell for viewport height).
- */
-
 export type StatusCardTone = 'info' | 'danger';
 
 const TONE_BADGE_CLASSES: Readonly<Record<StatusCardTone, string>> = {
@@ -33,7 +22,6 @@ export type StatusCardProps = {
   ariaLive?: 'polite' | 'assertive';
   showSpinner?: boolean;
   actions?: ReactNode;
-  /** Full-viewport centering for the shell-less auth screens. `false` for 404, which renders inside `<main>`. */
   fullScreen?: boolean;
 };
 
@@ -72,12 +60,6 @@ export function StatusCard({
         <h1
           className={cn(
             'mb-2 font-semibold text-[color:var(--text)]',
-            // parity cycle A8: the design's 404 h1 is 20px/margin-top 10px,
-            // distinct from the auth-bootstrap screens' 22px/12px — `fullScreen`
-            // already distinguishes 404 (false) from those screens (true), so
-            // it doubles as the hook for this size/spacing pair without a new
-            // prop. The auth-bootstrap screens aren't part of this parity
-            // cycle's measured findings, so their sizing is left as-is.
             fullScreen ? 'mt-3 text-[22px]' : 'mt-[10px] text-[20px]'
           )}
           id={titleId}

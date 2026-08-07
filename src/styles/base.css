@@ -1,40 +1,8 @@
-/*
- * Design tokens — Market Brief UI v2 (handoff_v2/README.md §6, §7-1, §15).
- * Values here are FINAL per the handoff doc: colors, type scale, spacing,
- * radius, shadow, motion, breakpoints, z-index and content measures.
- *
- * Font decision (README §3-1 / Phase 2 task, revisited during the
- * pixel-perfect-react-ui pass on /ops/batches):
- * The repo previously declared --font-sans: Inter and --font-display: Manrope,
- * but no font asset, @font-face, or CDN link ever backed those names, so it
- * was switched to the honest system stack below (no font claimed that
- * doesn't load). That reasoning still holds for Inter/Manrope. It does NOT
- * mean the app's declared stack should diverge from the design reference's
- * own stack, though: `docs/design_v2/handoff_v2/Market Brief v2.dc.html`
- * itself declares `font-family:'IBM Plex Sans KR',system-ui,-apple-system,
- * 'Segoe UI',sans-serif` and *also* ships no @font-face/font asset for
- * "IBM Plex Sans KR" — verified via Playwright against the running
- * reference page: `document.fonts` is empty (no registered font faces) and
- * `canvas.measureText()` with `font: 'IBM Plex Sans KR'` returns the exact
- * same width as a guaranteed-nonexistent font name, i.e. the reference
- * itself is already falling back through its stack, not rendering real
- * Plex glyphs. So matching this literal stack doesn't assert a font that
- * loads; it reproduces the reference's own (already-fallback) declaration
- * so both sides resolve through an IDENTICAL fallback chain in the same
- * browser — the two candidate stacks previously diverged enough (this
- * app's included explicit `Noto Sans KR`/`Apple SD Gothic Neo`/
- * `Malgun Gothic` entries the reference's stack lacks) that Korean glyphs
- * were resolving to a different actual system font on each side, which
- * showed up as real measured row-height/column-width deltas in the
- * ops-batches audit, not just a cosmetic string mismatch.
- * Numbers, IDs, timestamps and logs use --font-mono + tabular-nums via
- * .mono / [data-mono] (see bottom of this file).
- */
+/* Global design tokens and primitive layout rules. */
 
 :root {
   color-scheme: light;
 
-  /* ---- Color — surfaces & text ---- */
   --bg: #f6f8fb;
   --surface: #ffffff;
   --surface-2: #f1f4f9;
@@ -45,17 +13,14 @@
   --text-soft: #4a6180;
   --text-faint: #7288a5;
 
-  /* ---- Color — primary / brand ---- */
   --primary: #0f5bff;
   --primary-fg: #ffffff;
   --primary-soft: #eaf1ff;
   --primary-line: #bdd2ff;
 
-  /* ---- Color — market direction (text only, never background) ---- */
   --up: #0d8b5f;
   --down: #be3348;
 
-  /* ---- Color — intent (status badges: color + -soft bg + -line border) ---- */
   --success: #0d8b5f;
   --success-soft: #e7f6ef;
   --success-line: #a8dcc5;
@@ -74,17 +39,15 @@
 
   --focus: #0f5bff;
 
-  /* ---- Typography ---- */
   --font-sans:
     "IBM Plex Sans KR", system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-display: var(--font-sans);
   --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 
-  /* type scale — §6 Typography table (>640px values; ≤640 step below) */
   --fs-display: 26px;
   --fs-h1: 22px;
   --fs-h2: 17px;
-  --fs-h3: 14px; /* h3 range is 13–15px depending on block density */
+  --fs-h3: 14px;
   --fs-lead: 16px;
   --fs-body: 13.5px;
   --fs-sm: 12.5px;
@@ -103,56 +66,37 @@
   --lh-tight: 1.2;
 
   --ls-display: -0.015em;
-  --ls-caps: 0.07em; /* default caps/label letter-spacing */
-  --ls-caps-wide: 0.08em; /* nav group label variant (§5) */
+  --ls-caps: 0.07em;
+  --ls-caps-wide: 0.08em;
 
-  /* content measures */
   --measure-summary: 76ch;
   --measure-error: 62ch;
   --measure-analysis: 74ch;
 
-  /* ---- Spacing — steps down at 1024 / 640 (see media queries below) ---- */
   --pad: 32px;
-  --pad-dense: 20px; /* 고밀도 모드, independent of breakpoint */
+  --pad-dense: 20px;
   --gap: 20px;
   --gap-dense: 14px;
 
-  /* card internal padding */
-  --pad-card-header: 18px; /* 16–20px range */
-  --pad-card-body: 16px; /* 16–18px range */
-  --pad-cell-y: 10px; /* table cell, 9–12px range */
-  --pad-cell-x: 14px; /* table cell, 12–18px range */
+  --pad-card-header: 18px;
+  --pad-card-body: 16px;
+  --pad-cell-y: 10px;
+  --pad-cell-x: 14px;
 
-  /* ---- Radius ---- */
-  --r-sm: 4px; /* badge, chip, small control */
-  --r-md: 8px; /* button, input, tile */
-  --r-lg: 12px; /* card, panel */
-  --r-pill: 999px; /* nav badge only */
+  --r-sm: 4px;
+  --r-md: 8px;
+  --r-lg: 12px;
+  --r-pill: 999px;
 
-  /* ---- Shadow — cards use border only; shadow reserved for sticky/overlay ---- */
-  --sh2: 0 8px 24px rgba(15, 39, 67, 0.1); /* sticky header / popover */
-  --sh3: 0 24px 56px rgba(15, 39, 67, 0.2); /* drawer / dialog */
+  --sh2: 0 8px 24px rgba(15, 39, 67, 0.1);
+  --sh3: 0 24px 56px rgba(15, 39, 67, 0.2);
 
-  /* ---- Motion ---- */
   --dur-fast: 120ms;
   --dur: 200ms;
-  /* README doesn't pin an exact curve — standard "ease-out"-ish easing for
-     120–200ms transform/opacity transitions. */
   --ease: cubic-bezier(0.4, 0, 0.2, 1);
-  --dur-shimmer: 1.3s; /* skeleton shimmer, linear */
-  --dur-spinner: 0.9s; /* spinner, linear */
+  --dur-shimmer: 1.3s;
+  --dur-spinner: 0.9s;
 
-  /*
-   * ---- Breakpoints (documentation only — no bare media queries here) ----
-   * 1180px — master-detail 2 col -> 1 col, 3-col grid -> 2 col, aside collapses
-   * 1024px — nav rail -> mobile header, 2 col -> 1 col
-   * 640px  — mobile density, high/low price columns collapse to sub-line
-   * Repo convention: components express these via Tailwind md:/lg:/xl:
-   * prefixes (README §2); --pad/--gap below are the exception that must be
-   * plain CSS since they're consumed outside Tailwind's utility scanner.
-   */
-
-  /* ---- z-index ---- */
   --z-sticky: 40;
   --z-drawer-overlay: 60;
   --z-drawer: 61;
@@ -213,7 +157,6 @@
   background: var(--bg);
 }
 
-/* Spacing steps — README §6: --pad 32→20→14, --gap 20→…→12 */
 @media (max-width: 1024px) {
   :root {
     --pad: 20px;
@@ -241,18 +184,7 @@ body,
   min-height: 100vh;
 }
 
-/*
- * Content root base type — parity cycle A1/A2. Design's [data-app] wrapper
- * sets font-size:14px/line-height:1.6 on the div that wraps the whole
- * rendered app (nav + main); `#root` is this app's equivalent scope-owning
- * element. Deliberately NOT set on `:root`/`html` — that selector defines
- * the `rem` reference for every Tailwind utility class (`p-4`, `gap-3`,
- * `text-sm`, …) app-wide, so scoping the change there would silently shrink
- * every rem-based spacing/sizing value by 14/16, not just inherited body
- * text. Elements that already declare an explicit font-size (every
- * Tailwind `text-[…]` class, `--fs-*` token consumer, etc.) are unaffected
- * either way since an explicit declaration always wins over inheritance.
- */
+/* Keep app body sizing on #root; changing html would alter the rem basis. */
 #root {
   font-size: 14px;
   line-height: 1.6;
@@ -262,23 +194,10 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
-  /* Never mask horizontal overflow with overflow-x:hidden — README §11
-     requires document.scrollWidth <= clientWidth to be TRUE at every
-     breakpoint, not merely hidden. If it's ever wider than the viewport
-     that's a layout bug to fix at the source, not to paper over here. */
+  /* Do not hide horizontal overflow; wider content is a layout bug to fix. */
 }
 
-/*
- * Only `font-family` — NOT the `font` shorthand. `font: inherit` also
- * resets font-size/font-weight/line-height to inherit, and since this rule
- * is plain CSS (not inside any Tailwind `@layer`), cascade-layer rules
- * always lose to it regardless of specificity — every `text-[…]`/
- * `font-semibold`/etc. utility on a button/input/select was silently being
- * overridden back to the ambient inherited size/weight (discovered via the
- * parity cycle's C1 button fix never taking visual effect). Native form
- * controls still need the app's font-family (not the browser's UI font
- * stack) — just not the rest of the shorthand.
- */
+/* Use only font-family: font shorthand would reset utility size/weight/line-height. */
 button,
 input,
 select {
@@ -299,15 +218,12 @@ img {
   max-width: 100%;
 }
 
-/* ---- Mono / tabular numerals — README §3-1, §6 ----
-   Apply to indices, prices, job/page IDs, timestamps and logs. */
 .mono,
 [data-mono] {
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
 }
 
-/* ---- Content measure utilities (README §6 "본문 최대 너비") ---- */
 .measure-summary,
 .measure-error,
 .measure-analysis {
@@ -326,7 +242,6 @@ img {
   max-width: var(--measure-analysis);
 }
 
-/* ---- Responsive safety utilities (README §11) ---- */
 .min-w-0 {
   min-width: 0;
 }
@@ -335,14 +250,12 @@ img {
   overflow-wrap: anywhere;
 }
 
-/* ---- Focus ---- */
 :focus-visible {
   outline: 2px solid var(--focus);
   outline-offset: 2px;
 }
 
-/* Programmatic route-change focus on headings shouldn't show a ring, but
-   keyboard-driven :focus-visible must keep working everywhere else (§7-1). */
+/* Route-change focus is hidden; keyboard :focus-visible remains visible. */
 h1[tabindex="-1"]:focus,
 main[tabindex="-1"]:focus {
   outline: none;

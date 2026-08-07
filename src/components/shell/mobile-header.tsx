@@ -5,12 +5,6 @@ import type { ThemeMode } from '@/lib/app-state';
 
 import { ThemeToggleButton } from './theme-toggle';
 
-/**
- * Mobile compact header — README §5. `≤1024px` only (`min-[1025px]:hidden`),
- * `position: sticky; top:0; z-index:40` (`--z-sticky`), ~64px tall: 44×44
- * menu button + (section label 11px caps / current route 14px/600) + 44×44
- * theme toggle.
- */
 export function MobileHeader({
   groupLabel,
   itemLabel,

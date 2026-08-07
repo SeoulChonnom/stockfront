@@ -1,24 +1,6 @@
 import { type RefObject, useEffect, useRef } from 'react';
 
-/**
- * Shared focus-trap/Escape/scroll-lock/return-focus behaviour for Drawer and
- * Dialog (README §5 Drawer, §7-7 Manual Trigger dialog, §15 Accessibility).
- *
- * Contract (identical for both consumers, per the handoff doc):
- * - Tab / Shift+Tab cycle within the container only.
- * - Escape calls `onDismiss`.
- * - Focus moves to `initialFocusRef` (if given) or the first focusable
- *   element inside the container when it opens.
- * - Focus returns to whatever had focus before the container opened, once
- *   it closes (covers both `onDismiss` closes and unmount).
- * - Body scroll is locked while open and restored — never left leaked as
- *   `overflow: hidden` — on close.
- *
- * Overlay-click-to-close and history/URL neutrality are the caller's
- * responsibility (they differ slightly between Drawer and Dialog markup),
- * this hook only owns the keyboard/focus/scroll contract that's identical
- * for both.
- */
+/** Shared focus trap, Escape dismissal, scroll lock/restore, and return-focus for modal primitives. */
 
 const FOCUSABLE_SELECTOR = [
   'a[href]',

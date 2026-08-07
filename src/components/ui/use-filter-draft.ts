@@ -6,19 +6,6 @@ import {
   useState,
 } from 'react';
 
-/**
- * Draft/applied separation for filter forms (README §7-4 Archive Search,
- * §7-6 Batch Operations filters).
- *
- * Typing into a field only updates local `draft` state — it never touches
- * the URL. Only `apply()` calls `onApply`, which is where the consumer
- * (Archive/Batch page) is expected to `navigate(...)` with `page=1`.
- *
- * `applied` is expected to come from the URL (via `parseListFilters` et al
- * upstream) — when it changes (e.g. browser Back restores a previous
- * filter), `draft` resyncs to it and any stale errors are cleared.
- */
-
 export type FilterErrors<T> = Partial<Record<keyof T, string>>;
 
 export type UseFilterDraftOptions<T extends Record<string, string>> = {
@@ -58,8 +45,7 @@ export function useFilterDraft<T extends Record<string, string>>({
   useEffect(() => {
     setDraft(applied);
     setErrors({});
-    // Only resync when the URL-derived `applied` value itself changes —
-    // intentionally excludes `applied` object identity churn from re-render.
+    // Resync URL-derived values, not object identity churn.
   }, [JSON.stringify(applied)]);
 
   const setField = useCallback((name: keyof T, value: string) => {

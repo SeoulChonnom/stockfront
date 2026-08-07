@@ -1,16 +1,6 @@
 import { ApiError } from '@/lib/api/client';
 import { isRecord } from '@/lib/utils';
 
-/**
- * Maps a Trigger POST failure to the §7-7 error-state view. The per-status
- * message text is FIXED copy from README §7-7 (not derived from the
- * response body) except the 409 message, which interpolates the submitted
- * `businessDate`. `code` prefers whatever the backend body actually reports
- * and only falls back to the fixtures.js-documented code name when the body
- * doesn't carry one (README §14 A-06: the 409 payload's `existingJobId` is
- * assumed OPTIONAL — handled gracefully when absent, never required).
- */
-
 export type TriggerErrorView = {
   httpStatus: number;
   code: string;

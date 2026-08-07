@@ -8,25 +8,7 @@ import { MarketOverviewErrorPanel } from '../pages/market-overview/market-overvi
 import { MarketOverviewSkeleton } from '../pages/market-overview/market-overview-skeleton';
 import { MarketOverviewPage } from '../pages/market-overview-page';
 
-/**
- * Dispatches Latest/Archive Detail between loading skeleton, scoped error
- * (FAILED/5xx/401/429/offline/malformed, README §8), Archive-only 404
- * (§13 D-05) and the ready `MarketOverviewPage`.
- *
- * Owns the market-page queries itself (relocated from App.tsx): both
- * `useLatestMarketPage` and `useArchiveMarketPage` are called unconditionally
- * on every render, gated via each hook's own `enabled` flag — this preserves
- * the original `enabled: authResolved && route.page === ...` pattern, just
- * moved to the component that actually consumes the result, so the data only
- * flows one way and no query-shaped prop needs to cross the App → page
- * boundary at all.
- *
- * `mode`/`businessDate`/current filter query are derived here via
- * `useUrlState()` + `parseRoute()` rather than threaded through as props —
- * both are already exported, read-only APIs, and deriving them here means a
- * failed fetch (snapshot `undefined`) still has a real `businessDate` to show
- * on the 404 screen.
- */
+/** Owns latest/archive queries and dispatches loading, scoped errors, 404, or ready content. */
 export function MarketOverviewRouteContent({
   authResolved,
 }: {
@@ -55,8 +37,7 @@ export function MarketOverviewRouteContent({
     isFetching: isRefetching,
     refetch,
   } = mode === 'latest' ? latestQuery : archiveQuery;
-  // `refetch` returns a Promise; the panel's `onRetry` wants a void-returning
-  // handler (§9 Retry contract), so wrap rather than pass it through raw.
+  // Keep the retry callback void-returning for the panel contract.
   const onRetry = () => void refetch();
 
   if (isLoading) {

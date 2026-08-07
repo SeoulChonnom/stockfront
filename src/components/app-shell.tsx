@@ -11,36 +11,7 @@ import { NavRail } from './shell/nav-rail';
 import { buildScrollKey } from './shell/scroll-restoration';
 import { useOpsFailedCount } from './shell/use-ops-failed-count';
 
-/**
- * App Shell — README §5, §7-1. Replaces the old dual-nav sidebar+topbar
- * (duplicate links, non-functional search, Support/Documentation/System
- * Status/footer "Coming soon" placeholders — all deleted, §5 / the "Won't"
- * list in `docs/design_v2/09-scope-traceability-decisions.md`) with exactly
- * one primary nav rendered by `NavRail` (desktop, ≥1025px) / `NavDrawer`
- * (mobile, ≤1024px via `MobileHeader`'s menu button).
- *
- * Component tree:
- * ```
- * AppShell
- * └─ AnnounceProvider (keyed on pathname — the app's ONE aria-live region, §7-1)
- *    ├─ <a href="#main-content"> skip link
- *    ├─ NavRail            (desktop, hidden ≤1024px — not just visually: see NavList)
- *    ├─ MobileHeader        (mobile, hidden ≥1025px)
- *    ├─ (DEV only) DevUrlStrip
- *    ├─ <main id="main-content" tabIndex={-1}>  ← children (AppPageContent)
- *    └─ NavDrawer           (mobile menu, portal-less — renders null while closed)
- * ```
- *
- * `NavRail`/`NavDrawer` both render through `shell/nav-list.tsx`, the single
- * source of nav items + active-route rules (`shell/nav-items.ts`) — desktop
- * and mobile can never drift from each other.
- *
- * Any screen rendered as `children` can call `useAnnounce()`
- * (`src/components/shell/use-announce.ts`) to publish to the shared live
- * region — see `shell/announce-context.tsx`'s doc comment for the full
- * contract (it clears itself whenever `pathname`/`searchParams` change, so a
- * screen never needs to clear its own announcement on unmount).
- */
+/** Shared shell: desktop rail/mobile drawer and one app-wide live region. */
 export function AppShell({
   children,
   pathname,

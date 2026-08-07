@@ -15,17 +15,7 @@ import {
 } from './nav-items';
 import { saveScrollPosition } from './scroll-restoration';
 
-/**
- * Shared nav rendering for the desktop rail and the mobile drawer (README
- * §5). Both consumers pass their own `itemMinHeightClass` (40px rail / 48px
- * drawer) and `onNavigate` (drawer closes itself after a link click; the
- * rail has nothing extra to do).
- *
- * The admin-only "운영" group is rendered from a plain `if` — for a
- * non-admin user (`can('ops.view') === false`) that `<div>` is simply never
- * constructed, so it never reaches the DOM (§10, §16-11). CSS-hiding it
- * would not satisfy that requirement; only NOT rendering it does.
- */
+/** Shared nav renderer; omit the admin group entirely for unauthorized users. */
 
 const GROUP_LABEL_CLASSES =
   'px-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-[color:var(--text-faint)]';
@@ -119,10 +109,7 @@ export function NavList({
   onNavigate?: () => void;
   failedCount?: number | null;
 }) {
-  // `useCapabilities()` (not the bare `can()`) so this list re-renders on its
-  // own whenever the role changes — e.g. the dev-only role simulator toggling
-  // it while the mobile drawer (a NavList instance with no other subscribed
-  // ancestor) happens to be open.
+  // useCapabilities() keeps the open drawer reactive to role changes.
   const { can } = useCapabilities();
 
   return (

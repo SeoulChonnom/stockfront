@@ -25,13 +25,7 @@ export type ArchiveRowFilters = {
   page: number;
 };
 
-/**
- * README §7-4: opening a row must carry `?pageId=&from=&to=&status=&page=`
- * so Archive Detail can offer "검색 결과로 돌아가기" and Back restores this
- * exact search. Built from `filters` (the page's already-applied state)
- * rather than the raw incoming `URLSearchParams` so the target query is
- * always well-formed even if the incoming URL had stray/legacy params.
- */
+/** Row links carry applied filters so Archive Detail can restore the search. */
 function getArchiveDetailHref(
   record: ArchiveRecord,
   filters: ArchiveRowFilters
@@ -45,13 +39,7 @@ function getArchiveDetailHref(
   });
 }
 
-/**
- * Local equivalent of `app-state.ts`'s `createNavigateHandler` — duplicated
- * (not imported+wrapped) because this one extra step, saving the search
- * page's own scroll position immediately before navigating away, must run
- * for every row-open click and `createNavigateHandler` has no hook for
- * that. §9 "Archive 행 열기" Back contract: 원래 스크롤 복원.
- */
+/** Saves this page's scroll before opening a row; Back restores it. */
 function createRowOpenHandler(href: string, scrollSearch: string) {
   return (event: MouseEvent<HTMLAnchorElement>) => {
     if (
@@ -82,18 +70,6 @@ function ReasonSubline({ record }: { record: ArchiveRecord }) {
   );
 }
 
-/**
- * ≤1180px collapse target for the 생성 시각 column (§7-4/§11). The shared
- * `TableCollapsibleCell`/`TablePriorityCell` helpers (`components/ui/table`)
- * only parameterize md/lg/xl (768/1024/1280) — none lands on the 1180
- * breakpoint this screen needs, and widening that shared enum is outside
- * this phase's file ownership. Using Tailwind's arbitrary-breakpoint variant
- * (already an established pattern in this repo, e.g. `app-shell.tsx`'s
- * `min-[1025px]:`) keeps the exact pixel value without touching the shared
- * component; the value is never dropped either way (`display:none` only
- * hides the desktop cell once this same value has already been surfaced as
- * the subline below).
- */
 function GeneratedAtSubline({ record }: { record: ArchiveRecord }) {
   return (
     <div className='mono mt-1 text-[11.5px] text-[color:var(--text-faint)] min-[1181px]:hidden'>

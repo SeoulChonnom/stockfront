@@ -11,7 +11,6 @@ export function AppPageContent({
   route,
   searchParams,
 }: {
-  /** Gates the market-page queries owned by `MarketOverviewRouteContent` — relocated from App.tsx's old `enabled: authResolved && route.page === ...`. */
   authResolved: boolean;
   route: AppRoute;
   searchParams: URLSearchParams;

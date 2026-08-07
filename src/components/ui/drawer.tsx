@@ -4,16 +4,7 @@ import { cn } from '@/lib/utils';
 
 import { useDismissable } from './use-dismissable';
 
-/**
- * Drawer — README §5 (mobile nav drawer) + §15. `role="dialog"
- * aria-modal="true"`, slides from the left, `width: min(84vw, 300px)`,
- * `--sh3`, `overscroll-behavior: contain`. Focus trap / Escape / overlay
- * click / body scroll lock / return-focus-to-trigger come from the shared
- * `useDismissable` hook (identical contract to Dialog).
- *
- * Must not touch history/URL — this component never calls `navigate`, so
- * browser Back is never intercepted by opening/closing it (§5).
- */
+/** Drawer primitive; it must not mutate history or URL when opened/closed. */
 
 export type DrawerProps = {
   isOpen: boolean;
@@ -41,7 +32,7 @@ export function Drawer({
 
   return (
     <div className='fixed inset-0 z-(--z-drawer-overlay)'>
-      {/* Backdrop as a real <button> — see the same note in `dialog.tsx`. */}
+      {/* Real button keeps overlay dismissal keyboard-operable. */}
       <button
         aria-hidden='true'
         className='absolute inset-0 bg-[rgba(8,17,31,.55)]'

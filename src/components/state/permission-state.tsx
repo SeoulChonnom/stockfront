@@ -2,17 +2,7 @@ import { Button } from '@/components/ui/button';
 import { navigate } from '@/lib/router';
 import { cn } from '@/lib/utils';
 
-/**
- * PermissionState — README §7-6 비-관리자(ADMIN이 아닌 일반 사용자)가
- * `/ops/batches`에 접근했을 때 보여주는 403 화면. 문구는 README에 적힌
- * 한국어 그대로다. 이 컴포넌트만 렌더링되고 로그·Trigger·상세 노드는
- * DOM에 아예 없어야 한다는 것이 §7-6/§16-11의 요구사항 — 그 판단(무엇을
- * 렌더링할지)은 호출부(배치 운영 페이지)의 책임이고, 이 컴포넌트는 403
- * 화면 자체만 그린다.
- */
-
 export type PermissionStateProps = {
-  /** 기본값은 '/market/latest'로 navigate. 테스트/커스텀 이동이 필요하면 넘긴다. */
   onNavigateToLatest?: () => void;
   className?: string;
 };

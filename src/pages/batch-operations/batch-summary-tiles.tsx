@@ -3,22 +3,8 @@ import { cn } from '@/lib/utils';
 
 import { formatDurationKo } from './format-batch';
 
-/**
- * README §7-6 point 4: 3 tiles in FAILURE-FIRST order (실패 → 부분 실패 →
- * 성공), 3-col grid that collapses to 2-col at ≤1180px. "실패가 0이어도
- * 화면 전체를 위험색으로 물들이지 않는다 — 강조는 좌측 바와 숫자 색까지만"
- * — so only the 실패/부분 실패 tiles get a tone-colored left bar + number,
- * never a tone-colored background or page-wide wash.
- */
-
 type TileTone = 'danger' | 'warning' | 'neutral';
 
-// Design uses a real `border-left:3px solid var(--tone)` override on top of
-// the card's own 1px `--line` border on the other three sides (reference:
-// `border:1px solid var(--line);...;border-left:3px solid var(--danger)`),
-// not a box-shadow — a shadow leaves `border-left-width` computed at the
-// card's shared 1px and paints the tone color as a second, overlapping
-// layer instead of replacing the edge.
 const TILE_BAR_CLASSES: Readonly<Record<TileTone, string>> = {
   danger: 'border-l-[3px] border-l-[color:var(--danger)]',
   warning: 'border-l-[3px] border-l-[color:var(--warning)]',
@@ -45,8 +31,7 @@ function SummaryTile({
   return (
     <Card
       className={cn(
-        // U4 (parity cycle 5): design's tile padding is 14px top/bottom,
-        // 16px left/right — not a uniform `p-4` (16px all sides).
+        // Keep tile spacing independent from its status tone.
         'min-w-0 px-4 py-3.5',
         TILE_BAR_CLASSES[tone]
       )}
@@ -84,16 +69,9 @@ export function BatchSummaryTiles({
     // biome-ignore lint/a11y/useSemanticElements: Biome suggests <fieldset>, but these are read-only status tiles, not grouped form controls
     <div
       aria-label='배치 실행 요약'
-      // Found via the corrected `summary-tiles` probe (cycle 2, section 0):
-      // `max-[1180px]:grid-cols-2` applied at EVERY width ≤1180px, including
-      // mobile, so this never actually collapsed to the design's 1-column
-      // mobile layout (design steps 3→2 at 1180px, 2→1 at 640px). Rewritten
-      // mobile-first with non-overlapping min-width ranges so there's no
-      // ambiguity about which rule wins at a given width.
       className='grid min-w-0 grid-cols-1 gap-3 min-[641px]:grid-cols-2 min-[1181px]:grid-cols-3'
       role='group'
     >
-      {/* D9: supporting copy matches the design's exact wording. */}
       <SummaryTile
         label='실패'
         supporting='스냅샷 미생성 · 재실행 필요'

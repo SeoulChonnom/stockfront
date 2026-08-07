@@ -1,16 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { setRoleOverride, useRole } from '@/lib/capabilities';
 
-/**
- * Rail-footer "상태 시뮬레이터" — README §5 "(개발 빌드에서만) 상태
- * 시뮬레이터". Gated behind `import.meta.env.DEV` by the caller
- * (`nav-rail.tsx`) — this component itself has no env check, it's simply
- * never imported/rendered in a production build's code path.
- *
- * Flips the single-source-of-truth role override in `src/lib/capabilities.ts`
- * so a developer can preview User vs Admin nav/screens without a real
- * backend `roleList` (README §10).
- */
+/** Development-only role preview; the caller gates this component behind DEV. */
 export function DevRoleSimulator() {
   const role = useRole();
 

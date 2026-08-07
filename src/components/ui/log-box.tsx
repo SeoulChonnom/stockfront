@@ -5,18 +5,7 @@ import { cn } from '@/lib/utils';
 
 import { Button } from './button';
 
-/**
- * LogBox — README §7-6 실행 로그. `<pre>`는 `max-height:240px; overflow:auto;
- * white-space:pre-wrap; overflow-wrap:anywhere` + `--surface-2` 배경 +
- * mono 11.5px — 4,000자짜리 로그에 공백 없는 긴 토큰이 섞여 있어도 문서
- * 가로 스크롤을 만들지 않는다(`overflow-wrap:anywhere` + `break-words`
- * 이중 안전장치).
- *
- * `복사` 버튼은 `navigator.clipboard`를 쓰고 없으면 숨겨진 textarea +
- * `execCommand('copy')`로 폴백한다. 확인 문구("복사했습니다")는 버튼
- * 라벨을 잠깐 바꾸는 방식이라 화면의 단일 `aria-live` region을 가로채지
- * 않는다(§15). `전체 N,NNN자 보기` 토글은 `aria-expanded`를 갖는다.
- */
+/** Log output wraps long tokens, and copy falls back when Clipboard API is unavailable. */
 
 const PREVIEW_LENGTH = 600;
 const COPIED_LABEL_DURATION_MS = 2000;
@@ -48,12 +37,6 @@ function fallbackCopy(text: string): boolean {
 export type LogBoxProps = {
   content: string;
   className?: string;
-  /**
-   * O3 (parity cycle 3): the design puts the section heading in the SAME
-   * flex row as 복사/전체보기, not stacked above it — render the caller's
-   * heading here instead of above `LogBox` so all three share one wrapping
-   * row.
-   */
   heading?: ReactNode;
 };
 

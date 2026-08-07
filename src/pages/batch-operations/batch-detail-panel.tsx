@@ -23,13 +23,6 @@ import {
 } from './format-batch';
 import { useRetryAnnounce } from './use-retry-announce';
 
-/**
- * README §7-6 point 6: 상세 패널. Loading/error are independent of the list
- * (§7-6 "상세 loading/error도 독립"), so this component never reads list
- * query state — it only needs `run`/`isLoading`/`isError`, driven by its
- * own `useBatchJobDetail(selectedJobId)` in the parent.
- */
-
 export type BatchDetailPanelProps = {
   run: BatchRunRow | null;
   isLoading: boolean;
@@ -109,9 +102,6 @@ function toAiRetryErrorView(error: unknown): AiRetryErrorView {
 
 function Dl({ children }: { children: ReactNode }) {
   return (
-    // B5: design gap is 10px row / 14px column, not 8px / 16px.
-    // A1 (cycle 2): design text is 12.5px, not 13.5px — no explicit
-    // leading, inherits the content root's 1.6 (→ 20px, matching design).
     <dl className='m-0 grid min-w-0 grid-cols-1 gap-x-[14px] gap-y-[10px] text-[12.5px] sm:grid-cols-2'>
       {children}
     </dl>
@@ -280,12 +270,7 @@ function BatchDetailContent({
     run.pageId !== null
       ? buildUrl(`/market/archive/${run.businessDate}`, { pageId: run.pageId })
       : null;
-  // NEWS_COLLECTION 작업은 `snapshot`이 애초에 null이라(스펙상 그 잡타입은
-  // 스냅샷을 만들지 않는다) `mapBatchDetailToRun`이 원문/정제/이슈·실행
-  // 옵션을 0/0/0·force=false로 채운다 — 실제 값이 아니라 coerce 헬퍼의
-  // "값이 없을 때의" fallback이므로, 이 잡타입에서는 두 행 자체를
-  // 렌더하지 않는다(plan step 7 — 값을 숨기지 않고 그리면 없는 데이터를
-  // 있는 것처럼 보여주는 셈이다).
+  // NEWS_COLLECTION has no snapshot; do not render fallback counts/options as real data.
   const hasSnapshot = isMarketSnapshotJobType(run.jobType);
   const isRetryForRun = retryAiMutation.variables?.jobId === run.id;
   const isRetryPendingForRun = isRetryForRun && retryAiMutation.isPending;
