@@ -62,6 +62,7 @@ type RetryAiMutationResult = {
   isError: boolean;
   isPending: boolean;
   isSuccess: boolean;
+  variables: { jobId: number } | undefined;
   mutate: (
     variables: { jobId: number },
     options?: { onSuccess?: (data: AiRetryRunResponse) => void }
@@ -161,6 +162,7 @@ function retryAiReady(
     isError: false,
     isPending: false,
     isSuccess: false,
+    variables: undefined,
     mutate: vi.fn(),
     reset: vi.fn(),
     ...overrides,
@@ -813,7 +815,7 @@ describe('BatchOperationsPage — admin', () => {
     );
 
     mockUseRetryAiMutation.mockReturnValue(
-      retryAiReady({ isPending: true, mutate })
+      retryAiReady({ isPending: true, mutate, variables: { jobId: 101 } })
     );
     rerender(
       <AnnounceProvider pathname='/test'>
@@ -871,7 +873,11 @@ describe('BatchOperationsPage — admin', () => {
       },
     });
     mockUseRetryAiMutation.mockReturnValue(
-      retryAiReady({ error: conflict, isError: true })
+      retryAiReady({
+        error: conflict,
+        isError: true,
+        variables: { jobId: 101 },
+      })
     );
     mockUseBatchJobs.mockReturnValue(jobsReady());
     mockUseBatchJobDetail.mockReturnValue(
@@ -886,5 +892,106 @@ describe('BatchOperationsPage — admin', () => {
     expect(document.querySelector('[aria-live="polite"]')).toHaveTextContent(
       ''
     );
+  });
+
+  it('does not carry job A retry feedback or pending state into selected job B', async () => {
+    const user = userEvent.setup();
+    const response: AiRetryRunResponse = {
+      jobId: 1043,
+      jobName: 'market_snapshot_ai_retry',
+      businessDate: '2026-07-26',
+      status: 'RUNNING',
+      runMode: 'AI_SUMMARY_RETRY',
+      sourceJobId: 101,
+      sourcePageId: 501,
+      idempotencyKey: 'retry-key-a',
+      startedAt: '2026-08-07T08:24:31Z',
+    };
+    let settleA: (() => void) | undefined;
+    const mutate = vi.fn(
+      (
+        _variables: { jobId: number },
+        options?: { onSuccess?: (data: AiRetryRunResponse) => void }
+      ) => {
+        settleA = () => options?.onSuccess?.(response);
+      }
+    );
+    mockUseRetryAiMutation.mockReturnValue(retryAiReady({ mutate }));
+    mockUseBatchJobs.mockReturnValue(
+      jobsReady({ rows: [createRow({ id: 101 }), createRow({ id: 202 })] })
+    );
+    mockUseBatchJobDetail.mockImplementation((jobId) =>
+      detailReady(
+        createRow({
+          id: jobId ?? 101,
+          rawStatus: 'PARTIAL',
+          status: 'PARTIAL',
+        })
+      )
+    );
+
+    const { rerender } = renderPage(new URLSearchParams('jobId=101'));
+    await user.click(screen.getByRole('button', { name: 'AI 요약만 재시도' }));
+
+    mockUseRetryAiMutation.mockReturnValue(
+      retryAiReady({
+        isPending: true,
+        mutate,
+        variables: { jobId: 101 },
+      })
+    );
+    rerender(
+      <AnnounceProvider pathname='/test'>
+        <BatchOperationsPage searchParams={new URLSearchParams('jobId=202')} />
+      </AnnounceProvider>
+    );
+
+    expect(
+      screen.getByRole('button', { name: 'AI 요약만 재시도' })
+    ).toBeEnabled();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('AI 요약 재시도가 접수되었습니다.')
+    ).not.toBeInTheDocument();
+
+    settleA?.();
+    expect(
+      document.querySelector('[aria-live="polite"]')
+    ).not.toHaveTextContent('AI 요약 재시도가 접수되었습니다.');
+
+    mockUseRetryAiMutation.mockReturnValue(
+      retryAiReady({
+        data: response,
+        isSuccess: true,
+        mutate,
+        variables: { jobId: 101 },
+      })
+    );
+    rerender(
+      <AnnounceProvider pathname='/test'>
+        <BatchOperationsPage searchParams={new URLSearchParams('jobId=202')} />
+      </AnnounceProvider>
+    );
+
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('AI 요약 재시도가 접수되었습니다.')
+    ).not.toBeInTheDocument();
+
+    mockUseRetryAiMutation.mockReturnValue(
+      retryAiReady({
+        error: new Error('job A failed'),
+        isError: true,
+        mutate,
+        variables: { jobId: 101 },
+      })
+    );
+    rerender(
+      <AnnounceProvider pathname='/test'>
+        <BatchOperationsPage searchParams={new URLSearchParams('jobId=202')} />
+      </AnnounceProvider>
+    );
+
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 });

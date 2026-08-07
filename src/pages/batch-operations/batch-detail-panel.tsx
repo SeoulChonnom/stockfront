@@ -53,6 +53,7 @@ type RetryAiMutationState = {
   isError: boolean;
   isPending: boolean;
   isSuccess: boolean;
+  variables: RetryAiMutationVariables | undefined;
   mutate: (
     variables: RetryAiMutationVariables,
     options?: { onSuccess?: (data: AiRetryRunResponse) => void }
@@ -281,24 +282,34 @@ function BatchDetailContent({
   // 렌더하지 않는다(plan step 7 — 값을 숨기지 않고 그리면 없는 데이터를
   // 있는 것처럼 보여주는 셈이다).
   const hasSnapshot = isMarketSnapshotJobType(run.jobType);
-  const aiRetryError = retryAiMutation.isError
-    ? toAiRetryErrorView(retryAiMutation.error)
-    : null;
+  const isRetryForRun = retryAiMutation.variables?.jobId === run.id;
+  const isRetryPendingForRun = isRetryForRun && retryAiMutation.isPending;
+  const aiRetryError =
+    isRetryForRun && retryAiMutation.isError
+      ? toAiRetryErrorView(retryAiMutation.error)
+      : null;
+  const aiRetrySuccess = isRetryForRun && retryAiMutation.isSuccess;
+  const currentRunIdRef = useRef(run.id);
+
+  useEffect(() => {
+    currentRunIdRef.current = run.id;
+  }, [run.id]);
 
   function handleRetryAi() {
-    if (
-      !canRetryAi ||
-      run.rawStatus !== 'PARTIAL' ||
-      retryAiMutation.isPending
-    ) {
+    if (!canRetryAi || run.rawStatus !== 'PARTIAL' || isRetryPendingForRun) {
       return;
     }
 
+    const sourceJobId = run.id;
     onAnnounce('AI 요약 재시도를 요청하고 있습니다.');
     retryAiMutation.mutate(
-      { jobId: run.id },
+      { jobId: sourceJobId },
       {
-        onSuccess: () => onAnnounce('AI 요약 재시도가 접수되었습니다.'),
+        onSuccess: () => {
+          if (currentRunIdRef.current === sourceJobId) {
+            onAnnounce('AI 요약 재시도가 접수되었습니다.');
+          }
+        },
       }
     );
   }
@@ -405,7 +416,7 @@ function BatchDetailContent({
         </InlineAlert>
       ) : null}
 
-      {retryAiMutation.isSuccess && retryAiMutation.data ? (
+      {aiRetrySuccess && retryAiMutation.data ? (
         <InlineAlert title='AI 요약 재시도가 접수되었습니다.' tone='success'>
           job {retryAiMutation.data.jobId} · 상태 {retryAiMutation.data.status}
         </InlineAlert>
@@ -456,8 +467,8 @@ function BatchDetailContent({
         </Button>
         {canRetryAi && run.rawStatus === 'PARTIAL' ? (
           <Button
-            disabled={retryAiMutation.isPending}
-            loading={retryAiMutation.isPending}
+            disabled={isRetryPendingForRun}
+            loading={isRetryPendingForRun}
             onClick={handleRetryAi}
             size='sm'
             type='button'
