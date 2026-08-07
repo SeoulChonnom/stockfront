@@ -1,30 +1,20 @@
-import { type Ref, useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 
-import { EmptyState, InlineAlert, StatusBadge } from '@/components/state';
-import { Skeleton } from '@/components/state/skeleton';
-import { BatchTypeBadge } from '@/components/ui/batch-type-badge';
+import { InlineAlert } from '@/components/state';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Pagination } from '@/components/ui/pagination';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-  TableScrollWrapper,
-} from '@/components/ui/table';
 import { formatRelativeFreshness } from '@/lib/formatters';
 import type { BatchRunRow } from '@/lib/query-hooks';
 import { cn, computeTotalPages } from '@/lib/utils';
-
+import { BatchHistoryEmpty } from './batch-history-empty';
+import { BatchHistorySkeleton } from './batch-history-skeleton';
+import { BatchHistoryTable } from './batch-history-table';
 import type { BatchFilters } from './batch-url';
 import {
   getBatchStatusSummaryLabel,
   getBatchTypeSummaryLabel,
 } from './filter-copy';
-import { getSnapshotLabel } from './format-batch';
 import { useRetryAnnounce } from './use-retry-announce';
 
 /** List loading/error remain local to the table body; detail query state is independent. */
@@ -170,74 +160,22 @@ export function BatchHistoryList({
             </InlineAlert>
           </div>
         ) : (
-          <TableScrollWrapper>
-            <Table aria-busy={isLoading} minWidth={520}>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className='h-auto py-[9px] pl-4 sm:pl-[18px]'>
-                    작업 · 기준일
-                  </TableHead>
-                  <TableHead
-                    className='hidden h-auto min-[641px]:table-cell'
-                    padding='compact'
-                  >
-                    타입
-                  </TableHead>
-                  <TableHead className='h-auto' padding='compact'>
-                    상태
-                  </TableHead>
-                  <TableHead className='h-auto text-right' padding='compact'>
-                    소요
-                  </TableHead>
-                  <TableHead className='hidden h-auto py-[9px] pr-4 text-right whitespace-nowrap min-[1181px]:table-cell sm:pr-[18px]'>
-                    원문/정제/이슈
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isLoading ? (
-                  <SkeletonRows />
-                ) : rows.length === 0 ? (
-                  <TableRow>
-                    <TableCell className='p-4 sm:p-[18px]' colSpan={5}>
-                      <EmptyState
-                        actions={
-                          <Button
-                            onClick={clearFilters}
-                            size='sm'
-                            type='button'
-                            variant='secondary'
-                          >
-                            필터 해제
-                          </Button>
-                        }
-                        description='선택한 기간·상태·타입 조건에 해당하는 작업이 없습니다. 상태와 타입 조건을 해제하면 같은 기간의 전체 이력을 볼 수 있습니다.'
-                        kind='search-results'
-                        title='표시할 실행 이력이 없습니다'
-                      />
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  rows.map((row) => (
-                    <BatchHistoryRow
-                      buttonRef={
-                        row.id === selectedJobId
-                          ? selectedRowButtonRef
-                          : undefined
-                      }
-                      isSelected={row.id === selectedJobId}
-                      key={row.id}
-                      onSelect={() => {
-                        onAnnounce(`job ${row.id} 상세를 표시합니다.`);
-                        onSelectRow(row.id);
-                      }}
-                      row={row}
-                    />
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </TableScrollWrapper>
+          <BatchHistoryTable
+            isLoading={isLoading}
+            onSelectRow={(jobId) => {
+              onAnnounce(`job ${jobId} 상세를 표시합니다.`);
+              onSelectRow(jobId);
+            }}
+            rows={rows}
+            selectedJobId={selectedJobId}
+            selectedRowButtonRef={selectedRowButtonRef}
+          >
+            {isLoading ? (
+              <BatchHistorySkeleton />
+            ) : rows.length === 0 ? (
+              <BatchHistoryEmpty onClearFilters={clearFilters} />
+            ) : null}
+          </BatchHistoryTable>
         )}
 
         {!isError && !isLoading && rows.length > 0 ? (
@@ -252,103 +190,5 @@ export function BatchHistoryList({
         ) : null}
       </CardContent>
     </Card>
-  );
-}
-
-/** Keep row placeholders inside this table; a nested `<table>` would be invalid HTML. */
-function SkeletonRows() {
-  return (
-    <>
-      {Array.from({ length: 5 }, (_, index) => (
-        // biome-ignore lint/suspicious/noArrayIndexKey: fixed 5-row aria-hidden placeholder, never reordered
-        <TableRow aria-hidden='true' key={`skeleton-${index}`}>
-          <TableCell>
-            <Skeleton className='h-4 w-28' />
-          </TableCell>
-          <TableCell className='hidden min-[641px]:table-cell'>
-            <Skeleton className='h-4 w-16' />
-          </TableCell>
-          <TableCell>
-            <Skeleton className='h-4 w-20' />
-          </TableCell>
-          <TableCell>
-            <Skeleton className='h-4 w-16' />
-          </TableCell>
-          <TableCell className='hidden min-[1181px]:table-cell'>
-            <Skeleton className='h-4 w-24' />
-          </TableCell>
-        </TableRow>
-      ))}
-    </>
-  );
-}
-
-function BatchHistoryRow({
-  buttonRef,
-  row,
-  isSelected,
-  onSelect,
-}: {
-  buttonRef?: Ref<HTMLButtonElement>;
-  row: BatchRunRow;
-  isSelected: boolean;
-  onSelect: () => void;
-}) {
-  const isFailed = row.rawStatus.trim().toUpperCase() === 'FAILED';
-
-  return (
-    // Keep the row hit area while preventing the inner keyboard button from firing twice.
-    <TableRow
-      aria-selected={isSelected}
-      className='cursor-pointer'
-      onClick={onSelect}
-      selected={isSelected}
-      tone={isFailed ? 'danger' : undefined}
-    >
-      <TableCell className='py-2.5 pl-4 align-top sm:pl-[18px]'>
-        <button
-          aria-label={`job ${row.id} 상세 선택`}
-          className='mono block min-w-0 rounded-[var(--r-sm)] text-left text-body font-semibold text-fg outline-none hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--focus)]'
-          ref={buttonRef}
-          onClick={(event) => {
-            event.stopPropagation();
-            onSelect();
-          }}
-          type='button'
-        >
-          {row.businessDate}
-        </button>
-        <div className='mono text-label text-faint'>
-          job {row.id} · {getSnapshotLabel(row)}
-        </div>
-        <BatchTypeBadge
-          className='mt-1 px-[7px] py-0.5 text-label min-[641px]:hidden'
-          jobType={row.jobType}
-        />
-        <div className='mono min-[1181px]:hidden text-label text-faint'>
-          원문/정제/이슈 {row.counts}
-        </div>
-      </TableCell>
-      <TableCell className='hidden py-2.5 px-3 align-top min-[641px]:table-cell'>
-        <BatchTypeBadge className='py-0.5' jobType={row.jobType} />
-      </TableCell>
-      <TableCell className='py-2.5 px-3 align-top'>
-        <StatusBadge size='sm' status={row.rawStatus} />
-        {row.rawStatus.trim().toUpperCase() === 'PARTIAL' && row.detail ? (
-          <div className='wrap-anywhere mt-1 text-caption text-faint'>
-            {row.detail}
-          </div>
-        ) : null}
-      </TableCell>
-      <TableCell className='py-2.5 px-3 text-right align-top'>
-        <div className='mono text-[13px] text-fg'>{row.duration}</div>
-        <div className='mono text-label whitespace-nowrap text-faint'>
-          {row.startedAt}
-        </div>
-      </TableCell>
-      <TableCell className='mono hidden py-2.5 pr-4 text-right align-top whitespace-nowrap min-[1181px]:table-cell sm:pr-[18px]'>
-        {row.counts}
-      </TableCell>
-    </TableRow>
   );
 }
