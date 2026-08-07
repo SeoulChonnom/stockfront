@@ -7,6 +7,7 @@ import { can, useCapabilities } from '@/lib/capabilities';
 import {
   useBatchJobDetail,
   useBatchJobs,
+  useRetryAiMutation,
   useStartBatchRunMutation,
 } from '@/lib/query-hooks';
 import { navigate } from '@/lib/router';
@@ -67,12 +68,19 @@ export function BatchOperationsPage({
     return <PermissionState />;
   }
 
-  return <AdminBatchOperations searchParams={searchParams} />;
+  return (
+    <AdminBatchOperations
+      canTriggerAi={canDo('ops.trigger')}
+      searchParams={searchParams}
+    />
+  );
 }
 
 function AdminBatchOperations({
+  canTriggerAi,
   searchParams,
 }: {
+  canTriggerAi: boolean;
   searchParams: URLSearchParams;
 }) {
   const announce = useAnnounce();
@@ -130,6 +138,7 @@ function AdminBatchOperations({
   const detailQuery = useBatchJobDetail(selectedJobId);
 
   const startBatchMutation = useStartBatchRunMutation();
+  const retryAiMutation = useRetryAiMutation();
   const [triggerDialog, setTriggerDialog] = useState<{
     open: boolean;
     prefillDate?: string;
@@ -275,6 +284,7 @@ function AdminBatchOperations({
         />
 
         <BatchDetailPanel
+          canRetryAi={canTriggerAi}
           hasSelection={selectedJobId !== null}
           hiddenOnNarrowView={!isDetailView}
           isError={detailQuery.isError}
@@ -288,6 +298,7 @@ function AdminBatchOperations({
           onRetry={() => {
             void detailQuery.refetch();
           }}
+          retryAiMutation={retryAiMutation}
           run={detailQuery.data ?? null}
           selectedJobId={selectedJobId}
         />

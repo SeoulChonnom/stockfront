@@ -5,6 +5,7 @@ import {
   type BatchJobsParams,
   getBatchJobDetail,
   getBatchJobs,
+  retryAiSummary,
   startBatchRun,
 } from './api/batch';
 import { getClusterDetail } from './api/news';
@@ -143,6 +144,28 @@ export function useStartBatchRunMutation() {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['batch-jobs'] }),
         queryClient.invalidateQueries({ queryKey: ['batch-job-detail'] }),
+      ]);
+    },
+  });
+}
+
+export type RetryAiMutationVariables = {
+  jobId: number;
+};
+
+export function useRetryAiMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ jobId }: RetryAiMutationVariables) =>
+      retryAiSummary(jobId, crypto.randomUUID()),
+    retry: false,
+    onSuccess: async (_result, { jobId }) => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['batch-jobs'] }),
+        queryClient.invalidateQueries({
+          queryKey: ['batch-job-detail', jobId],
+        }),
       ]);
     },
   });

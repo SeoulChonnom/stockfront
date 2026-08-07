@@ -1,5 +1,6 @@
 import { apiRequest } from './client';
 import type {
+  AiRetryRunResponse,
   BatchJobDetailResponse,
   BatchJobListResponse,
   BatchRunRequest,
@@ -38,4 +39,17 @@ export function startBatchRun(
     body: payload,
     signal,
   });
+}
+
+export function retryAiSummary(
+  jobId: number,
+  idempotencyKey = crypto.randomUUID()
+) {
+  return apiRequest<AiRetryRunResponse>(
+    `/stock/api/batch/jobs/${jobId}/retry-ai`,
+    {
+      method: 'POST',
+      headers: { 'Idempotency-Key': idempotencyKey },
+    }
+  );
 }

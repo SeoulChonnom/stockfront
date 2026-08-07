@@ -3,12 +3,14 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { AnnounceProvider } from '@/components/shell/announce-context';
+import { ApiError } from '@/lib/api/client';
 import {
   resetRoleOverrideForTesting,
   setRoleOverride,
 } from '@/lib/capabilities';
 
 import type { BatchJobsParams } from './../lib/api/batch';
+import type { AiRetryRunResponse } from './../lib/api/types';
 import type { BatchRunRow } from './../lib/query-hooks';
 import { BatchOperationsPage } from './batch-operations-page';
 
@@ -54,20 +56,36 @@ type BatchJobDetailQueryResult = {
   refetch: () => void;
 };
 
+type RetryAiMutationResult = {
+  data: AiRetryRunResponse | undefined;
+  error: unknown;
+  isError: boolean;
+  isPending: boolean;
+  isSuccess: boolean;
+  mutate: (
+    variables: { jobId: number },
+    options?: { onSuccess?: (data: AiRetryRunResponse) => void }
+  ) => void;
+  reset: () => void;
+};
+
 const {
   mockUseBatchJobs,
   mockUseBatchJobDetail,
+  mockUseRetryAiMutation,
   mockUseStartBatchRunMutation,
 } = vi.hoisted(() => ({
   mockUseBatchJobs: vi.fn<(params: BatchJobsParams) => BatchJobsQueryResult>(),
   mockUseBatchJobDetail:
     vi.fn<(jobId: number | null) => BatchJobDetailQueryResult>(),
+  mockUseRetryAiMutation: vi.fn<() => RetryAiMutationResult>(),
   mockUseStartBatchRunMutation: vi.fn(),
 }));
 
 vi.mock('@/lib/query-hooks', () => ({
   useBatchJobs: mockUseBatchJobs,
   useBatchJobDetail: mockUseBatchJobDetail,
+  useRetryAiMutation: mockUseRetryAiMutation,
   useStartBatchRunMutation: mockUseStartBatchRunMutation,
 }));
 
@@ -134,6 +152,21 @@ function detailReady(run: BatchRunRow | undefined): BatchJobDetailQueryResult {
   };
 }
 
+function retryAiReady(
+  overrides: Partial<RetryAiMutationResult> = {}
+): RetryAiMutationResult {
+  return {
+    data: undefined,
+    error: null,
+    isError: false,
+    isPending: false,
+    isSuccess: false,
+    mutate: vi.fn(),
+    reset: vi.fn(),
+    ...overrides,
+  };
+}
+
 function renderPage(searchParams = new URLSearchParams()) {
   return render(
     <AnnounceProvider pathname='/test'>
@@ -152,7 +185,9 @@ beforeEach(() => {
   resetRoleOverrideForTesting();
   mockUseBatchJobs.mockReset();
   mockUseBatchJobDetail.mockReset();
+  mockUseRetryAiMutation.mockReset();
   mockUseStartBatchRunMutation.mockReset();
+  mockUseRetryAiMutation.mockReturnValue(retryAiReady());
   mockUseStartBatchRunMutation.mockReturnValue({
     isPending: false,
     isError: false,
@@ -715,5 +750,141 @@ describe('BatchOperationsPage — admin', () => {
       screen.getByRole('dialog', { name: '배치 수동 실행' })
     ).toBeInTheDocument();
     expect(screen.getByLabelText('기준일 (KST)')).toBeInTheDocument();
+  });
+
+  it('shows AI 요약만 재시도 only for a selected PARTIAL job', () => {
+    mockUseBatchJobs.mockReturnValue(jobsReady());
+    mockUseBatchJobDetail.mockReturnValue(
+      detailReady(createRow({ rawStatus: 'PARTIAL', status: 'PARTIAL' }))
+    );
+
+    const { rerender } = renderPage();
+
+    expect(
+      screen.getByRole('button', { name: 'AI 요약만 재시도' })
+    ).toBeInTheDocument();
+
+    mockUseBatchJobDetail.mockReturnValue(
+      detailReady(createRow({ rawStatus: 'SUCCESS', status: 'SUCCESS' }))
+    );
+    rerender(
+      <AnnounceProvider pathname='/test'>
+        <BatchOperationsPage searchParams={new URLSearchParams()} />
+      </AnnounceProvider>
+    );
+
+    expect(
+      screen.queryByRole('button', { name: 'AI 요약만 재시도' })
+    ).not.toBeInTheDocument();
+  });
+
+  it('requires ops.trigger and never exposes AI retry to a non-admin capability set', () => {
+    setRoleOverride('user');
+    mockUseBatchJobs.mockReturnValue(jobsReady());
+    mockUseBatchJobDetail.mockReturnValue(
+      detailReady(createRow({ rawStatus: 'PARTIAL', status: 'PARTIAL' }))
+    );
+
+    renderPage();
+
+    expect(
+      screen.queryByRole('button', { name: 'AI 요약만 재시도' })
+    ).not.toBeInTheDocument();
+    expect(mockUseRetryAiMutation).not.toHaveBeenCalled();
+  });
+
+  it('disables repeated activation while pending and announces one request', async () => {
+    const user = userEvent.setup();
+    const mutate = vi.fn();
+    const retryMutation = retryAiReady({ mutate });
+    mockUseRetryAiMutation.mockReturnValue(retryMutation);
+    mockUseBatchJobs.mockReturnValue(jobsReady());
+    mockUseBatchJobDetail.mockReturnValue(
+      detailReady(createRow({ rawStatus: 'PARTIAL', status: 'PARTIAL' }))
+    );
+
+    const { rerender } = renderPage();
+    const button = screen.getByRole('button', { name: 'AI 요약만 재시도' });
+    await user.click(button);
+    expect(mutate).toHaveBeenCalledTimes(1);
+    expect(mutate).toHaveBeenCalledWith({ jobId: 101 }, expect.anything());
+    expect(document.querySelector('[aria-live="polite"]')).toHaveTextContent(
+      'AI 요약 재시도를 요청하고 있습니다.'
+    );
+
+    mockUseRetryAiMutation.mockReturnValue(
+      retryAiReady({ isPending: true, mutate })
+    );
+    rerender(
+      <AnnounceProvider pathname='/test'>
+        <BatchOperationsPage searchParams={new URLSearchParams()} />
+      </AnnounceProvider>
+    );
+
+    const pendingButton = screen.getByRole('button', {
+      name: 'AI 요약만 재시도',
+    });
+    expect(pendingButton).toBeDisabled();
+    await user.click(pendingButton);
+    expect(mutate).toHaveBeenCalledTimes(1);
+  });
+
+  it('announces accepted success without adding a second live region', async () => {
+    const user = userEvent.setup();
+    const response: AiRetryRunResponse = {
+      jobId: 1043,
+      jobName: 'market_snapshot_ai_retry',
+      businessDate: '2026-07-26',
+      status: 'RUNNING',
+      runMode: 'AI_SUMMARY_RETRY',
+      sourceJobId: 101,
+      sourcePageId: 501,
+      idempotencyKey: 'retry-key-1',
+      startedAt: '2026-08-07T08:24:31Z',
+    };
+    const mutate = vi.fn(
+      (
+        _variables: { jobId: number },
+        options?: { onSuccess?: (data: AiRetryRunResponse) => void }
+      ) => options?.onSuccess?.(response)
+    );
+    mockUseRetryAiMutation.mockReturnValue(retryAiReady({ mutate }));
+    mockUseBatchJobs.mockReturnValue(jobsReady());
+    mockUseBatchJobDetail.mockReturnValue(
+      detailReady(createRow({ rawStatus: 'PARTIAL', status: 'PARTIAL' }))
+    );
+
+    renderPage();
+    await user.click(screen.getByRole('button', { name: 'AI 요약만 재시도' }));
+
+    expect(document.querySelectorAll('[aria-live]').length).toBe(1);
+    expect(document.querySelector('[aria-live="polite"]')).toHaveTextContent(
+      'AI 요약 재시도가 접수되었습니다.'
+    );
+  });
+
+  it('exposes API conflicts in an accessible alert without duplicate polite noise', () => {
+    const conflict = new ApiError('conflict', 409, {
+      error: {
+        code: 'AI_RETRY_IN_PROGRESS',
+        message: 'AI 요약 재시도가 이미 진행 중입니다.',
+      },
+    });
+    mockUseRetryAiMutation.mockReturnValue(
+      retryAiReady({ error: conflict, isError: true })
+    );
+    mockUseBatchJobs.mockReturnValue(jobsReady());
+    mockUseBatchJobDetail.mockReturnValue(
+      detailReady(createRow({ rawStatus: 'PARTIAL', status: 'PARTIAL' }))
+    );
+
+    renderPage();
+
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'AI 요약 재시도가 이미 진행 중입니다.'
+    );
+    expect(document.querySelector('[aria-live="polite"]')).toHaveTextContent(
+      ''
+    );
   });
 });

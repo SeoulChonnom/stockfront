@@ -7,11 +7,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { LogBox } from '@/components/ui/log-box';
 import { PipelineStages } from '@/components/ui/pipeline-stages';
+import { ApiError } from '@/lib/api/client';
+import type { AiRetryRunResponse } from '@/lib/api/types';
 import { createNavigateHandler } from '@/lib/app-state';
 import { isMarketSnapshotJobType } from '@/lib/batch-type';
-import type { BatchRunRow } from '@/lib/query-hooks';
+import type { BatchRunRow, RetryAiMutationVariables } from '@/lib/query-hooks';
 import { buildUrl, withBasePath } from '@/lib/router';
-import { cn } from '@/lib/utils';
+import { cn, isRecord } from '@/lib/utils';
 
 import {
   deriveUserImpact,
@@ -39,9 +41,69 @@ export type BatchDetailPanelProps = {
   onAnnounce: (message: string) => void;
   onBackToList: () => void;
   onReRun: (businessDate: string) => void;
+  canRetryAi: boolean;
+  retryAiMutation: RetryAiMutationState;
   /** Hidden below the master-detail breakpoint unless `view=detail` is active (README §7-6 drill-in). */
   hiddenOnNarrowView: boolean;
 };
+
+type RetryAiMutationState = {
+  data: AiRetryRunResponse | undefined;
+  error: unknown;
+  isError: boolean;
+  isPending: boolean;
+  isSuccess: boolean;
+  mutate: (
+    variables: RetryAiMutationVariables,
+    options?: { onSuccess?: (data: AiRetryRunResponse) => void }
+  ) => void;
+};
+
+type AiRetryErrorView = {
+  code: string;
+  message: string;
+  status: number;
+};
+
+function toAiRetryErrorView(error: unknown): AiRetryErrorView {
+  if (!(error instanceof ApiError)) {
+    return {
+      code: 'NETWORK_ERROR',
+      message: '네트워크에 연결할 수 없습니다.',
+      status: 0,
+    };
+  }
+
+  const body = isRecord(error.body) ? error.body : null;
+  const bodyError = body && isRecord(body.error) ? body.error : null;
+  const code =
+    (bodyError && typeof bodyError.code === 'string'
+      ? bodyError.code
+      : body && typeof body.code === 'string'
+        ? body.code
+        : undefined) ??
+    (error.status === 409 ? 'AI_RETRY_IN_PROGRESS' : 'AI_RETRY_ERROR');
+  const backendMessage =
+    bodyError && typeof bodyError.message === 'string'
+      ? bodyError.message
+      : body && typeof body.message === 'string'
+        ? body.message
+        : null;
+
+  return {
+    code,
+    message:
+      backendMessage ??
+      (error.status === 409
+        ? 'AI 요약 재시도가 이미 진행 중입니다.'
+        : error.status === 403
+          ? 'AI 요약 재시도 권한이 없습니다.'
+          : error.status === 0
+            ? '네트워크에 연결할 수 없습니다.'
+            : 'AI 요약 재시도 요청을 처리하지 못했습니다.'),
+    status: error.status,
+  };
+}
 
 function Dl({ children }: { children: ReactNode }) {
   return (
@@ -81,6 +143,8 @@ export function BatchDetailPanel({
   onAnnounce,
   onBackToList,
   onReRun,
+  canRetryAi,
+  retryAiMutation,
   hiddenOnNarrowView,
 }: BatchDetailPanelProps) {
   const retry = useRetryAnnounce(isFetching, isError, onAnnounce);
@@ -168,8 +232,11 @@ export function BatchDetailPanel({
           />
         ) : (
           <BatchDetailContent
+            canRetryAi={canRetryAi}
             detailHeadingRef={detailHeadingRef}
             onReRun={onReRun}
+            onAnnounce={onAnnounce}
+            retryAiMutation={retryAiMutation}
             run={run}
           />
         )}
@@ -179,12 +246,18 @@ export function BatchDetailPanel({
 }
 
 function BatchDetailContent({
+  canRetryAi,
   detailHeadingRef,
+  onAnnounce,
   run,
+  retryAiMutation,
   onReRun,
 }: {
+  canRetryAi: boolean;
   detailHeadingRef: RefObject<HTMLHeadingElement | null>;
+  onAnnounce: (message: string) => void;
   run: BatchRunRow;
+  retryAiMutation: RetryAiMutationState;
   onReRun: (businessDate: string) => void;
 }) {
   const running = isRunningStatus(run.rawStatus);
@@ -208,6 +281,27 @@ function BatchDetailContent({
   // 렌더하지 않는다(plan step 7 — 값을 숨기지 않고 그리면 없는 데이터를
   // 있는 것처럼 보여주는 셈이다).
   const hasSnapshot = isMarketSnapshotJobType(run.jobType);
+  const aiRetryError = retryAiMutation.isError
+    ? toAiRetryErrorView(retryAiMutation.error)
+    : null;
+
+  function handleRetryAi() {
+    if (
+      !canRetryAi ||
+      run.rawStatus !== 'PARTIAL' ||
+      retryAiMutation.isPending
+    ) {
+      return;
+    }
+
+    onAnnounce('AI 요약 재시도를 요청하고 있습니다.');
+    retryAiMutation.mutate(
+      { jobId: run.id },
+      {
+        onSuccess: () => onAnnounce('AI 요약 재시도가 접수되었습니다.'),
+      }
+    );
+  }
 
   return (
     <div className='flex min-w-0 flex-col gap-4'>
@@ -300,6 +394,23 @@ function BatchDetailContent({
         </div>
       ) : null}
 
+      {aiRetryError ? (
+        <InlineAlert title='AI 요약 재시도 실패' tone='danger'>
+          <span className='mono block text-[12px]'>
+            {aiRetryError.status > 0
+              ? `${aiRetryError.status} · ${aiRetryError.code}`
+              : aiRetryError.code}
+          </span>
+          <span>{aiRetryError.message}</span>
+        </InlineAlert>
+      ) : null}
+
+      {retryAiMutation.isSuccess && retryAiMutation.data ? (
+        <InlineAlert title='AI 요약 재시도가 접수되었습니다.' tone='success'>
+          job {retryAiMutation.data.jobId} · 상태 {retryAiMutation.data.status}
+        </InlineAlert>
+      ) : null}
+
       <div className='min-w-0'>
         {/* O3 (parity cycle 3): design keeps the heading and 복사/전체보기
             buttons on one wrapping row — pass the heading into `LogBox` so
@@ -343,6 +454,18 @@ function BatchDetailContent({
         >
           같은 기준일 재실행
         </Button>
+        {canRetryAi && run.rawStatus === 'PARTIAL' ? (
+          <Button
+            disabled={retryAiMutation.isPending}
+            loading={retryAiMutation.isPending}
+            onClick={handleRetryAi}
+            size='sm'
+            type='button'
+            variant='secondary'
+          >
+            AI 요약만 재시도
+          </Button>
+        ) : null}
         <span className='mono text-[12px] font-semibold text-[color:var(--text-faint)]'>
           {retryable ? '재실행 가능' : '재실행 불필요'}
         </span>

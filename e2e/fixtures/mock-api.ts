@@ -312,6 +312,22 @@ export type TriggerResult =
   | { data: TriggerSuccess }
   | { error: TriggerErrorBody };
 
+export type AiRetrySuccess = {
+  jobId: number;
+  jobName: string;
+  businessDate: string;
+  status: string;
+  runMode: string;
+  sourceJobId: number;
+  sourcePageId: number | null;
+  idempotencyKey: string | null;
+  startedAt: string;
+};
+
+export type AiRetryResult =
+  | { data: AiRetrySuccess }
+  | { error: TriggerErrorBody };
+
 // ---------------------------------------------------------------------------
 // Indices / articles / clusters (static seed data)
 // ---------------------------------------------------------------------------
@@ -1412,6 +1428,67 @@ export function triggerResult(
   return { data: base };
 }
 
+export function aiRetryResult(
+  mode: string,
+  sourceJobId: number,
+  idempotencyKey: string | null
+): AiRetryResult {
+  const source = BATCH_ALL.find((item) => item.jobId === sourceJobId);
+  const base: AiRetrySuccess = {
+    jobId: 1043,
+    jobName: 'market_snapshot_ai_retry',
+    businessDate: source?.businessDate ?? TODAY,
+    status: 'RUNNING',
+    runMode: 'AI_SUMMARY_RETRY',
+    sourceJobId,
+    sourcePageId: source?.pageId ?? null,
+    idempotencyKey,
+    startedAt: NOW_KST,
+  };
+
+  if (mode === 'conflict409') {
+    return {
+      error: {
+        http: 409,
+        code: 'AI_RETRY_IN_PROGRESS',
+        message: 'AI 요약 재시도가 이미 진행 중입니다.',
+      },
+    };
+  }
+
+  if (mode === 'forbidden403') {
+    return {
+      error: {
+        http: 403,
+        code: 'FORBIDDEN',
+        message: 'AI 요약 재시도 권한이 없습니다.',
+      },
+    };
+  }
+
+  if (mode === 'error500') {
+    return {
+      error: {
+        http: 500,
+        code: 'AI_RETRY_FAILED',
+        message: 'AI 요약 재시도 요청을 처리하지 못했습니다.',
+      },
+    };
+  }
+
+  if (mode === 'offline') {
+    return {
+      error: {
+        http: 0,
+        code: 'NETWORK_ERROR',
+        message: '네트워크에 연결할 수 없습니다.',
+      },
+    };
+  }
+
+  return { data: base };
+}
+
 // ---------------------------------------------------------------------------
 // Error equivalence classes
 // ---------------------------------------------------------------------------
@@ -1548,6 +1625,13 @@ export type InstallMockApiOptions = {
     | 'rate429'
     | 'error500'
     | 'offline';
+  /** Phase 1c AI-summary retry lifecycle. Defaults to an accepted 202 response. */
+  retryAiMode?:
+    | 'success'
+    | 'conflict409'
+    | 'forbidden403'
+    | 'error500'
+    | 'offline';
 };
 
 function envelope<T>(data: T): ApiEnvelope<T> {
@@ -1623,6 +1707,7 @@ export async function installMockApi(
   const batchDetailMode =
     options.batchDetailMode ?? (scenario === 'long' ? 'longLog' : undefined);
   const triggerMode = options.triggerMode ?? 'success';
+  const retryAiMode = options.retryAiMode ?? 'success';
 
   // Auth bootstrap (`src/lib/auth-bootstrap.ts`): fulfilling a real 200 body
   // (rather than aborting the request) exercises the REAL integration path —
@@ -1765,6 +1850,37 @@ export async function installMockApi(
         200,
         envelope(batchDetailFixture(jobId, batchDetailMode))
       );
+      return;
+    }
+
+    const retryAiMatch = /^\/stock\/api\/batch\/jobs\/(\d+)\/retry-ai$/.exec(
+      pathname
+    );
+    if (method === 'POST' && retryAiMatch) {
+      const sourceJobId = Number(retryAiMatch[1]);
+      const idempotencyKey =
+        request.headers()['idempotency-key']?.trim() || null;
+
+      // Keep the pending state observable in browser tests, just like the
+      // manual trigger fixture above.
+      await new Promise((resolve) => setTimeout(resolve, 300));
+
+      const result = aiRetryResult(retryAiMode, sourceJobId, idempotencyKey);
+
+      if ('error' in result) {
+        if (retryAiMode === 'offline') {
+          await route.abort('internetdisconnected');
+          return;
+        }
+
+        await fulfillJson(route, result.error.http, {
+          success: false,
+          error: result.error,
+        });
+        return;
+      }
+
+      await fulfillJson(route, 202, envelope(result.data));
       return;
     }
 

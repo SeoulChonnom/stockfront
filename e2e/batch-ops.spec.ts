@@ -196,3 +196,49 @@ test.describe('§16-12 live region (Batch)', () => {
     );
   });
 });
+
+test.describe('§16-13 AI summary retry', () => {
+  test('submits one accepted retry-ai request for a PARTIAL job', async ({
+    page,
+  }) => {
+    await installMockApi(page, { scenario: 'ready', retryAiMode: 'success' });
+    await page.goto('ops/batches?jobId=1038');
+
+    const retryButton = page.getByRole('button', {
+      name: 'AI 요약만 재시도',
+    });
+    await expect(retryButton).toBeVisible();
+
+    const requestPromise = page.waitForRequest((request) =>
+      request.url().endsWith('/stock/api/batch/jobs/1038/retry-ai')
+    );
+    await retryButton.click();
+    const request = await requestPromise;
+
+    expect(request.method()).toBe('POST');
+    expect(request.postData()).toBeNull();
+    expect(request.headers()['idempotency-key']).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+    );
+    await expect(
+      page.getByRole('heading', { name: 'AI 요약 재시도가 접수되었습니다.' })
+    ).toBeVisible();
+  });
+
+  test('renders the conflict response as an accessible detail alert', async ({
+    page,
+    consoleGuard,
+  }) => {
+    await installMockApi(page, {
+      scenario: 'ready',
+      retryAiMode: 'conflict409',
+    });
+    consoleGuard.allowConsoleError(/Failed to load resource.*409/);
+    await page.goto('ops/batches?jobId=1038');
+
+    await page.getByRole('button', { name: 'AI 요약만 재시도' }).click();
+    await expect(page.getByRole('alert')).toContainText(
+      'AI 요약 재시도가 이미 진행 중입니다.'
+    );
+  });
+});

@@ -246,3 +246,15 @@ export type BatchRunResponse = {
   status: string;
   startedAt: string;
 };
+
+export type AiRetryRunResponse = {
+  jobId: number;
+  jobName: string;
+  businessDate: string;
+  status: string;
+  runMode: string;
+  sourceJobId: number;
+  sourcePageId?: number | null;
+  idempotencyKey?: string | null;
+  startedAt: string;
+};

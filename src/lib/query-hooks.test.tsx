@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type {
+  AiRetryRunResponse,
   BatchJobDetailResponse,
   BatchJobListResponse,
   DailyPageResponse,
@@ -12,6 +13,7 @@ import {
   useArchiveMarketPage,
   useBatchJobDetail,
   useBatchJobs,
+  useRetryAiMutation,
 } from './query-hooks';
 
 const {
@@ -20,12 +22,14 @@ const {
   mockGetLatestDailyPage,
   mockGetBatchJobs,
   mockGetBatchJobDetail,
+  mockRetryAiSummary,
 } = vi.hoisted(() => ({
   mockGetDailyPageByBusinessDate: vi.fn(),
   mockGetDailyPageByPageId: vi.fn(),
   mockGetLatestDailyPage: vi.fn(),
   mockGetBatchJobs: vi.fn(),
   mockGetBatchJobDetail: vi.fn(),
+  mockRetryAiSummary: vi.fn(),
 }));
 
 vi.mock('./api/pages', () => ({
@@ -37,6 +41,7 @@ vi.mock('./api/pages', () => ({
 vi.mock('./api/batch', () => ({
   getBatchJobs: mockGetBatchJobs,
   getBatchJobDetail: mockGetBatchJobDetail,
+  retryAiSummary: mockRetryAiSummary,
 }));
 
 const dailyPageResponse: DailyPageResponse = {
@@ -278,5 +283,88 @@ describe('batch query polling', () => {
     expect(getRefetchInterval(queryClient, ['batch-job-detail', null])).toBe(
       false
     );
+  });
+});
+
+describe('useRetryAiMutation', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+    vi.restoreAllMocks();
+  });
+
+  it('generates one key per invocation and invalidates every batch list plus the selected detail after success', async () => {
+    const response: AiRetryRunResponse = {
+      jobId: 1043,
+      jobName: 'market_snapshot_ai_retry',
+      businessDate: '2026-03-31',
+      status: 'RUNNING',
+      runMode: 'AI_SUMMARY_RETRY',
+      sourceJobId: 101,
+      sourcePageId: 42,
+      idempotencyKey: 'key-1',
+      startedAt: '2026-03-31T06:13:00Z',
+    };
+    mockRetryAiSummary.mockResolvedValue(response);
+    const randomUuid = vi
+      .spyOn(crypto, 'randomUUID')
+      .mockReturnValueOnce('11111111-1111-4111-8111-111111111111')
+      .mockReturnValueOnce('22222222-2222-4222-8222-222222222222');
+    const queryClient = new QueryClient({
+      defaultOptions: {
+        queries: { retry: false },
+        mutations: { retry: false },
+      },
+    });
+    const invalidateQueries = vi
+      .spyOn(queryClient, 'invalidateQueries')
+      .mockResolvedValue(undefined);
+
+    const { result } = renderHook(() => useRetryAiMutation(), {
+      wrapper: createWrapper(queryClient),
+    });
+
+    result.current.mutate({ jobId: 101 });
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    result.current.mutate({ jobId: 101 });
+    await waitFor(() => expect(mockRetryAiSummary).toHaveBeenCalledTimes(2));
+
+    expect(randomUuid).toHaveBeenCalledTimes(2);
+    expect(mockRetryAiSummary).toHaveBeenNthCalledWith(
+      1,
+      101,
+      '11111111-1111-4111-8111-111111111111'
+    );
+    expect(mockRetryAiSummary).toHaveBeenNthCalledWith(
+      2,
+      101,
+      '22222222-2222-4222-8222-222222222222'
+    );
+    expect(invalidateQueries).toHaveBeenNthCalledWith(1, {
+      queryKey: ['batch-jobs'],
+    });
+    expect(invalidateQueries).toHaveBeenNthCalledWith(2, {
+      queryKey: ['batch-job-detail', 101],
+    });
+    expect(invalidateQueries).toHaveBeenCalledTimes(4);
+  });
+
+  it('leaves API conflicts as mutation errors for the detail action to expose', async () => {
+    const error = new Error('AI retry already running');
+    mockRetryAiSummary.mockRejectedValue(error);
+    const queryClient = new QueryClient({
+      defaultOptions: {
+        queries: { retry: false },
+        mutations: { retry: false },
+      },
+    });
+
+    const { result } = renderHook(() => useRetryAiMutation(), {
+      wrapper: createWrapper(queryClient),
+    });
+
+    result.current.mutate({ jobId: 101 });
+    await waitFor(() => expect(result.current.isError).toBe(true));
+
+    expect(result.current.error).toBe(error);
   });
 });
