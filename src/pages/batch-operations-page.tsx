@@ -135,6 +135,11 @@ function AdminBatchOperations({
   // detail panel than what the list visually led with.
   const fallbackJobId = rows[0]?.id ?? null;
   const selectedJobId = jobIdParam ?? fallbackJobId;
+  // Keep the latest selection in a ref so callbacks owned by a detail child
+  // can reject stale completions even when that child unmounts while the next
+  // detail request is loading.
+  const selectedJobIdRef = useRef(selectedJobId);
+  selectedJobIdRef.current = selectedJobId;
   const detailQuery = useBatchJobDetail(selectedJobId);
 
   const startBatchMutation = useStartBatchRunMutation();
@@ -298,6 +303,7 @@ function AdminBatchOperations({
           onRetry={() => {
             void detailQuery.refetch();
           }}
+          isCurrentRetryJob={(jobId) => selectedJobIdRef.current === jobId}
           retryAiMutation={retryAiMutation}
           run={detailQuery.data ?? null}
           selectedJobId={selectedJobId}

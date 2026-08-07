@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -149,6 +149,17 @@ function detailReady(run: BatchRunRow | undefined): BatchJobDetailQueryResult {
     isLoading: false,
     isError: false,
     isFetching: false,
+    refetch: vi.fn(),
+  };
+}
+
+function detailLoading(): BatchJobDetailQueryResult {
+  return {
+    data: undefined,
+    error: null,
+    isLoading: true,
+    isError: false,
+    isFetching: true,
     refetch: vi.fn(),
   };
 }
@@ -954,7 +965,9 @@ describe('BatchOperationsPage — admin', () => {
       screen.queryByText('AI 요약 재시도가 접수되었습니다.')
     ).not.toBeInTheDocument();
 
-    settleA?.();
+    act(() => {
+      settleA?.();
+    });
     expect(
       document.querySelector('[aria-live="polite"]')
     ).not.toHaveTextContent('AI 요약 재시도가 접수되었습니다.');
@@ -993,5 +1006,91 @@ describe('BatchOperationsPage — admin', () => {
     );
 
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('suppresses a late job A success when uncached job B unmounts the detail content', async () => {
+    const user = userEvent.setup();
+    const response: AiRetryRunResponse = {
+      jobId: 1043,
+      jobName: 'market_snapshot_ai_retry',
+      businessDate: '2026-07-26',
+      status: 'RUNNING',
+      runMode: 'AI_SUMMARY_RETRY',
+      sourceJobId: 101,
+      sourcePageId: 501,
+      idempotencyKey: 'retry-key-a',
+      startedAt: '2026-08-07T08:24:31Z',
+    };
+    let settleA: (() => void) | undefined;
+    const mutate = vi.fn(
+      (
+        _variables: { jobId: number },
+        options?: { onSuccess?: (data: AiRetryRunResponse) => void }
+      ) => {
+        settleA = () => options?.onSuccess?.(response);
+      }
+    );
+    mockUseRetryAiMutation.mockReturnValue(retryAiReady({ mutate }));
+    mockUseBatchJobs.mockReturnValue(
+      jobsReady({ rows: [createRow({ id: 101 }), createRow({ id: 202 })] })
+    );
+    mockUseBatchJobDetail.mockImplementation((jobId) =>
+      jobId === 101
+        ? detailReady(
+            createRow({ id: 101, rawStatus: 'PARTIAL', status: 'PARTIAL' })
+          )
+        : detailLoading()
+    );
+
+    const { rerender } = renderPage(new URLSearchParams('jobId=101'));
+    await user.click(screen.getByRole('button', { name: 'AI 요약만 재시도' }));
+
+    mockUseRetryAiMutation.mockReturnValue(
+      retryAiReady({
+        isPending: true,
+        mutate,
+        variables: { jobId: 101 },
+      })
+    );
+    rerender(
+      <AnnounceProvider pathname='/test'>
+        <BatchOperationsPage searchParams={new URLSearchParams('jobId=202')} />
+      </AnnounceProvider>
+    );
+
+    expect(screen.getByRole('status')).toBeInTheDocument();
+    act(() => {
+      settleA?.();
+    });
+    expect(
+      document.querySelector('[aria-live="polite"]')
+    ).not.toHaveTextContent('AI 요약 재시도가 접수되었습니다.');
+
+    mockUseRetryAiMutation.mockReturnValue(
+      retryAiReady({
+        data: response,
+        isSuccess: true,
+        mutate,
+        variables: { jobId: 101 },
+      })
+    );
+    mockUseBatchJobDetail.mockReturnValue(
+      detailReady(
+        createRow({ id: 202, rawStatus: 'PARTIAL', status: 'PARTIAL' })
+      )
+    );
+    rerender(
+      <AnnounceProvider pathname='/test'>
+        <BatchOperationsPage searchParams={new URLSearchParams('jobId=202')} />
+      </AnnounceProvider>
+    );
+
+    expect(
+      screen.getByRole('button', { name: 'AI 요약만 재시도' })
+    ).toBeEnabled();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('AI 요약 재시도가 접수되었습니다.')
+    ).not.toBeInTheDocument();
   });
 });

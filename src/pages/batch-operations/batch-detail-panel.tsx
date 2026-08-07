@@ -42,6 +42,7 @@ export type BatchDetailPanelProps = {
   onBackToList: () => void;
   onReRun: (businessDate: string) => void;
   canRetryAi: boolean;
+  isCurrentRetryJob: (jobId: number) => boolean;
   retryAiMutation: RetryAiMutationState;
   /** Hidden below the master-detail breakpoint unless `view=detail` is active (README §7-6 drill-in). */
   hiddenOnNarrowView: boolean;
@@ -145,6 +146,7 @@ export function BatchDetailPanel({
   onBackToList,
   onReRun,
   canRetryAi,
+  isCurrentRetryJob,
   retryAiMutation,
   hiddenOnNarrowView,
 }: BatchDetailPanelProps) {
@@ -235,6 +237,7 @@ export function BatchDetailPanel({
           <BatchDetailContent
             canRetryAi={canRetryAi}
             detailHeadingRef={detailHeadingRef}
+            isCurrentRetryJob={isCurrentRetryJob}
             onReRun={onReRun}
             onAnnounce={onAnnounce}
             retryAiMutation={retryAiMutation}
@@ -249,6 +252,7 @@ export function BatchDetailPanel({
 function BatchDetailContent({
   canRetryAi,
   detailHeadingRef,
+  isCurrentRetryJob,
   onAnnounce,
   run,
   retryAiMutation,
@@ -256,6 +260,7 @@ function BatchDetailContent({
 }: {
   canRetryAi: boolean;
   detailHeadingRef: RefObject<HTMLHeadingElement | null>;
+  isCurrentRetryJob: (jobId: number) => boolean;
   onAnnounce: (message: string) => void;
   run: BatchRunRow;
   retryAiMutation: RetryAiMutationState;
@@ -289,11 +294,6 @@ function BatchDetailContent({
       ? toAiRetryErrorView(retryAiMutation.error)
       : null;
   const aiRetrySuccess = isRetryForRun && retryAiMutation.isSuccess;
-  const currentRunIdRef = useRef(run.id);
-
-  useEffect(() => {
-    currentRunIdRef.current = run.id;
-  }, [run.id]);
 
   function handleRetryAi() {
     if (!canRetryAi || run.rawStatus !== 'PARTIAL' || isRetryPendingForRun) {
@@ -306,7 +306,7 @@ function BatchDetailContent({
       { jobId: sourceJobId },
       {
         onSuccess: () => {
-          if (currentRunIdRef.current === sourceJobId) {
+          if (isCurrentRetryJob(sourceJobId)) {
             onAnnounce('AI 요약 재시도가 접수되었습니다.');
           }
         },
