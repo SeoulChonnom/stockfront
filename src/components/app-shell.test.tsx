@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
+  act,
   fireEvent,
   render,
   screen,
@@ -51,6 +52,18 @@ function renderShell(props: Partial<Parameters<typeof AppShell>[0]> = {}) {
       </h1>
     </AppShell>
   );
+}
+
+function getFailedCountQuery(queryClient: QueryClient) {
+  const query = queryClient
+    .getQueryCache()
+    .find({ queryKey: ['batch-jobs', 'failed-count'], exact: false });
+
+  if (!query) {
+    throw new Error('failed-count query was not created');
+  }
+
+  return query;
 }
 
 describe('AppShell', () => {
@@ -204,7 +217,13 @@ describe('AppShell', () => {
       </QueryClientProvider>
     );
 
-    await waitFor(() => expect(mockGetBatchJobs).not.toHaveBeenCalled());
+    await act(async () => {
+      await Promise.resolve();
+    });
+    const query = getFailedCountQuery(queryClient);
+    expect(query.state.status).toBe('pending');
+    expect(query.state.fetchStatus).toBe('idle');
+    expect(mockGetBatchJobs).not.toHaveBeenCalled();
     expect(
       screen.queryByTestId('ops-failed-count-badge')
     ).not.toBeInTheDocument();
@@ -215,7 +234,10 @@ describe('AppShell', () => {
 
     renderShell({ pathname: '/ops/batches' });
 
-    await waitFor(() => expect(mockGetBatchJobs).not.toHaveBeenCalled());
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(mockGetBatchJobs).not.toHaveBeenCalled();
     expect(
       screen.queryByTestId('ops-failed-count-badge')
     ).not.toBeInTheDocument();
@@ -254,12 +276,18 @@ describe('AppShell', () => {
       </QueryClientProvider>
     );
 
-    await waitFor(() => expect(mockGetBatchJobs).toHaveBeenCalledTimes(1));
+    const expectedStatus =
+      caseName === 'zero failed jobs' ? 'success' : 'error';
+
     await waitFor(() => {
-      expect(
-        screen.queryByTestId('ops-failed-count-badge')
-      ).not.toBeInTheDocument();
+      const query = getFailedCountQuery(queryClient);
+      expect(mockGetBatchJobs).toHaveBeenCalledTimes(1);
+      expect(query.state.status).toBe(expectedStatus);
+      expect(query.state.fetchStatus).toBe('idle');
     });
+    expect(
+      screen.queryByTestId('ops-failed-count-badge')
+    ).not.toBeInTheDocument();
   });
 
   it('keeps the last successful count when a refetch fails', async () => {
