@@ -1,5 +1,11 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -10,6 +16,14 @@ import {
 
 import { AppShell } from './app-shell';
 import { useAnnounce } from './shell/use-announce';
+
+const { mockGetBatchJobs } = vi.hoisted(() => ({
+  mockGetBatchJobs: vi.fn(),
+}));
+
+vi.mock('@/lib/api/batch', () => ({
+  getBatchJobs: mockGetBatchJobs,
+}));
 
 /**
  * `AppShell` is the single-nav rail/mobile-header/drawer shell (README §5,
@@ -41,6 +55,7 @@ function renderShell(props: Partial<Parameters<typeof AppShell>[0]> = {}) {
 
 describe('AppShell', () => {
   beforeEach(() => {
+    vi.clearAllMocks();
     vi.stubEnv('VITE_APP_ENV', 'production');
   });
 
@@ -131,50 +146,12 @@ describe('AppShell', () => {
     expect(opsLinks[0]).toHaveAttribute('aria-current', 'page');
   });
 
-  it('does not render a failed-count badge when the batch-jobs query cache is empty', () => {
+  it('renders the failed-count badge from the live seven-day summary query', async () => {
     setRoleOverride('admin');
-    renderShell();
+    mockGetBatchJobs.mockResolvedValue({ summary: { failedCount: 2 } });
 
-    expect(
-      screen.queryByTestId('ops-failed-count-badge')
-    ).not.toBeInTheDocument();
-  });
-
-  it('renders the failed-count badge from an already-cached batch-jobs query, without firing a request', () => {
-    setRoleOverride('admin');
-    // No queryFn is ever registered on this client — `setQueryData` seeds the
-    // cache directly. If the badge required a live query, this render would
-    // throw ("Missing queryFn") instead of showing "2".
-    //
-    // Bug fix regression (`use-ops-failed-count.ts`, found by the §16
-    // acceptance suite's `e2e/routing.spec.ts`): TanStack Query's cache only
-    // ever holds the RAW `queryFn` result — the `BatchJobListResponse` shape
-    // `useBatchJobs`'s own `getBatchJobs()` returns (`{items, pagination,
-    // summary}`, see `src/lib/api/types.ts`) — never the post-`select`
-    // `BatchJobsViewWithCounts` shape (`{rows, counts, ...}`) a component
-    // sees after `useQuery()` applies `select: mapBatchJobsToView`. This
-    // fixture previously seeded the cache with the SELECTED shape (`rows`/a
-    // fabricated `summary.successRate` string), which the hook's old
-    // `data.rows.filter(...)` read only "worked" against by coincidence in
-    // this test — against the REAL raw shape it threw
-    // `TypeError: Cannot read properties of undefined (reading 'filter')`
-    // for every real user opening `/ops/batches` once. Seeding the actual
-    // raw response shape here is what would have caught that before it
-    // shipped.
-    const queryClient = new QueryClient();
-    queryClient.setQueryData(['batch-jobs', { page: 1, size: 20 }], {
-      items: [
-        { jobId: 1, status: 'FAILED' },
-        { jobId: 2, status: 'SUCCESS' },
-        { jobId: 3, status: 'FAILED' },
-      ],
-      pagination: { page: 1, size: 20, totalCount: 3 },
-      summary: {
-        successCount: 1,
-        partialCount: 0,
-        failedCount: 2,
-        avgDurationSeconds: 120,
-      },
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
     });
 
     render(
@@ -190,43 +167,137 @@ describe('AppShell', () => {
       </QueryClientProvider>
     );
 
-    const badges = screen.getAllByTestId('ops-failed-count-badge');
-    expect(badges[0]).toHaveTextContent('2');
-    // Rendering AppShell must not have registered/fetched any additional
-    // query — the one entry is exactly the one this test seeded, and it was
-    // never (re)fetched.
-    const cachedQueries = queryClient
-      .getQueryCache()
-      .findAll({ queryKey: ['batch-jobs'] });
-    expect(cachedQueries).toHaveLength(1);
-    expect(cachedQueries[0].state.fetchStatus).toBe('idle');
-  });
-
-  it('ignores malformed batch-jobs cache data without crashing the shell', () => {
-    setRoleOverride('admin');
-    const queryClient = new QueryClient();
-    queryClient.setQueryData(['batch-jobs', { page: 1, size: 20 }], {
-      summary: null,
+    await waitFor(() => {
+      const badge = screen.getAllByTestId('ops-failed-count-badge')[0];
+      expect(badge).toHaveTextContent('2');
+      expect(badge).toHaveAttribute('title', '최근 7일 실패');
+      expect(badge).toHaveAttribute('aria-label', '최근 7일 실패');
     });
 
-    expect(() =>
-      render(
-        <QueryClientProvider client={queryClient}>
-          <AppShell
-            onToggleTheme={() => undefined}
-            pathname='/ops/batches'
-            searchParams={new URLSearchParams()}
-            theme='dark'
-          >
-            <div>content</div>
-          </AppShell>
-        </QueryClientProvider>
+    expect(mockGetBatchJobs).toHaveBeenCalledTimes(1);
+    const [params] = mockGetBatchJobs.mock.calls[0] as [
+      { fromDate: string; toDate: string; page: number; size: number },
+    ];
+    expect(params).toMatchObject({ page: 1, size: 1 });
+    expect(
+      Math.round(
+        (Date.parse(params.toDate) - Date.parse(params.fromDate)) /
+          (24 * 60 * 60 * 1000)
       )
-    ).not.toThrow();
+    ).toBe(6);
+  });
 
+  it('does not request the failed summary for an unauthorized user', async () => {
+    setRoleOverride('user');
+    const queryClient = new QueryClient();
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <AppShell
+          onToggleTheme={() => undefined}
+          pathname='/ops/batches'
+          searchParams={new URLSearchParams()}
+          theme='dark'
+        >
+          <div>content</div>
+        </AppShell>
+      </QueryClientProvider>
+    );
+
+    await waitFor(() => expect(mockGetBatchJobs).not.toHaveBeenCalled());
     expect(
       screen.queryByTestId('ops-failed-count-badge')
     ).not.toBeInTheDocument();
+  });
+
+  it('does not request the failed summary when no QueryClientProvider is present', async () => {
+    setRoleOverride('admin');
+
+    renderShell({ pathname: '/ops/batches' });
+
+    await waitFor(() => expect(mockGetBatchJobs).not.toHaveBeenCalled());
+    expect(
+      screen.queryByTestId('ops-failed-count-badge')
+    ).not.toBeInTheDocument();
+  });
+
+  it.each([
+    'initial request failure',
+    'empty summary',
+    'malformed summary',
+    'zero failed jobs',
+  ])('hides the failed badge for %s', async (caseName) => {
+    setRoleOverride('admin');
+    if (caseName === 'initial request failure') {
+      mockGetBatchJobs.mockRejectedValue(new Error('offline'));
+    } else if (caseName === 'empty summary') {
+      mockGetBatchJobs.mockResolvedValue({});
+    } else if (caseName === 'malformed summary') {
+      mockGetBatchJobs.mockResolvedValue({ summary: null });
+    } else {
+      mockGetBatchJobs.mockResolvedValue({ summary: { failedCount: 0 } });
+    }
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <AppShell
+          onToggleTheme={() => undefined}
+          pathname='/ops/batches'
+          searchParams={new URLSearchParams()}
+          theme='dark'
+        >
+          <div>content</div>
+        </AppShell>
+      </QueryClientProvider>
+    );
+
+    await waitFor(() => expect(mockGetBatchJobs).toHaveBeenCalledTimes(1));
+    await waitFor(() => {
+      expect(
+        screen.queryByTestId('ops-failed-count-badge')
+      ).not.toBeInTheDocument();
+    });
+  });
+
+  it('keeps the last successful count when a refetch fails', async () => {
+    setRoleOverride('admin');
+    mockGetBatchJobs
+      .mockResolvedValueOnce({ summary: { failedCount: 2 } })
+      .mockRejectedValueOnce(new Error('offline'));
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <AppShell
+          onToggleTheme={() => undefined}
+          pathname='/ops/batches'
+          searchParams={new URLSearchParams()}
+          theme='dark'
+        >
+          <div>content</div>
+        </AppShell>
+      </QueryClientProvider>
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.getAllByTestId('ops-failed-count-badge')[0]
+      ).toHaveTextContent('2');
+    });
+
+    await queryClient.refetchQueries({
+      queryKey: ['batch-jobs', 'failed-count'],
+    });
+
+    expect(mockGetBatchJobs).toHaveBeenCalledTimes(2);
+    expect(
+      screen.getAllByTestId('ops-failed-count-badge')[0]
+    ).toHaveTextContent('2');
   });
 
   it('opens the mobile drawer from the menu button, and Escape closes it and returns focus to the menu button', async () => {

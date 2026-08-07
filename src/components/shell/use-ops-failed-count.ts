@@ -1,5 +1,23 @@
-import { QueryClientContext } from '@tanstack/react-query';
-import { useCallback, useContext, useSyncExternalStore } from 'react';
+import {
+  QueryClient,
+  QueryClientContext,
+  useQuery,
+} from '@tanstack/react-query';
+import { useContext } from 'react';
+
+import { getBatchJobs } from '@/lib/api/batch';
+import { useCapabilities } from '@/lib/capabilities';
+import { getRelativeIso, getTodayIso } from '@/lib/kst-date';
+
+const FAILED_COUNT_QUERY_KEY = 'failed-count';
+const FALLBACK_QUERY_CLIENT = new QueryClient();
+
+type FailedCountParams = {
+  fromDate: string;
+  toDate: string;
+  page: 1;
+  size: 1;
+};
 
 function readFailedCount(data: unknown): number | null {
   if (typeof data !== 'object' || data === null || !('summary' in data)) {
@@ -25,73 +43,49 @@ function readFailedCount(data: unknown): number | null {
     : null;
 }
 
+function buildFailedCountParams(now: Date): FailedCountParams {
+  return {
+    fromDate: getRelativeIso(6, now),
+    toDate: getTodayIso(now),
+    page: 1,
+    size: 1,
+  };
+}
+
 /**
- * Feeds the 배치 운영 nav item's failed-count pill (README §5) WITHOUT ever
- * firing a batch-jobs request itself.
- *
- * README's constraint: "if fetching it would mean firing a batch request on
- * every screen for every user, do NOT do that — render the badge only when
- * the data is already in the React Query cache." So this hook never calls
- * `useQuery`/`useBatchJobs` — it only reads whatever `['batch-jobs', ...]`
- * result(s) already exist in the TanStack Query cache (i.e. an admin has
- * opened `/ops/batches` at least once this session) via
- * `queryClient.getQueryCache()`, and re-derives the FAILED count from the
- * most recently updated match whenever the cache changes.
- *
- * Trade-off this makes on purpose (documented, not hidden): the count only
- * reflects whichever page/filter happens to be cached, not a true global
- * failed-job count across every page. A live global count would need either
- * a dedicated summary endpoint or an always-on query — precisely what this
- * hook is designed to avoid. See the Phase 4 report for the same note.
- *
- * Uses `QueryClientContext` directly (rather than `useQueryClient()`, which
- * throws without a provider) so a screen rendered without a
- * `QueryClientProvider` in the tree (e.g. `App.test.tsx`, which mocks
- * `src/lib/query-hooks` wholesale and never wraps a provider) degrades to
- * "no badge" instead of crashing.
+ * Reads the seven-day failed-job summary used by the 운영 nav badge. The
+ * query is scoped to operators and intentionally uses a single summary row;
+ * malformed responses are treated as failures so an initial bad response
+ * cannot render a misleading count while a later refetch can retain its last
+ * successful value through React Query.
  */
 export function useOpsFailedCount(): number | null {
   const queryClient = useContext(QueryClientContext);
+  const { can } = useCapabilities();
+  const params = buildFailedCountParams(new Date());
+  const isEnabled = queryClient !== undefined && can('ops.view');
 
-  const subscribe = useCallback(
-    (onStoreChange: () => void) => {
-      if (!queryClient) {
-        return () => {};
-      }
+  const query = useQuery(
+    {
+      queryKey: ['batch-jobs', FAILED_COUNT_QUERY_KEY, params],
+      queryFn: async ({ signal }) => {
+        const response = await getBatchJobs(params, signal);
+        const failedCount = readFailedCount(response);
 
-      return queryClient.getQueryCache().subscribe(onStoreChange);
+        if (failedCount === null) {
+          throw new Error('Batch summary did not contain a valid failed count');
+        }
+
+        return failedCount;
+      },
+      enabled: isEnabled,
+      retry: false,
     },
-    [queryClient]
+    // App tests render the shell without the root provider. Supplying one
+    // stable disabled fallback keeps hook order valid and avoids a second
+    // request while preserving the provider's normal query client boundary.
+    queryClient ?? FALLBACK_QUERY_CLIENT
   );
 
-  const getSnapshot = useCallback((): number | null => {
-    if (!queryClient) {
-      return null;
-    }
-
-    const queries = queryClient
-      .getQueryCache()
-      .findAll({ queryKey: ['batch-jobs'] });
-
-    // TanStack Query stores the RAW queryFn result, not the post-select view
-    // model. Treat that cache as untrusted: a partial or malformed entry must
-    // not take down AppShell, which reads this hook on every route.
-    let newest: { updatedAt: number; failedCount: number } | null = null;
-
-    for (const query of queries) {
-      const failedCount = readFailedCount(query.state.data);
-
-      if (failedCount === null) {
-        continue;
-      }
-
-      if (!newest || query.state.dataUpdatedAt > newest.updatedAt) {
-        newest = { updatedAt: query.state.dataUpdatedAt, failedCount };
-      }
-    }
-
-    return newest?.failedCount ?? null;
-  }, [queryClient]);
-
-  return useSyncExternalStore(subscribe, getSnapshot, () => null);
+  return query.data ?? null;
 }

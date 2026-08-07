@@ -49,8 +49,11 @@ function NavDot({ active }: { active: boolean }) {
 function FailedCountBadge({ count }: { count: number }) {
   return (
     <span
+      aria-label='최근 7일 실패'
       className='mono ml-auto inline-flex min-w-[20px] items-center justify-center rounded-full border border-[color:var(--danger-line)] bg-[color:var(--danger-soft)] px-1.5 py-0.5 text-[11px] font-semibold text-[color:var(--danger)]'
       data-testid='ops-failed-count-badge'
+      role='status'
+      title='최근 7일 실패'
     >
       {count}
     </span>
