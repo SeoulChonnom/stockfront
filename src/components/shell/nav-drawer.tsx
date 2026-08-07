@@ -33,15 +33,15 @@ export function NavDrawer({
 
   return (
     <Drawer isOpen={isOpen} labelledBy={DRAWER_TITLE_ID} onClose={onClose}>
-      <div className='flex items-center justify-between border-b border-[color:var(--line)] px-4 py-4'>
+      <div className='flex items-center justify-between border-b border-line px-4 py-4'>
         <div className='min-w-0'>
           <p
-            className='truncate text-[15px] font-bold tracking-[-0.02em] text-[color:var(--text)]'
+            className='truncate text-[15px] font-bold tracking-[-0.02em] text-fg'
             id={DRAWER_TITLE_ID}
           >
             Market Brief
           </p>
-          <p className='truncate text-[11.5px] text-[color:var(--text-faint)]'>
+          <p className='truncate text-[11.5px] text-faint'>
             {ROLE_LABELS[role]} · ops.analyst
           </p>
         </div>

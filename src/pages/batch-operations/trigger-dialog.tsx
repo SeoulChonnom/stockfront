@@ -120,10 +120,7 @@ export function TriggerDialog({
       onClose={handleClose}
     >
       <div className='mb-4 flex items-start justify-between gap-3'>
-        <h2
-          className='m-0 text-[16px] font-semibold text-[color:var(--text)]'
-          id={titleId}
-        >
+        <h2 className='m-0 text-[16px] font-semibold text-fg' id={titleId}>
           배치 수동 실행
         </h2>
         <Button

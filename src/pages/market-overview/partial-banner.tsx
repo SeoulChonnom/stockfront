@@ -46,7 +46,7 @@ export function PartialBanner({
         이 브리프는 일부 데이터가 누락된 상태로 생성됐습니다
       </h2>
       {items.length > 0 ? (
-        <ul className='m-0 mb-3 flex list-disc flex-col gap-1 pl-[18px] text-[13px] text-[color:var(--text-soft)]'>
+        <ul className='m-0 mb-3 flex list-disc flex-col gap-1 pl-[18px] text-[13px] text-fg-soft'>
           {items.map((text) => (
             <li className='wrap-anywhere' key={text}>
               {text}
@@ -54,7 +54,7 @@ export function PartialBanner({
           ))}
         </ul>
       ) : null}
-      <p className='m-0 mb-3 text-[13px] text-[color:var(--text-soft)]'>
+      <p className='m-0 mb-3 text-[13px] text-fg-soft'>
         누락된 항목은 아래 해당 섹션에도 표시됩니다. 재생성이 필요하면 배치
         운영에서 같은 기준일로 다시 실행할 수 있습니다.
       </p>

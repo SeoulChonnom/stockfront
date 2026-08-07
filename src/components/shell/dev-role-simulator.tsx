@@ -6,8 +6,8 @@ export function DevRoleSimulator() {
   const role = useRole();
 
   return (
-    <div className='flex items-center gap-1 rounded-[var(--r-md)] border border-[color:var(--line)] bg-[color:var(--surface-2)] p-1'>
-      <span className='px-1 text-[10.5px] font-semibold uppercase tracking-[0.06em] text-[color:var(--text-faint)]'>
+    <div className='flex items-center gap-1 rounded-[var(--r-md)] border border-line bg-[color:var(--surface-2)] p-1'>
+      <span className='px-1 text-[10.5px] font-semibold uppercase tracking-[0.06em] text-faint'>
         DEV
       </span>
       <Button

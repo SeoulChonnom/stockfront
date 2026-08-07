@@ -48,7 +48,7 @@ export function Dialog({
         aria-labelledby={labelledBy}
         aria-modal='true'
         className={cn(
-          'relative z-(--z-dialog) flex max-h-[88vh] w-[min(520px,94vw)] flex-col overflow-y-auto rounded-[var(--r-lg)] border border-[color:var(--line)] bg-[color:var(--surface)] p-5 shadow-(--sh3)',
+          'relative z-(--z-dialog) flex max-h-[88vh] w-[min(520px,94vw)] flex-col overflow-y-auto rounded-[var(--r-lg)] border border-line bg-[color:var(--surface)] p-5 shadow-(--sh3)',
           className
         )}
         ref={containerRef}

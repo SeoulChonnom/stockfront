@@ -25,7 +25,7 @@ import type { MarketIndex } from '@/lib/view-models';
 export function MarketIndexTable({ indices }: { indices: MarketIndex[] }) {
   if (indices.length === 0) {
     return (
-      <p className='m-0 px-[18px] py-4 text-[13px] text-[color:var(--text-faint)]'>
+      <p className='m-0 px-[18px] py-4 text-[13px] text-faint'>
         지수 데이터가 수집되지 않았습니다. provider 응답 실패 시 부분 실패로
         처리되며, 재수집은 배치 운영에서 같은 기준일로 실행합니다.
       </p>
@@ -77,21 +77,21 @@ function IndexRow({ item }: { item: MarketIndex }) {
       ? 'text-[color:var(--up)]'
       : item.direction === 'down'
         ? 'text-[color:var(--down)]'
-        : 'text-[color:var(--text-faint)]';
+        : 'text-faint';
 
   return (
     <TableRow>
       <TableCell className='min-w-0 px-[18px] py-[9px] font-semibold'>
         {item.label}
         {item.code ? (
-          <div className='mono text-[11px] font-normal text-[color:var(--text-faint)]'>
+          <div className='mono text-[11px] font-normal text-faint'>
             {item.code}
           </div>
         ) : null}
       </TableCell>
       <TableCell className='mono px-3 py-[9px] text-right font-semibold'>
         {item.value}
-        <div className='text-[10.5px] font-normal whitespace-nowrap text-[color:var(--text-faint)] sm:hidden'>
+        <div className='text-[10.5px] font-normal whitespace-nowrap text-faint sm:hidden'>
           {`고 ${item.high} · 저 ${item.low}`}
         </div>
       </TableCell>
@@ -111,10 +111,10 @@ function IndexRow({ item }: { item: MarketIndex }) {
       >
         {item.changeRate}
       </TableCell>
-      <TableCell className='mono hidden px-3 py-[9px] text-right text-[color:var(--text-soft)] sm:table-cell'>
+      <TableCell className='mono hidden px-3 py-[9px] text-right text-fg-soft sm:table-cell'>
         {item.high}
       </TableCell>
-      <TableCell className='mono hidden px-[18px] py-[9px] text-right text-[color:var(--text-soft)] sm:table-cell'>
+      <TableCell className='mono hidden px-[18px] py-[9px] text-right text-fg-soft sm:table-cell'>
         {item.low}
       </TableCell>
     </TableRow>

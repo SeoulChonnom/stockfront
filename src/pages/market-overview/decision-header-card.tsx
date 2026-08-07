@@ -40,36 +40,30 @@ export function DecisionHeaderCard({
   return (
     <section
       aria-labelledby='page-title'
-      className='flex flex-col gap-4 rounded-[var(--r-lg)] border border-[color:var(--line)] bg-[color:var(--surface)] p-5'
+      className='flex flex-col gap-4 rounded-[var(--r-lg)] border border-line bg-[color:var(--surface)] p-5'
     >
       <div className='flex flex-wrap items-center gap-x-3 gap-y-2'>
         <StatusBadge status={snapshot.status} />
-        <span className='text-[12.5px] text-[color:var(--text-faint)]'>
-          기준일
-        </span>
+        <span className='text-[12.5px] text-faint'>기준일</span>
         <span className='mono text-[14px] font-semibold'>
           {snapshot.businessDate}
         </span>
         <span aria-hidden='true' className='text-[color:var(--line-strong)]'>
           |
         </span>
-        <span className='text-[12.5px] text-[color:var(--text-faint)]'>
-          생성
-        </span>
-        <span className='mono text-[12.5px] text-[color:var(--text-soft)]'>
+        <span className='text-[12.5px] text-faint'>생성</span>
+        <span className='mono text-[12.5px] text-fg-soft'>
           {generatedDisplay}
         </span>
         {freshness ? (
-          <span className='text-[12.5px] text-[color:var(--text-soft)]'>
-            · {freshness} 생성
-          </span>
+          <span className='text-[12.5px] text-fg-soft'>· {freshness} 생성</span>
         ) : null}
         {isRefetching ? <RefetchBadge /> : null}
       </div>
 
       <div>
         <h1
-          className='m-0 mb-2 text-[15px] font-semibold tracking-[0.01em] text-[color:var(--text-faint)]'
+          className='m-0 mb-2 text-[15px] font-semibold tracking-[0.01em] text-faint'
           id='page-title'
           tabIndex={-1}
         >
@@ -81,8 +75,8 @@ export function DecisionHeaderCard({
           className={cn(
             'm-0 wrap-anywhere text-pretty',
             hasHeadline
-              ? 'text-[length:var(--fs-display)] leading-[var(--lh-display)] font-semibold tracking-[var(--ls-display)] text-[color:var(--text)]'
-              : 'text-[length:var(--fs-lead)] leading-[var(--lh-lead)] text-[color:var(--text-faint)]'
+              ? 'text-[length:var(--fs-display)] leading-[var(--lh-display)] font-semibold tracking-[var(--ls-display)] text-fg'
+              : 'text-[length:var(--fs-lead)] leading-[var(--lh-lead)] text-faint'
           )}
         >
           {hasHeadline ? snapshot.globalHeadline : NO_HEADLINE_COPY}
@@ -91,7 +85,7 @@ export function DecisionHeaderCard({
 
       <MarketCompareStrip markets={snapshot.markets} />
 
-      <div className='mono flex flex-wrap gap-x-4.5 gap-y-2 border-t border-[color:var(--line)] pt-3 text-[11.5px] text-[color:var(--text-faint)]'>
+      <div className='mono flex flex-wrap gap-x-4.5 gap-y-2 border-t border-line pt-3 text-[11.5px] text-faint'>
         {metadata ? (
           <span className='whitespace-nowrap'>
             원문 {metadata.rawNewsCount}건 → 정제 {metadata.processedNewsCount}

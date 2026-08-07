@@ -28,7 +28,7 @@ export function EmptyMarketsPanel({
       >
         시장 섹션이 생성되지 않았습니다
       </h2>
-      <p className='measure-analysis wrap-anywhere m-0 mb-4 text-[13.5px] text-[color:var(--text-soft)]'>
+      <p className='measure-analysis wrap-anywhere m-0 mb-4 text-[13.5px] text-fg-soft'>
         {reason}
       </p>
       <div className='flex flex-wrap gap-2'>

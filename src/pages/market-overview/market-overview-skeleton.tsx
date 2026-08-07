@@ -28,7 +28,7 @@ export function MarketOverviewSkeleton({
         <SkeletonText lines={4} />
         <SkeletonTableRows cols={6} rows={4} />
       </Card>
-      <p className='m-0 text-[13px] text-[color:var(--text-faint)]'>
+      <p className='m-0 text-[13px] text-faint'>
         브리프를 불러오는 중입니다. 화면 구조는 그대로 유지됩니다.
       </p>
     </div>

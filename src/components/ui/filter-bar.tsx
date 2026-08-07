@@ -69,7 +69,7 @@ export function FilterField({
   return (
     <div className={cn('min-w-0', className)}>
       <label
-        className='mb-1 block text-[12px] font-semibold text-[color:var(--text-soft)]'
+        className='mb-1 block text-[12px] font-semibold text-fg-soft'
         htmlFor={htmlFor}
       >
         {label}

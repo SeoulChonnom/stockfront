@@ -29,14 +29,14 @@ export function NavRail({
   const { role } = useCapabilities();
 
   return (
-    <aside className='sticky top-0 hidden h-screen w-[248px] shrink-0 flex-col border-r border-[color:var(--line)] bg-[color:var(--surface)] min-[1025px]:flex'>
+    <aside className='sticky top-0 hidden h-screen w-[248px] shrink-0 flex-col border-r border-line bg-[color:var(--surface)] min-[1025px]:flex'>
       <div className='px-5 pt-6 pb-4'>
         {/* C5: design wordmark color is `--text`, not `--primary`. */}
-        <p className='m-0 text-[19px] font-bold tracking-[-0.02em] text-[color:var(--text)] [font-family:var(--font-display)]'>
+        <p className='m-0 text-[19px] font-bold tracking-[-0.02em] text-fg [font-family:var(--font-display)]'>
           Market Brief
         </p>
         {/* Keep secondary context visible beneath the rail wordmark. */}
-        <p className='m-0 text-[12px] text-[color:var(--text-faint)]'>
+        <p className='m-0 text-[12px] text-faint'>
           일간 시장 브리프 · 운영 콘솔
         </p>
       </div>
@@ -51,16 +51,16 @@ export function NavRail({
         />
       </div>
 
-      <div className='flex flex-col gap-2 border-t border-[color:var(--line)] p-3'>
+      <div className='flex flex-col gap-2 border-t border-line p-3'>
         <div className='flex items-center gap-2.5 px-1'>
           <span className='flex size-[26px] shrink-0 items-center justify-center rounded-full border border-[color:var(--primary-line)] bg-[color:var(--primary-soft)] text-[color:var(--primary)]'>
             <CircleUserRound aria-hidden='true' size={16} />
           </span>
           <div className='min-w-0 flex-1'>
-            <p className='truncate text-[12.5px] font-semibold text-[color:var(--text)]'>
+            <p className='truncate text-[12.5px] font-semibold text-fg'>
               ops.analyst
             </p>
-            <p className='truncate text-[11px] text-[color:var(--text-faint)]'>
+            <p className='truncate text-[11px] text-faint'>
               {ROLE_LABELS[role]}
             </p>
           </div>

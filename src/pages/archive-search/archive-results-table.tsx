@@ -64,7 +64,7 @@ function ReasonSubline({ record }: { record: ArchiveRecord }) {
   }
 
   return (
-    <div className='wrap-anywhere mt-1 text-[12px] text-[color:var(--text-faint)]'>
+    <div className='wrap-anywhere mt-1 text-[12px] text-faint'>
       {record.detail}
     </div>
   );
@@ -72,7 +72,7 @@ function ReasonSubline({ record }: { record: ArchiveRecord }) {
 
 function GeneratedAtSubline({ record }: { record: ArchiveRecord }) {
   return (
-    <div className='mono mt-1 text-[11.5px] text-[color:var(--text-faint)] min-[1181px]:hidden'>
+    <div className='mono mt-1 text-[11.5px] text-faint min-[1181px]:hidden'>
       생성 {record.generatedAt}
     </div>
   );
@@ -122,20 +122,20 @@ export function ArchiveResultsTable({
                     12px, not the shared `TableCell` default (18px). */}
                 <TableCell className='py-3 pr-3 pl-[18px] align-top'>
                   <a
-                    className='mono text-[13.5px] font-semibold text-[color:var(--text)] underline-offset-2 hover:text-[color:var(--primary)] hover:underline'
+                    className='mono text-[13.5px] font-semibold text-fg underline-offset-2 hover:text-[color:var(--primary)] hover:underline'
                     href={withBasePath(href)}
                     onClick={onOpen}
                   >
                     {/* D1: ISO date, mono — not the ko-KR dotted format. */}
                     {record.businessDate}
                   </a>
-                  <div className='mono mt-0 text-[11px] text-[color:var(--text-faint)]'>
+                  <div className='mono mt-0 text-[11px] text-faint'>
                     pageId {record.pageId}
                   </div>
                 </TableCell>
                 <TableCell className='py-3 px-3 align-top'>
                   <a
-                    className='wrap-anywhere text-pretty font-normal text-[color:var(--text)] underline-offset-2 hover:text-[color:var(--primary)] hover:underline'
+                    className='wrap-anywhere text-pretty font-normal text-fg underline-offset-2 hover:text-[color:var(--primary)] hover:underline'
                     href={withBasePath(href)}
                     onClick={onOpen}
                   >
@@ -148,7 +148,7 @@ export function ArchiveResultsTable({
                   {/* Use the compact row-level badge size. */}
                   <StatusBadge size='sm' status={record.status} />
                 </TableCell>
-                <TableCell className='mono hidden py-3 pr-[18px] pl-3 text-left text-[12px] whitespace-nowrap text-[color:var(--text-soft)] min-[1181px]:table-cell'>
+                <TableCell className='mono hidden py-3 pr-[18px] pl-3 text-left text-[12px] whitespace-nowrap text-fg-soft min-[1181px]:table-cell'>
                   {record.generatedAt}
                 </TableCell>
               </TableRow>

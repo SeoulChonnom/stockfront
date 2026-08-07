@@ -106,23 +106,23 @@ export function BatchHistoryList({
       )}
     >
       <CardContent className='flex min-w-0 flex-col gap-0 p-0'>
-        <div className='flex flex-wrap items-center justify-between gap-2 border-b border-[color:var(--line)] px-4 py-3.5 sm:px-[18px]'>
+        <div className='flex flex-wrap items-center justify-between gap-2 border-b border-line px-4 py-3.5 sm:px-[18px]'>
           <div className='flex min-w-0 flex-wrap items-baseline gap-2'>
-            <h2 className='m-0 text-[14.5px] font-semibold text-[color:var(--text)]'>
+            <h2 className='m-0 text-[14.5px] font-semibold text-fg'>
               실행 이력
             </h2>
-            <span className='mono text-[12.5px] font-semibold text-[color:var(--text-soft)]'>
+            <span className='mono text-[12.5px] font-semibold text-fg-soft'>
               {totalCount === 0
                 ? '0 / 0'
                 : `${(applied.page - 1) * pageSize + 1}–${Math.min(applied.page * pageSize, totalCount)} / ${totalCount}`}
             </span>
-            <span className='mono text-[11.5px] text-[color:var(--text-faint)]'>
+            <span className='mono text-[11.5px] text-faint'>
               · {getBatchStatusSummaryLabel(applied.status)} ·{' '}
               {getBatchTypeSummaryLabel(applied.type)}
             </span>
           </div>
           <div className='flex flex-wrap items-center gap-2'>
-            <span className='mono text-[11.5px] text-[color:var(--text-faint)]'>
+            <span className='mono text-[11.5px] text-faint'>
               <time dateTime={updatedAtIso ?? undefined}>
                 {`마지막 갱신 ${relativeUpdatedAt ?? '-'}`}
               </time>
@@ -303,7 +303,7 @@ function BatchHistoryRow({
       <TableCell className='py-2.5 pl-4 align-top sm:pl-[18px]'>
         <button
           aria-label={`job ${row.id} 상세 선택`}
-          className='mono block min-w-0 rounded-[var(--r-sm)] text-left text-[13.5px] font-semibold text-[color:var(--text)] outline-none hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--focus)]'
+          className='mono block min-w-0 rounded-[var(--r-sm)] text-left text-[13.5px] font-semibold text-fg outline-none hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--focus)]'
           ref={buttonRef}
           onClick={(event) => {
             event.stopPropagation();
@@ -313,14 +313,14 @@ function BatchHistoryRow({
         >
           {row.businessDate}
         </button>
-        <div className='mono text-[11px] text-[color:var(--text-faint)]'>
+        <div className='mono text-[11px] text-faint'>
           job {row.id} · {getSnapshotLabel(row)}
         </div>
         <BatchTypeBadge
           className='mt-1 px-[7px] py-0.5 text-[11px] min-[641px]:hidden'
           jobType={row.jobType}
         />
-        <div className='mono min-[1181px]:hidden text-[11px] text-[color:var(--text-faint)]'>
+        <div className='mono min-[1181px]:hidden text-[11px] text-faint'>
           원문/정제/이슈 {row.counts}
         </div>
       </TableCell>
@@ -330,16 +330,14 @@ function BatchHistoryRow({
       <TableCell className='py-2.5 px-3 align-top'>
         <StatusBadge size='sm' status={row.rawStatus} />
         {row.rawStatus.trim().toUpperCase() === 'PARTIAL' && row.detail ? (
-          <div className='wrap-anywhere mt-1 text-[11.5px] text-[color:var(--text-faint)]'>
+          <div className='wrap-anywhere mt-1 text-[11.5px] text-faint'>
             {row.detail}
           </div>
         ) : null}
       </TableCell>
       <TableCell className='py-2.5 px-3 text-right align-top'>
-        <div className='mono text-[13px] text-[color:var(--text)]'>
-          {row.duration}
-        </div>
-        <div className='mono text-[11px] whitespace-nowrap text-[color:var(--text-faint)]'>
+        <div className='mono text-[13px] text-fg'>{row.duration}</div>
+        <div className='mono text-[11px] whitespace-nowrap text-faint'>
           {row.startedAt}
         </div>
       </TableCell>

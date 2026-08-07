@@ -18,7 +18,7 @@ import { saveScrollPosition } from './scroll-restoration';
 /** Shared nav renderer; omit the admin group entirely for unauthorized users. */
 
 const GROUP_LABEL_CLASSES =
-  'px-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-[color:var(--text-faint)]';
+  'px-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-faint';
 
 function NavGroupLabel({ children }: { children: string }) {
   return <p className={GROUP_LABEL_CLASSES}>{children}</p>;
@@ -77,7 +77,7 @@ function NavLink({
     <a
       aria-current={active ? 'page' : undefined}
       className={cn(
-        'flex items-center gap-2.5 rounded-[8px] border border-transparent px-2.5 text-[13.5px] font-medium text-[color:var(--text-soft)] transition-[background-color,color] duration-(--dur-fast) ease-(--ease) hover:bg-[color:var(--surface-2)] hover:text-[color:var(--text)]',
+        'flex items-center gap-2.5 rounded-[8px] border border-transparent px-2.5 text-[13.5px] font-medium text-fg-soft transition-[background-color,color] duration-(--dur-fast) ease-(--ease) hover:bg-[color:var(--surface-2)] hover:text-fg',
         minHeightClass,
         active &&
           'border-[color:var(--primary-line)] bg-[color:var(--primary-soft)] text-[color:var(--primary)] hover:bg-[color:var(--primary-soft)] hover:text-[color:var(--primary)]'

@@ -34,7 +34,7 @@ export function ArchiveModeBand({
       </span>
       <span className='mono text-[14px] font-semibold'>{businessDate}</span>
       {pageId !== null && versionNo !== null ? (
-        <span className='mono text-[12px] text-[color:var(--text-soft)]'>
+        <span className='mono text-[12px] text-fg-soft'>
           pageId {pageId} · v{versionNo}
         </span>
       ) : null}

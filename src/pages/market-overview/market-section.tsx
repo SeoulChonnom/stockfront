@@ -39,13 +39,13 @@ export function MarketSection({
   return (
     <section
       aria-labelledby={headingId}
-      className='flex min-w-0 scroll-mt-4 flex-col overflow-hidden rounded-[var(--r-lg)] border border-[color:var(--line)] bg-[color:var(--surface)]'
+      className='flex min-w-0 scroll-mt-4 flex-col overflow-hidden rounded-[var(--r-lg)] border border-line bg-[color:var(--surface)]'
       id={`mk-section-${index}`}
     >
-      <div className='flex flex-wrap items-baseline gap-x-3 gap-y-2 border-b border-[color:var(--line)] px-[18px] py-4'>
+      <div className='flex flex-wrap items-baseline gap-x-3 gap-y-2 border-b border-line px-[18px] py-4'>
         {/* Show the market scope before its name. */}
         {market.marketType ? (
-          <span className='mono rounded-[var(--r-sm)] border border-[color:var(--line-strong)] px-1.75 py-0.5 text-[11px] font-semibold tracking-[0.08em] text-[color:var(--text-soft)]'>
+          <span className='mono rounded-[var(--r-sm)] border border-[color:var(--line-strong)] px-1.75 py-0.5 text-[11px] font-semibold tracking-[0.08em] text-fg-soft'>
             {market.marketType}
           </span>
         ) : null}
@@ -57,12 +57,12 @@ export function MarketSection({
           {market.label}
         </h2>
         {market.summaryTitle ? (
-          <span className='text-pretty text-[14px] text-[color:var(--text-soft)]'>
+          <span className='text-pretty text-[14px] text-fg-soft'>
             — {market.summaryTitle}
           </span>
         ) : null}
         {metadata ? (
-          <span className='mono ml-auto text-[11.5px] text-[color:var(--text-faint)]'>
+          <span className='mono ml-auto text-[11.5px] text-faint'>
             원문 {metadata.rawNewsCount}건 · 정제 {metadata.processedNewsCount}
             건 · 클러스터 {metadata.clusterCount}건
           </span>
@@ -77,7 +77,7 @@ export function MarketSection({
           >
             !
           </span>
-          <p className='m-0 text-[13px] text-[color:var(--text)]'>
+          <p className='m-0 text-[13px] text-fg'>
             <strong className='font-semibold'>누락 </strong>
             {metadata.partialMessage}
           </p>
@@ -86,29 +86,29 @@ export function MarketSection({
 
       <div className='flex flex-col gap-3.5 px-[18px] py-4'>
         {hasNarrative ? (
-          <p className='measure-summary text-pretty wrap-anywhere m-0 text-[length:var(--fs-lead)] leading-[var(--lh-lead)] text-[color:var(--text)]'>
+          <p className='measure-summary text-pretty wrap-anywhere m-0 text-[length:var(--fs-lead)] leading-[var(--lh-lead)] text-fg'>
             {market.summaryBody}
           </p>
         ) : null}
         <MarketAnalysisBlock analysis={market.analysis} />
         {hasNarrative ? null : (
-          <p className='m-0 rounded-[var(--r-md)] border border-dashed border-[color:var(--line-strong)] px-3.5 py-3 text-[13px] text-[color:var(--text-faint)]'>
+          <p className='m-0 rounded-[var(--r-md)] border border-dashed border-[color:var(--line-strong)] px-3.5 py-3 text-[13px] text-faint'>
             {NO_NARRATIVE_COPY}
           </p>
         )}
       </div>
 
-      <div className='flex items-baseline gap-2.5 border-t border-[color:var(--line)] bg-[color:var(--surface-2)] px-[18px] py-3'>
+      <div className='flex items-baseline gap-2.5 border-t border-line bg-[color:var(--surface-2)] px-[18px] py-3'>
         <h3 className='m-0 text-[13.5px] font-semibold'>대표 지수</h3>
-        <span className='mono text-[11.5px] text-[color:var(--text-faint)]'>
+        <span className='mono text-[11.5px] text-faint'>
           {market.indices.length}종
         </span>
       </div>
       <MarketIndexTable indices={market.indices} />
 
-      <div className='flex items-baseline gap-2.5 border-t border-[color:var(--line)] bg-[color:var(--surface-2)] px-[18px] py-3'>
+      <div className='flex items-baseline gap-2.5 border-t border-line bg-[color:var(--surface-2)] px-[18px] py-3'>
         <h3 className='m-0 text-[13.5px] font-semibold'>핵심 이슈</h3>
-        <span className='mono text-[11.5px] text-[color:var(--text-faint)]'>
+        <span className='mono text-[11.5px] text-faint'>
           {market.clusters.length}건
         </span>
       </div>

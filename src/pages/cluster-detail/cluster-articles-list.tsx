@@ -23,10 +23,10 @@ function ClusterArticleRow({ article }: { article: ClusterArticle }) {
   // publisher/date/원문 배지/네이버 미러 all inline on the line below. The
   // app previously pulled the 원문 badge up next to the title (3 lines).
   return (
-    <li className='min-w-0 border-b border-[color:var(--line)] px-[18px] py-3'>
+    <li className='min-w-0 border-b border-line px-[18px] py-3'>
       {originalUrl ? (
         <a
-          className='wrap-anywhere font-medium text-[color:var(--text)] underline-offset-2 hover:underline'
+          className='wrap-anywhere font-medium text-fg underline-offset-2 hover:underline'
           href={originalUrl}
           rel='noopener noreferrer'
           target='_blank'
@@ -34,25 +34,25 @@ function ClusterArticleRow({ article }: { article: ClusterArticle }) {
           {displayArticleTitle(article.title)} ↗
         </a>
       ) : (
-        <span className='wrap-anywhere font-medium text-[color:var(--text)]'>
+        <span className='wrap-anywhere font-medium text-fg'>
           {displayArticleTitle(article.title)}
         </span>
       )}
-      <div className='mono mt-1 flex flex-wrap items-center gap-2 text-[11.5px] text-[color:var(--text-faint)]'>
+      <div className='mono mt-1 flex flex-wrap items-center gap-2 text-[11.5px] text-faint'>
         <span>{displaySource(article.source)}</span>
         <span>{displayPublishedAt(article.publishedAt)}</span>
         {/* README §7-5: "제목 링크 + mono 메타 + 원문 배지 + 네이버 미러 ↗"
             — the title itself links to the original source; this badge
             labels that destination in words (not color-only), distinct
             from the 네이버 미러 link below. */}
-        <span className='rounded-[var(--r-sm)] border border-[color:var(--line-strong)] px-1.5 py-0.5 text-[11.5px] font-semibold text-[color:var(--text-faint)]'>
+        <span className='rounded-[var(--r-sm)] border border-[color:var(--line-strong)] px-1.5 py-0.5 text-[11.5px] font-semibold text-faint'>
           원문
         </span>
         {/* F6: design's 네이버 미러 is a bordered chip (matching 원문's
             style), not a plain underlined link. */}
         {mirrorUrl ? (
           <a
-            className='rounded-[var(--r-sm)] border border-[color:var(--line)] px-1.5 py-0.5 text-[color:var(--text-soft)] no-underline'
+            className='rounded-[var(--r-sm)] border border-line px-1.5 py-0.5 text-fg-soft no-underline'
             href={mirrorUrl}
             rel='noopener noreferrer'
             target='_blank'
@@ -80,17 +80,17 @@ export function ClusterArticlesList({
     // Header, body, and pager own their padding.
     <section
       aria-labelledby='cluster-articles-heading'
-      className='flex min-w-0 flex-col overflow-hidden rounded-[var(--r-lg)] border border-[color:var(--line)] bg-[color:var(--surface)]'
+      className='flex min-w-0 flex-col overflow-hidden rounded-[var(--r-lg)] border border-line bg-[color:var(--surface)]'
     >
-      <div className='flex flex-wrap items-center gap-2.5 border-b border-[color:var(--line)] px-[18px] py-3.5'>
+      <div className='flex flex-wrap items-center gap-2.5 border-b border-line px-[18px] py-3.5'>
         {/* Keep this dense card heading at 15px. */}
         <h2
-          className='m-0 text-[15px] font-semibold text-[color:var(--text)]'
+          className='m-0 text-[15px] font-semibold text-fg'
           id='cluster-articles-heading'
         >
           관련 기사
         </h2>
-        <span className='mono text-[11.5px] text-[color:var(--text-faint)]'>
+        <span className='mono text-[11.5px] text-faint'>
           관련 기사 {articles.length}건
         </span>
         {remaining > 0 ? (

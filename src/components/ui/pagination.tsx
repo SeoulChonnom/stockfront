@@ -57,7 +57,7 @@ export function Pagination({
     <div className={cn('flex flex-wrap items-center gap-2', className)}>
       <nav aria-label={navLabel} className='flex flex-wrap items-center gap-2'>
         <Button
-          className='min-h-10 min-w-11 border-[color:var(--line-strong)] bg-[color:var(--surface)] px-3 text-[13px] font-normal text-[color:var(--text)]'
+          className='min-h-10 min-w-11 border-[color:var(--line-strong)] bg-[color:var(--surface)] px-3 text-[13px] font-normal text-fg'
           disabled={page <= 1}
           onClick={() => goTo(page - 1)}
           size='sm'
@@ -70,7 +70,7 @@ export function Pagination({
           <Button
             aria-current={candidate === page ? 'page' : undefined}
             className={cn(
-              'mono min-h-10 min-w-11 bg-[color:var(--surface)] px-2.5 text-[13px] text-[color:var(--text-soft)]',
+              'mono min-h-10 min-w-11 bg-[color:var(--surface)] px-2.5 text-[13px] text-fg-soft',
               candidate === page &&
                 'border-[color:var(--primary-line)] bg-[color:var(--primary-soft)] text-[color:var(--primary)]'
             )}
@@ -84,7 +84,7 @@ export function Pagination({
           </Button>
         ))}
         <Button
-          className='min-h-10 min-w-11 border-[color:var(--line-strong)] bg-[color:var(--surface)] px-3 text-[13px] font-normal text-[color:var(--text)]'
+          className='min-h-10 min-w-11 border-[color:var(--line-strong)] bg-[color:var(--surface)] px-3 text-[13px] font-normal text-fg'
           disabled={page >= safeTotalPages}
           onClick={() => goTo(page + 1)}
           size='sm'
@@ -95,7 +95,7 @@ export function Pagination({
         </Button>
       </nav>
       {showPageIndicator ? (
-        <span className='mono ml-auto text-[12px] text-[color:var(--text-faint)]'>
+        <span className='mono ml-auto text-[12px] text-faint'>
           {page} / {safeTotalPages}
         </span>
       ) : null}

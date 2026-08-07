@@ -56,7 +56,7 @@ export function InlineAlert({
         </h3>
       ) : null}
       {children ? (
-        <div className='measure-error wrap-anywhere m-0 text-[13.5px] text-[color:var(--text-soft)]'>
+        <div className='measure-error wrap-anywhere m-0 text-[13.5px] text-fg-soft'>
           {children}
         </div>
       ) : null}

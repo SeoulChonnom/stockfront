@@ -40,8 +40,8 @@ const NOTE_CLASSES: Readonly<Record<PipelineStageTone, string>> = {
   running: 'text-[color:var(--info)]',
   failed: 'text-[color:var(--danger)]',
   skipped: 'text-[color:var(--neutral)]',
-  pending: 'text-[color:var(--text-faint)]',
-  unknown: 'text-[color:var(--text-faint)]',
+  pending: 'text-faint',
+  unknown: 'text-faint',
 };
 
 // Match error keywords to labels, then verify the label exists in this job type's stages.
@@ -203,7 +203,7 @@ export function PipelineStages({
   return (
     <div className={cn('min-w-0', className)}>
       <div className='mb-2 flex items-center gap-2'>
-        <h3 className='m-0 text-[15px] font-semibold text-[color:var(--text)]'>
+        <h3 className='m-0 text-[15px] font-semibold text-fg'>
           파이프라인 단계
         </h3>
         <span className='inline-flex items-center rounded-[var(--r-sm)] border border-[color:var(--neutral-line)] bg-[color:var(--neutral-soft)] px-1.5 py-0.5 text-[11px] font-semibold text-[color:var(--neutral)]'>
@@ -223,7 +223,7 @@ export function PipelineStages({
                 TONE_DOT_CLASSES[stage.tone]
               )}
             />
-            <span className='min-w-0 flex-1 text-[13.5px] font-medium text-[color:var(--text)]'>
+            <span className='min-w-0 flex-1 text-[13.5px] font-medium text-fg'>
               {stage.name}
               {stage.note ? (
                 <span
@@ -236,13 +236,13 @@ export function PipelineStages({
                 </span>
               ) : null}
             </span>
-            <span className='mono shrink-0 text-right text-[12.5px] font-semibold text-[color:var(--text-soft)]'>
+            <span className='mono shrink-0 text-right text-[12.5px] font-semibold text-fg-soft'>
               {STAGE_STATUS_LABELS[stage.tone]}
               {/* 소요 시간: 여전히 없다(파일 상단 주석 참고). 이 항상-"-"
                   컬럼은 디자인의 단계 행 모양(상태어 + 그 아래 소요 시간
                   줄)과 레이아웃 패리티를 맞추려고 의도적으로 유지한다 —
                   `docs/design_v2/v2-decisions.md` §10. */}
-              <span className='mono block text-[11px] font-normal text-[color:var(--text-faint)]'>
+              <span className='mono block text-[11px] font-normal text-faint'>
                 -
               </span>
             </span>

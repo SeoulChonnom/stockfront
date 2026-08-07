@@ -13,9 +13,8 @@ const buttonVariants = cva(
         primary:
           'border-[color:var(--primary)] bg-[color:var(--primary)] text-[color:var(--primary-fg)] hover:-translate-y-px',
         secondary:
-          'border-[color:var(--line-strong)] bg-[color:color-mix(in_srgb,var(--surface)_92%,transparent)] text-[color:var(--text)] hover:-translate-y-px',
-        ghost:
-          'border-[color:var(--line)] bg-transparent text-[color:var(--text-soft)] hover:-translate-y-px',
+          'border-[color:var(--line-strong)] bg-[color:color-mix(in_srgb,var(--surface)_92%,transparent)] text-fg hover:-translate-y-px',
+        ghost: 'border-line bg-transparent text-fg-soft hover:-translate-y-px',
         danger:
           'border-[color:var(--danger-line)] bg-[color:var(--danger-soft)] text-[color:var(--danger)] hover:-translate-y-px',
       },

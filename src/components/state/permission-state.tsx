@@ -23,13 +23,13 @@ export function PermissionState({
         403 · FORBIDDEN
       </span>
       <h1
-        className='mt-3 mb-2 text-[22px] font-semibold text-[color:var(--text)]'
+        className='mt-3 mb-2 text-[22px] font-semibold text-fg'
         id='page-title'
         tabIndex={-1}
       >
         이 화면에 접근할 권한이 없습니다
       </h1>
-      <p className='wrap-anywhere mb-5 text-[13.5px] text-[color:var(--text-soft)]'>
+      <p className='wrap-anywhere mb-5 text-[13.5px] text-fg-soft'>
         이 화면은 파이프라인 로그와 수동 실행을 포함하므로 관리자(ADMIN) 권한이
         있는 계정만 열 수 있습니다. 현재 계정은 일반 사용자입니다.
       </p>

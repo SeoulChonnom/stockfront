@@ -84,7 +84,7 @@ export function TableHead({
   return (
     <th
       className={cn(
-        'h-12 border-b border-[color:var(--line)] px-0 text-left align-middle text-[11px] uppercase tracking-[0.06em] text-[color:var(--text-faint)] font-semibold',
+        'h-12 border-b border-line px-0 text-left align-middle text-[11px] uppercase tracking-[0.06em] text-faint font-semibold',
         className
       )}
       {...props}
@@ -99,7 +99,7 @@ export function TableCell({
   return (
     <td
       className={cn(
-        'min-w-0 border-b border-[color:var(--line)] px-0 py-[18px] align-middle',
+        'min-w-0 border-b border-line px-0 py-[18px] align-middle',
         className
       )}
       {...props}

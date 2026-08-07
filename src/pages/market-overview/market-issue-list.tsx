@@ -36,7 +36,7 @@ export function MarketIssueList({
 }) {
   if (clusters.length === 0) {
     return (
-      <p className='m-0 px-[18px] py-4 text-[13px] text-[color:var(--text-faint)]'>
+      <p className='m-0 px-[18px] py-4 text-[13px] text-faint'>
         묶인 이슈가 없습니다. 수집 기사 수가 부족해 클러스터가 만들어지지 않은
         경우이며, 원문 목록이 있으면 아래에서 직접 확인할 수 있습니다.
       </p>
@@ -81,17 +81,17 @@ function IssueRow({
 
   return (
     // Keep fixed 10px row/18px column gaps and 18px horizontal padding.
-    <article className='grid min-w-0 grid-cols-1 gap-x-[18px] gap-y-[10px] border-b border-[color:var(--line)] px-[18px] py-3.5 last:border-b-0 sm:grid-cols-[minmax(0,1fr)_200px]'>
+    <article className='grid min-w-0 grid-cols-1 gap-x-[18px] gap-y-[10px] border-b border-line px-[18px] py-3.5 last:border-b-0 sm:grid-cols-[minmax(0,1fr)_200px]'>
       <div className='flex min-w-0 flex-col gap-[7px]'>
         <a
-          className='text-pretty wrap-anywhere text-[15px] font-semibold text-[color:var(--text)] no-underline hover:text-[color:var(--primary)] hover:underline'
+          className='text-pretty wrap-anywhere text-[15px] font-semibold text-fg no-underline hover:text-[color:var(--primary)] hover:underline'
           href={withBasePath(href)}
           onClick={onOpen}
         >
           {cluster.title}
         </a>
         {cluster.summary ? (
-          <p className='text-pretty wrap-anywhere m-0 text-[13.5px] text-[color:var(--text-soft)]'>
+          <p className='text-pretty wrap-anywhere m-0 text-[13.5px] text-fg-soft'>
             {cluster.summary}
           </p>
         ) : null}
@@ -99,7 +99,7 @@ function IssueRow({
           <div className='flex flex-wrap gap-1.5'>
             {cluster.tags.map((tag) => (
               <span
-                className='rounded-[var(--r-sm)] border border-[color:var(--line)] bg-[color:var(--surface-2)] px-1.75 py-0.5 text-[11.5px] text-[color:var(--text-soft)]'
+                className='rounded-[var(--r-sm)] border border-line bg-[color:var(--surface-2)] px-1.75 py-0.5 text-[11.5px] text-fg-soft'
                 key={tag}
               >
                 {tag}
@@ -107,12 +107,12 @@ function IssueRow({
             ))}
           </div>
         ) : null}
-        <div className='wrap-anywhere text-[12px] text-[color:var(--text-faint)]'>
+        <div className='wrap-anywhere text-[12px] text-faint'>
           대표 기사 · {buildRepresentativeLine(representative)}
         </div>
       </div>
       <div className='flex min-w-0 flex-col items-start gap-1.5'>
-        <span className='mono text-[12px] font-semibold text-[color:var(--text-soft)]'>
+        <span className='mono text-[12px] font-semibold text-fg-soft'>
           기사 {cluster.articleCount}건
         </span>
         <Button asChild className='min-h-9 px-3 text-[12.5px]' size='sm'>
@@ -134,7 +134,7 @@ function IssueRow({
         ) : null}
         {mirrorUrl ? (
           <a
-            className='text-[12px] text-[color:var(--text-faint)] underline'
+            className='text-[12px] text-faint underline'
             href={mirrorUrl}
             rel='noopener noreferrer'
             target='_blank'

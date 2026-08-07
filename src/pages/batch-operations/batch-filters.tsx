@@ -56,12 +56,12 @@ export function BatchFilters({
       <Card className='flex flex-col gap-3 px-[18px] py-4'>
         <div className='flex flex-wrap items-center gap-2.5'>
           <h2
-            className='m-0 text-[14px] font-semibold text-[color:var(--text)]'
+            className='m-0 text-[14px] font-semibold text-fg'
             id='ops-filter-heading'
           >
             조회 조건
           </h2>
-          <span className='mono wrap-anywhere text-[11.5px] text-[color:var(--text-faint)]'>
+          <span className='mono wrap-anywhere text-[11.5px] text-faint'>
             적용됨 · {applied.from} ~ {applied.to} ·{' '}
             {getBatchStatusSummaryLabel(applied.status)} ·{' '}
             {getBatchTypeSummaryLabel(applied.type)}
@@ -99,7 +99,7 @@ export function BatchFilters({
           </FilterField>
           <FilterField htmlFor='status' label='실행 상태'>
             <select
-              className='flex min-h-11 w-full rounded-[var(--r-md)] border border-[color:var(--line-strong)] bg-[color:var(--surface)] px-2.5 py-0 text-[13.5px] text-[color:var(--text)] outline-none transition-[border-color,box-shadow] duration-150 focus:border-[color:color-mix(in_srgb,var(--primary)_45%,transparent)] focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--primary)_16%,transparent)]'
+              className='flex min-h-11 w-full rounded-[var(--r-md)] border border-[color:var(--line-strong)] bg-[color:var(--surface)] px-2.5 py-0 text-[13.5px] text-fg outline-none transition-[border-color,box-shadow] duration-150 focus:border-[color:color-mix(in_srgb,var(--primary)_45%,transparent)] focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--primary)_16%,transparent)]'
               {...getFieldProps('status')}
             >
               {getBatchStatusOptions().map((option) => (
@@ -111,7 +111,7 @@ export function BatchFilters({
           </FilterField>
           <FilterField htmlFor='type' label='배치 타입'>
             <select
-              className='flex min-h-11 w-full rounded-[var(--r-md)] border border-[color:var(--line-strong)] bg-[color:var(--surface)] px-2.5 py-0 text-[13.5px] text-[color:var(--text)] outline-none transition-[border-color,box-shadow] duration-150 focus:border-[color:color-mix(in_srgb,var(--primary)_45%,transparent)] focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--primary)_16%,transparent)]'
+              className='flex min-h-11 w-full rounded-[var(--r-md)] border border-[color:var(--line-strong)] bg-[color:var(--surface)] px-2.5 py-0 text-[13.5px] text-fg outline-none transition-[border-color,box-shadow] duration-150 focus:border-[color:color-mix(in_srgb,var(--primary)_45%,transparent)] focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--primary)_16%,transparent)]'
               {...getFieldProps('type')}
             >
               {getBatchTypeOptions().map((option) => (

@@ -59,7 +59,7 @@ export function StatusCard({
         </span>
         <h1
           className={cn(
-            'mb-2 font-semibold text-[color:var(--text)]',
+            'mb-2 font-semibold text-fg',
             fullScreen ? 'mt-3 text-[22px]' : 'mt-[10px] text-[20px]'
           )}
           id={titleId}
@@ -67,7 +67,7 @@ export function StatusCard({
         >
           {title}
         </h1>
-        <p className='wrap-anywhere mb-5 text-[13.5px] text-[color:var(--text-soft)]'>
+        <p className='wrap-anywhere mb-5 text-[13.5px] text-fg-soft'>
           {description}
         </p>
         {showSpinner ? (

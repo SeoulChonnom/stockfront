@@ -108,8 +108,6 @@ describe('Pagination', () => {
       'min-h-10'
     );
     expect(screen.getByText('2 / 3').className).toContain('text-[12px]');
-    expect(screen.getByText('2 / 3').className).toContain(
-      'text-[color:var(--text-faint)]'
-    );
+    expect(screen.getByText('2 / 3').className).toContain('text-faint');
   });
 });

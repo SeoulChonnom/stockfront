@@ -121,7 +121,7 @@ function ClusterDetailErrorState({
         {status === null ? code : `${status} · ${code}`}
       </span>
       <h1
-        className='m-0 mt-2 mb-1.5 text-[19px] font-semibold text-[color:var(--text)]'
+        className='m-0 mt-2 mb-1.5 text-[19px] font-semibold text-fg'
         id='page-title'
         tabIndex={-1}
       >
@@ -129,7 +129,7 @@ function ClusterDetailErrorState({
           ? '이 이슈를 찾을 수 없습니다'
           : '이슈 상세를 불러오지 못했습니다'}
       </h1>
-      <p className='measure-error wrap-anywhere m-0 mb-4 text-[13.5px] text-[color:var(--text-soft)]'>
+      <p className='measure-error wrap-anywhere m-0 mb-4 text-[13.5px] text-fg-soft'>
         {message}
       </p>
       <div className='flex flex-wrap gap-2'>

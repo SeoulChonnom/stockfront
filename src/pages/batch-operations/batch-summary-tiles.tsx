@@ -14,7 +14,7 @@ const TILE_BAR_CLASSES: Readonly<Record<TileTone, string>> = {
 const TILE_NUMBER_CLASSES: Readonly<Record<TileTone, string>> = {
   danger: 'text-[color:var(--danger)]',
   warning: 'text-[color:var(--warning)]',
-  neutral: 'text-[color:var(--text)]',
+  neutral: 'text-fg',
 };
 
 function SummaryTile({
@@ -36,7 +36,7 @@ function SummaryTile({
         TILE_BAR_CLASSES[tone]
       )}
     >
-      <p className='m-0 text-[11px] font-semibold tracking-[0.07em] text-[color:var(--text-faint)] uppercase'>
+      <p className='m-0 text-[11px] font-semibold tracking-[0.07em] text-faint uppercase'>
         {label}
       </p>
       <p
@@ -47,9 +47,7 @@ function SummaryTile({
       >
         {value}
       </p>
-      <p className='wrap-anywhere m-0 text-[12px] text-[color:var(--text-soft)]'>
-        {supporting}
-      </p>
+      <p className='wrap-anywhere m-0 text-[12px] text-fg-soft'>{supporting}</p>
     </Card>
   );
 }

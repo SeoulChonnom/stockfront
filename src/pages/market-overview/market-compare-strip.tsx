@@ -72,15 +72,15 @@ function MarketCompareTile({
   const lead = market.indices[0];
 
   return (
-    <div className='flex min-w-0 flex-col gap-2 rounded-[var(--r-md)] border border-[color:var(--line)] bg-[color:var(--surface-2)] p-3.5'>
+    <div className='flex min-w-0 flex-col gap-2 rounded-[var(--r-md)] border border-line bg-[color:var(--surface-2)] p-3.5'>
       <div className='flex min-w-0 items-center gap-2'>
         {/* Show the market scope before its name as plain text. */}
         {market.marketType ? (
-          <span className='shrink-0 text-[11px] font-bold tracking-[0.07em] text-[color:var(--text-faint)] uppercase'>
+          <span className='shrink-0 text-[11px] font-bold tracking-[0.07em] text-faint uppercase'>
             {market.marketType}
           </span>
         ) : null}
-        <span className='min-w-0 truncate text-[13.5px] font-semibold text-[color:var(--text)]'>
+        <span className='min-w-0 truncate text-[13.5px] font-semibold text-fg'>
           {market.label}
         </span>
         <Button
@@ -94,7 +94,7 @@ function MarketCompareTile({
         </Button>
       </div>
       <div className='flex flex-wrap items-baseline gap-2.5'>
-        <span className='text-[12.5px] text-[color:var(--text-faint)]'>
+        <span className='text-[12.5px] text-faint'>
           {lead ? lead.label : '지수 없음'}
         </span>
         <span className='mono text-[21px] font-semibold'>
@@ -108,17 +108,17 @@ function MarketCompareTile({
                 ? 'text-[color:var(--up)]'
                 : lead.direction === 'down'
                   ? 'text-[color:var(--down)]'
-                  : 'text-[color:var(--text-faint)]'
+                  : 'text-faint'
             )}
           >
             {lead.change} ({lead.changeRate})
           </span>
         ) : null}
       </div>
-      <p className='wrap-anywhere m-0 text-[13px] text-[color:var(--text-soft)]'>
+      <p className='wrap-anywhere m-0 text-[13px] text-fg-soft'>
         {market.summaryTitle || '요약 미생성'}
       </p>
-      <div className='mono text-[11.5px] text-[color:var(--text-faint)]'>
+      <div className='mono text-[11.5px] text-faint'>
         지수 {market.indices.length}종 · 이슈 {market.clusters.length}건
       </div>
     </div>

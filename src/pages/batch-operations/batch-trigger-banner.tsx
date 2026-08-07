@@ -27,10 +27,8 @@ export function BatchTriggerBanner({
         <p className='wrap-anywhere m-0 text-[13.5px] font-semibold text-[color:var(--success)]'>
           실행을 시작했습니다
         </p>
-        <p className='wrap-anywhere m-0 mt-1 flex flex-wrap items-center gap-2 text-[12.5px] text-[color:var(--text-soft)]'>
-          <span className='mono font-semibold text-[color:var(--text)]'>
-            job {banner.jobId}
-          </span>
+        <p className='wrap-anywhere m-0 mt-1 flex flex-wrap items-center gap-2 text-[12.5px] text-fg-soft'>
+          <span className='mono font-semibold text-fg'>job {banner.jobId}</span>
           <StatusBadge status={banner.status} />
           <span className='mono'>
             기준일 {banner.businessDate} · 시작 {startedAtDisplay}

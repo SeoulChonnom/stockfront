@@ -116,10 +116,8 @@ function DlItem({ label, value }: { label: string; value: ReactNode }) {
           2px margin-bottom (reference: `<dt style="color:var(--fg3);
           margin-bottom:2px">`), unlike other dl instances in the app that
           do use the uppercase/tracked label treatment. */}
-      <dt className='m-0 mb-0.5 text-[color:var(--text-faint)]'>{label}</dt>
-      <dd className='mono wrap-anywhere m-0 text-[color:var(--text)]'>
-        {value}
-      </dd>
+      <dt className='m-0 mb-0.5 text-faint'>{label}</dt>
+      <dd className='mono wrap-anywhere m-0 text-fg'>{value}</dd>
     </div>
   );
 }
@@ -312,10 +310,10 @@ function BatchDetailContent({
       {/* 참조 889행 `gap:8px 10px`(row 8px / column 10px) — 균일한 8px이
           아니다. 이 행의 4개 아이템(제목·타입 배지·상태 배지·날짜) 사이
           가로 간격이 정확히 2px씩 밀려나던 원인이 이 근사치였다. */}
-      <div className='-mx-[18px] -mt-4 flex flex-wrap items-center gap-x-[10px] gap-y-2 border-b border-[color:var(--line)] px-[18px] py-[14px]'>
+      <div className='-mx-[18px] -mt-4 flex flex-wrap items-center gap-x-[10px] gap-y-2 border-b border-line px-[18px] py-[14px]'>
         {/* Keep this dense card heading at 14.5px in the page sans stack. */}
         <h2
-          className='m-0 text-[14.5px] font-semibold text-[color:var(--text)] outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--focus)]'
+          className='m-0 text-[14.5px] font-semibold text-fg outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--focus)]'
           ref={detailHeadingRef}
           tabIndex={-1}
         >
@@ -324,7 +322,7 @@ function BatchDetailContent({
         {/* 참조(893-896행) 헤더 순서: jobId · 타입 · 상태 · 기준일. */}
         <BatchTypeBadge jobType={run.jobType} />
         <StatusBadge status={run.rawStatus} />
-        <span className='mono text-[12.5px] text-[color:var(--text-soft)]'>
+        <span className='mono text-[12.5px] text-fg-soft'>
           {run.businessDate}
         </span>
       </div>
@@ -358,10 +356,10 @@ function BatchDetailContent({
 
       {impacts.length > 0 ? (
         <div className='min-w-0'>
-          <h3 className='m-0 mb-1.5 text-[15px] font-semibold text-[color:var(--text)]'>
+          <h3 className='m-0 mb-1.5 text-[15px] font-semibold text-fg'>
             사용자 영향
           </h3>
-          <ul className='wrap-anywhere m-0 flex list-disc flex-col gap-1 pl-5 text-[13.5px] text-[color:var(--text-soft)]'>
+          <ul className='wrap-anywhere m-0 flex list-disc flex-col gap-1 pl-5 text-[13.5px] text-fg-soft'>
             {impacts.map((impact) => (
               <li key={impact}>{impact}</li>
             ))}
@@ -377,7 +375,7 @@ function BatchDetailContent({
             </p>
           ) : null}
           {run.errorMessage ? (
-            <p className='wrap-anywhere m-0 mt-1 text-[13.5px] text-[color:var(--text)]'>
+            <p className='wrap-anywhere m-0 mt-1 text-[13.5px] text-fg'>
               {run.errorMessage}
             </p>
           ) : null}
@@ -407,17 +405,17 @@ function BatchDetailContent({
           <LogBox
             content={run.logSummary}
             heading={
-              <h3 className='m-0 text-[15px] font-semibold text-[color:var(--text)]'>
+              <h3 className='m-0 text-[15px] font-semibold text-fg'>
                 실행 로그
               </h3>
             }
           />
         ) : (
           <>
-            <h3 className='m-0 mb-1.5 text-[15px] font-semibold text-[color:var(--text)]'>
+            <h3 className='m-0 mb-1.5 text-[15px] font-semibold text-fg'>
               실행 로그
             </h3>
-            <p className='m-0 text-[12.5px] text-[color:var(--text-faint)]'>
+            <p className='m-0 text-[12.5px] text-faint'>
               실행 로그가 없습니다.
             </p>
           </>
@@ -427,7 +425,7 @@ function BatchDetailContent({
       <div className='flex flex-wrap items-center gap-2 pt-1'>
         {snapshotHref ? (
           <a
-            className='inline-flex min-h-10 items-center rounded-[var(--r-md)] border border-[color:var(--line-strong)] px-3.5 text-[13.5px] font-semibold text-[color:var(--text)] hover:-translate-y-px'
+            className='inline-flex min-h-10 items-center rounded-[var(--r-md)] border border-[color:var(--line-strong)] px-3.5 text-[13.5px] font-semibold text-fg hover:-translate-y-px'
             href={withBasePath(snapshotHref)}
             onClick={createNavigateHandler(snapshotHref)}
           >
@@ -454,7 +452,7 @@ function BatchDetailContent({
             AI 요약만 재시도
           </Button>
         ) : null}
-        <span className='mono text-[12px] font-semibold text-[color:var(--text-faint)]'>
+        <span className='mono text-[12px] font-semibold text-faint'>
           {retryable ? '재실행 가능' : '재실행 불필요'}
         </span>
       </div>

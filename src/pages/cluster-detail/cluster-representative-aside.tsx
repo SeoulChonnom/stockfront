@@ -26,23 +26,23 @@ export function ClusterRepresentativeAside({
     <aside
       aria-labelledby='cluster-representative-heading'
       // Per-element margins keep heading spacing independent from the card gap.
-      className='flex min-w-0 flex-col rounded-[var(--r-lg)] border border-[color:var(--line)] bg-[color:var(--surface)] p-[18px] min-[1181px]:sticky min-[1181px]:top-5'
+      className='flex min-w-0 flex-col rounded-[var(--r-lg)] border border-line bg-[color:var(--surface)] p-[18px] min-[1181px]:sticky min-[1181px]:top-5'
     >
       {/* The h2 is the accessible section label; the article title follows. */}
       <h2
-        className='m-0 mb-1 text-[12px] font-semibold tracking-[0.07em] text-[color:var(--text-faint)] uppercase'
+        className='m-0 mb-1 text-[12px] font-semibold tracking-[0.07em] text-faint uppercase'
         id='cluster-representative-heading'
       >
         대표 기사
       </h2>
-      <p className='m-0 mb-2 text-[14.5px] font-semibold text-[color:var(--text)]'>
+      <p className='m-0 mb-2 text-[14.5px] font-semibold text-fg'>
         {representative.title}
       </p>
-      <div className='mono mb-3 flex flex-col gap-0.5 text-[11.5px] text-[color:var(--text-faint)]'>
+      <div className='mono mb-3 flex flex-col gap-0.5 text-[11.5px] text-faint'>
         <span>{displaySource(representative.source)}</span>
         <span>{displayPublishedAt(representative.publishedAt)}</span>
         {representative.sourceSummary ? (
-          <span className='font-sans text-[13.5px] text-[color:var(--text-soft)]'>
+          <span className='font-sans text-[13.5px] text-fg-soft'>
             {representative.sourceSummary}
           </span>
         ) : null}

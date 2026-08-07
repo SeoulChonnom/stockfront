@@ -59,12 +59,12 @@ export function ArchiveSearchFilters({
         <div className='flex flex-wrap items-center gap-2.5'>
           {/* Dense card headings use 14–15px rather than the shared 17px scale. */}
           <h2
-            className='m-0 text-[14px] font-semibold text-[color:var(--text)]'
+            className='m-0 text-[14px] font-semibold text-fg'
             id='archive-filter-heading'
           >
             필터
           </h2>
-          <span className='mono wrap-anywhere text-[11.5px] text-[color:var(--text-faint)]'>
+          <span className='mono wrap-anywhere text-[11.5px] text-faint'>
             적용됨 · {applied.from} ~ {applied.to} ·{' '}
             {getStatusSummaryLabel(applied.status)}
           </span>
@@ -105,7 +105,7 @@ export function ArchiveSearchFilters({
           <FilterField htmlFor='status' label='생성 상태'>
             {/* Keep the select surface/border tokens aligned with the date fields. */}
             <select
-              className='flex min-h-11 w-full rounded-[var(--r-md)] border border-[color:var(--line-strong)] bg-[color:var(--surface)] px-2.5 py-0 text-[13.5px] text-[color:var(--text)] outline-none transition-[border-color,box-shadow] duration-150 focus:border-[color:color-mix(in_srgb,var(--primary)_45%,transparent)] focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--primary)_16%,transparent)]'
+              className='flex min-h-11 w-full rounded-[var(--r-md)] border border-[color:var(--line-strong)] bg-[color:var(--surface)] px-2.5 py-0 text-[13.5px] text-fg outline-none transition-[border-color,box-shadow] duration-150 focus:border-[color:color-mix(in_srgb,var(--primary)_45%,transparent)] focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--primary)_16%,transparent)]'
               {...getFieldProps('status')}
             >
               {getStatusOptions().map((option) => (

@@ -28,10 +28,10 @@ export function ClusterBreadcrumb({
     <div className='flex min-w-0 flex-col gap-3'>
       <nav
         aria-label='위치'
-        className='flex flex-wrap items-center gap-1.5 text-[12.5px] text-[color:var(--text-faint)]'
+        className='flex flex-wrap items-center gap-1.5 text-[12.5px] text-faint'
       >
         <a
-          className='text-[color:var(--text-soft)] underline-offset-2 hover:underline'
+          className='text-fg-soft underline-offset-2 hover:underline'
           href={withBasePath(href)}
           onClick={createNavigateHandler(href)}
         >
@@ -42,10 +42,7 @@ export function ClusterBreadcrumb({
         <span className='wrap-anywhere'>{marketLabel}</span>
         {/* D13: design separator is a plain "/", not a chevron icon. */}
         <span aria-hidden='true'>/</span>
-        <span
-          aria-current='page'
-          className='font-semibold text-[color:var(--text-soft)]'
-        >
+        <span aria-current='page' className='font-semibold text-fg-soft'>
           이슈 상세
         </span>
       </nav>
