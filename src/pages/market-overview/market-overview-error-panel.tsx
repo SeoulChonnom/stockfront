@@ -22,10 +22,14 @@ export function MarketOverviewErrorPanel({
   presentation,
   canViewOps,
   onRetry,
+  headingLevel = 'h1',
+  titleId = 'page-title',
 }: {
   presentation: FetchErrorPresentation;
   canViewOps: boolean;
   onRetry?: () => void;
+  headingLevel?: 'h1' | 'h2';
+  titleId?: string;
 }) {
   const announce = useAnnounce();
 
@@ -65,9 +69,10 @@ export function MarketOverviewErrorPanel({
       badge={presentation.code}
       description={presentation.message}
       fullScreen={false}
+      headingLevel={headingLevel}
       role='alert'
       title={presentation.title}
-      titleId='page-title'
+      titleId={titleId}
       tone='danger'
     />
   );

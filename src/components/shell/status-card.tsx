@@ -17,6 +17,7 @@ export type StatusCardProps = {
   badge: string;
   title: string;
   titleId?: string;
+  headingLevel?: 'h1' | 'h2';
   description: string;
   role?: AriaRole;
   ariaLive?: 'polite' | 'assertive';
@@ -30,6 +31,7 @@ export function StatusCard({
   badge,
   title,
   titleId,
+  headingLevel = 'h1',
   description,
   role,
   ariaLive,
@@ -37,6 +39,8 @@ export function StatusCard({
   actions,
   fullScreen = true,
 }: StatusCardProps) {
+  const Heading = headingLevel;
+
   return (
     <div
       className={cn(
@@ -57,7 +61,7 @@ export function StatusCard({
         >
           {badge}
         </span>
-        <h1
+        <Heading
           className={cn(
             'mb-2 font-semibold text-fg',
             fullScreen ? 'mt-3 text-[22px]' : 'mt-[10px] text-[20px]'
@@ -66,7 +70,7 @@ export function StatusCard({
           tabIndex={-1}
         >
           {title}
-        </h1>
+        </Heading>
         <p className='wrap-anywhere mb-5 text-body text-fg-soft'>
           {description}
         </p>
