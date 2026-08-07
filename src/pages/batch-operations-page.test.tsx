@@ -41,6 +41,7 @@ type BatchJobsQueryResult = {
   isLoading: boolean;
   isError: boolean;
   isFetching: boolean;
+  dataUpdatedAt: number;
   refetch: () => void;
 };
 
@@ -97,7 +98,8 @@ function createRow(overrides: Partial<BatchRunRow> = {}): BatchRunRow {
 }
 
 function jobsReady(
-  overrides: Partial<NonNullable<BatchJobsQueryResult['data']>> = {}
+  overrides: Partial<NonNullable<BatchJobsQueryResult['data']>> = {},
+  queryOverrides: Partial<BatchJobsQueryResult> = {}
 ): BatchJobsQueryResult {
   return {
     data: {
@@ -115,7 +117,9 @@ function jobsReady(
     isLoading: false,
     isError: false,
     isFetching: false,
+    dataUpdatedAt: Date.now(),
     refetch: vi.fn(),
+    ...queryOverrides,
   };
 }
 
@@ -161,6 +165,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  vi.useRealTimers();
   window.history.replaceState(null, '', '/');
 });
 
@@ -231,6 +236,67 @@ describe('BatchOperationsPage — admin', () => {
         jobType: 'MARKET_SNAPSHOT',
         size: 20,
       })
+    );
+  });
+
+  it('shows the relative last-updated time in the history header', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-08-07T03:00:00Z'));
+    mockUseBatchJobs.mockReturnValue(
+      jobsReady({}, { dataUpdatedAt: Date.parse('2026-08-07T02:58:00Z') })
+    );
+    mockUseBatchJobDetail.mockReturnValue(detailReady(createRow()));
+
+    renderPage();
+
+    expect(screen.getByText('마지막 갱신 2분 전')).toBeInTheDocument();
+    vi.useRealTimers();
+  });
+
+  it('refreshes the history from an accessible button and disables it while fetching', async () => {
+    const user = userEvent.setup();
+    const refetch = vi.fn();
+    mockUseBatchJobs.mockReturnValue(
+      jobsReady({}, { refetch, isFetching: false })
+    );
+    mockUseBatchJobDetail.mockReturnValue(detailReady(createRow()));
+
+    const { rerender } = renderPage();
+
+    const refreshButton = screen.getByRole('button', {
+      name: '실행 이력 새로고침',
+    });
+    expect(refreshButton).toBeEnabled();
+
+    await user.click(refreshButton);
+
+    expect(refetch).toHaveBeenCalledTimes(1);
+    expect(document.querySelector('[aria-live="polite"]')).toHaveTextContent(
+      '다시 불러오는 중입니다.'
+    );
+
+    mockUseBatchJobs.mockReturnValue(
+      jobsReady({}, { refetch, isFetching: true })
+    );
+    rerender(
+      <AnnounceProvider pathname='/test'>
+        <BatchOperationsPage searchParams={new URLSearchParams()} />
+      </AnnounceProvider>
+    );
+
+    expect(
+      screen.getByRole('button', { name: '실행 이력 새로고침' })
+    ).toBeDisabled();
+  });
+
+  it('does not announce a background refetch', () => {
+    mockUseBatchJobs.mockReturnValue(jobsReady({}, { isFetching: true }));
+    mockUseBatchJobDetail.mockReturnValue(detailReady(createRow()));
+
+    renderPage();
+
+    expect(document.querySelector('[aria-live="polite"]')).toHaveTextContent(
+      ''
     );
   });
 
@@ -487,6 +553,7 @@ describe('BatchOperationsPage — admin', () => {
       isLoading: false,
       isError: true,
       isFetching: false,
+      dataUpdatedAt: 0,
       refetch: vi.fn(),
     });
     mockUseBatchJobDetail.mockReturnValue(detailReady(createRow({ id: 202 })));

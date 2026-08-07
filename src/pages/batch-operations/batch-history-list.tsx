@@ -15,6 +15,7 @@ import {
   TableRow,
   TableScrollWrapper,
 } from '@/components/ui/table';
+import { formatRelativeFreshness } from '@/lib/formatters';
 import type { BatchRunRow } from '@/lib/query-hooks';
 import { cn, computeTotalPages } from '@/lib/utils';
 
@@ -52,7 +53,9 @@ export type BatchHistoryListProps = {
   isLoading: boolean;
   isError: boolean;
   isFetching: boolean;
+  dataUpdatedAt: number;
   onRetry: () => void;
+  onRefresh: () => void;
   selectedJobId: number | null;
   onSelectRow: (jobId: number) => void;
   /** design v2 2055행: 필터 해제 clears BOTH status and type in one action ("상태와 타입 조건을 해제했습니다."), not status alone. */
@@ -71,7 +74,9 @@ export function BatchHistoryList({
   isLoading,
   isError,
   isFetching,
+  dataUpdatedAt,
   onRetry,
+  onRefresh,
   selectedJobId,
   onSelectRow,
   onClearFilters,
@@ -108,6 +113,11 @@ export function BatchHistoryList({
 
   const retry = useRetryAnnounce(isFetching, isError, onAnnounce);
   const totalPages = computeTotalPages(totalCount, pageSize);
+  const updatedAtIso =
+    dataUpdatedAt > 0 ? new Date(dataUpdatedAt).toISOString() : null;
+  const relativeUpdatedAt = updatedAtIso
+    ? formatRelativeFreshness(updatedAtIso)
+    : null;
 
   return (
     // B6: this panel carries 0 padding — the header row, body, and
@@ -144,16 +154,33 @@ export function BatchHistoryList({
               {getBatchTypeSummaryLabel(applied.type)}
             </span>
           </div>
-          {hasAppliedFilter ? (
+          <div className='flex flex-wrap items-center gap-2'>
+            <span className='mono text-[11.5px] text-[color:var(--text-faint)]'>
+              <time dateTime={updatedAtIso ?? undefined}>
+                {`마지막 갱신 ${relativeUpdatedAt ?? '-'}`}
+              </time>
+            </span>
             <Button
-              onClick={clearFilters}
+              aria-label='실행 이력 새로고침'
+              loading={isFetching}
+              onClick={() => retry(onRefresh)}
               size='sm'
               type='button'
               variant='ghost'
             >
-              필터 해제
+              새로고침
             </Button>
-          ) : null}
+            {hasAppliedFilter ? (
+              <Button
+                onClick={clearFilters}
+                size='sm'
+                type='button'
+                variant='ghost'
+              >
+                필터 해제
+              </Button>
+            ) : null}
+          </div>
         </div>
 
         {isError ? (

@@ -249,6 +249,7 @@ function AdminBatchOperations({
           isError={jobsQuery.isError}
           isFetching={jobsQuery.isFetching}
           isLoading={jobsQuery.isLoading}
+          dataUpdatedAt={jobsQuery.dataUpdatedAt}
           onAnnounce={announce}
           onClearFilters={() => {
             cancelPendingApplyAnnounce();
@@ -256,6 +257,9 @@ function AdminBatchOperations({
           }}
           onPageChange={(page) => goTo({ page })}
           onRetry={() => {
+            void jobsQuery.refetch();
+          }}
+          onRefresh={() => {
             void jobsQuery.refetch();
           }}
           onSelectRow={(jobId) =>

@@ -22,6 +22,29 @@ import {
   mapDailyPageToSnapshot,
 } from './mappers';
 
+const BATCH_POLL_INTERVAL_MS = 5000;
+
+function isBatchJobInProgress(status: unknown): boolean {
+  if (typeof status !== 'string') {
+    return false;
+  }
+
+  const normalizedStatus = status.toUpperCase();
+  return normalizedStatus === 'PENDING' || normalizedStatus === 'RUNNING';
+}
+
+function shouldPollBatchJobs(
+  data: Awaited<ReturnType<typeof getBatchJobs>> | undefined
+): boolean {
+  return data?.items.some((item) => isBatchJobInProgress(item.status)) ?? false;
+}
+
+function shouldPollBatchJobDetail(
+  data: Awaited<ReturnType<typeof getBatchJobDetail>> | undefined
+): boolean {
+  return isBatchJobInProgress(data?.status);
+}
+
 export type { BatchRunRow } from './view-models';
 
 export function useLatestMarketPage(enabled = true) {
@@ -82,6 +105,8 @@ export function useBatchJobs(params: BatchJobsParams) {
     queryKey: ['batch-jobs', params],
     queryFn: ({ signal }) => getBatchJobs(params, signal),
     select: mapBatchJobsToView,
+    refetchInterval: (query) =>
+      shouldPollBatchJobs(query.state.data) ? BATCH_POLL_INTERVAL_MS : false,
   });
 }
 
@@ -97,6 +122,10 @@ export function useBatchJobDetail(jobId: number | null) {
     },
     select: mapBatchDetailToRun,
     enabled: jobId !== null,
+    refetchInterval: (query) =>
+      shouldPollBatchJobDetail(query.state.data)
+        ? BATCH_POLL_INTERVAL_MS
+        : false,
   });
 }
 
