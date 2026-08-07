@@ -33,7 +33,7 @@ function createRow(overrides: Partial<BatchRunRow> = {}): BatchRunRow {
 }
 
 describe('BatchHistoryTable', () => {
-  it('renders a semantic table and selects a row from both its button and row hit area', async () => {
+  it('renders a semantic table and selects once from a button or row hit area', async () => {
     const user = userEvent.setup();
     const onSelectRow = vi.fn();
 
@@ -56,7 +56,8 @@ describe('BatchHistoryTable', () => {
     ).toHaveAttribute('aria-selected', 'true');
 
     await user.click(screen.getByRole('button', { name: 'job 202 상세 선택' }));
-    expect(onSelectRow).toHaveBeenCalledWith(202);
+    expect(onSelectRow).toHaveBeenCalledTimes(1);
+    expect(onSelectRow).toHaveBeenNthCalledWith(1, 202);
 
     const firstRow = screen
       .getByRole('button', { name: 'job 101 상세 선택' })
@@ -64,7 +65,8 @@ describe('BatchHistoryTable', () => {
     await user.click(
       within(firstRow as HTMLTableRowElement).getByText('2m 15s')
     );
-    expect(onSelectRow).toHaveBeenCalledWith(101);
+    expect(onSelectRow).toHaveBeenCalledTimes(2);
+    expect(onSelectRow).toHaveBeenNthCalledWith(2, 101);
   });
 
   it('keeps the selected-row button ref on the matching row only', () => {
@@ -75,12 +77,15 @@ describe('BatchHistoryTable', () => {
         isLoading={false}
         onSelectRow={vi.fn()}
         rows={[createRow(), createRow({ id: 202 })]}
-        selectedJobId={202}
+        selectedJobId={101}
         selectedRowButtonRef={selectedRowButtonRef}
       />
     );
 
     expect(selectedRowButtonRef.current).toBe(
+      screen.getByRole('button', { name: 'job 101 상세 선택' })
+    );
+    expect(selectedRowButtonRef.current).not.toBe(
       screen.getByRole('button', { name: 'job 202 상세 선택' })
     );
   });
