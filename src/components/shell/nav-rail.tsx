@@ -57,10 +57,10 @@ export function NavRail({
             <CircleUserRound aria-hidden='true' size={16} />
           </span>
           <div className='min-w-0 flex-1'>
-            <p className='truncate text-[12.5px] font-semibold text-fg'>
+            <p className='truncate text-body-sm font-semibold text-fg'>
               ops.analyst
             </p>
-            <p className='truncate text-[11px] text-faint'>
+            <p className='truncate text-label text-faint'>
               {ROLE_LABELS[role]}
             </p>
           </div>

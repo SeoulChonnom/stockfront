@@ -53,7 +53,7 @@ export function BatchFilters({
 
   return (
     <section aria-labelledby='ops-filter-heading'>
-      <Card className='flex flex-col gap-3 px-[18px] py-4'>
+      <Card className='flex flex-col gap-3' padding='inset'>
         <div className='flex flex-wrap items-center gap-2.5'>
           <h2
             className='m-0 text-[14px] font-semibold text-fg'
@@ -61,7 +61,7 @@ export function BatchFilters({
           >
             조회 조건
           </h2>
-          <span className='mono wrap-anywhere text-[11.5px] text-faint'>
+          <span className='mono wrap-anywhere text-caption text-faint'>
             적용됨 · {applied.from} ~ {applied.to} ·{' '}
             {getBatchStatusSummaryLabel(applied.status)} ·{' '}
             {getBatchTypeSummaryLabel(applied.type)}
@@ -78,7 +78,7 @@ export function BatchFilters({
           <FilterField error={errors.from} htmlFor='from' label='기준일 시작'>
             <Input
               className={cn(
-                'mono rounded-[var(--r-md)] bg-[color:var(--surface)] px-3 py-0 text-[13.5px]',
+                'mono rounded-[var(--r-md)] bg-[color:var(--surface)] px-3 py-0 text-body',
                 !errors.from && 'border-[color:var(--line-strong)]'
               )}
               invalid={Boolean(errors.from)}
@@ -89,7 +89,7 @@ export function BatchFilters({
           <FilterField error={errors.to} htmlFor='to' label='기준일 종료'>
             <Input
               className={cn(
-                'mono rounded-[var(--r-md)] bg-[color:var(--surface)] px-3 py-0 text-[13.5px]',
+                'mono rounded-[var(--r-md)] bg-[color:var(--surface)] px-3 py-0 text-body',
                 !errors.to && 'border-[color:var(--line-strong)]'
               )}
               invalid={Boolean(errors.to)}
@@ -99,7 +99,7 @@ export function BatchFilters({
           </FilterField>
           <FilterField htmlFor='status' label='실행 상태'>
             <select
-              className='flex min-h-11 w-full rounded-[var(--r-md)] border border-[color:var(--line-strong)] bg-[color:var(--surface)] px-2.5 py-0 text-[13.5px] text-fg outline-none transition-[border-color,box-shadow] duration-150 focus:border-[color:color-mix(in_srgb,var(--primary)_45%,transparent)] focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--primary)_16%,transparent)]'
+              className='flex min-h-11 w-full rounded-[var(--r-md)] border border-[color:var(--line-strong)] bg-[color:var(--surface)] px-2.5 py-0 text-body text-fg outline-none transition-[border-color,box-shadow] duration-150 focus:border-[color:color-mix(in_srgb,var(--primary)_45%,transparent)] focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--primary)_16%,transparent)]'
               {...getFieldProps('status')}
             >
               {getBatchStatusOptions().map((option) => (
@@ -111,7 +111,7 @@ export function BatchFilters({
           </FilterField>
           <FilterField htmlFor='type' label='배치 타입'>
             <select
-              className='flex min-h-11 w-full rounded-[var(--r-md)] border border-[color:var(--line-strong)] bg-[color:var(--surface)] px-2.5 py-0 text-[13.5px] text-fg outline-none transition-[border-color,box-shadow] duration-150 focus:border-[color:color-mix(in_srgb,var(--primary)_45%,transparent)] focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--primary)_16%,transparent)]'
+              className='flex min-h-11 w-full rounded-[var(--r-md)] border border-[color:var(--line-strong)] bg-[color:var(--surface)] px-2.5 py-0 text-body text-fg outline-none transition-[border-color,box-shadow] duration-150 focus:border-[color:color-mix(in_srgb,var(--primary)_45%,transparent)] focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--primary)_16%,transparent)]'
               {...getFieldProps('type')}
             >
               {getBatchTypeOptions().map((option) => (

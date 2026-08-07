@@ -36,7 +36,7 @@ function SummaryTile({
         TILE_BAR_CLASSES[tone]
       )}
     >
-      <p className='m-0 text-[11px] font-semibold tracking-[0.07em] text-faint uppercase'>
+      <p className='m-0 text-label font-semibold tracking-[0.07em] text-faint uppercase'>
         {label}
       </p>
       <p

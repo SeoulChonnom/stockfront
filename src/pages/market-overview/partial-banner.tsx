@@ -40,7 +40,7 @@ export function PartialBanner({
       className='rounded-[var(--r-lg)] border border-[color:var(--warning-line)] border-l-4 border-l-[color:var(--warning)] bg-[color:var(--surface)] px-[18px] py-4'
     >
       <h2
-        className='m-0 mb-1.5 text-[14.5px] font-semibold'
+        className='m-0 mb-1.5 text-card-heading font-semibold'
         id='partial-banner-heading'
       >
         이 브리프는 일부 데이터가 누락된 상태로 생성됐습니다

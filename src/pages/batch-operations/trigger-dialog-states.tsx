@@ -26,7 +26,7 @@ export function TriggerPendingState({
         className='animate-spin text-[color:var(--info)]'
         size={28}
       />
-      <p className='m-0 text-[14.5px] font-semibold text-fg'>
+      <p className='m-0 text-card-heading font-semibold text-fg'>
         실행 요청을 보내고 있습니다
       </p>
       <p className='wrap-anywhere m-0 text-[13px] text-fg-soft'>
@@ -51,7 +51,7 @@ export function TriggerSuccessState({
   return (
     <div className='flex flex-col gap-4'>
       <div className='rounded-[var(--r-md)] border border-[color:var(--success-line)] bg-[color:var(--success-soft)] p-3'>
-        <dl className='m-0 grid grid-cols-[auto_1fr] items-baseline gap-x-3 gap-y-2 text-[13.5px]'>
+        <dl className='m-0 grid grid-cols-[auto_1fr] items-baseline gap-x-3 gap-y-2 text-body'>
           <dt className='text-faint'>작업 ID</dt>
           <dd className='mono m-0 font-semibold text-fg'>job {result.jobId}</dd>
           <dt className='text-faint'>상태</dt>
@@ -97,11 +97,11 @@ export function TriggerErrorState({
         <p className='mono m-0 font-semibold text-[color:var(--danger)]'>
           {error.httpStatus} · {error.code}
         </p>
-        <p className='wrap-anywhere m-0 mt-1 text-[13.5px] text-fg'>
+        <p className='wrap-anywhere m-0 mt-1 text-body text-fg'>
           {error.message}
         </p>
       </div>
-      <p className='wrap-anywhere m-0 text-[12.5px] text-fg-soft'>
+      <p className='wrap-anywhere m-0 text-body-sm text-fg-soft'>
         입력값은 그대로 유지됩니다. 원인을 확인한 뒤 다시 시도할 수 있습니다.
       </p>
       <div className='flex flex-wrap justify-end gap-2'>

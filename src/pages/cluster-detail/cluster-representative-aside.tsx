@@ -35,14 +35,14 @@ export function ClusterRepresentativeAside({
       >
         대표 기사
       </h2>
-      <p className='m-0 mb-2 text-[14.5px] font-semibold text-fg'>
+      <p className='m-0 mb-2 text-card-heading font-semibold text-fg'>
         {representative.title}
       </p>
-      <div className='mono mb-3 flex flex-col gap-0.5 text-[11.5px] text-faint'>
+      <div className='mono mb-3 flex flex-col gap-0.5 text-caption text-faint'>
         <span>{displaySource(representative.source)}</span>
         <span>{displayPublishedAt(representative.publishedAt)}</span>
         {representative.sourceSummary ? (
-          <span className='font-sans text-[13.5px] text-fg-soft'>
+          <span className='font-sans text-body text-fg-soft'>
             {representative.sourceSummary}
           </span>
         ) : null}

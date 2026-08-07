@@ -1,16 +1,26 @@
+import { cva, type VariantProps } from 'class-variance-authority';
 import type { HTMLAttributes } from 'react';
 
 import { cn } from '@/lib/utils';
 
-export function Card({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
+const cardVariants = cva(
+  'rounded-[var(--r-lg)] border border-line bg-[color:var(--surface)]',
+  {
+    variants: {
+      padding: {
+        inset: 'px-[18px] py-4',
+      },
+    },
+  }
+);
+
+export interface CardProps
+  extends HTMLAttributes<HTMLDivElement>,
+    VariantProps<typeof cardVariants> {}
+
+export function Card({ className, padding, ...props }: CardProps) {
   return (
-    <div
-      className={cn(
-        'rounded-[var(--r-lg)] border border-line bg-[color:var(--surface)]',
-        className
-      )}
-      {...props}
-    />
+    <div className={cn(cardVariants({ padding }), className)} {...props} />
   );
 }
 

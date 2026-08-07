@@ -41,7 +41,7 @@ export function NavDrawer({
           >
             Market Brief
           </p>
-          <p className='truncate text-[11.5px] text-faint'>
+          <p className='truncate text-caption text-faint'>
             {ROLE_LABELS[role]} · ops.analyst
           </p>
         </div>

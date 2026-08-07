@@ -72,7 +72,7 @@ function ReasonSubline({ record }: { record: ArchiveRecord }) {
 
 function GeneratedAtSubline({ record }: { record: ArchiveRecord }) {
   return (
-    <div className='mono mt-1 text-[11.5px] text-faint min-[1181px]:hidden'>
+    <div className='mono mt-1 text-caption text-faint min-[1181px]:hidden'>
       생성 {record.generatedAt}
     </div>
   );
@@ -98,10 +98,12 @@ export function ArchiveResultsTable({
             <TableHead className='h-auto py-[9px] pr-3 pl-[18px]'>
               기준일
             </TableHead>
-            <TableHead className='h-auto py-[9px] px-3'>
+            <TableHead className='h-auto' padding='compact'>
               글로벌 헤드라인
             </TableHead>
-            <TableHead className='h-auto py-[9px] px-3'>상태</TableHead>
+            <TableHead className='h-auto' padding='compact'>
+              상태
+            </TableHead>
             {/* D3: design left-aligns 생성 시각, the app right-aligned it. */}
             <TableHead className='hidden h-auto py-[9px] pr-[18px] pl-3 text-left min-[1181px]:table-cell'>
               생성 시각
@@ -122,14 +124,14 @@ export function ArchiveResultsTable({
                     12px, not the shared `TableCell` default (18px). */}
                 <TableCell className='py-3 pr-3 pl-[18px] align-top'>
                   <a
-                    className='mono text-[13.5px] font-semibold text-fg underline-offset-2 hover:text-[color:var(--primary)] hover:underline'
+                    className='mono text-body font-semibold text-fg underline-offset-2 hover:text-[color:var(--primary)] hover:underline'
                     href={withBasePath(href)}
                     onClick={onOpen}
                   >
                     {/* D1: ISO date, mono — not the ko-KR dotted format. */}
                     {record.businessDate}
                   </a>
-                  <div className='mono mt-0 text-[11px] text-faint'>
+                  <div className='mono mt-0 text-label text-faint'>
                     pageId {record.pageId}
                   </div>
                 </TableCell>

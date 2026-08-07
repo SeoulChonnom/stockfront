@@ -37,22 +37,22 @@ export function MarketIndexTable({ indices }: { indices: MarketIndex[] }) {
       <Table className='border-collapse text-[13px]' minWidth={380}>
         <TableHeader>
           <TableRow>
-            <TableHead className='h-auto px-[18px] py-2 text-[11px]'>
+            <TableHead className='h-auto px-[18px] py-2 text-label'>
               지수
             </TableHead>
-            <TableHead className='h-auto px-3 py-2 text-right text-[11px]'>
+            <TableHead className='h-auto px-3 py-2 text-right text-label'>
               종가
             </TableHead>
-            <TableHead className='h-auto px-3 py-2 text-right text-[11px] whitespace-nowrap'>
+            <TableHead className='h-auto px-3 py-2 text-right text-label whitespace-nowrap'>
               등락
             </TableHead>
-            <TableHead className='h-auto px-3 py-2 text-right text-[11px] whitespace-nowrap'>
+            <TableHead className='h-auto px-3 py-2 text-right text-label whitespace-nowrap'>
               등락률
             </TableHead>
-            <TableHead className='hidden h-auto px-3 py-2 text-right text-[11px] whitespace-nowrap sm:table-cell'>
+            <TableHead className='hidden h-auto px-3 py-2 text-right text-label whitespace-nowrap sm:table-cell'>
               고가
             </TableHead>
-            <TableHead className='hidden h-auto px-[18px] py-2 text-right text-[11px] whitespace-nowrap sm:table-cell'>
+            <TableHead className='hidden h-auto px-[18px] py-2 text-right text-label whitespace-nowrap sm:table-cell'>
               저가
             </TableHead>
           </TableRow>
@@ -84,34 +84,33 @@ function IndexRow({ item }: { item: MarketIndex }) {
       <TableCell className='min-w-0 px-[18px] py-[9px] font-semibold'>
         {item.label}
         {item.code ? (
-          <div className='mono text-[11px] font-normal text-faint'>
+          <div className='mono text-label font-normal text-faint'>
             {item.code}
           </div>
         ) : null}
       </TableCell>
-      <TableCell className='mono px-3 py-[9px] text-right font-semibold'>
+      <TableCell className='mono text-right font-semibold' padding='compact'>
         {item.value}
         <div className='text-[10.5px] font-normal whitespace-nowrap text-faint sm:hidden'>
           {`고 ${item.high} · 저 ${item.low}`}
         </div>
       </TableCell>
       <TableCell
-        className={cn(
-          'mono px-3 py-[9px] text-right font-semibold',
-          directionClass
-        )}
+        className={cn('mono text-right font-semibold', directionClass)}
+        padding='compact'
       >
         {item.change}
       </TableCell>
       <TableCell
-        className={cn(
-          'mono px-3 py-[9px] text-right font-semibold',
-          directionClass
-        )}
+        className={cn('mono text-right font-semibold', directionClass)}
+        padding='compact'
       >
         {item.changeRate}
       </TableCell>
-      <TableCell className='mono hidden px-3 py-[9px] text-right text-fg-soft sm:table-cell'>
+      <TableCell
+        className='mono hidden text-right text-fg-soft sm:table-cell'
+        padding='compact'
+      >
         {item.high}
       </TableCell>
       <TableCell className='mono hidden px-[18px] py-[9px] text-right text-fg-soft sm:table-cell'>

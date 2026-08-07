@@ -35,7 +35,7 @@ export function AppShell({
     <AnnounceProvider pathname={pathname}>
       <div className='min-h-screen'>
         <a
-          className='fixed top-[-64px] left-3 z-(--z-skip) rounded-[8px] bg-[color:var(--primary)] px-4 py-2.5 text-[13.5px] font-semibold text-[color:var(--primary-fg)] transition-[top] duration-(--dur) ease-(--ease) focus:top-3'
+          className='fixed top-[-64px] left-3 z-(--z-skip) rounded-[8px] bg-[color:var(--primary)] px-4 py-2.5 text-body font-semibold text-[color:var(--primary-fg)] transition-[top] duration-(--dur) ease-(--ease) focus:top-3'
           href='#main-content'
         >
           본문으로 바로가기

@@ -117,7 +117,7 @@ function ClusterDetailErrorState({
       className='min-w-0 rounded-[var(--r-lg)] border border-[color:var(--danger-line)] border-l-4 border-l-[color:var(--danger)] bg-[color:var(--surface)] p-5'
       role='alert'
     >
-      <span className='mono inline-flex rounded-[var(--r-sm)] border border-[color:var(--danger-line)] bg-[color:var(--danger-soft)] px-2 py-0.5 text-[11.5px] font-semibold text-[color:var(--danger)]'>
+      <span className='mono inline-flex rounded-[var(--r-sm)] border border-[color:var(--danger-line)] bg-[color:var(--danger-soft)] px-2 py-0.5 text-caption font-semibold text-[color:var(--danger)]'>
         {status === null ? code : `${status} · ${code}`}
       </span>
       <h1
@@ -129,7 +129,7 @@ function ClusterDetailErrorState({
           ? '이 이슈를 찾을 수 없습니다'
           : '이슈 상세를 불러오지 못했습니다'}
       </h1>
-      <p className='measure-error wrap-anywhere m-0 mb-4 text-[13.5px] text-fg-soft'>
+      <p className='measure-error wrap-anywhere m-0 mb-4 text-body text-fg-soft'>
         {message}
       </p>
       <div className='flex flex-wrap gap-2'>

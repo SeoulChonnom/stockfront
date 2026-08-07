@@ -93,7 +93,7 @@ export function FilterDirtyBadge({ isDirty }: { isDirty: boolean }) {
   }
 
   return (
-    <span className='mono inline-flex w-fit items-center gap-1.5 rounded-[var(--r-sm)] border border-[color:var(--info-line)] bg-[color:var(--info-soft)] px-2 py-0.5 text-[11.5px] font-semibold text-[color:var(--info)]'>
+    <span className='mono inline-flex w-fit items-center gap-1.5 rounded-[var(--r-sm)] border border-[color:var(--info-line)] bg-[color:var(--info-soft)] px-2 py-0.5 text-caption font-semibold text-[color:var(--info)]'>
       적용 전 변경 있음
     </span>
   );

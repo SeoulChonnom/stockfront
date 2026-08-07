@@ -38,14 +38,14 @@ function ClusterArticleRow({ article }: { article: ClusterArticle }) {
           {displayArticleTitle(article.title)}
         </span>
       )}
-      <div className='mono mt-1 flex flex-wrap items-center gap-2 text-[11.5px] text-faint'>
+      <div className='mono mt-1 flex flex-wrap items-center gap-2 text-caption text-faint'>
         <span>{displaySource(article.source)}</span>
         <span>{displayPublishedAt(article.publishedAt)}</span>
         {/* README §7-5: "제목 링크 + mono 메타 + 원문 배지 + 네이버 미러 ↗"
             — the title itself links to the original source; this badge
             labels that destination in words (not color-only), distinct
             from the 네이버 미러 link below. */}
-        <span className='rounded-[var(--r-sm)] border border-[color:var(--line-strong)] px-1.5 py-0.5 text-[11.5px] font-semibold text-faint'>
+        <span className='rounded-[var(--r-sm)] border border-[color:var(--line-strong)] px-1.5 py-0.5 text-caption font-semibold text-faint'>
           원문
         </span>
         {/* F6: design's 네이버 미러 is a bordered chip (matching 원문's
@@ -90,7 +90,7 @@ export function ClusterArticlesList({
         >
           관련 기사
         </h2>
-        <span className='mono text-[11.5px] text-faint'>
+        <span className='mono text-caption text-faint'>
           관련 기사 {articles.length}건
         </span>
         {remaining > 0 ? (

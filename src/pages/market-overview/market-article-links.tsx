@@ -22,14 +22,14 @@ export function MarketArticleLinks({ links }: { links: ArticleLink[] }) {
   return (
     <div className='border-t border-line px-[18px] py-3.5'>
       <div className='mb-2.5 flex flex-wrap items-center gap-2.5'>
-        <h3 className='m-0 text-[13.5px] font-semibold'>근거 원문</h3>
-        <span className='mono text-[11.5px] text-faint'>
+        <h3 className='m-0 text-body font-semibold'>근거 원문</h3>
+        <span className='mono text-caption text-faint'>
           원문 {links.length}건
         </span>
         {needsToggle ? (
           <button
             aria-expanded={expanded}
-            className='ml-auto min-h-8.5 rounded-[var(--r-md)] border border-[color:var(--line-strong)] bg-[color:var(--surface)] px-3 text-[12.5px] text-fg-soft'
+            className='ml-auto min-h-8.5 rounded-[var(--r-md)] border border-[color:var(--line-strong)] bg-[color:var(--surface)] px-3 text-body-sm text-fg-soft'
             onClick={() => setExpanded((current) => !current)}
             type='button'
           >
@@ -55,7 +55,7 @@ function ArticleLinkRow({ link }: { link: ArticleLink }) {
     <li className='flex min-w-0 flex-wrap items-baseline gap-x-2.5 gap-y-1.5 border-b border-line pb-2'>
       {originalUrl ? (
         <a
-          className='wrap-anywhere text-[13.5px] font-medium text-fg no-underline hover:text-[color:var(--primary)] hover:underline'
+          className='wrap-anywhere text-body font-medium text-fg no-underline hover:text-[color:var(--primary)] hover:underline'
           href={originalUrl}
           rel='noopener noreferrer'
           target='_blank'
@@ -63,16 +63,14 @@ function ArticleLinkRow({ link }: { link: ArticleLink }) {
           {`${link.title} ↗`}
         </a>
       ) : (
-        <span className='wrap-anywhere text-[13.5px] font-medium text-fg'>
+        <span className='wrap-anywhere text-body font-medium text-fg'>
           {link.title}
         </span>
       )}
-      <span className='mono wrap-anywhere text-[11.5px] text-faint'>
-        {meta}
-      </span>
+      <span className='mono wrap-anywhere text-caption text-faint'>{meta}</span>
       {mirrorUrl ? (
         <a
-          className='text-[11.5px] text-faint underline'
+          className='text-caption text-faint underline'
           href={mirrorUrl}
           rel='noopener noreferrer'
           target='_blank'

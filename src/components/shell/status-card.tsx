@@ -51,7 +51,7 @@ export function StatusCard({
       >
         <span
           className={cn(
-            'mono inline-flex items-center gap-1.5 rounded-[var(--r-sm)] border px-2 py-0.5 text-[12.5px] font-semibold',
+            'mono inline-flex items-center gap-1.5 rounded-[var(--r-sm)] border px-2 py-0.5 text-body-sm font-semibold',
             TONE_BADGE_CLASSES[tone]
           )}
         >
@@ -67,7 +67,7 @@ export function StatusCard({
         >
           {title}
         </h1>
-        <p className='wrap-anywhere mb-5 text-[13.5px] text-fg-soft'>
+        <p className='wrap-anywhere mb-5 text-body text-fg-soft'>
           {description}
         </p>
         {showSpinner ? (

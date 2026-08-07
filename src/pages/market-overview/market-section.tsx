@@ -45,7 +45,7 @@ export function MarketSection({
       <div className='flex flex-wrap items-baseline gap-x-3 gap-y-2 border-b border-line px-[18px] py-4'>
         {/* Show the market scope before its name. */}
         {market.marketType ? (
-          <span className='mono rounded-[var(--r-sm)] border border-[color:var(--line-strong)] px-1.75 py-0.5 text-[11px] font-semibold tracking-[0.08em] text-fg-soft'>
+          <span className='mono rounded-[var(--r-sm)] border border-[color:var(--line-strong)] px-1.75 py-0.5 text-label font-semibold tracking-[0.08em] text-fg-soft'>
             {market.marketType}
           </span>
         ) : null}
@@ -62,7 +62,7 @@ export function MarketSection({
           </span>
         ) : null}
         {metadata ? (
-          <span className='mono ml-auto text-[11.5px] text-faint'>
+          <span className='mono ml-auto text-caption text-faint'>
             원문 {metadata.rawNewsCount}건 · 정제 {metadata.processedNewsCount}
             건 · 클러스터 {metadata.clusterCount}건
           </span>
@@ -99,16 +99,16 @@ export function MarketSection({
       </div>
 
       <div className='flex items-baseline gap-2.5 border-t border-line bg-[color:var(--surface-2)] px-[18px] py-3'>
-        <h3 className='m-0 text-[13.5px] font-semibold'>대표 지수</h3>
-        <span className='mono text-[11.5px] text-faint'>
+        <h3 className='m-0 text-body font-semibold'>대표 지수</h3>
+        <span className='mono text-caption text-faint'>
           {market.indices.length}종
         </span>
       </div>
       <MarketIndexTable indices={market.indices} />
 
       <div className='flex items-baseline gap-2.5 border-t border-line bg-[color:var(--surface-2)] px-[18px] py-3'>
-        <h3 className='m-0 text-[13.5px] font-semibold'>핵심 이슈</h3>
-        <span className='mono text-[11.5px] text-faint'>
+        <h3 className='m-0 text-body font-semibold'>핵심 이슈</h3>
+        <span className='mono text-caption text-faint'>
           {market.clusters.length}건
         </span>
       </div>

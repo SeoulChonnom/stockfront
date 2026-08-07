@@ -34,7 +34,7 @@ export function MobileHeader({
       </Button>
 
       <div className='min-w-0 flex-1'>
-        <p className='truncate text-[11px] font-semibold uppercase tracking-[0.07em] text-faint'>
+        <p className='truncate text-label font-semibold uppercase tracking-[0.07em] text-faint'>
           {groupLabel}
         </p>
         <p className='truncate text-[14px] font-semibold text-fg'>

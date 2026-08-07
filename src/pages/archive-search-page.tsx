@@ -185,7 +185,7 @@ export function ArchiveSearchPage({
             is `display:flex;gap:6px` between h1 and this paragraph, not a
             margin on the paragraph — `gap-1.5` (6px) on the wrapper above
             replaces what used to be an `mt-2` (8px) margin here. */}
-        <p className='wrap-anywhere max-w-[70ch] text-[13.5px] text-fg-soft'>
+        <p className='wrap-anywhere max-w-[70ch] text-body text-fg-soft'>
           기준일 범위와 생성 상태로 과거 스냅샷을 찾습니다. 결과를 열면 해당
           날짜의 시장 브리프로 이동하고, 돌아올 때 필터·페이지·스크롤 위치가
           복원됩니다.
@@ -210,11 +210,11 @@ export function ArchiveSearchPage({
               다시 시도
             </Button>
           }
-          className='bg-[color:var(--surface)] px-[18px] py-4 [&_h3]:mb-1.5 [&_h3]:text-[14.5px] [&_h3]:text-fg'
+          className='bg-[color:var(--surface)] px-[18px] py-4 [&_h3]:mb-1.5 [&_h3]:text-card-heading [&_h3]:text-fg'
           title={
             <span className='flex flex-wrap items-center gap-2.5'>
               <span>{errorPresentation.title}</span>
-              <span className='mono rounded-[var(--r-sm)] border border-[color:var(--danger-line)] bg-[color:var(--danger-soft)] px-2 py-0.5 text-[11.5px] font-semibold text-[color:var(--danger)]'>
+              <span className='mono rounded-[var(--r-sm)] border border-[color:var(--danger-line)] bg-[color:var(--danger-soft)] px-2 py-0.5 text-caption font-semibold text-[color:var(--danger)]'>
                 {errorPresentation.code}
               </span>
             </span>
@@ -270,7 +270,7 @@ function ArchiveResultsCard({
         <div className='flex flex-wrap items-center gap-x-3 gap-y-2'>
           {/* Keep this dense card heading at 14.5px. */}
           <h2
-            className='m-0 scroll-mt-24 text-[14.5px] font-semibold text-fg focus:outline-none'
+            className='m-0 scroll-mt-24 text-card-heading font-semibold text-fg focus:outline-none'
             id='archive-results-heading'
             ref={resultsHeadingRef}
             tabIndex={-1}
@@ -278,14 +278,14 @@ function ArchiveResultsCard({
             검색 결과
           </h2>
           {data ? (
-            <span className='mono text-[12.5px] font-semibold text-fg'>
+            <span className='mono text-body-sm font-semibold text-fg'>
               {formatInteger(data.totalCount)}건
             </span>
           ) : null}
           {/* D5: "1–20 / 46" range lives next to the results heading, not
               beside the pager (see Pagination's own comment). */}
           {data && data.totalCount > 0 ? (
-            <span className='mono text-[11.5px] text-faint'>
+            <span className='mono text-caption text-faint'>
               {(data.page - 1) * PAGE_SIZE + 1}–
               {Math.min(data.page * PAGE_SIZE, data.totalCount)} /{' '}
               {data.totalCount}
@@ -298,7 +298,7 @@ function ArchiveResultsCard({
       {isInitialLoading ? (
         <div className='flex min-w-0 flex-col gap-2.5 p-[18px]' role='status'>
           <SkeletonTableRows cols={4} rows={8} />
-          <p className='m-0 text-[12.5px] text-faint'>
+          <p className='m-0 text-body-sm text-faint'>
             결과를 불러오는 중입니다. 필터는 그대로 유지됩니다.
           </p>
         </div>
@@ -313,7 +313,7 @@ function ArchiveResultsCard({
           <h3 className='m-0 mb-2 text-[15.5px] font-semibold text-fg'>
             조건에 맞는 스냅샷이 없습니다
           </h3>
-          <p className='wrap-anywhere m-0 mb-3.5 max-w-[60ch] text-[13.5px] text-fg-soft'>
+          <p className='wrap-anywhere m-0 mb-3.5 max-w-[60ch] text-body text-fg-soft'>
             선택한 기간에 생성된 브리프가 없거나, 상태 필터가 결과를 모두
             제외했습니다. 기간을 넓히거나 상태 필터를 해제해 보세요.
           </p>

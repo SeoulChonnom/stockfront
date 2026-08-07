@@ -91,7 +91,7 @@ function IssueRow({
           {cluster.title}
         </a>
         {cluster.summary ? (
-          <p className='text-pretty wrap-anywhere m-0 text-[13.5px] text-fg-soft'>
+          <p className='text-pretty wrap-anywhere m-0 text-body text-fg-soft'>
             {cluster.summary}
           </p>
         ) : null}
@@ -99,7 +99,7 @@ function IssueRow({
           <div className='flex flex-wrap gap-1.5'>
             {cluster.tags.map((tag) => (
               <span
-                className='rounded-[var(--r-sm)] border border-line bg-[color:var(--surface-2)] px-1.75 py-0.5 text-[11.5px] text-fg-soft'
+                className='rounded-[var(--r-sm)] border border-line bg-[color:var(--surface-2)] px-1.75 py-0.5 text-caption text-fg-soft'
                 key={tag}
               >
                 {tag}
@@ -115,7 +115,7 @@ function IssueRow({
         <span className='mono text-[12px] font-semibold text-fg-soft'>
           기사 {cluster.articleCount}건
         </span>
-        <Button asChild className='min-h-9 px-3 text-[12.5px]' size='sm'>
+        <Button asChild className='min-h-9 px-3 text-body-sm' size='sm'>
           <a href={withBasePath(href)} onClick={onOpen}>
             이슈 상세
           </a>
@@ -123,7 +123,7 @@ function IssueRow({
         {originalUrl ? (
           <Button
             asChild
-            className='min-h-9 px-3 text-[12.5px]'
+            className='min-h-9 px-3 text-body-sm'
             size='sm'
             variant='secondary'
           >

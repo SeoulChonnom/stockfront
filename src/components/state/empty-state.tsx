@@ -49,7 +49,7 @@ export function EmptyState({
       <h3 className='m-0 mb-1 text-[15px] font-semibold text-fg'>
         {title ?? copy.title}
       </h3>
-      <p className='wrap-anywhere m-0 text-[13.5px] text-fg-soft'>
+      <p className='wrap-anywhere m-0 text-body text-fg-soft'>
         {description ?? copy.description}
       </p>
       {actions ? (

@@ -206,7 +206,7 @@ export function PipelineStages({
         <h3 className='m-0 text-[15px] font-semibold text-fg'>
           파이프라인 단계
         </h3>
-        <span className='inline-flex items-center rounded-[var(--r-sm)] border border-[color:var(--neutral-line)] bg-[color:var(--neutral-soft)] px-1.5 py-0.5 text-[11px] font-semibold text-[color:var(--neutral)]'>
+        <span className='inline-flex items-center rounded-[var(--r-sm)] border border-[color:var(--neutral-line)] bg-[color:var(--neutral-soft)] px-1.5 py-0.5 text-label font-semibold text-[color:var(--neutral)]'>
           PROPOSED · BACKEND
         </span>
       </div>
@@ -223,7 +223,7 @@ export function PipelineStages({
                 TONE_DOT_CLASSES[stage.tone]
               )}
             />
-            <span className='min-w-0 flex-1 text-[13.5px] font-medium text-fg'>
+            <span className='min-w-0 flex-1 text-body font-medium text-fg'>
               {stage.name}
               {stage.note ? (
                 <span
@@ -236,13 +236,13 @@ export function PipelineStages({
                 </span>
               ) : null}
             </span>
-            <span className='mono shrink-0 text-right text-[12.5px] font-semibold text-fg-soft'>
+            <span className='mono shrink-0 text-right text-body-sm font-semibold text-fg-soft'>
               {STAGE_STATUS_LABELS[stage.tone]}
               {/* 소요 시간: 여전히 없다(파일 상단 주석 참고). 이 항상-"-"
                   컬럼은 디자인의 단계 행 모양(상태어 + 그 아래 소요 시간
                   줄)과 레이아웃 패리티를 맞추려고 의도적으로 유지한다 —
                   `docs/design_v2/v2-decisions.md` §10. */}
-              <span className='mono block text-[11px] font-normal text-faint'>
+              <span className='mono block text-label font-normal text-faint'>
                 -
               </span>
             </span>

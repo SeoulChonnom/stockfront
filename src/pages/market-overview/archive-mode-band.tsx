@@ -29,7 +29,7 @@ export function ArchiveModeBand({
 }: ArchiveModeBandProps) {
   return (
     <div className='flex flex-wrap items-center gap-x-3.5 gap-y-2.5 rounded-[var(--r-lg)] border border-[color:var(--warning-line)] border-l-4 border-l-[color:var(--warning)] bg-[color:var(--warning-soft)] px-4 py-3'>
-      <span className='text-[11.5px] font-bold tracking-[0.07em] text-[color:var(--warning)] uppercase'>
+      <span className='text-caption font-bold tracking-[0.07em] text-[color:var(--warning)] uppercase'>
         아카이브 스냅샷
       </span>
       <span className='mono text-[14px] font-semibold'>{businessDate}</span>
@@ -41,7 +41,7 @@ export function ArchiveModeBand({
       <div className='ml-auto flex flex-wrap gap-2'>
         {filterQuery ? (
           <Button
-            className='min-h-9 px-3 text-[12.5px]'
+            className='min-h-9 px-3 text-body-sm'
             onClick={() => navigate(buildArchiveSearchHref(filterQuery))}
             size='sm'
             type='button'
@@ -51,7 +51,7 @@ export function ArchiveModeBand({
           </Button>
         ) : null}
         <Button
-          className='mono min-h-9 px-3 text-[12.5px]'
+          className='mono min-h-9 px-3 text-body-sm'
           onClick={() => navigate(`/market/archive/${prevDate}`)}
           size='sm'
           type='button'
@@ -60,7 +60,7 @@ export function ArchiveModeBand({
           ← {prevDate}
         </Button>
         <Button
-          className='mono min-h-9 px-3 text-[12.5px]'
+          className='mono min-h-9 px-3 text-body-sm'
           disabled={nextDisabled}
           onClick={() => navigate(`/market/archive/${nextDate}`)}
           size='sm'
@@ -70,7 +70,7 @@ export function ArchiveModeBand({
           {nextDate} →
         </Button>
         <Button
-          className='min-h-9 px-3 text-[12.5px]'
+          className='min-h-9 px-3 text-body-sm'
           onClick={() => navigate('/market/latest')}
           size='sm'
           type='button'

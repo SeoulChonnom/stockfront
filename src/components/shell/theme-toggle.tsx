@@ -22,7 +22,7 @@ export function ThemeToggleButton({
       aria-label={label}
       className={cn(
         'shrink-0',
-        showLabel && 'min-h-9 w-full justify-start px-2.5 text-[12.5px]',
+        showLabel && 'min-h-9 w-full justify-start px-2.5 text-body-sm',
         className
       )}
       onClick={onToggle}

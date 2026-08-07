@@ -19,9 +19,9 @@ const buttonVariants = cva(
           'border-[color:var(--danger-line)] bg-[color:var(--danger-soft)] text-[color:var(--danger)] hover:-translate-y-px',
       },
       size: {
-        default: 'min-h-11 px-[18px] text-[13.5px]',
-        sm: 'min-h-10 px-3.5 text-[12.5px]',
-        lg: 'min-h-12 px-[18px] text-[13.5px]',
+        default: 'min-h-11 px-[18px] text-body',
+        sm: 'min-h-10 px-3.5 text-body-sm',
+        lg: 'min-h-12 px-[18px] text-body',
         icon: 'size-11',
       },
     },

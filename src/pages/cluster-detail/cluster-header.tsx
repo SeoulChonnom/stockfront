@@ -33,8 +33,8 @@ export function ClusterHeader({
 
   return (
     <Card className='flex min-w-0 flex-col gap-3.5 p-5'>
-      <div className='mono flex flex-wrap items-center gap-x-2 gap-y-1 text-[12.5px] text-fg-soft'>
-        <span className='rounded-[var(--r-sm)] border border-[color:var(--line-strong)] px-2 py-0.5 text-[11px] font-semibold text-faint uppercase'>
+      <div className='mono flex flex-wrap items-center gap-x-2 gap-y-1 text-body-sm text-fg-soft'>
+        <span className='rounded-[var(--r-sm)] border border-[color:var(--line-strong)] px-2 py-0.5 text-label font-semibold text-faint uppercase'>
           {detail.marketLabel}
         </span>
         <span className='text-faint'>기준일</span>

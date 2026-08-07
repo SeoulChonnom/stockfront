@@ -22,10 +22,10 @@ export function MarketAnalysisBlock({
     <div className='grid grid-cols-1 gap-3 lg:grid-cols-2'>
       {background.length > 0 ? (
         <div className='min-w-0'>
-          <div className='mb-1.5 text-[11px] font-semibold tracking-[0.07em] text-faint uppercase'>
+          <div className='mb-1.5 text-label font-semibold tracking-[0.07em] text-faint uppercase'>
             배경
           </div>
-          <ul className='m-0 flex list-disc flex-col gap-0.5 pl-4 text-[13.5px] text-fg-soft'>
+          <ul className='m-0 flex list-disc flex-col gap-0.5 pl-4 text-body text-fg-soft'>
             {background.map((line) => (
               <li className='wrap-anywhere' key={line}>
                 {line}
@@ -37,13 +37,13 @@ export function MarketAnalysisBlock({
       <div className='flex min-w-0 flex-col gap-3'>
         {keyThemes.length > 0 ? (
           <div>
-            <div className='mb-1.5 text-[11px] font-semibold tracking-[0.07em] text-faint uppercase'>
+            <div className='mb-1.5 text-label font-semibold tracking-[0.07em] text-faint uppercase'>
               핵심 테마
             </div>
             <div className='flex flex-wrap gap-1.5'>
               {keyThemes.map((theme) => (
                 <span
-                  className='rounded-[var(--r-sm)] border border-line bg-[color:var(--surface-2)] px-[9px] py-[3px] text-[12.5px] text-fg-soft'
+                  className='rounded-[var(--r-sm)] border border-line bg-[color:var(--surface-2)] px-[9px] py-[3px] text-body-sm text-fg-soft'
                   key={theme}
                 >
                   {theme}
@@ -54,10 +54,10 @@ export function MarketAnalysisBlock({
         ) : null}
         {outlook ? (
           <div>
-            <div className='mb-1.5 text-[11px] font-semibold tracking-[0.07em] text-faint uppercase'>
+            <div className='mb-1.5 text-label font-semibold tracking-[0.07em] text-faint uppercase'>
               관전 포인트
             </div>
-            <p className='text-pretty wrap-anywhere m-0 text-[13.5px] text-fg-soft'>
+            <p className='text-pretty wrap-anywhere m-0 text-body text-fg-soft'>
               {outlook}
             </p>
           </div>

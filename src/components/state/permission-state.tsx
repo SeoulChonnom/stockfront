@@ -19,7 +19,7 @@ export function PermissionState({
     <div
       className={cn('mx-auto max-w-[440px] px-4 py-8 text-center', className)}
     >
-      <span className='inline-flex items-center gap-1.5 rounded-[var(--r-sm)] border border-[color:var(--danger-line)] bg-[color:var(--danger-soft)] px-2 py-0.5 text-[12.5px] font-semibold text-[color:var(--danger)]'>
+      <span className='inline-flex items-center gap-1.5 rounded-[var(--r-sm)] border border-[color:var(--danger-line)] bg-[color:var(--danger-soft)] px-2 py-0.5 text-body-sm font-semibold text-[color:var(--danger)]'>
         403 · FORBIDDEN
       </span>
       <h1
@@ -29,7 +29,7 @@ export function PermissionState({
       >
         이 화면에 접근할 권한이 없습니다
       </h1>
-      <p className='wrap-anywhere mb-5 text-[13.5px] text-fg-soft'>
+      <p className='wrap-anywhere mb-5 text-body text-fg-soft'>
         이 화면은 파이프라인 로그와 수동 실행을 포함하므로 관리자(ADMIN) 권한이
         있는 계정만 열 수 있습니다. 현재 계정은 일반 사용자입니다.
       </p>

@@ -44,14 +44,14 @@ export function TriggerIdleForm({
         onSubmit();
       }}
     >
-      <p className='wrap-anywhere m-0 text-[13.5px] text-fg-soft'>
+      <p className='wrap-anywhere m-0 text-body text-fg-soft'>
         기준일 하루치 뉴스·지수를 다시 수집하고 통합 페이지 스냅샷을 생성합니다.
         같은 기준일 작업이 실행 중이면 요청은 거부됩니다.
       </p>
 
       <div>
         <label
-          className='mb-1 block text-[11px] font-semibold tracking-[0.07em] text-faint uppercase'
+          className='mb-1 block text-label font-semibold tracking-[0.07em] text-faint uppercase'
           htmlFor='trigger-date'
         >
           기준일 (KST)
@@ -132,7 +132,7 @@ function AdvancedOptions({
       </Button>
       {expanded ? (
         <div className='mt-2 flex flex-col gap-3 rounded-[var(--r-md)] border border-[color:var(--warning-line)] bg-[color:var(--warning-soft)] p-3'>
-          <label className='flex items-start gap-2 text-[13.5px] text-fg'>
+          <label className='flex items-start gap-2 text-body text-fg'>
             <input
               checked={values.force}
               className='mt-1 size-4'
@@ -143,13 +143,13 @@ function AdvancedOptions({
             />
             <span>
               <span className='block font-semibold'>force</span>
-              <span className='wrap-anywhere block text-[12.5px] text-fg-soft'>
+              <span className='wrap-anywhere block text-body-sm text-fg-soft'>
                 이미 생성된 스냅샷이 있어도 새 versionNo로 다시 생성합니다. 기존
                 버전은 보존됩니다.
               </span>
             </span>
           </label>
-          <label className='flex items-start gap-2 text-[13.5px] text-fg'>
+          <label className='flex items-start gap-2 text-body text-fg'>
             <input
               checked={values.rebuildPageOnly}
               className='mt-1 size-4'
@@ -160,7 +160,7 @@ function AdvancedOptions({
             />
             <span>
               <span className='block font-semibold'>rebuildPageOnly</span>
-              <span className='wrap-anywhere block text-[12.5px] text-fg-soft'>
+              <span className='wrap-anywhere block text-body-sm text-fg-soft'>
                 뉴스·지수를 재수집하지 않고 저장된 정제 결과로 페이지만 다시
                 만듭니다.
               </span>

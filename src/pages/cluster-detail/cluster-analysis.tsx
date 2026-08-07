@@ -32,7 +32,7 @@ export function ClusterAnalysis({
       ) : null}
 
       {analysis.length === 0 ? (
-        <p className='measure-analysis wrap-anywhere m-0 text-[13.5px] text-fg-soft'>
+        <p className='measure-analysis wrap-anywhere m-0 text-body text-fg-soft'>
           이 이슈의 심층 분석이 아직 생성되지 않았습니다. AI 요약 단계가
           완료되면 이 영역에 표시됩니다.
         </p>
@@ -43,7 +43,7 @@ export function ClusterAnalysis({
               the index is what keeps keys unique; the <p> holds no state. */}
           {analysis.map((paragraph, index) => (
             <p
-              className='measure-analysis wrap-anywhere m-0 border-l-2 border-[color:var(--line-strong)] pl-3 text-[13.5px] leading-[1.65] text-fg-soft'
+              className='measure-analysis wrap-anywhere m-0 border-l-2 border-[color:var(--line-strong)] pl-3 text-body leading-[1.65] text-fg-soft'
               // biome-ignore lint/suspicious/noArrayIndexKey: stateless read-only list, index disambiguates equal prefixes — see above
               key={`${index}-${paragraph.slice(0, 24)}`}
             >

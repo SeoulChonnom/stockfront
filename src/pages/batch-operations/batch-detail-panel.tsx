@@ -102,7 +102,7 @@ function toAiRetryErrorView(error: unknown): AiRetryErrorView {
 
 function Dl({ children }: { children: ReactNode }) {
   return (
-    <dl className='m-0 grid min-w-0 grid-cols-1 gap-x-[14px] gap-y-[10px] text-[12.5px] sm:grid-cols-2'>
+    <dl className='m-0 grid min-w-0 grid-cols-1 gap-x-[14px] gap-y-[10px] text-body-sm sm:grid-cols-2'>
       {children}
     </dl>
   );
@@ -313,7 +313,7 @@ function BatchDetailContent({
       <div className='-mx-[18px] -mt-4 flex flex-wrap items-center gap-x-[10px] gap-y-2 border-b border-line px-[18px] py-[14px]'>
         {/* Keep this dense card heading at 14.5px in the page sans stack. */}
         <h2
-          className='m-0 text-[14.5px] font-semibold text-fg outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--focus)]'
+          className='m-0 text-card-heading font-semibold text-fg outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--focus)]'
           ref={detailHeadingRef}
           tabIndex={-1}
         >
@@ -322,7 +322,7 @@ function BatchDetailContent({
         {/* 참조(893-896행) 헤더 순서: jobId · 타입 · 상태 · 기준일. */}
         <BatchTypeBadge jobType={run.jobType} />
         <StatusBadge status={run.rawStatus} />
-        <span className='mono text-[12.5px] text-fg-soft'>
+        <span className='mono text-body-sm text-fg-soft'>
           {run.businessDate}
         </span>
       </div>
@@ -359,7 +359,7 @@ function BatchDetailContent({
           <h3 className='m-0 mb-1.5 text-[15px] font-semibold text-fg'>
             사용자 영향
           </h3>
-          <ul className='wrap-anywhere m-0 flex list-disc flex-col gap-1 pl-5 text-[13.5px] text-fg-soft'>
+          <ul className='wrap-anywhere m-0 flex list-disc flex-col gap-1 pl-5 text-body text-fg-soft'>
             {impacts.map((impact) => (
               <li key={impact}>{impact}</li>
             ))}
@@ -375,7 +375,7 @@ function BatchDetailContent({
             </p>
           ) : null}
           {run.errorMessage ? (
-            <p className='wrap-anywhere m-0 mt-1 text-[13.5px] text-fg'>
+            <p className='wrap-anywhere m-0 mt-1 text-body text-fg'>
               {run.errorMessage}
             </p>
           ) : null}
@@ -415,9 +415,7 @@ function BatchDetailContent({
             <h3 className='m-0 mb-1.5 text-[15px] font-semibold text-fg'>
               실행 로그
             </h3>
-            <p className='m-0 text-[12.5px] text-faint'>
-              실행 로그가 없습니다.
-            </p>
+            <p className='m-0 text-body-sm text-faint'>실행 로그가 없습니다.</p>
           </>
         )}
       </div>
@@ -425,7 +423,7 @@ function BatchDetailContent({
       <div className='flex flex-wrap items-center gap-2 pt-1'>
         {snapshotHref ? (
           <a
-            className='inline-flex min-h-10 items-center rounded-[var(--r-md)] border border-[color:var(--line-strong)] px-3.5 text-[13.5px] font-semibold text-fg hover:-translate-y-px'
+            className='inline-flex min-h-10 items-center rounded-[var(--r-md)] border border-[color:var(--line-strong)] px-3.5 text-body font-semibold text-fg hover:-translate-y-px'
             href={withBasePath(snapshotHref)}
             onClick={createNavigateHandler(snapshotHref)}
           >

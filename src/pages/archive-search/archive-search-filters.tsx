@@ -54,7 +54,7 @@ export function ArchiveSearchFilters({
   return (
     <section aria-labelledby='archive-filter-heading'>
       {/* Use 16px vertical and 18px horizontal card padding at all widths. */}
-      <Card className='flex flex-col gap-3 px-[18px] py-4'>
+      <Card className='flex flex-col gap-3' padding='inset'>
         {/* Keep the heading and applied summary in one wrapping row. */}
         <div className='flex flex-wrap items-center gap-2.5'>
           {/* Dense card headings use 14–15px rather than the shared 17px scale. */}
@@ -64,7 +64,7 @@ export function ArchiveSearchFilters({
           >
             필터
           </h2>
-          <span className='mono wrap-anywhere text-[11.5px] text-faint'>
+          <span className='mono wrap-anywhere text-caption text-faint'>
             적용됨 · {applied.from} ~ {applied.to} ·{' '}
             {getStatusSummaryLabel(applied.status)}
           </span>
@@ -83,7 +83,7 @@ export function ArchiveSearchFilters({
           <FilterField error={errors.from} htmlFor='from' label='시작일'>
             <Input
               className={cn(
-                'mono rounded-[var(--r-md)] bg-[color:var(--surface)] px-3 py-0 text-[13.5px]',
+                'mono rounded-[var(--r-md)] bg-[color:var(--surface)] px-3 py-0 text-body',
                 !errors.from && 'border-[color:var(--line-strong)]'
               )}
               invalid={Boolean(errors.from)}
@@ -94,7 +94,7 @@ export function ArchiveSearchFilters({
           <FilterField error={errors.to} htmlFor='to' label='종료일'>
             <Input
               className={cn(
-                'mono rounded-[var(--r-md)] bg-[color:var(--surface)] px-3 py-0 text-[13.5px]',
+                'mono rounded-[var(--r-md)] bg-[color:var(--surface)] px-3 py-0 text-body',
                 !errors.to && 'border-[color:var(--line-strong)]'
               )}
               invalid={Boolean(errors.to)}
@@ -105,7 +105,7 @@ export function ArchiveSearchFilters({
           <FilterField htmlFor='status' label='생성 상태'>
             {/* Keep the select surface/border tokens aligned with the date fields. */}
             <select
-              className='flex min-h-11 w-full rounded-[var(--r-md)] border border-[color:var(--line-strong)] bg-[color:var(--surface)] px-2.5 py-0 text-[13.5px] text-fg outline-none transition-[border-color,box-shadow] duration-150 focus:border-[color:color-mix(in_srgb,var(--primary)_45%,transparent)] focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--primary)_16%,transparent)]'
+              className='flex min-h-11 w-full rounded-[var(--r-md)] border border-[color:var(--line-strong)] bg-[color:var(--surface)] px-2.5 py-0 text-body text-fg outline-none transition-[border-color,box-shadow] duration-150 focus:border-[color:color-mix(in_srgb,var(--primary)_45%,transparent)] focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--primary)_16%,transparent)]'
               {...getFieldProps('status')}
             >
               {getStatusOptions().map((option) => (

@@ -1,3 +1,4 @@
+import { cva, type VariantProps } from 'class-variance-authority';
 import type {
   HTMLAttributes,
   ReactNode,
@@ -7,6 +8,16 @@ import type {
 } from 'react';
 
 import { cn } from '@/lib/utils';
+
+const tableCellPaddingVariants = cva('', {
+  variants: {
+    padding: {
+      compact: 'py-[9px] px-3',
+    },
+  },
+});
+
+type TableCellPaddingProps = VariantProps<typeof tableCellPaddingVariants>;
 
 /** Tables keep a minimum width inside a scoped horizontal-scroll wrapper. */
 
@@ -77,14 +88,16 @@ export function TableRow({
   );
 }
 
-export function TableHead({
-  className,
-  ...props
-}: ThHTMLAttributes<HTMLTableCellElement>) {
+export interface TableHeadProps
+  extends ThHTMLAttributes<HTMLTableCellElement>,
+    TableCellPaddingProps {}
+
+export function TableHead({ className, padding, ...props }: TableHeadProps) {
   return (
     <th
       className={cn(
-        'h-12 border-b border-line px-0 text-left align-middle text-[11px] uppercase tracking-[0.06em] text-faint font-semibold',
+        'h-12 border-b border-line px-0 text-left align-middle text-label uppercase tracking-[0.06em] text-faint font-semibold',
+        tableCellPaddingVariants({ padding }),
         className
       )}
       {...props}
@@ -92,14 +105,16 @@ export function TableHead({
   );
 }
 
-export function TableCell({
-  className,
-  ...props
-}: TdHTMLAttributes<HTMLTableCellElement>) {
+export interface TableCellProps
+  extends TdHTMLAttributes<HTMLTableCellElement>,
+    TableCellPaddingProps {}
+
+export function TableCell({ className, padding, ...props }: TableCellProps) {
   return (
     <td
       className={cn(
         'min-w-0 border-b border-line px-0 py-[18px] align-middle',
+        tableCellPaddingVariants({ padding }),
         className
       )}
       {...props}

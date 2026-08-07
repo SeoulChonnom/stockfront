@@ -44,19 +44,19 @@ export function DecisionHeaderCard({
     >
       <div className='flex flex-wrap items-center gap-x-3 gap-y-2'>
         <StatusBadge status={snapshot.status} />
-        <span className='text-[12.5px] text-faint'>기준일</span>
+        <span className='text-body-sm text-faint'>기준일</span>
         <span className='mono text-[14px] font-semibold'>
           {snapshot.businessDate}
         </span>
         <span aria-hidden='true' className='text-[color:var(--line-strong)]'>
           |
         </span>
-        <span className='text-[12.5px] text-faint'>생성</span>
-        <span className='mono text-[12.5px] text-fg-soft'>
+        <span className='text-body-sm text-faint'>생성</span>
+        <span className='mono text-body-sm text-fg-soft'>
           {generatedDisplay}
         </span>
         {freshness ? (
-          <span className='text-[12.5px] text-fg-soft'>· {freshness} 생성</span>
+          <span className='text-body-sm text-fg-soft'>· {freshness} 생성</span>
         ) : null}
         {isRefetching ? <RefetchBadge /> : null}
       </div>
@@ -85,7 +85,7 @@ export function DecisionHeaderCard({
 
       <MarketCompareStrip markets={snapshot.markets} />
 
-      <div className='mono flex flex-wrap gap-x-4.5 gap-y-2 border-t border-line pt-3 text-[11.5px] text-faint'>
+      <div className='mono flex flex-wrap gap-x-4.5 gap-y-2 border-t border-line pt-3 text-caption text-faint'>
         {metadata ? (
           <span className='whitespace-nowrap'>
             원문 {metadata.rawNewsCount}건 → 정제 {metadata.processedNewsCount}

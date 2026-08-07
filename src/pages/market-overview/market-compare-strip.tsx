@@ -76,11 +76,11 @@ function MarketCompareTile({
       <div className='flex min-w-0 items-center gap-2'>
         {/* Show the market scope before its name as plain text. */}
         {market.marketType ? (
-          <span className='shrink-0 text-[11px] font-bold tracking-[0.07em] text-faint uppercase'>
+          <span className='shrink-0 text-label font-bold tracking-[0.07em] text-faint uppercase'>
             {market.marketType}
           </span>
         ) : null}
-        <span className='min-w-0 truncate text-[13.5px] font-semibold text-fg'>
+        <span className='min-w-0 truncate text-body font-semibold text-fg'>
           {market.label}
         </span>
         <Button
@@ -94,7 +94,7 @@ function MarketCompareTile({
         </Button>
       </div>
       <div className='flex flex-wrap items-baseline gap-2.5'>
-        <span className='text-[12.5px] text-faint'>
+        <span className='text-body-sm text-faint'>
           {lead ? lead.label : '지수 없음'}
         </span>
         <span className='mono text-[21px] font-semibold'>
@@ -118,7 +118,7 @@ function MarketCompareTile({
       <p className='wrap-anywhere m-0 text-[13px] text-fg-soft'>
         {market.summaryTitle || '요약 미생성'}
       </p>
-      <div className='mono text-[11.5px] text-faint'>
+      <div className='mono text-caption text-faint'>
         지수 {market.indices.length}종 · 이슈 {market.clusters.length}건
       </div>
     </div>

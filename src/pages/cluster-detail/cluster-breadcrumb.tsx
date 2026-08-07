@@ -28,7 +28,7 @@ export function ClusterBreadcrumb({
     <div className='flex min-w-0 flex-col gap-3'>
       <nav
         aria-label='위치'
-        className='flex flex-wrap items-center gap-1.5 text-[12.5px] text-faint'
+        className='flex flex-wrap items-center gap-1.5 text-body-sm text-faint'
       >
         <a
           className='text-fg-soft underline-offset-2 hover:underline'
