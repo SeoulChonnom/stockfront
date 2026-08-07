@@ -8,10 +8,8 @@ import type { MarketSnapshot } from '@/lib/view-models';
  * `indices[0]`를 "대표"로 취급 — `docs/design_v2/handoff_v2/Market Brief
  * v2.dc.html`의 `compare` 계산 참고).
  *
- * B2 (parity cycle 2): 코드 칩(`US`/`KR`)은 DTO의 `marketType`에서 오며,
- * `mappers.ts:295`가 이미 view model에 매핑해 두었다 — `market-section.tsx`의
- * 섹션 헤더는 cycle 1(D8)에서 이미 이 칩을 받았고, 이 비교 스트립 타일에도
- * 같은 칩이 필요하다.
+ * The market-type code is already mapped by the view model and is shown on
+ * each comparison tile.
  */
 
 function scrollToMarketSection(targetId: string) {
@@ -76,8 +74,7 @@ function MarketCompareTile({
   return (
     <div className='flex min-w-0 flex-col gap-2 rounded-[var(--r-md)] border border-[color:var(--line)] bg-[color:var(--surface-2)] p-3.5'>
       <div className='flex min-w-0 items-center gap-2'>
-        {/* B2: US/KR scope label before the market name — plain text, not
-            the bordered chip market-section.tsx's own header uses. */}
+        {/* Show the market scope before its name as plain text. */}
         {market.marketType ? (
           <span className='shrink-0 text-[11px] font-bold tracking-[0.07em] text-[color:var(--text-faint)] uppercase'>
             {market.marketType}

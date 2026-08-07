@@ -35,7 +35,7 @@ export function NavRail({
         <p className='m-0 text-[19px] font-bold tracking-[-0.02em] text-[color:var(--text)] [font-family:var(--font-display)]'>
           Market Brief
         </p>
-        {/* B1 (parity cycle 2): design rail has a subtitle under the wordmark. */}
+        {/* Keep secondary context visible beneath the rail wordmark. */}
         <p className='m-0 text-[12px] text-[color:var(--text-faint)]'>
           일간 시장 브리프 · 운영 콘솔
         </p>

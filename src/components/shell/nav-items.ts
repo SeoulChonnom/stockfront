@@ -1,4 +1,4 @@
-/** Shared nav source; the admin-only item is gated before it reaches the DOM. */
+/** Shared nav source; nav-list gates the exported admin item before rendering. */
 
 export type NavLeaf = {
   href: string;

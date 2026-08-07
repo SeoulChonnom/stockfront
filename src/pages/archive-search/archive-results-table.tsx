@@ -145,8 +145,7 @@ export function ArchiveResultsTable({
                   <GeneratedAtSubline record={record} />
                 </TableCell>
                 <TableCell className='py-3 px-3 align-top'>
-                  {/* N2 (parity cycle 3): row-level badge is one notch
-                      smaller than the page-level badge in the design. */}
+                  {/* Use the compact row-level badge size. */}
                   <StatusBadge size='sm' status={record.status} />
                 </TableCell>
                 <TableCell className='mono hidden py-3 pr-[18px] pl-3 text-left text-[12px] whitespace-nowrap text-[color:var(--text-soft)] min-[1181px]:table-cell'>

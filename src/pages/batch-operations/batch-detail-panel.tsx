@@ -313,12 +313,7 @@ function BatchDetailContent({
           아니다. 이 행의 4개 아이템(제목·타입 배지·상태 배지·날짜) 사이
           가로 간격이 정확히 2px씩 밀려나던 원인이 이 근사치였다. */}
       <div className='-mx-[18px] -mt-4 flex flex-wrap items-center gap-x-[10px] gap-y-2 border-b border-[color:var(--line)] px-[18px] py-[14px]'>
-        {/* parity cycle A3: per-block card-heading size (see
-            archive-search-filters.tsx's comment) — the ops detail heading
-            measures 14.5px in the design, not the README §6 17px scale.
-            It also isn't mono — design's `#ops-detail-h` (`{{ dJobId }}`)
-            has no font-family override and inherits the page's sans stack;
-            only the numeric IDs elsewhere in this panel are mono. */}
+        {/* Keep this dense card heading at 14.5px in the page sans stack. */}
         <h2
           className='m-0 text-[14.5px] font-semibold text-[color:var(--text)] outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--focus)]'
           ref={detailHeadingRef}
@@ -341,8 +336,7 @@ function BatchDetailContent({
           value={running && run.finishedAt === '-' ? '진행 중' : run.finishedAt}
         />
         <DlItem label='소요' value={run.duration} />
-        {/* O4 (parity cycle 3): match batch-history-list.tsx's slash label
-            — this call site still had the old middle-dot copy. */}
+        {/* Keep the counts label consistent with the history list. */}
         {hasSnapshot ? (
           <DlItem label='원문/정제/이슈' value={run.counts} />
         ) : null}
@@ -408,9 +402,7 @@ function BatchDetailContent({
       ) : null}
 
       <div className='min-w-0'>
-        {/* O3 (parity cycle 3): design keeps the heading and 복사/전체보기
-            buttons on one wrapping row — pass the heading into `LogBox` so
-            it renders inside that row instead of stacked above it. */}
+        {/* Keep the log heading and actions in one wrapping row. */}
         {run.logSummary ? (
           <LogBox
             content={run.logSummary}

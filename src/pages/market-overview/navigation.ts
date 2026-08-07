@@ -67,13 +67,10 @@ export function buildClusterHref(
 }
 
 /**
- * Same contract as `createNavigateHandler` (`src/lib/app-state.ts`) plus a
- * scroll-position save immediately before navigating — required whenever a
- * screen this agent owns navigates somewhere that later needs to restore
- * this exact scroll offset on Back (README §9: "스크롤 복원은 `navigate`
- * 직전에 현재 URL 키로 `window.scrollY`를 저장"). `app-state.ts` itself is out
- * of this agent's file-ownership scope, so this variant lives alongside the
- * other Phase 6 navigation helpers instead of being added there.
+ * Like `createNavigateHandler`, this saves the current scroll position
+ * immediately before navigating so browser Back can restore the exact offset.
+ * The generic helper remains in `app-state.ts`; this variant stays local to
+ * the market navigation call sites.
  */
 export function createScrollSavingNavigateHandler(
   to: string,

@@ -268,9 +268,7 @@ function ArchiveResultsCard({
     >
       <div className='flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-[color:var(--line)] px-[18px] py-3.5'>
         <div className='flex flex-wrap items-center gap-x-3 gap-y-2'>
-          {/* parity cycle A3: per-block card-heading size (see
-              archive-search-filters.tsx's comment) — "검색 결과" measures
-              14.5px in the design, not the README §6 17px scale. */}
+          {/* Keep this dense card heading at 14.5px. */}
           <h2
             className='m-0 scroll-mt-24 text-[14.5px] font-semibold text-[color:var(--text)] focus:outline-none'
             id='archive-results-heading'

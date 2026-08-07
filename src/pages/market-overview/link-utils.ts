@@ -1,8 +1,7 @@
 /**
  * Guards an external URL before it's used as an `href`. Mirrors the
- * `getSafeExternalUrl` helper already used by `cluster-detail-page.tsx`
- * (owned by a different concurrent agent, so duplicated here rather than
- * imported — see README file-ownership boundaries for Phase 6).
+ * `getSafeExternalUrl` helper already used by `cluster-detail-page.tsx`.
+ * The small local copy avoids coupling these page modules.
  *
  * `originalUrl`/`mirrorUrl` on `ArticleLink` and
  * `ClusterRepresentativeArticle` are nullable in the view model, so callers

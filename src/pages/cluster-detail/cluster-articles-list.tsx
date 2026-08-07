@@ -77,25 +77,19 @@ export function ClusterArticlesList({
   const remaining = articles.length - INITIAL_VISIBLE_COUNT;
 
   return (
-    // B6: list panels (관련 기사/실행 이력/검색 결과) carry 0 padding on the
-    // panel itself — the header row and the body each own their padding.
+    // Header, body, and pager own their padding.
     <section
       aria-labelledby='cluster-articles-heading'
       className='flex min-w-0 flex-col overflow-hidden rounded-[var(--r-lg)] border border-[color:var(--line)] bg-[color:var(--surface)]'
     >
       <div className='flex flex-wrap items-center gap-2.5 border-b border-[color:var(--line)] px-[18px] py-3.5'>
-        {/* parity cycle A3: per-block card-heading size — "관련 기사"
-            measures 15px in the design, not the README §6 17px scale. */}
+        {/* Keep this dense card heading at 15px. */}
         <h2
           className='m-0 text-[15px] font-semibold text-[color:var(--text)]'
           id='cluster-articles-heading'
         >
           관련 기사
         </h2>
-        {/* D12/F5: design's count span repeats the "관련 기사" label inside
-            its own text ("관련 기사 8건"), not just "8건" — confirmed in the
-            design's own fixture script (`articleTotal: '관련 기사 ' + n +
-            '건'`), redundant with the heading but intentional. */}
         <span className='mono text-[11.5px] text-[color:var(--text-faint)]'>
           관련 기사 {articles.length}건
         </span>

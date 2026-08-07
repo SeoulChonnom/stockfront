@@ -19,9 +19,8 @@ import type { MarketIndex } from '@/lib/view-models';
  * `sm:table-cell`/`sm:hidden`을 직접 쓴다 — 같은 "숨김 대신 서브라인" 계약은
  * 그대로 지킨다.
  *
- * D7: 지수명 옆 mono 코드 서브라인(§7-2 "이름 + mono 코드 서브라인")은
- * `MarketIndex.code`가 `mapIndex`(`mappers.ts:178`)에서 이미 매핑되어 view
- * model까지 도달한다 — 이 표가 그동안 렌더하지 않고 있었을 뿐이다.
+ * The nullable `MarketIndex.code` is already mapped into the view model; this
+ * table renders it as the mono subline beside each index name.
  */
 export function MarketIndexTable({ indices }: { indices: MarketIndex[] }) {
   if (indices.length === 0) {

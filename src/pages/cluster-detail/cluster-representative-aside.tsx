@@ -25,22 +25,10 @@ export function ClusterRepresentativeAside({
   return (
     <aside
       aria-labelledby='cluster-representative-heading'
-      // N3 (parity cycle 3): design lays out this card via explicit
-      // per-element margin-bottom (4/8/12px), not a uniform flex `gap` —
-      // switched from `gap-3` to per-child `mb-*` below so the heading can
-      // carry its own 4px without stacking on top of a container gap.
+      // Per-element margins keep heading spacing independent from the card gap.
       className='flex min-w-0 flex-col rounded-[var(--r-lg)] border border-[color:var(--line)] bg-[color:var(--surface)] p-[18px] min-[1181px]:sticky min-[1181px]:top-5'
     >
-      {/* A3 (parity cycle 2): design's `h2` IS the "대표 기사" label itself
-          (uppercase caps, --text-faint) — the article title is a plain
-          paragraph below it, not the heading. Cycle 1 had this backwards
-          (the label was a plain span, the title carried the `h2`), which
-          gave the aside the wrong accessible name — a real a11y bug, not
-          just a style mismatch.
-          N3: design is 12px/letter-spacing:.07em (→0.84px)/margin:0 0 4px,
-          not 11px/0.77px/0 — `tracking-[0.07em]` already matches the
-          design's em-based ratio, it just needed the larger base size to
-          land on 0.84px. */}
+      {/* The h2 is the accessible section label; the article title follows. */}
       <h2
         className='m-0 mb-1 text-[12px] font-semibold tracking-[0.07em] text-[color:var(--text-faint)] uppercase'
         id='cluster-representative-heading'
@@ -59,8 +47,6 @@ export function ClusterRepresentativeAside({
           </span>
         ) : null}
       </div>
-      {/* C8: design shows the two actions as inline auto-width buttons side
-          by side, not stacked full-width. */}
       <div className='flex flex-wrap gap-2'>
         {originalUrl ? (
           <Button asChild className='w-auto' variant='primary'>
