@@ -1,6 +1,20 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-
 @import "./styles/base.css";
 @import "./styles/app-shell.css";
 @import "./styles/components.css";
+
+@theme inline {
+  /* --text-* → text-{name} (font-size utilities). */
+  --text-body: var(--fs-body);
+  --text-body-sm: var(--fs-sm);
+  --text-label: var(--fs-label);
+  --text-caption: 11.5px;
+  --text-card-heading: 14.5px;
+
+  /* --color-* → text-/bg-/border-{name} (color utilities). */
+  --color-fg: var(--text);
+  --color-fg-soft: var(--text-soft);
+  --color-faint: var(--text-faint);
+  --color-line: var(--line);
+}
