@@ -445,12 +445,16 @@ describe('App routing', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText('아카이브 검색')).toBeInTheDocument();
+      expect(
+        screen.getByRole('heading', { level: 1, name: '아카이브' })
+      ).toBeInTheDocument();
     });
 
     expect(redirectToLogin).not.toHaveBeenCalled();
     expect(screen.getByText('Market Brief')).toBeInTheDocument();
-    expect(screen.getByText('아카이브 검색')).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { level: 1, name: '아카이브' })
+    ).toBeInTheDocument();
     // v2: 페이지 표시는 공용 Pagination의 mono `page / totalPages` 이고,
     // 적용 버튼은 draft/applied 분리를 반영한 '필터 적용'이다.
     expect(screen.getByText('2 / 3')).toBeInTheDocument();
@@ -552,7 +556,9 @@ describe('App routing', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText('아카이브 검색')).toBeInTheDocument();
+      expect(
+        screen.getByRole('heading', { level: 1, name: '아카이브' })
+      ).toBeInTheDocument();
     });
     expect(document.activeElement?.id).toBe('page-title');
 
@@ -670,7 +676,9 @@ describe('App routing', () => {
       navigate('/market/archive/search');
     });
     await waitFor(() => {
-      expect(screen.getByText('아카이브 검색')).toBeInTheDocument();
+      expect(
+        screen.getByRole('heading', { level: 1, name: '아카이브' })
+      ).toBeInTheDocument();
     });
     // A different, never-visited key also starts at 0.
     expect(scrollToSpy).toHaveBeenLastCalledWith(0, 0);

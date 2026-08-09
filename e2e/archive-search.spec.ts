@@ -221,9 +221,7 @@ test.describe('§16-9 Retry (Archive Search)', () => {
     await page.locator('#status').selectOption('PARTIAL');
     await page.getByRole('button', { name: '필터 적용' }).click();
 
-    await expect(
-      page.getByText('아카이브 검색 결과를 불러오지 못했습니다')
-    ).toBeVisible();
+    await expect(page.getByText('데이터를 불러오지 못했습니다')).toBeVisible();
     // §9 Retry contract: filters + PREVIOUS rows stay visible through the error.
     await expect(
       page
@@ -237,7 +235,7 @@ test.describe('§16-9 Retry (Archive Search)', () => {
     await page.getByRole('button', { name: '다시 시도' }).click();
 
     await expect(
-      page.getByText('아카이브 검색 결과를 불러오지 못했습니다')
+      page.getByText('데이터를 불러오지 못했습니다')
     ).not.toBeVisible();
     await expect(page.locator('table tbody tr').first()).toBeVisible();
   });

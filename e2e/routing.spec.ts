@@ -20,7 +20,7 @@ test.describe('§16-1 route / query parsing', () => {
     const cases: Array<{ path: string; expectHeadingText: string | RegExp }> = [
       { path: '', expectHeadingText: '최신 시장 브리프' }, // '/' -> replace-redirects to /market/latest
       { path: 'market/latest', expectHeadingText: '최신 시장 브리프' },
-      { path: 'market/archive/search', expectHeadingText: '아카이브 검색' },
+      { path: 'market/archive/search', expectHeadingText: '아카이브' },
       {
         path: 'market/archive/2026-07-06',
         expectHeadingText: /2026-07-06 시장 브리프/,
@@ -122,7 +122,7 @@ test.describe('§16-7 route focus', () => {
     // §16-7 is about the app's OWN focus management reacting to `navigate()`,
     // not to a fresh document load.
     await page.getByRole('link', { name: '아카이브' }).click();
-    await expect(page.locator('#page-title')).toHaveText('아카이브 검색');
+    await expect(page.locator('#page-title')).toHaveText('아카이브');
     await expect(page.locator('#page-title')).toBeFocused();
   });
 

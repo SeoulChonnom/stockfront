@@ -64,14 +64,14 @@ function getArchiveSearchErrorPresentation(
 
     return {
       code: `${error.status} · REQUEST_FAILED`,
-      title: '아카이브 검색 요청을 처리하지 못했습니다',
+      title: '아카이브 요청을 처리하지 못했습니다',
       message: error.message,
     };
   }
 
   return {
     code: 'REQUEST_FAILED',
-    title: '아카이브 검색 요청을 처리하지 못했습니다',
+    title: '아카이브 요청을 처리하지 못했습니다',
     message: error.message || '알 수 없는 오류가 발생했습니다.',
   };
 }
@@ -178,7 +178,7 @@ export function ArchiveSearchPage({
           id='page-title'
           tabIndex={-1}
         >
-          아카이브 검색
+          아카이브
         </h1>
         {/* D5: design's measure here is 70ch, not the shared 76ch
             `.measure-summary` utility. U2: the design's title `<section>`

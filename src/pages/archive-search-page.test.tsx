@@ -119,7 +119,7 @@ describe('ArchiveSearchPage', () => {
       size: 20,
     });
     expect(
-      screen.getByRole('heading', { level: 1, name: '아카이브 검색' })
+      screen.getByRole('heading', { level: 1, name: '아카이브' })
     ).toBeInTheDocument();
   });
 
@@ -277,6 +277,22 @@ describe('ArchiveSearchPage', () => {
     expect(
       screen.getByRole('button', { name: '다시 시도' })
     ).toBeInTheDocument();
+  });
+
+  it('uses the archive page label in request errors', () => {
+    mockUseArchiveList.mockReturnValue({
+      data: undefined,
+      error: new ApiError('잘못된 요청입니다.', 400, null),
+      isLoading: false,
+      isFetching: false,
+      refetch: vi.fn(),
+    });
+
+    renderPage(new URLSearchParams());
+
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      '아카이브 요청을 처리하지 못했습니다'
+    );
   });
 
   it('shows the empty-results state with a reset action when the query resolves with zero rows', () => {

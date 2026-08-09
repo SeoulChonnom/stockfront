@@ -465,7 +465,7 @@ color-scheme:dark;
 </sc-if>
 <sc-if value="{{ isSearch }}">
 <section style="display:flex;flex-direction:column;gap:6px">
-<h1 id="page-title" tabindex="-1" style="margin:0;font-size:22px;font-weight:600">아카이브 검색</h1>
+<h1 id="page-title" tabindex="-1" style="margin:0;font-size:22px;font-weight:600">아카이브</h1>
 <p style="margin:0;max-width:70ch;color:var(--fg2);font-size:13.5px">기준일 범위와 생성 상태로 과거 스냅샷을 찾습니다. 결과를 열면 해당 날짜의 시장 브리프로 이동하고, 돌아올 때 필터·페이지·스크롤 위치가 복원됩니다.</p>
 </section>
 
@@ -1413,7 +1413,7 @@ class Component extends DCLogic {
         ['sparse', 'null·빈 배열 혼재'], ['long', '장문 + 공백 없는 200자 토큰'],
         ['error500', '5xx 오류'], ['offline', '네트워크 오프라인'], ['malformed', '형식 오류 응답'], ['error401', '401 세션 만료'], ['error429', '429 rate limit'],
       ] },
-      { g: '아카이브 검색', p: '/market/archive/search', items: [
+      { g: '아카이브', p: '/market/archive/search', items: [
         ['ready', '결과 20건'], ['loading', '로딩 (필터 유지)'], ['refetching', '갱신 (이전 결과 유지)'],
         ['noResults', '검색 결과 없음'], ['error500', '오류 (필터 유지 + 재시도)'], ['validation', '날짜 field validation'],
       ] },
@@ -1737,7 +1737,7 @@ class Component extends DCLogic {
     return {
       isSearch: true,
       sectionLabel: '시장 인텔리전스',
-      routeLabel: '아카이브 검색',
+      routeLabel: '아카이브',
       searchLoading: loading,
       searchError: !!err,
       searchRefetching: mode === 'refetching',

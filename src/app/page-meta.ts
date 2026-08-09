@@ -9,7 +9,7 @@ const STATIC_PAGE_META: Record<
   PageMeta
 > = {
   latest: { title: 'Market Brief · 최신 브리프' },
-  'archive-search': { title: 'Market Brief · 아카이브 검색' },
+  'archive-search': { title: 'Market Brief · 아카이브' },
   'cluster-detail': { title: 'Market Brief · 이슈 상세' },
   'batch-ops': { title: 'Market Brief · 배치 운영' },
   'not-found': { title: 'Market Brief · 페이지를 찾을 수 없음' },

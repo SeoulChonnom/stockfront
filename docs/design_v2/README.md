@@ -47,7 +47,7 @@ flowchart LR
 
 ## 대표 화면
 
-| 최신 시장 | 아카이브 검색 | 배치 운영 |
+| 최신 시장 | 아카이브 | 배치 운영 |
 | --- | --- | --- |
 | [![Latest Market](./screenshots/01-latest-ready-dark-desktop.png)](./screenshots/01-latest-ready-dark-desktop.png) | [![Archive Search](./screenshots/14-archive-search-populated-desktop.png)](./screenshots/14-archive-search-populated-desktop.png) | [![Batch Operations](./screenshots/26-batch-mixed-default-failed-desktop.png)](./screenshots/26-batch-mixed-default-failed-desktop.png) |
 
