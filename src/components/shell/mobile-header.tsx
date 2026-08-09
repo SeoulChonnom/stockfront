@@ -21,7 +21,7 @@ export function MobileHeader({
   onToggleTheme: () => void;
 }) {
   return (
-    <header className='sticky top-0 z-(--z-sticky) flex h-16 items-center gap-3 border-b border-line bg-[color:var(--surface)] px-3 min-[1025px]:hidden'>
+    <header className='sticky top-0 z-(--z-sticky) flex h-(--topbar-height) items-center gap-3 border-b border-line bg-[color:var(--surface)] px-3 min-[1025px]:hidden'>
       <Button
         aria-expanded={isDrawerOpen}
         aria-label='주요 메뉴 열기'

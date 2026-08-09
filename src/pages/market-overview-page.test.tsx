@@ -125,7 +125,7 @@ describe('MarketOverviewPage — 대표 지수 표', () => {
         />
       );
 
-      await user.click(screen.getByRole('button', { name: '섹션 이동' }));
+      await user.click(screen.getByRole('button', { name: /섹션 이동/ }));
 
       const heading = screen.getByRole('heading', {
         level: 2,
@@ -149,6 +149,61 @@ describe('MarketOverviewPage — 대표 지수 표', () => {
           .scrollIntoView;
       }
     }
+  });
+
+  it('keeps section navigation sticky below the mobile shell and horizontally contained', () => {
+    const snapshot = buildSnapshot({
+      markets: [
+        buildSnapshot().markets[0],
+        {
+          ...buildSnapshot().markets[0],
+          label: '한국 증시',
+          marketType: 'KR',
+        },
+      ],
+    });
+
+    render(
+      <MarketOverviewPage mode='latest' now={FIXED_NOW} snapshot={snapshot} />
+    );
+
+    const navigation = screen.getByRole('navigation', {
+      name: '시장 섹션 탐색',
+    });
+    expect(
+      navigation.closest('section[aria-labelledby="page-title"]')
+    ).toBeNull();
+    expect(navigation).toHaveClass('sticky', 'top-0', 'z-(--z-sticky)');
+    expect(navigation).toHaveClass('max-[1024px]:top-(--topbar-height)');
+    expect(navigation).toHaveClass(
+      'max-[1024px]:pb-[env(safe-area-inset-bottom)]'
+    );
+
+    const scroller = navigation.querySelector('[data-section-nav-scroll]');
+    expect(scroller).not.toBeNull();
+    expect(scroller).toHaveClass('min-w-0', 'max-w-full', 'overflow-x-auto');
+    expect(screen.getAllByRole('button', { name: /섹션 이동/ })).toHaveLength(
+      2
+    );
+  });
+
+  it('gives market sections enough scroll margin for the shell and sticky navigation', () => {
+    render(
+      <MarketOverviewPage
+        mode='latest'
+        now={FIXED_NOW}
+        snapshot={buildSnapshot()}
+      />
+    );
+
+    const section = document.getElementById('mk-section-0');
+    expect(section).not.toBeNull();
+    expect(section).toHaveClass(
+      'scroll-mt-[calc(var(--section-nav-height)+var(--gap))]'
+    );
+    expect(section).toHaveClass(
+      'max-[1024px]:scroll-mt-[calc(var(--topbar-height)+var(--section-nav-height)+var(--gap))]'
+    );
   });
 });
 
@@ -209,6 +264,59 @@ describe('MarketOverviewPage — PARTIAL 배너', () => {
 });
 
 describe('MarketOverviewPage — 근거 원문', () => {
+  it('keeps the lower evidence block separate from row source actions', () => {
+    const rowOriginalUrl = 'https://example.com/row-original';
+    const snapshot = buildSnapshot();
+    snapshot.markets[0] = {
+      ...snapshot.markets[0],
+      clusters: [
+        {
+          id: 'cluster-1',
+          articleCount: 1,
+          title: '대표 이슈',
+          summary: '대표 이슈 요약',
+          tags: [],
+          representativeArticle: {
+            title: '대표 기사',
+            source: '한국경제',
+            publishedAt: '2026-03-17 08:00 KST',
+            originalUrl: rowOriginalUrl,
+            mirrorUrl: null,
+          },
+        },
+      ],
+      articleLinks: [
+        {
+          id: 'evidence-1',
+          clusterId: 'cluster-1',
+          clusterTitle: '대표 이슈',
+          title: '근거 기사',
+          source: '한국경제',
+          publishedAt: '2026-03-17 08:00 KST',
+          originalUrl: 'https://example.com/evidence',
+          mirrorUrl: null,
+        },
+      ],
+    };
+
+    render(
+      <MarketOverviewPage mode='latest' now={FIXED_NOW} snapshot={snapshot} />
+    );
+
+    expect(
+      screen.getByRole('heading', { name: '근거 원문' })
+    ).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: '근거 기사 ↗' })).toHaveAttribute(
+      'href',
+      'https://example.com/evidence'
+    );
+    expect(
+      screen
+        .getAllByRole('link')
+        .filter((link) => link.getAttribute('href') === rowOriginalUrl)
+    ).toHaveLength(1);
+  });
+
   it('toggles aria-expanded and reveals links beyond the first 4', async () => {
     const user = userEvent.setup();
     const snapshot = buildSnapshot();

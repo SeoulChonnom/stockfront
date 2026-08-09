@@ -120,27 +120,29 @@ function IssueRow({
             이슈 상세
           </a>
         </Button>
-        {originalUrl ? (
-          <Button
-            asChild
-            className='min-h-9 px-3 text-body-sm'
-            size='sm'
-            variant='secondary'
-          >
-            <a href={originalUrl} rel='noopener noreferrer' target='_blank'>
-              원문 ↗
-            </a>
-          </Button>
-        ) : null}
-        {mirrorUrl ? (
-          <a
-            className='text-[12px] text-faint underline'
-            href={mirrorUrl}
-            rel='noopener noreferrer'
-            target='_blank'
-          >
-            네이버 미러 ↗
-          </a>
+        {originalUrl || mirrorUrl ? (
+          <div className='flex flex-wrap items-center gap-x-2.5 gap-y-1 text-body-sm text-faint'>
+            {originalUrl ? (
+              <a
+                className='underline underline-offset-2 hover:text-[color:var(--primary)]'
+                href={originalUrl}
+                rel='noopener noreferrer'
+                target='_blank'
+              >
+                원문 ↗
+              </a>
+            ) : null}
+            {mirrorUrl ? (
+              <a
+                className='underline underline-offset-2 hover:text-[color:var(--primary)]'
+                href={mirrorUrl}
+                rel='noopener noreferrer'
+                target='_blank'
+              >
+                네이버 미러 ↗
+              </a>
+            ) : null}
+          </div>
         ) : null}
       </div>
     </article>

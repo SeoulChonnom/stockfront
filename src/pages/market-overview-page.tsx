@@ -9,6 +9,7 @@ import {
 } from './market-overview/date-utils';
 import { DecisionHeaderCard } from './market-overview/decision-header-card';
 import { EmptyMarketsPanel } from './market-overview/empty-markets-panel';
+import { MarketSectionNavigation } from './market-overview/market-compare-strip';
 import { MarketSection } from './market-overview/market-section';
 import {
   type ClusterOriginQuery,
@@ -75,6 +76,8 @@ export function MarketOverviewPage({
         now={now}
         snapshot={snapshot}
       />
+
+      <MarketSectionNavigation markets={snapshot.markets} />
 
       <PartialBanner canViewOps={canViewOps} snapshot={snapshot} />
 

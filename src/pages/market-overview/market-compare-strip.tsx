@@ -46,7 +46,7 @@ export function MarketCompareStrip({
   }
 
   return (
-    <div className='grid grid-cols-1 gap-3 lg:grid-cols-2'>
+    <div className='grid min-w-0 grid-cols-1 gap-3 lg:grid-cols-2'>
       {/* Position *is* the identity — `index` also builds the
           `mk-section-{index}` anchor this tile scrolls to, so it has to match
           the section list's ordering. */}
@@ -55,19 +55,60 @@ export function MarketCompareStrip({
           // biome-ignore lint/suspicious/noArrayIndexKey: position is the identity — see above
           key={`${market.label}-${index}`}
           market={market}
-          targetId={`mk-section-${index}`}
         />
       ))}
     </div>
   );
 }
 
+export function MarketSectionNavigation({
+  markets,
+}: {
+  markets: MarketSnapshot['markets'];
+}) {
+  if (markets.length === 0) {
+    return null;
+  }
+
+  return (
+    <nav
+      aria-label='시장 섹션 탐색'
+      className='sticky top-0 z-(--z-sticky) min-w-0 max-w-full border-y border-line bg-[color:var(--surface)] shadow-(--sh2) min-[1025px]:rounded-[var(--r-md)] max-[1024px]:top-(--topbar-height) max-[1024px]:pb-[env(safe-area-inset-bottom)]'
+    >
+      <div
+        className='flex h-(--section-nav-height) min-w-0 max-w-full items-center gap-2 overflow-x-auto px-2 [scrollbar-width:none]'
+        data-section-nav-scroll
+      >
+        <span className='shrink-0 text-label font-semibold tracking-[0.06em] text-faint'>
+          시장 섹션
+        </span>
+        {markets.map((market, index) => {
+          const targetId = `mk-section-${index}`;
+
+          return (
+            <Button
+              aria-controls={targetId}
+              aria-label={`${market.label} 섹션 이동`}
+              className='shrink-0 px-2.5 text-body-sm'
+              key={targetId}
+              onClick={() => scrollToMarketSection(targetId)}
+              size='sm'
+              type='button'
+              variant='ghost'
+            >
+              섹션 이동
+            </Button>
+          );
+        })}
+      </div>
+    </nav>
+  );
+}
+
 function MarketCompareTile({
   market,
-  targetId,
 }: {
   market: MarketSnapshot['markets'][number];
-  targetId: string;
 }) {
   const lead = market.indices[0];
 
@@ -83,15 +124,6 @@ function MarketCompareTile({
         <span className='min-w-0 truncate text-body font-semibold text-fg'>
           {market.label}
         </span>
-        <Button
-          className='ml-auto min-h-8 shrink-0 px-2.5 text-[12px]'
-          onClick={() => scrollToMarketSection(targetId)}
-          size='sm'
-          type='button'
-          variant='ghost'
-        >
-          섹션 이동
-        </Button>
       </div>
       <div className='flex flex-wrap items-baseline gap-2.5'>
         <span className='text-body-sm text-faint'>
