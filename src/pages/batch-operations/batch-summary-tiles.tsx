@@ -32,7 +32,7 @@ function SummaryTile({
     <Card
       className={cn(
         // Keep tile spacing independent from its status tone.
-        'min-w-0 px-4 py-3.5',
+        'min-w-0 px-2 py-2 min-[641px]:px-4 min-[641px]:py-3.5',
         TILE_BAR_CLASSES[tone]
       )}
     >
@@ -41,13 +41,15 @@ function SummaryTile({
       </p>
       <p
         className={cn(
-          'mono m-0 text-[26px] font-semibold',
+          'mono m-0 text-[22px] font-semibold min-[641px]:text-[26px]',
           TILE_NUMBER_CLASSES[tone]
         )}
       >
         {value}
       </p>
-      <p className='wrap-anywhere m-0 text-[12px] text-fg-soft'>{supporting}</p>
+      <p className='wrap-anywhere m-0 text-caption text-fg-soft min-[641px]:text-[12px]'>
+        {supporting}
+      </p>
     </Card>
   );
 }
@@ -67,7 +69,7 @@ export function BatchSummaryTiles({
     // biome-ignore lint/a11y/useSemanticElements: Biome suggests <fieldset>, but these are read-only status tiles, not grouped form controls
     <div
       aria-label='배치 실행 요약'
-      className='grid min-w-0 grid-cols-1 gap-3 min-[641px]:grid-cols-2 min-[1181px]:grid-cols-3'
+      className='grid min-w-0 grid-cols-3 gap-2 min-[641px]:grid-cols-2 min-[641px]:gap-3 min-[1181px]:grid-cols-3'
       role='group'
     >
       <SummaryTile
