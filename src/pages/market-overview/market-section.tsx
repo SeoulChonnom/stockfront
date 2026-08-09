@@ -39,7 +39,7 @@ export function MarketSection({
   return (
     <section
       aria-labelledby={headingId}
-      className='flex min-w-0 scroll-mt-[calc(var(--section-nav-height)+var(--gap))] flex-col overflow-hidden rounded-[var(--r-lg)] border border-line bg-[color:var(--surface)] max-[1024px]:scroll-mt-[calc(var(--topbar-height)+var(--section-nav-height)+var(--gap))]'
+      className='flex min-w-0 scroll-mt-[calc(var(--section-nav-height)+var(--gap))] flex-col overflow-hidden rounded-[var(--r-lg)] border border-line bg-[color:var(--surface)] max-[1025px]:scroll-mt-[calc(var(--topbar-height)+var(--section-nav-height)+var(--gap))]'
       id={`mk-section-${index}`}
     >
       <div className='flex flex-wrap items-baseline gap-x-3 gap-y-2 border-b border-line px-[18px] py-4'>

@@ -174,14 +174,22 @@ describe('MarketOverviewPage — 대표 지수 표', () => {
       navigation.closest('section[aria-labelledby="page-title"]')
     ).toBeNull();
     expect(navigation).toHaveClass('sticky', 'top-0', 'z-(--z-sticky)');
-    expect(navigation).toHaveClass('max-[1024px]:top-(--topbar-height)');
-    expect(navigation).toHaveClass(
-      'max-[1024px]:pb-[env(safe-area-inset-bottom)]'
-    );
+    expect(navigation).toHaveClass('max-[1025px]:top-(--topbar-height)');
+    expect(
+      [...navigation.classList].some((className) =>
+        className.includes('safe-area-inset-bottom')
+      )
+    ).toBe(false);
 
     const scroller = navigation.querySelector('[data-section-nav-scroll]');
     expect(scroller).not.toBeNull();
-    expect(scroller).toHaveClass('min-w-0', 'max-w-full', 'overflow-x-auto');
+    expect(scroller).toHaveClass(
+      'min-w-0',
+      'max-w-full',
+      'overflow-x-auto',
+      'ps-[max(0.5rem,env(safe-area-inset-left))]',
+      'pe-[max(0.5rem,env(safe-area-inset-right))]'
+    );
     expect(screen.getAllByRole('button', { name: /섹션 이동/ })).toHaveLength(
       2
     );
@@ -202,7 +210,7 @@ describe('MarketOverviewPage — 대표 지수 표', () => {
       'scroll-mt-[calc(var(--section-nav-height)+var(--gap))]'
     );
     expect(section).toHaveClass(
-      'max-[1024px]:scroll-mt-[calc(var(--topbar-height)+var(--section-nav-height)+var(--gap))]'
+      'max-[1025px]:scroll-mt-[calc(var(--topbar-height)+var(--section-nav-height)+var(--gap))]'
     );
   });
 });

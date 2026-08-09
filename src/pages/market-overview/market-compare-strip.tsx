@@ -73,10 +73,10 @@ export function MarketSectionNavigation({
   return (
     <nav
       aria-label='시장 섹션 탐색'
-      className='sticky top-0 z-(--z-sticky) min-w-0 max-w-full border-y border-line bg-[color:var(--surface)] shadow-(--sh2) min-[1025px]:rounded-[var(--r-md)] max-[1024px]:top-(--topbar-height) max-[1024px]:pb-[env(safe-area-inset-bottom)]'
+      className='sticky top-0 z-(--z-sticky) min-w-0 max-w-full border-y border-line bg-[color:var(--surface)] shadow-(--sh2) min-[1025px]:rounded-[var(--r-md)] max-[1025px]:top-(--topbar-height)'
     >
       <div
-        className='flex h-(--section-nav-height) min-w-0 max-w-full items-center gap-2 overflow-x-auto px-2 [scrollbar-width:none]'
+        className='flex h-(--section-nav-height) min-w-0 max-w-full items-center gap-2 overflow-x-auto ps-[max(0.5rem,env(safe-area-inset-left))] pe-[max(0.5rem,env(safe-area-inset-right))] [scrollbar-width:none]'
         data-section-nav-scroll
       >
         <span className='shrink-0 text-label font-semibold tracking-[0.06em] text-faint'>
