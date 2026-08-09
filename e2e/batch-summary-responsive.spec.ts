@@ -18,6 +18,23 @@ for (const width of [320, 390]) {
     const tiles = group.locator(':scope > div');
     await expect(tiles).toHaveCount(3);
 
+    // Wait for the ready fixture's summary response rather than measuring the
+    // zero-valued fallback rendered while useBatchJobs is still pending.
+    const failedValues = group.getByText('6', { exact: true });
+    await expect(failedValues).toHaveCount(2);
+    await expect(failedValues.nth(0)).toBeVisible();
+    await expect(failedValues.nth(1)).toBeVisible();
+    await expect(group.getByText('41', { exact: true })).toBeVisible();
+    await expect(
+      group.getByText('스냅샷 미생성 · 재실행 필요', { exact: true })
+    ).toBeVisible();
+    await expect(
+      group.getByText('일부 지수·요약 누락', { exact: true })
+    ).toBeVisible();
+    await expect(
+      group.getByText('평균 소요 2분 49초', { exact: true })
+    ).toBeVisible();
+
     const geometry = await tiles.evaluateAll((elements) =>
       elements.map((element) => {
         const rect = element.getBoundingClientRect();
