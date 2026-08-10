@@ -194,12 +194,7 @@ export function BatchDetailContent({
         ) : null}
       </DescriptionList>
 
-      <PipelineStages
-        currentStep={run.currentStep}
-        errorCode={run.errorCode}
-        jobStatus={run.rawStatus}
-        jobType={run.jobType}
-      />
+      <PipelineStages steps={run.steps} />
 
       {impacts.length > 0 ? (
         <div className='min-w-0'>

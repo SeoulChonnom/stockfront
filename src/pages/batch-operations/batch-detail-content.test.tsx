@@ -158,4 +158,27 @@ describe('BatchDetailContent', () => {
     });
     expect(onAnnounce).toHaveBeenCalledWith('AI 요약 재시도가 접수되었습니다.');
   });
+
+  it('renders a succeeded step run with its label and formatted duration', () => {
+    render(
+      <BatchDetailContent
+        {...createProps({
+          run: createRun({
+            steps: [
+              {
+                stepCode: 'CREATE_JOB',
+                label: '작업 생성',
+                status: 'SUCCEEDED',
+                duration: '12ms',
+              },
+            ],
+          }),
+        })}
+      />
+    );
+
+    expect(screen.getByText('작업 생성')).toBeInTheDocument();
+    expect(screen.getByText('성공')).toBeInTheDocument();
+    expect(screen.getByText('12ms')).toBeInTheDocument();
+  });
 });
