@@ -262,16 +262,37 @@ export type BatchNewsCollectionDetail = {
 };
 
 /**
+ * `docs/api_spec.json`'s `BatchJobStepRunResponse` — one persisted execution
+ * record from the step-history table. Retries and checkpoint resumes repeat
+ * `stepCode`; the backend returns items in persisted execution order (not
+ * sorted, not deduplicated). `src/lib/mappers/batch.ts` maps this array
+ * as-is into `BatchStepRunView[]` — no inference from job-level `status`,
+ * `currentStep`, or `errorCode` once `steps` is present.
+ */
+export type BatchJobStepRunResponse = {
+  stepCode: string;
+  status: 'RUNNING' | 'SUCCEEDED' | 'FAILED';
+  startedAt: string;
+  endedAt: string | null;
+  durationMs: number | null;
+  errorMessage: string | null;
+  errorLog: string | null;
+};
+
+/**
  * `docs/api_spec.json`'s `BatchJobDetailResponse`. Deliberately NOT
  * `BatchListItem & {...}` any more — the real detail response nests the
  * snapshot/news-collection fields under `snapshot`/`newsCollection` instead
  * of carrying them flat, and drops `marketScope` entirely. Also drops the
  * old `stages: BatchStage[]`/`impact`/`retryable` fields this file used to
  * fabricate: none of those three ever existed in any real API contract
- * (old or new) and the app never read them from the wire — `PipelineStages`
- * derives its own stage view from `jobType`/`status`/`errorCode`/
- * `currentStep`, and `format-batch.ts` derives impact/retryable from the
- * mapped `BatchRunRow` client-side.
+ * (old or new) and the app never read them from the wire.
+ *
+ * `steps` replaces the job-level-inferred `PipelineStages` view: the
+ * backend now persists one `BatchJobStepRunResponse` per step execution
+ * (including retries), and `PipelineStages` renders that array directly, in
+ * order, without deriving anything from `status`/`currentStep`/`errorCode`.
+ * Old jobs predating step-history persistence return `steps: []`.
  */
 export type BatchDetail = {
   jobId: number;
@@ -289,6 +310,7 @@ export type BatchDetail = {
   logSummary: string | null;
   snapshot: BatchSnapshotDetail | null;
   newsCollection: BatchNewsCollectionDetail | null;
+  steps: BatchJobStepRunResponse[];
 };
 
 export type TriggerSuccess = {
@@ -1279,17 +1301,142 @@ function syntheticRunningJob(jobId: number): BatchListItem {
   };
 }
 
+/**
+ * Step codes actually implemented per jobType (see `src/lib/batch-type.ts`'s
+ * `BATCH_STEP_LABELS`), in persisted execution order. Independent from
+ * `BATCH_STAGE_KEYS` above (which only feeds `currentStep`, a field the
+ * step-history view no longer consults) — kept separate on purpose so a
+ * change to one doesn't silently reshape the other.
+ */
+const SNAPSHOT_STEP_ORDER: readonly string[] = [
+  'CREATE_JOB',
+  'PREPARE_MARKET_CONTEXTS',
+  'BUILD_CLUSTERS',
+  'COLLECT_MARKET_INDICES',
+  'GENERATE_AI_SUMMARIES',
+  'BUILD_PAGE_SNAPSHOT',
+  'FINALIZE_JOB',
+];
+
+const NEWS_COLLECTION_STEP_ORDER: readonly string[] = [
+  'CREATE_JOB',
+  'PREPARE_MARKET_CONTEXTS',
+  'COLLECT_NEWS',
+  'COLLECT_NAVER_NEWS',
+  'DEDUPE_ARTICLES',
+  'COLLECT_MARKET_INDICES',
+  'FINALIZE_JOB',
+];
+
+function addMs(iso: string, ms: number): string {
+  const dt = new Date(`${iso}Z`);
+  dt.setUTCMilliseconds(dt.getUTCMilliseconds() + ms);
+  return dt.toISOString().replace(/\.\d{3}Z$/, '');
+}
+
+/**
+ * Builds one `BatchJobStepRunResponse` per step in `order`, in order, ending
+ * either at the last step (job finished) or at `failIndex`/`runningIndex`
+ * (job stopped mid-pipeline) — never both. Mirrors the real backend: a
+ * FAILED or RUNNING job's `steps` array only contains records for steps that
+ * actually started, not the full pipeline padded with placeholders.
+ */
+function buildStepRuns(
+  order: readonly string[],
+  startedAt: string,
+  opts: {
+    failIndex?: number;
+    runningIndex?: number;
+    errorMessage?: string | null;
+    errorLog?: string | null;
+    stepDurationMs: number;
+  }
+): BatchJobStepRunResponse[] {
+  const stopIndex = opts.failIndex ?? opts.runningIndex ?? order.length - 1;
+  const runs: BatchJobStepRunResponse[] = [];
+  let cursor = startedAt;
+  for (let i = 0; i <= stopIndex; i += 1) {
+    const stepCode = order[i];
+    const isStopStep = i === stopIndex;
+    const isRunningStep = isStopStep && opts.runningIndex !== undefined;
+    const isFailedStep = isStopStep && opts.failIndex !== undefined;
+    const duration = isRunningStep ? null : opts.stepDurationMs;
+    const endedAt = isRunningStep ? null : addMs(cursor, opts.stepDurationMs);
+    runs.push({
+      stepCode,
+      status: isRunningStep ? 'RUNNING' : isFailedStep ? 'FAILED' : 'SUCCEEDED',
+      startedAt: cursor,
+      endedAt,
+      durationMs: duration,
+      errorMessage: isFailedStep ? (opts.errorMessage ?? null) : null,
+      errorLog: isFailedStep ? (opts.errorLog ?? null) : null,
+    });
+    cursor = endedAt ?? cursor;
+  }
+  return runs;
+}
+
+/**
+ * jobId 1036 (MARKET_SNAPSHOT, otherwise a plain SUCCESS job — see
+ * `BATCH_ALL`) additionally carries a real AI-summary retry: `AI_RETRY_SELECT`
+ * succeeds, the first `AI_RETRY_GENERATE` attempt FAILS, and a second
+ * `AI_RETRY_GENERATE` attempt SUCCEEDS (`durationMs: 4210`) before
+ * `AI_RETRY_BUILD_PAGE`/`AI_RETRY_FINALIZE` finish the retry. Exercises the
+ * "repeated stepCode, retained order, duration only on the successful row"
+ * contract end to end (`e2e/batch-ops.spec.ts`).
+ */
+const AI_RETRY_STEP_JOB_ID = 1036;
+
+function buildAiRetryStepRuns(afterIso: string): BatchJobStepRunResponse[] {
+  let cursor = addMs(afterIso, 60_000);
+  const step = (
+    stepCode: string,
+    status: BatchJobStepRunResponse['status'],
+    durationMs: number | null,
+    errorMessage: string | null = null
+  ): BatchJobStepRunResponse => {
+    const startedAt = cursor;
+    const endedAt = durationMs === null ? null : addMs(startedAt, durationMs);
+    cursor = endedAt ?? cursor;
+    return {
+      stepCode,
+      status,
+      startedAt,
+      endedAt,
+      durationMs,
+      errorMessage,
+      errorLog: errorMessage
+        ? '2026-07-27T09:25:31 step=AI_RETRY_GENERATE status=timeout elapsed_ms=8120 retry=1/1'
+        : null,
+    };
+  };
+
+  return [
+    step('AI_RETRY_SELECT', 'SUCCEEDED', 340),
+    step(
+      'AI_RETRY_GENERATE',
+      'FAILED',
+      8120,
+      'AI 요약 재처리 중 응답 제한 시간을 초과했습니다.'
+    ),
+    step('AI_RETRY_GENERATE', 'SUCCEEDED', 4210),
+    step('AI_RETRY_BUILD_PAGE', 'SUCCEEDED', 610),
+    step('AI_RETRY_FINALIZE', 'SUCCEEDED', 45),
+  ];
+}
+
 export function batchDetailFixture(jobId: number, mode?: string): BatchDetail {
   const item =
     BATCH_ALL.find((r) => r.jobId === jobId) ?? syntheticRunningJob(jobId);
   const failed = item.status === 'FAILED';
   const partial = item.status === 'PARTIAL';
+  const running = item.status === 'RUNNING';
   const isSnapshot = item.jobType === 'MARKET_SNAPSHOT';
-  // Distinct per-type errorCode so `pipeline-stages.tsx`'s errorCode->stage
-  // keyword table (unchanged by this pass) actually resolves to a stage
-  // that exists in THIS job's 6-stage list: /NEWS/ -> '뉴스 수집' (only in
-  // NEWS_COLLECTION's list), /SUMMARY|AI|LLM|GPT/ -> 'AI 요약 생성' (only
-  // in MARKET_SNAPSHOT's list).
+  const stepOrder = isSnapshot
+    ? SNAPSHOT_STEP_ORDER
+    : NEWS_COLLECTION_STEP_ORDER;
+  // Distinct per-type errorCode/errorMessage so the failure reads coherently
+  // against whichever step actually failed below.
   const errorCode = failed
     ? isSnapshot
       ? 'AI_SUMMARY_TIMEOUT'
@@ -1300,6 +1447,40 @@ export function batchDetailFixture(jobId: number, mode?: string): BatchDetail {
       ? 'AI 요약 생성 단계에서 응답 제한 시간을 초과했습니다. 재시도 3회를 모두 소진한 뒤 작업이 중단됐습니다.'
       : '원문 공급자 응답 제한 시간을 초과했습니다. 재시도 3회를 모두 소진한 뒤 작업이 중단됐습니다.'
     : null;
+
+  // Jobs older than roughly business date 2026-07-10 (jobId < 1010) predate
+  // step-history persistence on the backend — real old jobs return `steps:
+  // []` rather than a fabricated pipeline, and this fixture set mirrors
+  // that instead of inventing history nothing ever recorded.
+  const isOldJob = item.jobId < 1010;
+  const stepDurationMs = item.durationSeconds
+    ? Math.max(80, Math.round((item.durationSeconds * 1000) / stepOrder.length))
+    : 1200;
+  const failStepIndex = isSnapshot
+    ? stepOrder.indexOf('GENERATE_AI_SUMMARIES')
+    : stepOrder.indexOf('COLLECT_NEWS');
+  const runningStepIndex = Math.max(1, stepOrder.length - 3);
+
+  const steps: BatchJobStepRunResponse[] = isOldJob
+    ? []
+    : failed
+      ? buildStepRuns(stepOrder, item.startedAt, {
+          failIndex: failStepIndex,
+          errorMessage,
+          errorLog: LONG_LOG.slice(0, 800),
+          stepDurationMs,
+        })
+      : running
+        ? buildStepRuns(stepOrder, item.startedAt, {
+            runningIndex: runningStepIndex,
+            stepDurationMs,
+          })
+        : jobId === AI_RETRY_STEP_JOB_ID
+          ? [
+              ...buildStepRuns(stepOrder, item.startedAt, { stepDurationMs }),
+              ...buildAiRetryStepRuns(item.endedAt ?? item.startedAt),
+            ]
+          : buildStepRuns(stepOrder, item.startedAt, { stepDurationMs });
 
   return {
     jobId: item.jobId,
@@ -1354,6 +1535,7 @@ export function batchDetailFixture(jobId: number, mode?: string): BatchDetail {
           insertedCount: item.processedNewsCount,
           coverageComplete: !failed,
         },
+    steps,
   };
 }
 

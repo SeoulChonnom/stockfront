@@ -1,0 +1,3087 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Market Daily Brief API",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/stock/api/health": {
+      "get": {
+        "tags": [
+          "health"
+        ],
+        "summary": "Health",
+        "operationId": "health_stock_api_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/stock/api/batch/news-collection": {
+      "post": {
+        "tags": [
+          "batch"
+        ],
+        "summary": "Start Naver News Collection",
+        "operationId": "start_naver_news_collection_stock_api_batch_news_collection_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/NewsCollectionRunRequest"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Payload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiSuccess_NewsCollectionRunResponse_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/stock/api/batch/market-daily": {
+      "post": {
+        "tags": [
+          "batch"
+        ],
+        "summary": "Start Market Daily Batch",
+        "operationId": "start_market_daily_batch_stock_api_batch_market_daily_post",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200,
+                  "pattern": ".*\\S.*"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/BatchRunRequest"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Payload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiSuccess_BatchRunResponse_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/stock/api/batch/jobs": {
+      "get": {
+        "tags": [
+          "batch"
+        ],
+        "summary": "List Batch Jobs",
+        "operationId": "list_batch_jobs_stock_api_batch_jobs_get",
+        "parameters": [
+          {
+            "name": "fromDate",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Fromdate"
+            }
+          },
+          {
+            "name": "toDate",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Todate"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/BatchJobStatus"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "name": "jobType",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/BatchJobType"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Jobtype"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 20,
+              "title": "Size"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiSuccess_BatchJobListResponse_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/stock/api/batch/jobs/{jobId}": {
+      "get": {
+        "tags": [
+          "batch"
+        ],
+        "summary": "Get Batch Job Detail",
+        "operationId": "get_batch_job_detail_stock_api_batch_jobs__jobId__get",
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "title": "Jobid"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiSuccess_BatchJobDetailResponse_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/stock/api/batch/jobs/{jobId}/retry-ai": {
+      "post": {
+        "tags": [
+          "batch"
+        ],
+        "summary": "Retry Ai Summaries",
+        "operationId": "retry_ai_summaries_stock_api_batch_jobs__jobId__retry_ai_post",
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "title": "Jobid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200,
+                  "pattern": ".*\\S.*"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiSuccess_AiRetryRunResponse_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/stock/api/pages/archive": {
+      "get": {
+        "tags": [
+          "archive"
+        ],
+        "summary": "List Archive",
+        "operationId": "list_archive_stock_api_pages_archive_get",
+        "parameters": [
+          {
+            "name": "fromDate",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Fromdate"
+            }
+          },
+          {
+            "name": "toDate",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Todate"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/ArchiveStatus"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 30,
+              "title": "Size"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiSuccess_ArchiveListResponse_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/stock/api/pages/daily/latest": {
+      "get": {
+        "tags": [
+          "pages"
+        ],
+        "summary": "Get Latest Page",
+        "operationId": "get_latest_page_stock_api_pages_daily_latest_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiSuccess_DailyPageResponse_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/stock/api/pages/daily": {
+      "get": {
+        "tags": [
+          "pages"
+        ],
+        "summary": "Get Page By Business Date",
+        "operationId": "get_page_by_business_date_stock_api_pages_daily_get",
+        "parameters": [
+          {
+            "name": "businessDate",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "title": "Businessdate"
+            }
+          },
+          {
+            "name": "versionNo",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Versionno"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiSuccess_DailyPageResponse_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/stock/api/pages/{pageId}": {
+      "get": {
+        "tags": [
+          "pages"
+        ],
+        "summary": "Get Page By Id",
+        "operationId": "get_page_by_id_stock_api_pages__pageId__get",
+        "parameters": [
+          {
+            "name": "pageId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "title": "Pageid"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiSuccess_DailyPageResponse_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/stock/api/news/clusters/{clusterId}": {
+      "get": {
+        "tags": [
+          "news"
+        ],
+        "summary": "Get Cluster Detail",
+        "operationId": "get_cluster_detail_stock_api_news_clusters__clusterId__get",
+        "parameters": [
+          {
+            "name": "clusterId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Clusterid"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiSuccess_ClusterDetailResponse_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AiRetryRunResponse": {
+        "properties": {
+          "jobId": {
+            "type": "integer",
+            "title": "Jobid"
+          },
+          "jobName": {
+            "type": "string",
+            "title": "Jobname"
+          },
+          "businessDate": {
+            "type": "string",
+            "format": "date",
+            "title": "Businessdate"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "runMode": {
+            "type": "string",
+            "title": "Runmode"
+          },
+          "sourceJobId": {
+            "type": "integer",
+            "title": "Sourcejobid"
+          },
+          "sourcePageId": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sourcepageid"
+          },
+          "idempotencyKey": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Idempotencykey"
+          },
+          "startedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Startedat"
+          }
+        },
+        "type": "object",
+        "required": [
+          "jobId",
+          "jobName",
+          "businessDate",
+          "status",
+          "runMode",
+          "sourceJobId",
+          "startedAt"
+        ],
+        "title": "AiRetryRunResponse"
+      },
+      "ApiSuccess_AiRetryRunResponse_": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/AiRetryRunResponse"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/MetaPayload"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "title": "ApiSuccess[AiRetryRunResponse]"
+      },
+      "ApiSuccess_ArchiveListResponse_": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/ArchiveListResponse"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/MetaPayload"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "title": "ApiSuccess[ArchiveListResponse]"
+      },
+      "ApiSuccess_BatchJobDetailResponse_": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/BatchJobDetailResponse"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/MetaPayload"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "title": "ApiSuccess[BatchJobDetailResponse]"
+      },
+      "ApiSuccess_BatchJobListResponse_": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/BatchJobListResponse"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/MetaPayload"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "title": "ApiSuccess[BatchJobListResponse]"
+      },
+      "ApiSuccess_BatchRunResponse_": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/BatchRunResponse"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/MetaPayload"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "title": "ApiSuccess[BatchRunResponse]"
+      },
+      "ApiSuccess_ClusterDetailResponse_": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/ClusterDetailResponse"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/MetaPayload"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "title": "ApiSuccess[ClusterDetailResponse]"
+      },
+      "ApiSuccess_DailyPageResponse_": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/DailyPageResponse"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/MetaPayload"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "title": "ApiSuccess[DailyPageResponse]"
+      },
+      "ApiSuccess_NewsCollectionRunResponse_": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/NewsCollectionRunResponse"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/MetaPayload"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "title": "ApiSuccess[NewsCollectionRunResponse]"
+      },
+      "ArchiveItemResponse": {
+        "properties": {
+          "pageId": {
+            "type": "integer",
+            "title": "Pageid"
+          },
+          "businessDate": {
+            "type": "string",
+            "format": "date",
+            "title": "Businessdate"
+          },
+          "pageTitle": {
+            "type": "string",
+            "title": "Pagetitle"
+          },
+          "headlineSummary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Headlinesummary"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "generatedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Generatedat"
+          },
+          "partialMessage": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Partialmessage"
+          }
+        },
+        "type": "object",
+        "required": [
+          "pageId",
+          "businessDate",
+          "pageTitle",
+          "status",
+          "generatedAt"
+        ],
+        "title": "ArchiveItemResponse"
+      },
+      "ArchiveListResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ArchiveItemResponse"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationResponse"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "pagination"
+        ],
+        "title": "ArchiveListResponse"
+      },
+      "ArchiveStatus": {
+        "type": "string",
+        "enum": [
+          "READY",
+          "PARTIAL",
+          "FAILED"
+        ]
+      },
+      "ArticleLinkResponse": {
+        "properties": {
+          "processedArticleId": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Processedarticleid"
+          },
+          "clusterId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Clusterid"
+          },
+          "clusterTitle": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Clustertitle"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "publisherName": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Publishername"
+          },
+          "publishedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Publishedat"
+          },
+          "originLink": {
+            "type": "string",
+            "title": "Originlink"
+          },
+          "naverLink": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Naverlink"
+          }
+        },
+        "type": "object",
+        "required": [
+          "title",
+          "originLink"
+        ],
+        "title": "ArticleLinkResponse"
+      },
+      "BatchJobDetailResponse": {
+        "properties": {
+          "jobId": {
+            "type": "integer",
+            "title": "Jobid"
+          },
+          "jobName": {
+            "type": "string",
+            "title": "Jobname"
+          },
+          "jobType": {
+            "type": "string",
+            "title": "Jobtype"
+          },
+          "businessDate": {
+            "type": "string",
+            "format": "date",
+            "title": "Businessdate"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "runMode": {
+            "type": "string",
+            "title": "Runmode"
+          },
+          "sourceJobId": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sourcejobid"
+          },
+          "sourcePageId": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sourcepageid"
+          },
+          "queuedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Queuedat"
+          },
+          "attemptCount": {
+            "type": "integer",
+            "title": "Attemptcount"
+          },
+          "maxAttempts": {
+            "type": "integer",
+            "title": "Maxattempts"
+          },
+          "currentStep": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currentstep"
+          },
+          "startedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Startedat"
+          },
+          "endedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Endedat"
+          },
+          "durationSeconds": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Durationseconds"
+          },
+          "partialMessage": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Partialmessage"
+          },
+          "errorCode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Errorcode"
+          },
+          "errorMessage": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Errormessage"
+          },
+          "logSummary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Logsummary"
+          },
+          "snapshot": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BatchJobSnapshotDetail"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "newsCollection": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BatchJobNewsCollectionDetail"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "steps": {
+            "items": {
+              "$ref": "#/components/schemas/BatchJobStepRunResponse"
+            },
+            "type": "array",
+            "title": "Steps",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "jobId",
+          "jobName",
+          "jobType",
+          "businessDate",
+          "status",
+          "runMode",
+          "attemptCount",
+          "maxAttempts",
+          "startedAt"
+        ],
+        "title": "BatchJobDetailResponse"
+      },
+      "BatchJobListItemResponse": {
+        "properties": {
+          "jobId": {
+            "type": "integer",
+            "title": "Jobid"
+          },
+          "jobType": {
+            "type": "string",
+            "title": "Jobtype"
+          },
+          "jobName": {
+            "type": "string",
+            "title": "Jobname"
+          },
+          "businessDate": {
+            "type": "string",
+            "format": "date",
+            "title": "Businessdate"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "runMode": {
+            "type": "string",
+            "title": "Runmode"
+          },
+          "sourceJobId": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sourcejobid"
+          },
+          "sourcePageId": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sourcepageid"
+          },
+          "queuedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Queuedat"
+          },
+          "attemptCount": {
+            "type": "integer",
+            "title": "Attemptcount"
+          },
+          "maxAttempts": {
+            "type": "integer",
+            "title": "Maxattempts"
+          },
+          "currentStep": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currentstep"
+          },
+          "startedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Startedat"
+          },
+          "endedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Endedat"
+          },
+          "durationSeconds": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Durationseconds"
+          },
+          "marketScope": {
+            "type": "string",
+            "title": "Marketscope"
+          },
+          "rawNewsCount": {
+            "type": "integer",
+            "title": "Rawnewscount"
+          },
+          "processedNewsCount": {
+            "type": "integer",
+            "title": "Processednewscount"
+          },
+          "clusterCount": {
+            "type": "integer",
+            "title": "Clustercount"
+          },
+          "pageId": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pageid"
+          },
+          "pageVersionNo": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pageversionno"
+          },
+          "partialMessage": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Partialmessage"
+          },
+          "aiTargetCount": {
+            "type": "integer",
+            "title": "Aitargetcount",
+            "default": 0
+          },
+          "aiAttemptedCount": {
+            "type": "integer",
+            "title": "Aiattemptedcount",
+            "default": 0
+          },
+          "aiSuccessCount": {
+            "type": "integer",
+            "title": "Aisuccesscount",
+            "default": 0
+          },
+          "aiFallbackCount": {
+            "type": "integer",
+            "title": "Aifallbackcount",
+            "default": 0
+          },
+          "aiFailedCount": {
+            "type": "integer",
+            "title": "Aifailedcount",
+            "default": 0
+          },
+          "aiRecoveredCount": {
+            "type": "integer",
+            "title": "Airecoveredcount",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "jobId",
+          "jobType",
+          "jobName",
+          "businessDate",
+          "status",
+          "runMode",
+          "attemptCount",
+          "maxAttempts",
+          "startedAt",
+          "marketScope",
+          "rawNewsCount",
+          "processedNewsCount",
+          "clusterCount"
+        ],
+        "title": "BatchJobListItemResponse"
+      },
+      "BatchJobListResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/BatchJobListItemResponse"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/BatchJobsPaginationResponse"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/BatchJobSummaryResponse"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "pagination",
+          "summary"
+        ],
+        "title": "BatchJobListResponse"
+      },
+      "BatchJobNewsCollectionDetail": {
+        "properties": {
+          "runId": {
+            "type": "integer",
+            "title": "Runid"
+          },
+          "providerName": {
+            "type": "string",
+            "title": "Providername"
+          },
+          "windowStartAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Windowstartat"
+          },
+          "windowEndAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Windowendat"
+          },
+          "queryStartAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Querystartat"
+          },
+          "queryEndAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Queryendat"
+          },
+          "totalKeywordCount": {
+            "type": "integer",
+            "title": "Totalkeywordcount"
+          },
+          "completedKeywordCount": {
+            "type": "integer",
+            "title": "Completedkeywordcount"
+          },
+          "fetchedCount": {
+            "type": "integer",
+            "title": "Fetchedcount"
+          },
+          "matchedCount": {
+            "type": "integer",
+            "title": "Matchedcount"
+          },
+          "insertedCount": {
+            "type": "integer",
+            "title": "Insertedcount"
+          },
+          "coverageComplete": {
+            "type": "boolean",
+            "title": "Coveragecomplete"
+          }
+        },
+        "type": "object",
+        "required": [
+          "runId",
+          "providerName",
+          "windowStartAt",
+          "windowEndAt",
+          "queryStartAt",
+          "queryEndAt",
+          "totalKeywordCount",
+          "completedKeywordCount",
+          "fetchedCount",
+          "matchedCount",
+          "insertedCount",
+          "coverageComplete"
+        ],
+        "title": "BatchJobNewsCollectionDetail"
+      },
+      "BatchJobSnapshotDetail": {
+        "properties": {
+          "forceRun": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Forcerun"
+          },
+          "rebuildPageOnly": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rebuildpageonly"
+          },
+          "rawNewsCount": {
+            "type": "integer",
+            "title": "Rawnewscount"
+          },
+          "processedNewsCount": {
+            "type": "integer",
+            "title": "Processednewscount"
+          },
+          "clusterCount": {
+            "type": "integer",
+            "title": "Clustercount"
+          },
+          "pageId": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pageid"
+          },
+          "pageVersionNo": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pageversionno"
+          },
+          "aiTargetCount": {
+            "type": "integer",
+            "title": "Aitargetcount",
+            "default": 0
+          },
+          "aiAttemptedCount": {
+            "type": "integer",
+            "title": "Aiattemptedcount",
+            "default": 0
+          },
+          "aiSuccessCount": {
+            "type": "integer",
+            "title": "Aisuccesscount",
+            "default": 0
+          },
+          "aiFallbackCount": {
+            "type": "integer",
+            "title": "Aifallbackcount",
+            "default": 0
+          },
+          "aiFailedCount": {
+            "type": "integer",
+            "title": "Aifailedcount",
+            "default": 0
+          },
+          "aiRecoveredCount": {
+            "type": "integer",
+            "title": "Airecoveredcount",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "rawNewsCount",
+          "processedNewsCount",
+          "clusterCount"
+        ],
+        "title": "BatchJobSnapshotDetail"
+      },
+      "BatchJobStatus": {
+        "type": "string",
+        "enum": [
+          "PENDING",
+          "RUNNING",
+          "SUCCESS",
+          "PARTIAL",
+          "FAILED"
+        ],
+        "title": "BatchJobStatus"
+      },
+      "BatchJobStepRunResponse": {
+        "properties": {
+          "stepCode": {
+            "type": "string",
+            "title": "Stepcode"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "startedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Startedat"
+          },
+          "endedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Endedat"
+          },
+          "durationMs": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Durationms"
+          },
+          "errorMessage": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Errormessage"
+          },
+          "errorLog": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Errorlog"
+          }
+        },
+        "type": "object",
+        "required": [
+          "stepCode",
+          "status",
+          "startedAt"
+        ],
+        "title": "BatchJobStepRunResponse"
+      },
+      "BatchJobSummaryResponse": {
+        "properties": {
+          "successCount": {
+            "type": "integer",
+            "title": "Successcount"
+          },
+          "partialCount": {
+            "type": "integer",
+            "title": "Partialcount"
+          },
+          "failedCount": {
+            "type": "integer",
+            "title": "Failedcount"
+          },
+          "avgDurationSeconds": {
+            "type": "integer",
+            "title": "Avgdurationseconds"
+          }
+        },
+        "type": "object",
+        "required": [
+          "successCount",
+          "partialCount",
+          "failedCount",
+          "avgDurationSeconds"
+        ],
+        "title": "BatchJobSummaryResponse"
+      },
+      "BatchJobType": {
+        "type": "string",
+        "enum": [
+          "NEWS_COLLECTION",
+          "MARKET_SNAPSHOT"
+        ],
+        "title": "BatchJobType"
+      },
+      "BatchJobsPaginationResponse": {
+        "properties": {
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          },
+          "size": {
+            "type": "integer",
+            "title": "Size"
+          },
+          "totalCount": {
+            "type": "integer",
+            "title": "Totalcount"
+          }
+        },
+        "type": "object",
+        "required": [
+          "page",
+          "size",
+          "totalCount"
+        ],
+        "title": "BatchJobsPaginationResponse"
+      },
+      "BatchRunRequest": {
+        "properties": {
+          "businessDate": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Businessdate"
+          },
+          "force": {
+            "type": "boolean",
+            "title": "Force",
+            "default": false
+          },
+          "rebuildPageOnly": {
+            "type": "boolean",
+            "title": "Rebuildpageonly",
+            "default": false
+          }
+        },
+        "type": "object",
+        "title": "BatchRunRequest"
+      },
+      "BatchRunResponse": {
+        "properties": {
+          "jobId": {
+            "type": "integer",
+            "title": "Jobid"
+          },
+          "jobName": {
+            "type": "string",
+            "title": "Jobname"
+          },
+          "businessDate": {
+            "type": "string",
+            "format": "date",
+            "title": "Businessdate"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "startedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Startedat"
+          },
+          "queuedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Queuedat"
+          }
+        },
+        "type": "object",
+        "required": [
+          "jobId",
+          "jobName",
+          "businessDate",
+          "status",
+          "startedAt"
+        ],
+        "title": "BatchRunResponse"
+      },
+      "ClusterArticleResponse": {
+        "properties": {
+          "processedArticleId": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Processedarticleid"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "publisherName": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Publishername"
+          },
+          "publishedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Publishedat"
+          },
+          "originLink": {
+            "type": "string",
+            "title": "Originlink"
+          },
+          "naverLink": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Naverlink"
+          },
+          "sourceSummary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sourcesummary"
+          }
+        },
+        "type": "object",
+        "required": [
+          "title",
+          "originLink"
+        ],
+        "title": "ClusterArticleResponse"
+      },
+      "ClusterCardResponse": {
+        "properties": {
+          "clusterId": {
+            "type": "string",
+            "title": "Clusterid"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary"
+          },
+          "articleCount": {
+            "type": "integer",
+            "title": "Articlecount"
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Tags"
+          },
+          "representativeArticle": {
+            "$ref": "#/components/schemas/RepresentativeArticleResponse"
+          }
+        },
+        "type": "object",
+        "required": [
+          "clusterId",
+          "title",
+          "articleCount",
+          "tags",
+          "representativeArticle"
+        ],
+        "title": "ClusterCardResponse"
+      },
+      "ClusterDetailResponse": {
+        "properties": {
+          "clusterId": {
+            "type": "string",
+            "title": "Clusterid"
+          },
+          "businessDate": {
+            "type": "string",
+            "format": "date",
+            "title": "Businessdate"
+          },
+          "marketType": {
+            "type": "string",
+            "title": "Markettype"
+          },
+          "marketLabel": {
+            "type": "string",
+            "title": "Marketlabel"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Tags"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/ClusterSummaryResponse"
+          },
+          "representativeArticle": {
+            "$ref": "#/components/schemas/ClusterArticleResponse"
+          },
+          "articles": {
+            "items": {
+              "$ref": "#/components/schemas/ClusterArticleResponse"
+            },
+            "type": "array",
+            "title": "Articles"
+          },
+          "lastUpdatedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Lastupdatedat"
+          },
+          "articleCount": {
+            "type": "integer",
+            "title": "Articlecount"
+          }
+        },
+        "type": "object",
+        "required": [
+          "clusterId",
+          "businessDate",
+          "marketType",
+          "marketLabel",
+          "title",
+          "tags",
+          "summary",
+          "representativeArticle",
+          "articles",
+          "lastUpdatedAt",
+          "articleCount"
+        ],
+        "title": "ClusterDetailResponse"
+      },
+      "ClusterSummaryResponse": {
+        "properties": {
+          "short": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Short"
+          },
+          "long": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Long"
+          },
+          "analysis": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Analysis"
+          }
+        },
+        "type": "object",
+        "required": [
+          "analysis"
+        ],
+        "title": "ClusterSummaryResponse"
+      },
+      "DailyPageResponse": {
+        "properties": {
+          "pageId": {
+            "type": "integer",
+            "title": "Pageid"
+          },
+          "businessDate": {
+            "type": "string",
+            "format": "date",
+            "title": "Businessdate"
+          },
+          "versionNo": {
+            "type": "integer",
+            "title": "Versionno"
+          },
+          "pageTitle": {
+            "type": "string",
+            "title": "Pagetitle"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "globalHeadline": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Globalheadline"
+          },
+          "generatedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Generatedat"
+          },
+          "partialMessage": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Partialmessage"
+          },
+          "markets": {
+            "items": {
+              "$ref": "#/components/schemas/MarketSectionResponse"
+            },
+            "type": "array",
+            "title": "Markets"
+          },
+          "metadata": {
+            "$ref": "#/components/schemas/PageMetadataResponse"
+          }
+        },
+        "type": "object",
+        "required": [
+          "pageId",
+          "businessDate",
+          "versionNo",
+          "pageTitle",
+          "status",
+          "generatedAt",
+          "markets",
+          "metadata"
+        ],
+        "title": "DailyPageResponse"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "IndexCardResponse": {
+        "properties": {
+          "indexCode": {
+            "type": "string",
+            "title": "Indexcode"
+          },
+          "indexName": {
+            "type": "string",
+            "title": "Indexname"
+          },
+          "closePrice": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Closeprice"
+          },
+          "changeValue": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Changevalue"
+          },
+          "changePercent": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Changepercent"
+          },
+          "highPrice": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Highprice"
+          },
+          "lowPrice": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lowprice"
+          },
+          "sourceDate": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sourcedate"
+          },
+          "expectedSessionDate": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expectedsessiondate"
+          },
+          "sessionCloseAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sessioncloseat"
+          }
+        },
+        "type": "object",
+        "required": [
+          "indexCode",
+          "indexName",
+          "closePrice",
+          "changeValue",
+          "changePercent"
+        ],
+        "title": "IndexCardResponse"
+      },
+      "MarketAnalysisResponse": {
+        "properties": {
+          "background": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Background"
+          },
+          "keyThemes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Keythemes"
+          },
+          "outlook": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Outlook"
+          }
+        },
+        "type": "object",
+        "required": [
+          "background",
+          "keyThemes"
+        ],
+        "title": "MarketAnalysisResponse"
+      },
+      "MarketMetadataResponse": {
+        "properties": {
+          "rawNewsCount": {
+            "type": "integer",
+            "title": "Rawnewscount"
+          },
+          "processedNewsCount": {
+            "type": "integer",
+            "title": "Processednewscount"
+          },
+          "clusterCount": {
+            "type": "integer",
+            "title": "Clustercount"
+          },
+          "lastUpdatedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Lastupdatedat"
+          },
+          "partialMessage": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Partialmessage"
+          },
+          "sourceDate": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sourcedate"
+          },
+          "expectedSessionDate": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expectedsessiondate"
+          },
+          "sessionCloseAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sessioncloseat"
+          },
+          "newsWindowStartAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Newswindowstartat"
+          },
+          "newsWindowEndAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Newswindowendat"
+          },
+          "coverageComplete": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Coveragecomplete"
+          }
+        },
+        "type": "object",
+        "required": [
+          "rawNewsCount",
+          "processedNewsCount",
+          "clusterCount",
+          "lastUpdatedAt"
+        ],
+        "title": "MarketMetadataResponse"
+      },
+      "MarketSectionResponse": {
+        "properties": {
+          "marketType": {
+            "type": "string",
+            "title": "Markettype"
+          },
+          "marketLabel": {
+            "type": "string",
+            "title": "Marketlabel"
+          },
+          "summaryTitle": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summarytitle"
+          },
+          "summaryBody": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summarybody"
+          },
+          "analysis": {
+            "$ref": "#/components/schemas/MarketAnalysisResponse"
+          },
+          "indices": {
+            "items": {
+              "$ref": "#/components/schemas/IndexCardResponse"
+            },
+            "type": "array",
+            "title": "Indices"
+          },
+          "topClusters": {
+            "items": {
+              "$ref": "#/components/schemas/ClusterCardResponse"
+            },
+            "type": "array",
+            "title": "Topclusters"
+          },
+          "articleLinks": {
+            "items": {
+              "$ref": "#/components/schemas/ArticleLinkResponse"
+            },
+            "type": "array",
+            "title": "Articlelinks"
+          },
+          "metadata": {
+            "$ref": "#/components/schemas/MarketMetadataResponse"
+          }
+        },
+        "type": "object",
+        "required": [
+          "marketType",
+          "marketLabel",
+          "analysis",
+          "indices",
+          "topClusters",
+          "articleLinks",
+          "metadata"
+        ],
+        "title": "MarketSectionResponse"
+      },
+      "MetaPayload": {
+        "properties": {
+          "requestId": {
+            "type": "string",
+            "title": "Requestid"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Timestamp"
+          }
+        },
+        "type": "object",
+        "required": [
+          "requestId",
+          "timestamp"
+        ],
+        "title": "MetaPayload"
+      },
+      "NewsCollectionRunRequest": {
+        "properties": {
+          "slotEndAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slotendat"
+          }
+        },
+        "type": "object",
+        "title": "NewsCollectionRunRequest"
+      },
+      "NewsCollectionRunResponse": {
+        "properties": {
+          "jobId": {
+            "type": "integer",
+            "title": "Jobid"
+          },
+          "runId": {
+            "type": "integer",
+            "title": "Runid"
+          },
+          "jobName": {
+            "type": "string",
+            "title": "Jobname"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "providerName": {
+            "type": "string",
+            "title": "Providername"
+          },
+          "windowStartAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Windowstartat"
+          },
+          "windowEndAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Windowendat"
+          },
+          "queryStartAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Querystartat"
+          },
+          "queryEndAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Queryendat"
+          },
+          "queuedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Queuedat"
+          }
+        },
+        "type": "object",
+        "required": [
+          "jobId",
+          "runId",
+          "jobName",
+          "status",
+          "providerName",
+          "windowStartAt",
+          "windowEndAt",
+          "queryStartAt",
+          "queryEndAt",
+          "queuedAt"
+        ],
+        "title": "NewsCollectionRunResponse"
+      },
+      "PageMetadataResponse": {
+        "properties": {
+          "rawNewsCount": {
+            "type": "integer",
+            "title": "Rawnewscount"
+          },
+          "processedNewsCount": {
+            "type": "integer",
+            "title": "Processednewscount"
+          },
+          "clusterCount": {
+            "type": "integer",
+            "title": "Clustercount"
+          },
+          "lastUpdatedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Lastupdatedat"
+          },
+          "isLatest": {
+            "type": "boolean",
+            "title": "Islatest",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "rawNewsCount",
+          "processedNewsCount",
+          "clusterCount",
+          "lastUpdatedAt"
+        ],
+        "title": "PageMetadataResponse"
+      },
+      "PaginationResponse": {
+        "properties": {
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          },
+          "size": {
+            "type": "integer",
+            "title": "Size"
+          },
+          "totalCount": {
+            "type": "integer",
+            "title": "Totalcount"
+          }
+        },
+        "type": "object",
+        "required": [
+          "page",
+          "size",
+          "totalCount"
+        ],
+        "title": "PaginationResponse"
+      },
+      "RepresentativeArticleResponse": {
+        "properties": {
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "publisherName": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Publishername"
+          },
+          "publishedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Publishedat"
+          },
+          "originLink": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Originlink"
+          },
+          "naverLink": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Naverlink"
+          }
+        },
+        "type": "object",
+        "title": "RepresentativeArticleResponse"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}

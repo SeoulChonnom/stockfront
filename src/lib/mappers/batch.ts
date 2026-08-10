@@ -2,6 +2,7 @@ import type {
   BatchJobDetailResponse,
   BatchJobListItemResponse,
   BatchJobListResponse,
+  BatchJobStepRunResponse,
 } from '../api/types';
 import { getBatchStepLabel } from '../batch-type';
 import {
@@ -42,7 +43,7 @@ function toRawStatus(value: unknown): string {
 
 /** 정렬/중복 제거 없이 API 응답 순서를 그대로 유지한다(재시도도 별도 행으로 보존). */
 function mapBatchStepRuns(
-  steps: BatchJobDetailResponse['steps']
+  steps: readonly BatchJobStepRunResponse[]
 ): BatchStepRunView[] {
   if (!Array.isArray(steps)) {
     return [];

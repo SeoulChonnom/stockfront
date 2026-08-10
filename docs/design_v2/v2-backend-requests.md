@@ -120,18 +120,25 @@ DOM에 없고 요청 자체가 나가지 않는 것까지만 확인한다(정상
   파싱 자체는 변경 불필요), 헤더에 "최신 여부"를 route 추론 대신 서버 값으로 직접
   표시하는 view-model 로직.
 
-### 파이프라인 단계별 status/duration
+### 파이프라인 단계별 status/duration (구현 완료 · 2026-08-10)
 
-- **현재 UI 동작(fallback)**: `/ops/batches` 상세 화면(§7-6)은 배치 파이프라인을
-  `app/batch/steps/` 모듈명 기준 8단계(작업 생성 · 뉴스 수집 · 지수 수집 · 중복 제거 ·
-  클러스터 구성 · AI 요약 생성 · 페이지 스냅샷 · 작업 종료)로 **가정**하고 `PROPOSED ·
-  BACKEND` 배지를 붙인다. 실패 지점은 `errorCode` 문자열에서 키워드를 추론해 `FAILED`로
-  표시하고, 그 이후 단계는 "이전 단계 실패로 건너뜀"(`SKIPPED`)으로 표시한다. **소요
-  시간(duration)은 절대 임의로 만들어내지 않는다** — 값이 없으면 표시하지 않는다.
-- **백엔드에 필요한 것**: 배치 상세 응답에 단계별 `{ stepName, status, durationSeconds }`
-  구조화 필드.
-- **생기면 바뀌는 프런트 지점**: `src/lib/mappers.ts`(배치 상세 매핑), 파이프라인 단계
-  컴포넌트에서 `errorCode` 키워드 추론 로직 제거 + `PROPOSED · BACKEND` 배지 제거.
+- **이전 UI 동작(fallback, 지금은 대체됨)**: `/ops/batches` 상세 화면(§7-6)은 배치
+  파이프라인을 `app/batch/steps/` 모듈명 기준 8단계(작업 생성 · 뉴스 수집 · 지수 수집 ·
+  중복 제거 · 클러스터 구성 · AI 요약 생성 · 페이지 스냅샷 · 작업 종료)로 **가정**하고
+  `PROPOSED · BACKEND` 배지를 붙였다. 실패 지점은 `errorCode` 문자열에서 키워드를
+  추론해 `FAILED`로 표시하고, 그 이후 단계는 "이전 단계 실패로 건너뜀"(`SKIPPED`)으로
+  표시했다. 소요 시간(duration)은 값이 없으면 항상 `-`만 표시했다.
+- **백엔드에서 받은 것 (구현 완료)**: 배치 상세 응답(`GET /batch/jobs/{jobId}`)이
+  실행 순서 그대로의 `steps: BatchJobStepRunResponse[]` 배열을 반환한다. 각 항목은
+  `{ stepCode, status, startedAt, endedAt, durationMs, errorMessage, errorLog }`이며,
+  재시도/체크포인트 재개로 같은 `stepCode`가 여러 번 나타날 수 있다. 자세한 계약은
+  `docs/api_spec_doc.md` §5-4 참고.
+- **바뀐 프런트 지점**: `src/lib/mappers/batch.ts`가 `steps`를 정렬·중복 제거 없이
+  그대로 `BatchStepRunView[]`로 매핑한다. `src/components/ui/pipeline-stages.tsx`는
+  `jobStatus`/`jobType`/`currentStep`/`errorCode`로부터 단계를 추론하던 로직과
+  `errorCode` 키워드 테이블, `PROPOSED · BACKEND` 배지를 모두 제거하고 `steps`
+  배열을 있는 그대로 렌더링한다. `SUCCEEDED`이고 `durationMs`가 유효한 항목만
+  `formatDurationMs`로 소요 시간을 표시하며, 그 외에는 `-`를 표시한다.
 
 ### D-05. 인접 business date 이동 API
 

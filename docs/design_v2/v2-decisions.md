@@ -242,6 +242,44 @@ per-stage duration 줄은 백엔드가 절대 값을 주지 않으므로 항상 
 `pipeline-stages.tsx`의 이 한 줄만 실제 값 렌더로 교체하면 된다 — 삭제
 후 재도입하는 것보다 비용이 낮다.
 
+### 10-1. 상위 결정 대체 (2026-08-10) — 백엔드가 실제 스텝 이력을 제공
+
+위 §10 전체(증상/판정/결정/부수 결정)는 **그 당시 시점의 기록으로 그대로
+남긴다** — 이 결정을 지웠다가 나중에 되짚어야 할 때를 위한 근거이자, 왜
+"고치지 않는 게 맞았는지"의 이유를 보여주는 사례이기 때문이다. 다만 그
+전제(`BatchJobDetailResponse`에 단계별 status/duration 필드가 없다)는
+2026-08-10부로 더 이상 사실이 아니다.
+
+**바뀐 것**: 백엔드가 `GET /batch/jobs/{jobId}` 응답에 실행 순서 그대로의
+`steps: BatchJobStepRunResponse[]`를 추가했다(`docs/api_spec_doc.md` §5-4,
+`docs/api-spec.json`의 `BatchJobStepRunResponse`/`BatchJobDetailResponse.
+properties.steps`). 각 항목은
+`{ stepCode, status, startedAt, endedAt, durationMs, errorMessage,
+errorLog }`이며, 재시도·체크포인트 재개로 같은 `stepCode`가 여러 번
+나타날 수 있고 배열은 이미 실행 순서다(프런트가 정렬/추론할 필요가 없다).
+
+**대체된 것**:
+- §10의 "job 전체 status에서 단계를 추론" 판정 → 더 이상 유효하지 않다.
+  `src/lib/mappers/batch.ts`가 `steps`를 그대로 `BatchStepRunView[]`로
+  매핑하고, `src/components/ui/pipeline-stages.tsx`는 `jobStatus`/
+  `jobType`/`currentStep`/`errorCode`로부터 단계를 추론하던 로직과
+  `errorCode` 키워드 테이블을 모두 제거했다. `PROPOSED · BACKEND` 배지도
+  제거됐다 — 이제 그리는 데이터가 실제로 백엔드가 주는 데이터이기
+  때문이다.
+- §10 "부수 결정 — 항상 `-`인 소요 컬럼" → 더 이상 항상 `-`가 아니다.
+  `status === 'SUCCEEDED'`이고 `durationMs`가 유효한(0 이상의 유한수)
+  항목만 `formatDurationMs`로 실제 소요 시간을 표시하고
+  (`src/lib/formatters.ts`), 그 외(`RUNNING`/`FAILED`/알 수 없는 상태/
+  유효하지 않은 duration)는 여전히 `-`를 표시한다. 두 줄 스택 레이아웃
+  자체는 §10이 지킨 대로 유지된다 — 아래쪽 줄의 값만 항상 `-`에서 조건부
+  실값으로 바뀌었다.
+
+**유지되는 것**: 이 기능 도입 이전에 실행된 잡은 `steps: []`를 반환하며,
+그 경우 `스텝 실행 이력이 없습니다.`라는 정직한 빈 상태를 표시한다(없는
+단계를 지어내지 않는다는 §10의 원래 원칙은 그대로다 — 이제는 "단계별
+필드가 아예 없다"가 아니라 "이 특정 잡은 이력이 비어 있다"는 좁은 의미로
+적용될 뿐).
+
 ## 부록: 검증 방법
 
 이 문서의 모든 갭·판정·필드 상태는 추측이 아니라 아래 방식으로 직접 확인했다.

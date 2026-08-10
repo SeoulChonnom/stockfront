@@ -197,6 +197,31 @@ test.describe('§16-12 live region (Batch)', () => {
   });
 });
 
+test.describe('§16-14 pipeline step history (retries, ordered)', () => {
+  test('renders a failed-then-succeeded AI retry as two ordered rows with duration only on the successful one', async ({
+    page,
+  }) => {
+    // jobId 1036 (mock-api.ts's `batchDetailFixture`) is seeded with a real
+    // AI-summary retry: `AI_RETRY_GENERATE` first FAILED, then SUCCEEDED
+    // (`durationMs: 4210`). `PipelineStages` must render both rows, in that
+    // order, with `-` on the failed row and `4.21초` only on the successful
+    // one — no dedup, no inference from job-level status.
+    await installMockApi(page, { scenario: 'ready' });
+    await page.goto('ops/batches?jobId=1036');
+    await expect(page.getByRole('heading', { name: 'job 1036' })).toBeVisible();
+
+    const retryRows = page.locator('li').filter({ hasText: 'AI 요약 재처리' });
+    await expect(retryRows).toHaveCount(2);
+
+    const failedRow = retryRows.nth(0);
+    const succeededRow = retryRows.nth(1);
+    await expect(failedRow).toContainText('실패');
+    await expect(failedRow).not.toContainText('4.21초');
+    await expect(succeededRow).toContainText('성공');
+    await expect(succeededRow).toContainText('4.21초');
+  });
+});
+
 test.describe('§16-13 AI summary retry', () => {
   test('submits one accepted retry-ai request for a PARTIAL job', async ({
     page,

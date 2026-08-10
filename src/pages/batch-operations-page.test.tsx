@@ -710,6 +710,16 @@ describe('BatchOperationsPage — admin', () => {
       status: 'RUNNING',
       pageId: null,
       pageVersion: '-',
+      // PipelineStages renders `run.steps` verbatim from the detail API; it
+      // no longer infers a stage list from `jobType`.
+      steps: [
+        {
+          stepCode: 'COLLECT_NEWS',
+          label: '뉴스 수집',
+          status: 'RUNNING',
+          duration: '-',
+        },
+      ],
     });
     mockUseBatchJobs.mockReturnValue(jobsReady({ rows: [], totalCount: 0 }));
     mockUseBatchJobDetail.mockReturnValue(detailReady(newsRun));
@@ -735,6 +745,10 @@ describe('BatchOperationsPage — admin', () => {
       pageId: null,
       pageVersion: '-',
       detail: '',
+      // No step history for this job (e.g. an old job); PipelineStages is
+      // jobType-agnostic and must still render its heading plus the honest
+      // empty state, never an invented stage list keyed off jobType.
+      steps: [],
     });
     mockUseBatchJobs.mockReturnValue(jobsReady({ rows: [], totalCount: 0 }));
     mockUseBatchJobDetail.mockReturnValue(detailReady(unknownRun));
@@ -745,7 +759,8 @@ describe('BatchOperationsPage — admin', () => {
     expect(screen.getByText('스냅샷 정보 확인 불가')).toBeInTheDocument();
     expect(screen.queryByText('174 / 114 / 21')).not.toBeInTheDocument();
     expect(screen.queryByText('실행 옵션')).not.toBeInTheDocument();
-    expect(screen.queryByText('파이프라인 단계')).not.toBeInTheDocument();
+    expect(screen.getByText('파이프라인 단계')).toBeInTheDocument();
+    expect(screen.getByText('스텝 실행 이력이 없습니다.')).toBeInTheDocument();
     expect(
       screen.queryByText('2026-07-26 시장 스냅샷이 생성되지 않았습니다.')
     ).not.toBeInTheDocument();
