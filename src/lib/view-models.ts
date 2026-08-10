@@ -131,6 +131,17 @@ export type ClusterDetail = {
   updatedAt: string;
 };
 
+/**
+ * One rendered row of batch step history. Repeated `stepCode` values are
+ * legitimate retries, so rows are never merged or sorted.
+ */
+export type BatchStepRunView = {
+  stepCode: string;
+  label: string;
+  status: string;
+  duration: string;
+};
+
 /** Shared base for list/detail batch rows. */
 type BatchRun = {
   id: number;
@@ -148,6 +159,8 @@ type BatchRun = {
   counts: string;
   detail: string;
   pageVersion: string;
+  /** Detail-only execution history in API order; list rows carry an empty array. */
+  steps: BatchStepRunView[];
   /** Detail-only fields; list rows use null and older fixtures may omit them. */
   errorCode?: string | null;
   errorMessage?: string | null;

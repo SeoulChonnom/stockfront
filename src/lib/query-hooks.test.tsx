@@ -137,6 +137,7 @@ const batchDetailResponse: BatchJobDetailResponse = {
   logSummary: null,
   snapshot: null,
   newsCollection: null,
+  steps: [],
 };
 
 describe('useArchiveMarketPage', () => {

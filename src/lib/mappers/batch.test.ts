@@ -232,6 +232,7 @@ describe('mappers - batch', () => {
         pageVersionNo: 2,
       },
       newsCollection: null,
+      steps: [],
     });
 
     expect(jobsView.summary.successRate).toBe('100.0%');
@@ -270,6 +271,7 @@ describe('restored batch detail fields (README §13)', () => {
         pageVersionNo: null,
       },
       newsCollection: null,
+      steps: [],
     });
 
     expect(detail.errorCode).toBe('NEWS_SOURCE_TIMEOUT');
@@ -379,6 +381,7 @@ describe('mapBatchDetailToRun — jobType-split detail DTO (docs/api_spec.json)'
         pageVersionNo: 3,
       },
       newsCollection: null,
+      steps: [],
     });
 
     // Before this fix, the mapper read these 7 fields off the response's
@@ -421,6 +424,7 @@ describe('mapBatchDetailToRun — jobType-split detail DTO (docs/api_spec.json)'
         insertedCount: 114,
         coverageComplete: true,
       },
+      steps: [],
     });
 
     // The mapper still falls back to '0 / 0 / 0'/'-'/null/false (the coerce
@@ -507,5 +511,157 @@ describe('mapBatchListItemToRun — jobType/currentStep (docs/api_spec.json)', (
     });
 
     expect(jobsView.rows[0].currentStep).toBeNull();
+  });
+});
+
+describe('batch step execution history', () => {
+  const detailWithSteps = (
+    steps: Parameters<typeof mapBatchDetailToRun>[0]['steps']
+  ) =>
+    mapBatchDetailToRun({
+      jobId: 4242,
+      jobType: 'MARKET_SNAPSHOT',
+      jobName: 'ai_retry_batch',
+      businessDate: '2026-08-10',
+      status: 'SUCCESS',
+      currentStep: null,
+      startedAt: '2026-08-10T06:10:00',
+      endedAt: '2026-08-10T06:10:05',
+      durationSeconds: 5,
+      partialMessage: null,
+      errorCode: null,
+      errorMessage: null,
+      logSummary: null,
+      snapshot: null,
+      newsCollection: null,
+      steps,
+    });
+
+  it('preserves API order and keeps a retried stepCode as two separate rows', () => {
+    const detail = detailWithSteps([
+      {
+        stepCode: 'CREATE_JOB',
+        status: 'SUCCEEDED',
+        startedAt: '2026-08-10T06:10:00',
+        endedAt: '2026-08-10T06:10:00',
+        durationMs: 12,
+        errorMessage: null,
+        errorLog: null,
+      },
+      {
+        stepCode: 'AI_RETRY_GENERATE',
+        status: 'FAILED',
+        startedAt: '2026-08-10T06:10:00',
+        endedAt: '2026-08-10T06:10:01',
+        durationMs: 1100,
+        errorMessage: 'LLM timeout',
+        errorLog: 'stack',
+      },
+      {
+        stepCode: 'AI_RETRY_GENERATE',
+        status: 'SUCCEEDED',
+        startedAt: '2026-08-10T06:10:01',
+        endedAt: '2026-08-10T06:10:05',
+        durationMs: 4210,
+        errorMessage: null,
+        errorLog: null,
+      },
+    ]);
+
+    expect(detail.steps).toEqual([
+      {
+        stepCode: 'CREATE_JOB',
+        label: '작업 생성',
+        status: 'SUCCEEDED',
+        duration: '12ms',
+      },
+      {
+        stepCode: 'AI_RETRY_GENERATE',
+        label: 'AI 요약 재처리',
+        status: 'FAILED',
+        duration: '-',
+      },
+      {
+        stepCode: 'AI_RETRY_GENERATE',
+        label: 'AI 요약 재처리',
+        status: 'SUCCEEDED',
+        duration: '4.21초',
+      },
+    ]);
+  });
+
+  it('keeps unknown step codes and statuses visible instead of dropping them', () => {
+    const detail = detailWithSteps([
+      {
+        stepCode: 'SOME_FUTURE_STEP',
+        status: 'skipped',
+        startedAt: '2026-08-10T06:10:00',
+        endedAt: null,
+        durationMs: null,
+        errorMessage: null,
+        errorLog: null,
+      },
+    ]);
+
+    expect(detail.steps).toEqual([
+      {
+        stepCode: 'SOME_FUTURE_STEP',
+        label: 'SOME_FUTURE_STEP',
+        status: 'SKIPPED',
+        duration: '-',
+      },
+    ]);
+  });
+
+  it('falls back to "-" when a succeeded step reports a malformed duration', () => {
+    const detail = detailWithSteps([
+      {
+        stepCode: 'FINALIZE_JOB',
+        status: 'SUCCEEDED',
+        startedAt: '2026-08-10T06:10:00',
+        endedAt: '2026-08-10T06:10:05',
+        durationMs: 'nope' as unknown as number,
+        errorMessage: null,
+        errorLog: null,
+      },
+    ]);
+
+    expect(detail.steps[0].duration).toBe('-');
+  });
+
+  it('returns an empty history for old jobs and for list-derived rows', () => {
+    expect(detailWithSteps([]).steps).toEqual([]);
+
+    const jobsView = mapBatchJobsToView({
+      items: [
+        {
+          jobId: 1,
+          jobType: 'NEWS_COLLECTION',
+          jobName: 'daily',
+          businessDate: '2026-08-10',
+          status: 'SUCCESS',
+          currentStep: null,
+          startedAt: '2026-08-10T06:12:00Z',
+          endedAt: '2026-08-10T06:13:09Z',
+          durationSeconds: 69,
+          marketScope: 'GLOBAL',
+          rawNewsCount: 21,
+          processedNewsCount: 0,
+          clusterCount: 0,
+          pageId: null,
+          pageVersionNo: null,
+          partialMessage: null,
+        },
+      ],
+      pagination: { page: 1, size: 20, totalCount: 1 },
+      summary: {
+        successCount: 1,
+        partialCount: 0,
+        failedCount: 0,
+        avgDurationSeconds: 69,
+      },
+    });
+
+    expect(jobsView.rows[0].steps).toEqual([]);
   });
 });

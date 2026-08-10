@@ -112,6 +112,7 @@ function createRow(overrides: Partial<BatchRunRow> = {}): BatchRunRow {
     logSummary: null,
     forceRun: false,
     rebuildPageOnly: false,
+    steps: [],
     ...overrides,
   };
 }

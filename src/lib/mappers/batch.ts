@@ -3,8 +3,10 @@ import type {
   BatchJobListItemResponse,
   BatchJobListResponse,
 } from '../api/types';
+import { getBatchStepLabel } from '../batch-type';
 import {
   formatDurationKo,
+  formatDurationMs,
   formatDurationSeconds,
   formatKstDateTime,
 } from '../formatters';
@@ -12,6 +14,7 @@ import { computeTotalPages } from '../utils';
 import type {
   BatchJobsViewWithCounts,
   BatchRunRow,
+  BatchStepRunView,
   BatchSummaryView,
 } from '../view-models';
 import {
@@ -35,6 +38,30 @@ const batchJobStatuses = [
 
 function toRawStatus(value: unknown): string {
   return typeof value === 'string' && value.length > 0 ? value : 'UNKNOWN';
+}
+
+/** 정렬/중복 제거 없이 API 응답 순서를 그대로 유지한다(재시도도 별도 행으로 보존). */
+function mapBatchStepRuns(
+  steps: BatchJobDetailResponse['steps']
+): BatchStepRunView[] {
+  if (!Array.isArray(steps)) {
+    return [];
+  }
+
+  return steps.map((step) => {
+    const stepCode = asString(step.stepCode, 'UNKNOWN_STEP');
+    const status = asString(step.status, 'UNKNOWN').trim().toUpperCase();
+
+    return {
+      stepCode,
+      label: getBatchStepLabel(stepCode),
+      status,
+      duration:
+        status === 'SUCCEEDED'
+          ? formatDurationMs(asNullableFiniteNumber(step.durationMs))
+          : '-',
+    };
+  });
 }
 
 function mapBatchListItemToRun(item: BatchJobListItemResponse): BatchRunRow {
@@ -67,6 +94,7 @@ function mapBatchListItemToRun(item: BatchJobListItemResponse): BatchRunRow {
     rebuildPageOnly: null,
     pageId: item.pageId ?? null,
     rawStatus: toRawStatus(item.status),
+    steps: [],
   };
 }
 
@@ -157,5 +185,6 @@ export function mapBatchDetailToRun(
     rebuildPageOnly: asOptionalBoolean(snapshot?.rebuildPageOnly),
     pageId: snapshot?.pageId ?? null,
     rawStatus: toRawStatus(response.status),
+    steps: mapBatchStepRuns(response.steps),
   };
 }
