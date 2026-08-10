@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  formatDurationMs,
   formatInteger,
   formatKstDateTime,
   formatNumericText,
@@ -130,6 +131,28 @@ describe('formatters', () => {
       'falls back to "-" for non-finite/non-numeric input (%p)',
       (value) => {
         expect(formatInteger(value)).toBe('-');
+      }
+    );
+  });
+
+  describe('formatDurationMs', () => {
+    it('keeps sub-second durations in raw milliseconds', () => {
+      expect(formatDurationMs(12)).toBe('12ms');
+    });
+
+    it('switches to seconds at 1000ms, trimming trailing zeros', () => {
+      expect(formatDurationMs(1000)).toBe('1초');
+      expect(formatDurationMs(4210)).toBe('4.21초');
+    });
+
+    it('splits minutes out once the duration passes a minute', () => {
+      expect(formatDurationMs(68_420)).toBe('1분 8.42초');
+    });
+
+    it.each([null, undefined, -1, Number.NaN, Number.POSITIVE_INFINITY])(
+      'falls back to "-" for missing/invalid input (%p)',
+      (value) => {
+        expect(formatDurationMs(value)).toBe('-');
       }
     );
   });

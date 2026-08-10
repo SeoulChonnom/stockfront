@@ -169,6 +169,27 @@ export function formatDurationKo(seconds: number | null | undefined): string {
     : `${minutes}분`;
 }
 
+/** Korean duration for per-step `durationMs`, which can be well under a second. */
+export function formatDurationMs(value: number | null | undefined): string {
+  if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) {
+    return '-';
+  }
+
+  if (value < 1000) {
+    return `${value}ms`;
+  }
+
+  const minutes = Math.floor(value / MINUTE_MS);
+  const seconds = (value % MINUTE_MS) / 1000;
+  const formattedSeconds = seconds.toLocaleString('ko-KR', {
+    maximumFractionDigits: 2,
+  });
+
+  return minutes > 0
+    ? `${minutes}분 ${formattedSeconds}초`
+    : `${formattedSeconds}초`;
+}
+
 export function toStatusTone(value: string | null | undefined) {
   if (typeof value !== 'string') {
     return 'failed';

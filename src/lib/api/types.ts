@@ -181,6 +181,21 @@ type BatchJobNewsCollectionDetail = {
   coverageComplete: boolean;
 };
 
+/**
+ * One persisted step execution. Retries and checkpoint resumes repeat the same
+ * `stepCode`, so items are only meaningful in the order the backend returns.
+ * `status` stays a raw string so future backend statuses remain visible.
+ */
+export type BatchJobStepRunResponse = {
+  stepCode: string;
+  status: string;
+  startedAt: string;
+  endedAt: string | null;
+  durationMs: number | null;
+  errorMessage: string | null;
+  errorLog: string | null;
+};
+
 /** Detail response nests nullable snapshot/newsCollection blocks by jobType. */
 export type BatchJobDetailResponse = {
   jobId: number;
@@ -198,6 +213,8 @@ export type BatchJobDetailResponse = {
   logSummary: string | null;
   snapshot: BatchJobSnapshotDetail | null;
   newsCollection: BatchJobNewsCollectionDetail | null;
+  /** Execution history in persisted order; empty for jobs run before tracking. */
+  steps: BatchJobStepRunResponse[];
 };
 
 export type BatchJobListResponse = {
