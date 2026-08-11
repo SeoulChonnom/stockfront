@@ -131,7 +131,7 @@ export function useBatchJobDetail(jobId: number | null) {
 }
 
 /**
- * README §7-7 Manual Trigger: the caller now supplies `businessDate`/`force`/
+ * Manual Trigger callers supply `businessDate`/`force`/
  * `rebuildPageOnly` as the mutation variable instead of the hook hardcoding
  * `startBatchRun({})` and discarding whatever the dialog collected.
  */

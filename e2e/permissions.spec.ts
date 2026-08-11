@@ -2,19 +2,18 @@ import { expect, test } from './fixtures/console-guard';
 import { installMockApi } from './fixtures/mock-api';
 
 /**
- * Phase 9 §16-11 — permissions. Drives the role through the REAL
+ * Permission coverage drives the role through the real
  * integration path: `installMockApi(page, {role: 'user'|'admin'})` makes
  * the mocked `POST /api/users/token` response body carry a `roleList`
  * field, which `auth-bootstrap.ts#readRoleList()` parses and
  * `capabilities.ts#getRole()` consumes ahead of its own default — not a
  * test-only override of `capabilities.ts` internals.
  *
- * §16-11 requires asserting ABSENCE from the DOM, not mere invisibility —
- * `expect(locator).toHaveCount(0)` (not `.not.toBeVisible()`) is used
- * throughout for that reason.
+ * Privileged controls must be absent from the DOM, not merely invisible, so
+ * `expect(locator).toHaveCount(0)` is used instead of `.not.toBeVisible()`.
  */
 
-test.describe('§16-11 non-admin user permissions', () => {
+test.describe('non-admin user permissions', () => {
   test('the ops nav item is absent from the DOM (desktop rail and mobile drawer)', async ({
     page,
   }) => {
@@ -74,7 +73,7 @@ test.describe('§16-11 non-admin user permissions', () => {
   });
 });
 
-test.describe('§16-11 admin permissions (control group)', () => {
+test.describe('admin permissions (control group)', () => {
   test('the ops nav item and trigger button ARE present, and /ops/batches renders the admin screen', async ({
     page,
   }) => {

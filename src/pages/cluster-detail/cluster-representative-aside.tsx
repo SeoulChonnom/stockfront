@@ -7,7 +7,7 @@ import { displayPublishedAt, displaySource } from './copy-fallbacks';
 import { getSafeExternalUrl } from './url-safety';
 
 /**
- * README §7-5 "대표 기사" sticky aside. Sticky only in the 2-column desktop
+ * "대표 기사" sticky aside. Sticky only in the 2-column desktop
  * layout (≥1181px) — the parent grid in `cluster-detail-page.tsx` collapses
  * to 1 column at ≤1180px, at which point this aside stacks normally below
  * the main column instead of pinning.

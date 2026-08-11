@@ -68,11 +68,8 @@ export function AppShell({
               />
             ) : null}
 
-            {/* B1/B2: design's <main> pads all 4 sides equally with
-                `var(--pad)` (32/20/14 across breakpoints, already declared
-                in base.css) and is `flex; flex-direction:column;
-                gap:var(--gap)` — not the previous 20px/12px asymmetric
-                block padding. */}
+            {/* Main uses equal responsive padding on all sides and a flex
+                column gap between route-level sections. */}
             <main
               className='mx-auto flex w-full min-w-0 max-w-[1280px] flex-1 flex-col gap-(--gap) p-(--pad)'
               id='main-content'

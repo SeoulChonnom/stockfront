@@ -18,14 +18,14 @@ import {
 import { PartialBanner } from './market-overview/partial-banner';
 
 /**
- * Latest (`/market/latest`, README §7-2)와 Archive Detail
- * (`/market/archive/:businessDate`, §7-3)이 공유하는 단일 컴포넌트.
+ * Latest (`/market/latest`)와 Archive Detail
+ * (`/market/archive/:businessDate`)이 공유하는 단일 컴포넌트.
  * "본문은 Latest와 동일 컴포넌트를 재사용한다" — Archive Detail은 이 위에
  * `ArchiveModeBand`를 얹고 `mode='archive'`로 h1/원점 쿼리만 바꾼다.
  *
  * URL 상태(현재 search params, pathname)는 이 컴포넌트가 직접
- * `useUrlState()`로 읽는다 — 아카이브 필터 복귀 쿼리(§7-2 item 3: "coming
- * from archive")와 스크롤 복원 키(§9) 양쪽에 필요하기 때문이다.
+ * `useUrlState()`로 읽는다 — 아카이브 필터 복귀 쿼리와 스크롤 복원 키 양쪽에
+ * 필요하기 때문이다.
  */
 export type MarketOverviewPageProps = {
   mode: 'latest' | 'archive';

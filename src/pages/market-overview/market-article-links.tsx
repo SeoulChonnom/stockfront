@@ -5,9 +5,9 @@ import type { ArticleLink } from '@/lib/view-models';
 import { getSafeExternalUrl } from './link-utils';
 
 /**
- * 근거 원문 — README §7-2 item 3 마지막 블록. 기본 4건 + `전체 N건 보기`
+ * 근거 원문 마지막 블록. 기본 4건 + `전체 N건 보기`
  * 토글(`aria-expanded`). `articleLinks`는 이전엔 mapper가 버리던 필드라
- * 이 화면에서 처음 소비된다(§13).
+ * 이 화면에서 소비된다.
  */
 export function MarketArticleLinks({ links }: { links: ArticleLink[] }) {
   const [expanded, setExpanded] = useState(false);

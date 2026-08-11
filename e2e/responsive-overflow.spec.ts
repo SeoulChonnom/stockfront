@@ -8,7 +8,7 @@ import { expectNoDocumentOverflow } from './utils/overflow';
 import { VIEWPORTS } from './utils/viewports';
 
 /**
- * Phase 8 — responsive overflow sweep (handoff README §11 / §16-13).
+ * Responsive overflow sweep across supported viewports and content states.
  *
  * For every viewport in `VIEWPORTS` × every route/state below, asserts
  * `document.documentElement.scrollWidth <= clientWidth`. Scoped scroll
@@ -25,7 +25,7 @@ import { VIEWPORTS } from './utils/viewports';
  * Route/state coverage follows the task brief's required matrix (latest:
  * ready/partial/emptyMarkets/long; archive detail: ready; archive search:
  * results + 0 results; cluster: ready/long+heavy; batch: ready + a selected
- * job with the 4,000-char log; 404) plus every remaining §8 equivalence
+ * job with the 4,000-char log; 404) plus every remaining error/loading
  * class the mock API is required to support (failed/sparse/error5xx/loading)
  * so all 8 scenario keys are exercised at least once, not just present in
  * `mock-api.ts` unused.
@@ -145,7 +145,7 @@ const ROUTE_STATES: readonly RouteState[] = [
   },
 ];
 
-test.describe('responsive overflow sweep (handoff README §11 / §16-13)', () => {
+test.describe('responsive overflow sweep', () => {
   for (const viewport of VIEWPORTS) {
     test.describe(`${viewport.width}px`, () => {
       for (const state of ROUTE_STATES) {

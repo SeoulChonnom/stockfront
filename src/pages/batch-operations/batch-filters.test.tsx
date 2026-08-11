@@ -73,7 +73,7 @@ describe('BatchFilters', () => {
     });
   });
 
-  it('rejects a future date with the §7-4 message text, blocks apply, focuses the field, and announces the exact batch-screen error copy', async () => {
+  it('rejects a future date with the product message, blocks apply, focuses the field, and announces the exact batch-screen error copy', async () => {
     const user = userEvent.setup();
     const onApply = vi.fn();
     renderWithAnnounce(
@@ -128,7 +128,7 @@ describe('BatchFilters', () => {
     expect(getLiveRegionText()).toBe('조회 조건을 기본값으로 초기화했습니다.');
   });
 
-  it('offers the five status options exactly as specified (design v2 2074행)', () => {
+  it('offers the five supported status options in display order', () => {
     renderWithAnnounce(
       <BatchFilters applied={applied} onApply={vi.fn()} onReset={vi.fn()} />
     );
@@ -147,7 +147,7 @@ describe('BatchFilters', () => {
     ]);
   });
 
-  it('offers the three type options with API enum values and design labels', () => {
+  it('offers the three type options with API enum values and user-facing labels', () => {
     renderWithAnnounce(
       <BatchFilters applied={applied} onApply={vi.fn()} onReset={vi.fn()} />
     );

@@ -2,7 +2,7 @@ import { Skeleton, SkeletonTableRows, SkeletonText } from '@/components/state';
 import { Card } from '@/components/ui/card';
 
 /**
- * 최초 loading skeleton — README §8: "skeleton은 실제 레이아웃 골격을
+ * 최초 loading skeleton. Skeleton은 실제 레이아웃 골격을
  * 유지한다(중앙 메시지로 화면을 대체하지 않는다)". 결정 헤더 카드 + 시장
  * 비교 스트립 + 시장 섹션 하나 분량의 자리를 그대로 유지한다.
  */

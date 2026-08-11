@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils';
 import type { MarketIndex } from '@/lib/view-models';
 
 /**
- * 대표 지수 — README §7-2: "카드 대신 밀도 높은 표". ≤640px에서 고가/저가
+ * 대표 지수 — 카드 대신 밀도 높은 표. ≤640px에서 고가/저가
  * 컬럼을 접되 값을 버리지 않고 종가 셀 아래 서브라인으로 노출한다.
  *
  * `TableCollapsibleCell`/`TablePriorityCell`(`@/components/ui/table`)은

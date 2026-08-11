@@ -1,13 +1,12 @@
 import type { Page } from '@playwright/test';
 
 /**
- * README §11 / handoff README §16-13: "모든 폭에서
- * `document.documentElement.scrollWidth <= clientWidth`. 데이터 테이블
- * 내부의 의도된 scoped scroll은 허용, 문서 전체 가로 스크롤은 불허."
+ * At every supported width, document scrollWidth must not exceed clientWidth.
+ * Intentional scoped scrolling inside data tables is allowed; document-level
+ * horizontal scrolling is not.
  *
- * This module is the shared diagnostic behind the Phase 8 overflow sweep
- * (`e2e/responsive-overflow.spec.ts`) — kept in `utils/` rather than inlined
- * in the spec so Phase 9 can reuse the same assertion.
+ * This module is shared by responsive E2E coverage so overflow diagnostics
+ * stay consistent across specs.
  */
 
 export type OverflowOffender = {
@@ -43,8 +42,8 @@ export async function measureDocumentOverflow(
  * Walks every element in the document looking for boxes whose right edge
  * extends past the viewport's client width. Elements that sit inside their
  * own horizontally-scrollable ancestor (`overflow-x: auto|scroll` — e.g.
- * `TableScrollWrapper`) are excluded, since README §11 explicitly allows
- * scoped scroll there; only genuine DOCUMENT-level overflow is reported.
+ * `TableScrollWrapper`) are excluded because scoped table scroll is allowed;
+ * only genuine document-level overflow is reported.
  */
 export async function findOverflowOffenders(
   page: Page,
@@ -159,10 +158,9 @@ function formatOffender(offender: OverflowOffender): string {
 }
 
 /**
- * Asserts §11's document-level overflow rule and, on failure, reports WHICH
+ * Asserts the document-level overflow rule and, on failure, reports which
  * element overflows (selector/width/parent width) instead of a bare
- * scrollWidth/clientWidth mismatch — required by the Phase 8 task brief so a
- * fix can be targeted instead of guessed at.
+ * scrollWidth/clientWidth mismatch so a fix can be targeted precisely.
  */
 export async function expectNoDocumentOverflow(
   page: Page,

@@ -17,11 +17,8 @@ export function DescriptionListItem({
 }) {
   return (
     <div className='min-w-0'>
-      {/* design's `dt` for this dl carries no size/weight/case override —
-          it inherits the dl's 12.5px and just gets the muted color +
-          2px margin-bottom (reference: `<dt style="color:var(--fg3);
-          margin-bottom:2px">`), unlike other dl instances in the app that
-          do use the uppercase/tracked label treatment. */}
+      {/* Labels inherit the list's 12.5px type size and add only muted color
+          plus a 2px bottom margin; they intentionally avoid uppercase tracking. */}
       <dt className='m-0 mb-0.5 text-faint'>{label}</dt>
       <dd className='mono wrap-anywhere m-0 text-fg'>{value}</dd>
     </div>

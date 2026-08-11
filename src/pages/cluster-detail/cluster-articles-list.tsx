@@ -19,9 +19,8 @@ function ClusterArticleRow({ article }: { article: ClusterArticle }) {
     ? getSafeExternalUrl(article.mirrorUrl)
     : null;
 
-  // C10: design is 2 lines — title (+ "↗") on its own line, then
-  // publisher/date/원문 배지/네이버 미러 all inline on the line below. The
-  // app previously pulled the 원문 badge up next to the title (3 lines).
+  // Keep each article to two logical lines: title first, then publisher,
+  // date, original-source badge, and mirror link together below.
   return (
     <li className='min-w-0 border-b border-line px-[18px] py-3'>
       {originalUrl ? (
@@ -41,15 +40,14 @@ function ClusterArticleRow({ article }: { article: ClusterArticle }) {
       <div className='mono mt-1 flex flex-wrap items-center gap-2 text-caption text-faint'>
         <span>{displaySource(article.source)}</span>
         <span>{displayPublishedAt(article.publishedAt)}</span>
-        {/* README §7-5: "제목 링크 + mono 메타 + 원문 배지 + 네이버 미러 ↗"
+        {/* Product layout: "제목 링크 + mono 메타 + 원문 배지 + 네이버 미러 ↗"
             — the title itself links to the original source; this badge
             labels that destination in words (not color-only), distinct
             from the 네이버 미러 link below. */}
         <span className='rounded-[var(--r-sm)] border border-[color:var(--line-strong)] px-1.5 py-0.5 text-caption font-semibold text-faint'>
           원문
         </span>
-        {/* F6: design's 네이버 미러 is a bordered chip (matching 원문's
-            style), not a plain underlined link. */}
+        {/* 네이버 미러 uses a bordered chip matching the 원문 badge. */}
         {mirrorUrl ? (
           <a
             className='rounded-[var(--r-sm)] border border-line px-1.5 py-0.5 text-fg-soft no-underline'

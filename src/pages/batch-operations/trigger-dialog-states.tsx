@@ -8,7 +8,7 @@ import { formatKstDateTime } from '@/lib/formatters';
 
 import type { TriggerErrorView } from './trigger-error';
 
-/** README §7-7 "pending": the form is replaced entirely, so duplicate submit is structurally impossible. */
+/** Pending replaces the form entirely, so duplicate submit is structurally impossible. */
 export function TriggerPendingState({
   statusRef,
 }: {

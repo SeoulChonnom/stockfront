@@ -2,7 +2,7 @@ import { expect, test } from './fixtures/console-guard';
 import { installMockApi } from './fixtures/mock-api';
 
 /**
- * Phase 9 §16 items 1 (route/query parsing), 6 (deep link), 7 (route focus).
+ * Covers route/query parsing, deep links, and route-focus management.
  *
  * Paths are relative (no leading `/`) so Playwright resolves them against
  * `baseURL` (`http://127.0.0.1:4173/stock/`) — see
@@ -13,7 +13,7 @@ import { installMockApi } from './fixtures/mock-api';
 const CLUSTER_ID = '51f0d9a0-9fc5-4f15-a4f9-62856f128683';
 const FAILED_JOB_ID = 1037; // jobStatusFor(5) in mock-api.ts's BATCH_ALL seed -> 'FAILED', jobId 1042-5.
 
-test.describe('§16-1 route / query parsing', () => {
+test.describe('route / query parsing', () => {
   test('all 6 routes render their own page-title heading', async ({ page }) => {
     await installMockApi(page, { scenario: 'ready' });
 
@@ -67,7 +67,7 @@ test.describe('§16-1 route / query parsing', () => {
   });
 });
 
-test.describe('§16-6 deep link', () => {
+test.describe('deep link', () => {
   test("?jobId=&view=detail opens that job's detail panel directly", async ({
     page,
   }) => {
@@ -105,13 +105,13 @@ test.describe('§16-6 deep link', () => {
     );
 
     // No `origin` at all -> falls back to the cluster's own business-date
-    // archive snapshot (README §7-5), not a bare "no info" dead end.
+    // archive snapshot, not a bare "no info" dead end.
     await page.goto(`market/cluster/${CLUSTER_ID}`);
     await expect(page.getByText(/진입 경로 정보가 없어/)).toBeVisible();
   });
 });
 
-test.describe('§16-7 route focus', () => {
+test.describe('route focus', () => {
   test('a pathname navigation focuses #page-title', async ({ page }) => {
     await installMockApi(page, { scenario: 'ready' });
     await page.goto('market/latest');
@@ -119,14 +119,14 @@ test.describe('§16-7 route focus', () => {
     await expect(page.locator('#page-title')).toBeFocused();
 
     // Click a real primary-nav link (pathname change) rather than page.goto —
-    // §16-7 is about the app's OWN focus management reacting to `navigate()`,
+    // This checks the app's own focus management reacting to `navigate()`,
     // not to a fresh document load.
     await page.getByRole('link', { name: '아카이브' }).click();
     await expect(page.locator('#page-title')).toHaveText('아카이브');
     await expect(page.locator('#page-title')).toBeFocused();
   });
 
-  test('a query-only change does NOT refocus #page-title — the page owns it (§9 ownership split)', async ({
+  test('a query-only change does NOT refocus #page-title — the page owns it', async ({
     page,
   }) => {
     await installMockApi(page, { scenario: 'ready' });

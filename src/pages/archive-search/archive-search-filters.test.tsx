@@ -80,7 +80,7 @@ describe('ArchiveSearchFilters', () => {
     });
   });
 
-  it('rejects a future date with the exact §7-4 message, blocks apply, and focuses the field', async () => {
+  it('rejects a future date with the exact product message, blocks apply, and focuses the field', async () => {
     const user = userEvent.setup();
     const onApply = vi.fn();
     renderWithAnnounce(
@@ -109,7 +109,7 @@ describe('ArchiveSearchFilters', () => {
     );
   });
 
-  it('rejects from > to with the exact §7-4 swap message, attached to the start date field', async () => {
+  it('rejects from > to with the exact swap message, attached to the start date field', async () => {
     const user = userEvent.setup();
     const onApply = vi.fn();
     renderWithAnnounce(

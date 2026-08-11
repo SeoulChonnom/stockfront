@@ -6,11 +6,6 @@
     "module": "ESNext",
     "types": ["node"],
     "skipLibCheck": true,
-    /* `e2e/parity-capture.spec.ts` imports `scripts/parity/*.mjs` — plain JS
-       shared verbatim with the standalone `capture-design.mjs` script so the
-       two parity capture sides can never drift on routes/probes/style
-       properties. `allowJs` lets that import resolve under `strict`. */
-    "allowJs": true,
 
     /* Bundler mode */
     "moduleResolution": "bundler",

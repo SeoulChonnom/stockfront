@@ -8,8 +8,8 @@ import { getTodayBusinessDateKst, shiftBusinessDate } from './date-utils';
 import { extractFilterQuery } from './navigation';
 
 /**
- * Archive Detail 404 — README §13 D-05: "해당 날짜 스냅샷이 없으면 404
- * 상태 화면을 보여준다." 인접 날짜 이동 API가 없으므로(D-05) prev/next는
+ * Archive Detail 404는 해당 날짜 스냅샷이 없을 때 상태 화면을 보여준다.
+ * 인접 날짜 이동 API가 없으므로(D-05) prev/next는
  * 여기서도 순수 날짜 산술이다 — 그래서 404 화면에서도 정상 스냅샷과 같은
  * `ArchiveModeBand`를 재사용해 날짜 내비게이션을 그대로 유지한다.
  */

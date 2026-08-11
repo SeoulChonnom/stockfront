@@ -146,17 +146,10 @@ export function BatchDetailContent({
 
   return (
     <div className='flex min-w-0 flex-col gap-4'>
-      {/* 참조 889행: 이 헤더 바는 본문(16px/18px, `CardContent`의 앰비언트
-          padding)과 별개로 자기 몫의 `padding:14px 18px` +
-          `border-bottom:1px solid var(--line)`을 갖는다(목록 패널 헤더와
-          같은 패턴, `batch-history-list.tsx` 참고). `CardContent`가
-          모든 자식에 균일한 18px/16px padding을 주는 구조라, 음수 마진으로
-          카드 가장자리까지 뺀 뒤 이 행만 자기 padding·구분선을 다시
-          그린다 — divider가 부모 padding에 막혀 18px씩 짧아지지 않게
-          하려면 가로 방향도 카드 가장자리까지 닿아야 한다. */}
-      {/* 참조 889행 `gap:8px 10px`(row 8px / column 10px) — 균일한 8px이
-          아니다. 이 행의 4개 아이템(제목·타입 배지·상태 배지·날짜) 사이
-          가로 간격이 정확히 2px씩 밀려나던 원인이 이 근사치였다. */}
+      {/* This header owns 14px/18px padding and a full-width bottom border,
+          separate from the detail body's padding. Negative margins extend
+          the divider to the card edges. */}
+      {/* Use an 8px row gap and 10px column gap between wrapped metadata. */}
       <div className='-mx-[18px] -mt-4 flex flex-wrap items-center gap-x-[10px] gap-y-2 border-b border-line px-[18px] py-[14px]'>
         {/* Keep this dense card heading at 14.5px in the page sans stack. */}
         <h2
@@ -166,7 +159,7 @@ export function BatchDetailContent({
         >
           job {run.id}
         </h2>
-        {/* 참조(893-896행) 헤더 순서: jobId · 타입 · 상태 · 기준일. */}
+        {/* Header order: jobId · type · status · business date. */}
         <BatchTypeBadge jobType={run.jobType} />
         <StatusBadge status={run.rawStatus} />
         <span className='mono text-body-sm text-fg-soft'>

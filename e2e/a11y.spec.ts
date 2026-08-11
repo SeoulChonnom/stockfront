@@ -2,16 +2,15 @@ import { expect, test } from './fixtures/console-guard';
 import { installMockApi } from './fixtures/mock-api';
 
 /**
- * Phase 9 §16-8 — keyboard: Tab order, skip link, and Drawer/Dialog focus
- * trap + Escape + return-to-trigger (README §5 Drawer, §7-7 Trigger dialog,
- * §15). Both Drawer and Dialog share the same underlying
+ * Keyboard coverage: Tab order, skip link, and Drawer/Dialog focus trap,
+ * Escape, and return-to-trigger. Both share the same underlying
  * `use-dismissable.ts` hook, so their contracts are identical in shape.
  */
 
-test.describe('§16-8 skip link', () => {
+test.describe('skip link', () => {
   // NOTE on approach: this app deliberately auto-focuses `#page-title` (or
   // `#main-content` as a transient fallback while loading) on every route
-  // mount (§7-1/§16-7) — by the time `page.goto()` resolves, SOMETHING deep
+  // mount — by the time `page.goto()` resolves, something deep
   // in the page already holds focus. Resetting via `document.activeElement
   // ?.blur()` does NOT reliably move Chromium's sequential-focus-navigation
   // cursor back to the true top of the document (verified empirically: a
@@ -56,7 +55,7 @@ test.describe('§16-8 skip link', () => {
   });
 });
 
-test.describe('§16-8 mobile nav Drawer — focus trap / Escape / return', () => {
+test.describe('mobile nav Drawer — focus trap / Escape / return', () => {
   test.use({ viewport: { width: 390, height: 844 } });
 
   test('opens with focus on its first focusable element, traps Tab, Escape closes and returns focus to the menu button', async ({
@@ -118,7 +117,7 @@ test.describe('§16-8 mobile nav Drawer — focus trap / Escape / return', () =>
   });
 });
 
-test.describe('§16-8 Manual Trigger Dialog — focus trap / Escape / return', () => {
+test.describe('Manual Trigger Dialog — focus trap / Escape / return', () => {
   test('opens with focus on #trigger-date, traps Tab, Escape closes and returns focus to the trigger button', async ({
     page,
   }) => {
@@ -130,8 +129,7 @@ test.describe('§16-8 Manual Trigger Dialog — focus trap / Escape / return', (
 
     const dialog = page.getByRole('dialog');
     await expect(dialog).toBeVisible();
-    // `Dialog` is opened with `initialFocusRef={dateInputRef}` (README §7-7:
-    // "첫 입력(`#trigger-date`)으로 포커스"), so #trigger-date gets initial
+    // `Dialog` opens with `initialFocusRef={dateInputRef}`, so #trigger-date gets initial
     // focus even though the header's own ✕ close button is EARLIER in DOM
     // order (and is therefore the trap's true "first" focusable element).
     await expect(page.locator('#trigger-date')).toBeFocused();

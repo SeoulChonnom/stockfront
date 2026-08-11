@@ -48,7 +48,7 @@ describe('parseKstAwareDate', () => {
 });
 
 describe('getTodayIso', () => {
-  it('rolls the KST calendar date forward across the UTC day boundary (D6)', () => {
+  it('rolls the KST calendar date forward across the UTC day boundary', () => {
     // 2026-07-27T15:00:00Z is 2026-07-28 00:00 KST — an instant between
     // 00:00 and 09:00 KST where the UTC calendar date is still the
     // PREVIOUS day. A naive `toISOString().slice(0, 10)` on the raw
@@ -61,7 +61,7 @@ describe('getTodayIso', () => {
     expect(getTodayIso(utcJustAfterKstMidnight)).toBe('2026-07-28');
   });
 
-  it('agrees with the Intl-based getTodayBusinessDateKst technique at the D6 boundary', () => {
+  it('agrees with the Intl-based getTodayBusinessDateKst technique at the KST boundary', () => {
     // Both techniques are correct for Korea (no DST); prove they produce
     // identical output for the boundary instant so unifying the module
     // does not silently change behavior for either caller.

@@ -75,7 +75,7 @@ export function ArchiveSearchFilters({
           {/* No native `max`/`min` here on purpose: an HTML5
               constraint-violating value makes the browser (and jsdom)
               silently block the form's `submit` event before it ever
-              reaches `handleSubmit` — which would make the exact §7-4
+              reaches `handleSubmit` — which would make the exact validation
               future-date message below unreachable in real use, not just in
               tests. All range/format checks are enforced by
               `validateArchiveFilters` alone. */}

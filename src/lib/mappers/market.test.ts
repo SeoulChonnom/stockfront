@@ -439,7 +439,7 @@ describe('mappers - market', () => {
 
     expect(snapshot.markets[0].indices[0]).toEqual({
       label: '-',
-      // indexCode는 문자열이면 그대로 보존한다 (§7-2 mono 코드 서브라인).
+      // indexCode는 mono 코드 서브라인용 문자열로 그대로 보존한다.
       code: 'IX',
       value: '-',
       change: '-',
@@ -537,11 +537,10 @@ describe('mappers - market', () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────
-// Phase 5 "Data layer 복원": fields the v2 handoff (README §13) identified as
-// present in the DTO but dropped by the mapper. Fixtures below mirror the
-// shapes in docs/design_v2/handoff_v2/fixtures.js.
+// Fields present in the daily-page DTO that older mapper implementations
+// dropped. The fixtures below mirror the current API shapes.
 // ─────────────────────────────────────────────────────────────────────────
-describe('restored daily page fields (README §13)', () => {
+describe('restored daily page fields', () => {
   const LONG_TOKEN =
     'GLOBALMARKETDAILYBRIEFSEMICONDUCTORSUPPLYCHAINRECOVERYANDFOREIGNNETBUYINGANALYSISREPORTVERSIONTHREEFINALDRAFTCONFIDENTIALINTERNALUSEONLYDONOTDISTRIBUTEOUTSIDEOFTHEORGANIZATION2026072712345678';
 
@@ -756,7 +755,7 @@ describe('restored daily page fields (README §13)', () => {
   it('maps the page-level PARTIAL banner message, distinct from any per-market metadata.partialMessage', () => {
     // This is DailyPageResponse.partialMessage — a sibling of `metadata`,
     // not `metadata.partialMessage`. Both must reach the view model: the
-    // PARTIAL banner (README §7-2) renders the page-level message plus a
+    // The PARTIAL banner renders the page-level message plus a
     // per-market "시장명 — 메시지" line sourced from metadata.partialMessage.
     const snapshot = mapDailyPageToSnapshot({
       pageId: 501,

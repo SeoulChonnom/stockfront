@@ -10,7 +10,7 @@ export type BatchFilterDraft = {
 
 export const BATCH_STATUSES = ['SUCCESS', 'PARTIAL', 'FAILED', 'RUNNING'];
 
-/** API enum is canonical; prototype fixture names are not sent to the backend. */
+/** API enum is canonical; legacy fixture names are not sent to the backend. */
 export const BATCH_TYPES = ['NEWS_COLLECTION', 'MARKET_SNAPSHOT'];
 
 const STATUS_OPTIONS: ReadonlyArray<{ value: string; label: string }> = [

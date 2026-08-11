@@ -1,6 +1,6 @@
 /**
  * `businessDate` date arithmetic for Archive Detail's prev/next navigation
- * (README §7-3: "인접 날짜 이동은 날짜 산술이다"). `businessDate` is a plain
+ * Adjacent-date navigation uses calendar arithmetic. `businessDate` is a plain
  * `YYYY-MM-DD` calendar date (no time component), so UTC-based arithmetic on
  * the parsed y/m/d triplet is timezone-safe — there's no wall-clock/instant
  * ambiguity to worry about the way there is for `generatedAt` timestamps.

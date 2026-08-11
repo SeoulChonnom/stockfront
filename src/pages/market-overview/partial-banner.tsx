@@ -3,7 +3,7 @@ import { navigate } from '@/lib/router';
 import type { MarketSnapshot } from '@/lib/view-models';
 
 /**
- * PARTIAL 배너 — README §7-2 item 2. `status==='partial'`이거나 페이지 레벨
+ * PARTIAL 배너. `status==='partial'`이거나 페이지 레벨
  * `partialMessage`가 있으면 렌더링한다. 누락 항목은 페이지 레벨 메시지 +
  * 시장별 `metadata.partialMessage`를 `시장명 — 메시지`로 합친 목록이다.
  */

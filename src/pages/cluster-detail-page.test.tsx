@@ -107,8 +107,7 @@ describe('ClusterDetailPage', () => {
 
     render(<ClusterDetailPage clusterId='cluster-1' />);
 
-    // C10: the title link's accessible name includes the trailing "↗"
-    // the design appends to linked article titles.
+    // Linked article titles include a trailing "↗" in their accessible name.
     expect(
       screen.getByRole('link', { name: 'safe article ↗' })
     ).toHaveAttribute('href', 'https://example.com/original');

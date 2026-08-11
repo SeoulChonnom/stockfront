@@ -131,8 +131,8 @@ export function mapDailyPageToSnapshot(
     /**
      * null을 보존한다. 예전에는 `pageTitle`로 치환해서, AI 요약 단계가
      * 실패해 헤드라인이 생성되지 않은 브리프가 페이지 제목을 헤드라인처럼
-     * 보여주며 정상처럼 렌더됐다. README §7-2의 "글로벌 헤드라인이 생성되지
-     * 않았습니다" 상태는 그래서 실제 데이터로는 도달할 수 없었다.
+     * 보여주며 정상처럼 렌더됐다. "글로벌 헤드라인이 생성되지 않았습니다"
+     * 상태는 그래서 실제 데이터로는 도달할 수 없었다.
      * 표현(대체 문구) 선택은 UI의 책임이다.
      */
     globalHeadline: asNullableString(response.globalHeadline),

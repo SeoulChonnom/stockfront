@@ -4,8 +4,8 @@ import { navigate } from '@/lib/router';
 import { buildArchiveSearchHref, type FilterQueryParams } from './navigation';
 
 /**
- * 아카이브 모드 밴드 — README §7-3. Archive Detail만 Latest 위에 얹는 상단
- * 밴드. 정상 스냅샷(§7-3)과 404(§13 D-05, 인접 날짜 스냅샷이 없는 경우) 양쪽
+ * 아카이브 모드 밴드. Archive Detail만 Latest 위에 얹는 상단 밴드. 정상
+ * 스냅샷과 인접 날짜 스냅샷이 없는 404 양쪽
  * 화면에서 재사용한다 — 두 경우 모두 날짜 산술 내비게이션은 그대로 필요하다.
  */
 export type ArchiveModeBandProps = {

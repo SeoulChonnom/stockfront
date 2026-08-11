@@ -24,7 +24,7 @@ describe('mappers - archive', () => {
 
     expect(view.page).toBe(2);
     expect(view.totalPages).toBe(3);
-    // D4: null `headlineSummary` no longer backfills with `pageTitle` — a
+    // A null `headlineSummary` no longer backfills with `pageTitle` — a
     // FAILED (AI-summary-failed) row must not look like a normal one.
     expect(view.rows[0].headline).toBe('헤드라인이 생성되지 않았습니다');
   });

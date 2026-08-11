@@ -2,8 +2,7 @@ import { expect, test } from './fixtures/console-guard';
 import { installMockApi } from './fixtures/mock-api';
 
 /**
- * Phase 9 §16-10 — Manual Trigger lifecycle (README §7-7), plus the Trigger
- * slice of §16-12 (live region outcomes).
+ * Covers the Manual Trigger lifecycle and its live-region outcomes.
  *
  * `installMockApi`'s POST `/stock/api/batch/market-daily` handler
  * (`e2e/fixtures/mock-api.ts`) adds a 300ms artificial delay before resolving
@@ -18,7 +17,7 @@ async function openTriggerDialog(page: import('@playwright/test').Page) {
   await expect(page.locator('#trigger-date')).toBeFocused();
 }
 
-test.describe('§16-10 Trigger lifecycle — success path', () => {
+test.describe('Trigger lifecycle — success path', () => {
   test('idle -> pending -> success, with duplicate submit structurally impossible', async ({
     page,
   }) => {
@@ -95,7 +94,7 @@ test.describe('§16-10 Trigger lifecycle — success path', () => {
   });
 });
 
-test.describe('§16-10 Trigger lifecycle — error paths', () => {
+test.describe('Trigger lifecycle — error paths', () => {
   const cases: Array<{
     triggerMode: Parameters<typeof installMockApi>[1]['triggerMode'];
     expectedCode: string;
@@ -205,7 +204,7 @@ test.describe('§16-10 Trigger lifecycle — error paths', () => {
   });
 });
 
-test.describe('§16-12 live region — Trigger outcomes', () => {
+test.describe('live region — Trigger outcomes', () => {
   test('announces the pending request and the eventual error', async ({
     page,
     consoleGuard,

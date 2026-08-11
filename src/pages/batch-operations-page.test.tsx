@@ -15,7 +15,7 @@ import type { BatchRunRow } from './../lib/query-hooks';
 import { BatchOperationsPage } from './batch-operations-page';
 
 /**
- * `/ops/batches` (README §7-6/§7-7). Rewritten for Phase 6's full rebuild:
+ * `/ops/batches`. Rewritten for the current master-detail and trigger UI:
  * non-admin 403 gating with NO batch request issued, failure-first summary
  * tiles, real pagination, `?jobId=` deep link, list/detail INDEPENDENT
  * loading/error, and the ≤1180px column collapse. Trigger dialog lifecycle
@@ -218,7 +218,7 @@ afterEach(() => {
   window.history.replaceState(null, '', '/');
 });
 
-describe('BatchOperationsPage — non-admin user (§10, §16-11)', () => {
+describe('BatchOperationsPage — non-admin user', () => {
   beforeEach(() => {
     setRoleOverride('user');
   });
@@ -445,7 +445,7 @@ describe('BatchOperationsPage — admin', () => {
 
     // from/to are preserved (today-relative defaults, not asserted
     // verbatim); status+page=1 is what this quick filter is responsible for
-    // (README §7-6 point 3).
+    // The quick filter owns `status` and resets pagination.
     const params = new URLSearchParams(window.location.search);
     expect(params.get('status')).toBe('FAILED');
     expect(params.get('page')).toBe('1');
@@ -463,9 +463,8 @@ describe('BatchOperationsPage — admin', () => {
 
     renderPage(new URLSearchParams('page=2'));
 
-    // E7 (parity cycle 2): design's ops pager has no trailing "N / M"
-    // indicator (unlike Archive's) — the range lives in the list header
-    // instead ("1–20 / 27", already covered by other tests in this file).
+    // Ops intentionally omits the trailing "N / M" pager indicator used by
+    // Archive because its item range already lives in the list header.
     expect(screen.getByText('21–27 / 27')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: '1' }));
@@ -614,7 +613,7 @@ describe('BatchOperationsPage — admin', () => {
         '배치 목록을 불러오지 못했습니다. 필터와 이전 선택은 그대로 유지됩니다.'
       )
     ).toBeInTheDocument();
-    // E3: the applied status (+ type) filter is shown as plain muted text in
+    // The applied status (+ type) filter is shown as plain muted text in
     // the list header ("· <status label> · <type label>", always present)
     // rather than a `<select>` value — the actual filter FORM now lives in
     // the "조회 조건" card above (`batch-filters.tsx`), covered separately
@@ -627,7 +626,7 @@ describe('BatchOperationsPage — admin', () => {
     ).toBeInTheDocument();
   });
 
-  it('실행 이력 헤더의 필터 해제는 status와 type을 모두 해제하고 announce한다 (design v2 2055행)', async () => {
+  it('실행 이력 헤더의 필터 해제는 status와 type을 모두 해제하고 announce한다', async () => {
     const user = userEvent.setup();
     mockUseBatchJobs.mockReturnValue(jobsReady());
     mockUseBatchJobDetail.mockReturnValue(detailReady(createRow()));
@@ -652,8 +651,8 @@ describe('BatchOperationsPage — admin', () => {
     mockUseBatchJobs.mockReturnValue(jobsReady({ rows: [], totalCount: 0 }));
     mockUseBatchJobDetail.mockReturnValue(detailReady(undefined));
 
-    // status/type 없는 기본 URL — 빈 상태의 필터 해제 버튼은 프로토타입과
-    // 동일하게 무조건 렌더되지만, 실제로 해제할 조건이 없으므로 "해제했습니다"
+    // status/type 없는 기본 URL에서도 빈 상태의 필터 해제 버튼은 무조건
+    // 렌더되지만, 실제로 해제할 조건이 없으므로 "해제했습니다"
     // 라고 알리면 일어나지 않은 상태 변화를 announce하는 셈이 된다.
     renderPage(new URLSearchParams());
 

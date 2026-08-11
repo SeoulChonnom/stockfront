@@ -8,10 +8,9 @@ import { buildUrl, navigate } from '@/lib/router';
 
 /**
  * Filter query fields an Archive Search result row attaches when it opens an
- * Archive Detail page (`?pageId=&from=&to=&status=&page=`, README §7-4/§9).
+ * Archive Detail page (`?pageId=&from=&to=&status=&page=`).
  * Kept as a distinct type from `pageId` (identity, not a filter) because only
- * these four round-trip further into a Cluster Detail navigation (§7-2 point
- * 3: "plus filter query when coming from archive").
+ * these four round-trip further into a Cluster Detail navigation.
  */
 export type FilterQueryParams = {
   from?: string;
@@ -23,8 +22,8 @@ export type FilterQueryParams = {
 /**
  * Reads `from`/`to`/`status`/`page` off the current URL. Returns `null` when
  * none are present — the caller (Archive Detail) uses that `null` to decide
- * whether "검색 결과로 돌아가기" should render at all (README §7-3: "진입 시
- * 필터 쿼리가 있을 때만").
+ * whether "검색 결과로 돌아가기" should render at all: only URLs carrying
+ * archive-search filter state came from a result list.
  */
 export function extractFilterQuery(
   searchParams: URLSearchParams

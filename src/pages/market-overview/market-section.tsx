@@ -7,7 +7,7 @@ import { MarketIssueList } from './market-issue-list';
 import type { ClusterOriginQuery } from './navigation';
 
 /**
- * 시장 섹션 — README §7-2 item 3. `markets[]`의 DTO 순서(미국 → 한국)를
+ * 시장 섹션. `markets[]`의 DTO 순서(미국 → 한국)를
  * 그대로 유지해 map으로 순회한다.
  *
  * The market-type code is already mapped by the view model and rendered in

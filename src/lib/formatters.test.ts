@@ -40,8 +40,8 @@ describe('formatters', () => {
     });
 
     it('reads a naive (no-offset) timestamp as literal KST wall-clock digits, independent of the host runtime timezone', () => {
-      // Every timestamp in the real DTO contract (fixtures.js `NOW_KST`,
-      // `generatedAt`, `publishedAt`, `startedAt`, ...) has no trailing Z or
+      // Every timestamp in the real DTO contract (`generatedAt`,
+      // `publishedAt`, `startedAt`, ...) has no trailing Z or
       // offset and already represents KST wall-clock time. Naively passing
       // such a string to `new Date(value)` parses it using the *host
       // runtime's local timezone*, which would make this test's outcome

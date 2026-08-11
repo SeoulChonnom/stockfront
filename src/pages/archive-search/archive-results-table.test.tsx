@@ -29,7 +29,7 @@ describe('ArchiveResultsTable', () => {
       '/market/archive/2026-03-31?pageId=42&from=2026-03-01&to=2026-03-31&page=1'
     );
 
-    // D1: ISO date, not the ko-KR dotted format ("2026. 03. 31").
+    // Use an ISO date rather than the ko-KR dotted format ("2026. 03. 31").
     expect(screen.getByRole('link', { name: '2026-03-31' })).toHaveAttribute(
       'href',
       expectedHref
@@ -85,7 +85,7 @@ describe('ArchiveResultsTable', () => {
     // The desktop column renders the raw value without a "생성 " prefix, so
     // this text only ever matches the priority-cell subline that stays
     // mounted (CSS-hidden above 1180px, not `hidden`/unmounted below it) —
-    // §11 forbids `display:none` from ever dropping the value, including
+    // Responsive rendering must not use `display:none` to drop the value,
     // from the accessibility tree.
     const subline = screen.getByText('생성 2026-03-30 06:08 KST');
     expect(subline).toBeInTheDocument();

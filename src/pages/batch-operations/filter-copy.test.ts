@@ -11,7 +11,7 @@ import {
 } from './filter-copy';
 
 describe('getDefaultBatchFilters', () => {
-  it('D6: defaults to the KST calendar date, not the UTC one, in the early-KST-morning boundary window', () => {
+  it('defaults to the KST calendar date, not the UTC one, in the early-KST-morning boundary window', () => {
     // Same boundary case as `archive-search/filter-copy.test.ts` — both
     // pages duplicate the same KST-default logic on purpose (see that
     // file's header comment and this file's `getDefaultBatchFilters`).
@@ -32,7 +32,7 @@ describe('getDefaultBatchFilters', () => {
 });
 
 describe('getBatchStatusOptions', () => {
-  it('exposes 전체/SUCCESS/PARTIAL/FAILED/RUNNING in that exact order (design v2 2074행)', () => {
+  it('exposes 전체/SUCCESS/PARTIAL/FAILED/RUNNING in display order', () => {
     expect(getBatchStatusOptions().map((option) => option.value)).toEqual([
       '',
       'SUCCESS',
@@ -51,7 +51,7 @@ describe('getBatchStatusOptions', () => {
 });
 
 describe('getBatchTypeOptions', () => {
-  it('uses the API BatchJobType enum values (NEWS_COLLECTION/MARKET_SNAPSHOT), not the design fixture values', () => {
+  it('uses the API BatchJobType enum values (NEWS_COLLECTION/MARKET_SNAPSHOT), not legacy fixture values', () => {
     expect(getBatchTypeOptions().map((option) => option.value)).toEqual([
       '',
       'NEWS_COLLECTION',
@@ -60,7 +60,7 @@ describe('getBatchTypeOptions', () => {
     expect(BATCH_TYPES).toEqual(['NEWS_COLLECTION', 'MARKET_SNAPSHOT']);
   });
 
-  it('labels the API enum values with the design copy (검색 결과 저장/스냅샷 생성)', () => {
+  it('labels the API enum values with the user-facing copy (검색 결과 저장/스냅샷 생성)', () => {
     expect(getBatchTypeOptions().map((option) => option.label)).toEqual([
       '전체 타입',
       '검색 결과 저장',
@@ -125,7 +125,7 @@ describe('validateBatchFilters', () => {
     });
   });
 
-  it('rejects a future `to` date with the exact §7-4 message', () => {
+  it('rejects a future `to` date with the exact product message', () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date(`${today}T00:00:00+09:00`));
     try {

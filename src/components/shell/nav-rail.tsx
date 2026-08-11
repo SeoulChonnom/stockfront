@@ -31,7 +31,7 @@ export function NavRail({
   return (
     <aside className='sticky top-0 hidden h-screen w-[248px] shrink-0 flex-col border-r border-line bg-[color:var(--surface)] min-[1025px]:flex'>
       <div className='px-5 pt-6 pb-4'>
-        {/* C5: design wordmark color is `--text`, not `--primary`. */}
+        {/* Keep the wordmark on the foreground token rather than the primary accent. */}
         <p className='m-0 text-[19px] font-bold tracking-[-0.02em] text-fg [font-family:var(--font-display)]'>
           Market Brief
         </p>

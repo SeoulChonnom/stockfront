@@ -243,7 +243,7 @@ describe('mappers - batch', () => {
   });
 });
 
-describe('restored batch detail fields (README §13)', () => {
+describe('restored batch detail fields', () => {
   const LONG_LOG = 'x'.repeat(4000);
 
   it('maps errorCode, errorMessage, logSummary, forceRun, and rebuildPageOnly from the batch detail response', () => {

@@ -6,7 +6,7 @@ import { navigate } from '@/lib/router';
 import type { FetchErrorPresentation } from './error-presentation';
 
 /**
- * FAILED/5xx/401/429/offline/malformed 오류 상태 — README §8: "오류는 영향
+ * FAILED/5xx/401/429/offline/malformed 오류 상태. 오류는 영향
  * 받는 영역 안에서만 나타나고 항상 복구 액션을 가진다." Archive 404는 이
  * 컴포넌트가 아니라 `ArchiveNotFoundState`(날짜 내비게이션이 함께 필요해
  * 별도 화면)가 처리한다 — `market-overview-route-content.tsx`가 분기한다.

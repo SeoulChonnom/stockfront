@@ -49,7 +49,7 @@ function isAuthResolved(status: AuthBootstrapStatus) {
   return status === 'authenticated' || status === 'bypassed';
 }
 
-/** Copy is FINAL per README §7-8 — do not paraphrase. */
+/** Product-approved not-found copy; do not paraphrase. */
 function getAuthBootstrapMessage(
   status: AuthBootstrapStatus
 ): AuthStatusCardConfig {

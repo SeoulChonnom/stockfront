@@ -194,7 +194,7 @@ describe('mappers - cluster', () => {
     expect(detail.updatedAt).toBe('-');
     expect(detail.representative).toMatchObject({
       id: 'representative-unknown-cluster',
-      // 영어 sentinel을 굽지 않고 null을 보존한다 — 문구 선택은 UI 책임 (§7-5).
+      // 영어 sentinel을 굽지 않고 null을 보존한다 — 문구 선택은 UI 책임이다.
       source: null,
       publishedAt: null,
       title: null,
@@ -205,7 +205,7 @@ describe('mappers - cluster', () => {
     });
     expect(detail.articles[0]).toMatchObject({
       id: '1',
-      // 영어 sentinel을 굽지 않고 null을 보존한다 — 문구 선택은 UI 책임 (§7-5).
+      // 영어 sentinel을 굽지 않고 null을 보존한다 — 문구 선택은 UI 책임이다.
       source: null,
       publishedAt: null,
       title: null,

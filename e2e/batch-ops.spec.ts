@@ -2,34 +2,28 @@ import { expect, test } from './fixtures/console-guard';
 import { installMockApi } from './fixtures/mock-api';
 
 /**
- * Phase 9 §16 items 4 (Batch pagination), 5 (browser Back — jobId selection +
- * scroll), 9 (Retry — list/detail independence), 12 (live region — the
- * subset this screen owns).
+ * Covers batch pagination, browser Back restoration for selection/scroll,
+ * independent list/detail retries, and this screen's live regions.
  *
  * `BATCH_ALL` (mock-api.ts) seeds 27 business dates × 2 job types = 54 jobs,
  * interleaved newest-first. The list page size is 20, so the unfiltered list
  * has 3 pages. Tests that care which job is selected pass an explicit
  * `?jobId=` rather than relying on the first-row fallback.
  *
- * Design parity cycle 1 (E1) also removed the 시작일/종료일/상태 filter FORM
- * (`BatchFilterBar`) — there is no `#batch-status-trigger`/필터 적용 flow
- * anymore. The only way to change `status` from the UI is the attention
- * banner's 실패만 보기/부분 실패만 보기 quick filters (see
- * `batch-attention-banner.tsx`) or the list header's 필터 해제 button.
+ * The batch screen intentionally has no 시작일/종료일/상태 filter form.
+ * The UI changes `status` through the attention banner's 실패만 보기/부분
+ * 실패만 보기 quick filters or clears it from the list header.
  */
 
-test.describe('§16-4 pagination (Batch: 54/20 -> 3 pages)', () => {
+test.describe('pagination (Batch: 54/20 -> 3 pages)', () => {
   test('paginates through all pages and reflects `page` in the URL', async ({
     page,
   }) => {
     await installMockApi(page, { scenario: 'ready' });
     await page.goto('ops/batches');
 
-    // The "1–20 / 27" range lives only in the list header (design parity
-    // cycle 1, D5) — the shared `Pagination` component no longer renders a
-    // range next to the pager. E7 (cycle 2): Ops's pager also has no
-    // trailing "N / M" indicator at all (unlike Archive's, which does) —
-    // this screen only has the range in the header, nothing beside 다음.
+    // The item range lives only in the list header. Unlike Archive, Ops does
+    // not duplicate it or add a trailing "N / M" beside the pager.
     await expect(page.getByText('1–20 / 54', { exact: true })).toBeVisible();
     await expect(page.getByText(/^\d+ \/ \d+$/)).not.toBeVisible();
 
@@ -44,7 +38,7 @@ test.describe('§16-4 pagination (Batch: 54/20 -> 3 pages)', () => {
   });
 });
 
-test.describe('§16-5 browser Back (Batch jobId selection + scroll)', () => {
+test.describe('browser Back (Batch jobId selection + scroll)', () => {
   test('Back restores the previous job selection', async ({ page }) => {
     await installMockApi(page, { scenario: 'ready' });
     await page.goto('ops/batches?jobId=1042');
@@ -59,7 +53,14 @@ test.describe('§16-5 browser Back (Batch jobId selection + scroll)', () => {
     await expect(page.getByRole('heading', { name: 'job 1042' })).toBeVisible();
   });
 
-  test('Back restores scroll position', async ({ page }) => {
+  test('Back restores scroll position', async ({ page, consoleGuard }) => {
+    // Going Back immediately after the URL changes can cancel the detail
+    // query before its response arrives. React Query forwards that expected
+    // navigation cancellation through the request's AbortSignal.
+    consoleGuard.allowFailedRequest(
+      /GET .*\/stock\/api\/batch\/jobs\/1037 — net::ERR_ABORTED$/
+    );
+
     await installMockApi(page, { scenario: 'ready' });
     await page.setViewportSize({ width: 1440, height: 700 });
     await page.goto('ops/batches');
@@ -77,7 +78,7 @@ test.describe('§16-5 browser Back (Batch jobId selection + scroll)', () => {
   });
 });
 
-test.describe('§16-9 Retry (Batch list/detail independence)', () => {
+test.describe('Retry (Batch list/detail independence)', () => {
   test('a failing list refetch does not disturb the (unrelated-query) detail panel; retry recovers the list only', async ({
     page,
     consoleGuard,
@@ -178,7 +179,7 @@ test.describe('§16-9 Retry (Batch list/detail independence)', () => {
   });
 });
 
-test.describe('§16-12 live region (Batch)', () => {
+test.describe('live region (Batch)', () => {
   const LIVE_REGION = '[aria-live="polite"]';
 
   test('announces row selection and page moves', async ({ page }) => {
@@ -197,7 +198,7 @@ test.describe('§16-12 live region (Batch)', () => {
   });
 });
 
-test.describe('§16-14 pipeline step history (retries, ordered)', () => {
+test.describe('pipeline step history (retries, ordered)', () => {
   test('renders a failed-then-succeeded AI retry as two ordered rows with duration only on the successful one', async ({
     page,
   }) => {
@@ -222,7 +223,7 @@ test.describe('§16-14 pipeline step history (retries, ordered)', () => {
   });
 });
 
-test.describe('§16-13 AI summary retry', () => {
+test.describe('AI summary retry', () => {
   test('submits one accepted retry-ai request for a PARTIAL job', async ({
     page,
   }) => {

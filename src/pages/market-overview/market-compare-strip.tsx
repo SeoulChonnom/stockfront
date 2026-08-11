@@ -3,10 +3,9 @@ import { cn } from '@/lib/utils';
 import type { MarketSnapshot } from '@/lib/view-models';
 
 /**
- * 시장 비교 스트립 — README §7-2 결정 헤더 카드의 일부. 2열 그리드(≤1024px
- * 1열). 대표 지수는 시장의 첫 번째 지수(README/디자인 레퍼런스 모두
- * `indices[0]`를 "대표"로 취급 — `docs/design_v2/handoff_v2/Market Brief
- * v2.dc.html`의 `compare` 계산 참고).
+ * 시장 비교 스트립 — 결정 헤더 카드의 일부. 2열 그리드(≤1024px 1열).
+ * API에는 별도의 대표 지수 표식이 없으므로 배열 순서를 보존하고
+ * `indices[0]`를 시장의 대표 지수로 취급한다.
  *
  * The market-type code is already mapped by the view model and is shown on
  * each comparison tile.

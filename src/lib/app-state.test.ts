@@ -80,7 +80,7 @@ describe('parseListFilters', () => {
     }
   });
 
-  it('D6: defaults to the KST calendar date, not the UTC one, in the early-KST-morning boundary window', () => {
+  it('defaults to the KST calendar date, not the UTC one, in the early-KST-morning boundary window', () => {
     // 2026-07-27T00:30 KST == 2026-07-26T15:30:00Z — a naive
     // `new Date().toISOString()` reads the UTC date and would default `to`
     // to 2026-07-26 (yesterday in Korea) for this entire 00:00–09:00 KST

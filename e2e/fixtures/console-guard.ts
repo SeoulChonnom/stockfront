@@ -1,6 +1,6 @@
 /**
- * Shared `test`/`expect` for the Phase 9 acceptance suite — §16-14 ("console
- * error 0 and no unexpected failed requests").
+ * Shared `test`/`expect` for behavioral E2E specs that require zero unexpected
+ * console errors or failed requests.
  *
  * Every spec file in this phase (`routing.spec.ts`, `archive-search.spec.ts`,
  * `batch-ops.spec.ts`, `trigger.spec.ts`, `a11y.spec.ts`,
@@ -16,12 +16,11 @@
  * A test that deliberately drives a failing request/console error (e.g. the
  * 5xx retry scenario, or a Trigger network-error scenario) MUST allow-list it
  * explicitly via `consoleGuard.allowFailedRequest(...)` /
- * `consoleGuard.allowConsoleError(...)` — that is the point of §16-14: it is
- * not "no errors ever," it is "no *unexpected* errors."
+ * `consoleGuard.allowConsoleError(...)`: the invariant is not "no errors ever"
+ * but "no unexpected errors."
  *
- * Deliberately NOT applied to `e2e/responsive-overflow.spec.ts` (Phase 8,
- * already green — out of scope to touch) or the screenshot-capture spec
- * (visual evidence, not a behavioral assertion).
+ * Deliberately not applied to `e2e/responsive-overflow.spec.ts`, whose focus
+ * is layout measurement rather than behavioral request assertions.
  */
 import { test as base, expect } from '@playwright/test';
 
@@ -93,7 +92,7 @@ export const test = base.extend<Fixtures>({
 
       if (problems.length > 0) {
         throw new Error(
-          `[§16-14 console-guard] ${problems.join('\n\n')}\n\nIf this failure is EXPECTED for this test (e.g. a deliberate 5xx/offline scenario), call consoleGuard.allowConsoleError(...)/allowFailedRequest(...) with a matcher for it.`
+          `[console-guard] ${problems.join('\n\n')}\n\nIf this failure is EXPECTED for this test (e.g. a deliberate 5xx/offline scenario), call consoleGuard.allowConsoleError(...)/allowFailedRequest(...) with a matcher for it.`
         );
       }
     },

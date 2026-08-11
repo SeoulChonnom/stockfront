@@ -180,11 +180,8 @@ export function ArchiveSearchPage({
         >
           아카이브
         </h1>
-        {/* D5: design's measure here is 70ch, not the shared 76ch
-            `.measure-summary` utility. U2: the design's title `<section>`
-            is `display:flex;gap:6px` between h1 and this paragraph, not a
-            margin on the paragraph — `gap-1.5` (6px) on the wrapper above
-            replaces what used to be an `mt-2` (8px) margin here. */}
+        {/* Keep the summary measure at 70ch rather than the shared 76ch.
+            The title section's 6px flex gap replaces paragraph margin. */}
         <p className='wrap-anywhere max-w-[70ch] text-body text-fg-soft'>
           기준일 범위와 생성 상태로 과거 스냅샷을 찾습니다. 결과를 열면 해당
           날짜의 시장 브리프로 이동하고, 돌아올 때 필터·페이지·스크롤 위치가
@@ -282,8 +279,7 @@ function ArchiveResultsCard({
               {formatInteger(data.totalCount)}건
             </span>
           ) : null}
-          {/* D5: "1–20 / 46" range lives next to the results heading, not
-              beside the pager (see Pagination's own comment). */}
+          {/* The result range lives next to the heading rather than beside the pager. */}
           {data && data.totalCount > 0 ? (
             <span className='mono text-caption text-faint'>
               {(data.page - 1) * PAGE_SIZE + 1}–

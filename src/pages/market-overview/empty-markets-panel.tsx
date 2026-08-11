@@ -3,7 +3,7 @@ import { navigate } from '@/lib/router';
 import type { MarketSnapshot } from '@/lib/view-models';
 
 /**
- * `markets:[]` 상태 — README §7-2 item 4.
+ * `markets:[]` empty state.
  */
 export function EmptyMarketsPanel({
   status,

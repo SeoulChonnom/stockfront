@@ -107,7 +107,7 @@ describe('capabilities', () => {
     expect(getRole()).toBe('admin');
   });
 
-  it('gates every ops.* capability to admin only (README §10)', () => {
+  it('gates every ops.* capability to admin only', () => {
     expect(can('ops.view', 'user')).toBe(false);
     expect(can('ops.trigger', 'user')).toBe(false);
     expect(can('ops.viewLogs', 'user')).toBe(false);

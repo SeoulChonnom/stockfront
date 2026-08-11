@@ -1,8 +1,7 @@
 /**
- * README §11 responsive matrix — the six widths every route/state combination
- * must be checked at. Heights are arbitrary (tall enough to avoid vertical
- * scroll noise in screenshots/traces); only `width` is contractually required
- * by §11's `scrollWidth <= clientWidth` assertion.
+ * The six supported widths checked for every route/state combination. Heights
+ * are tall enough to reduce vertical-scroll noise; only width affects the
+ * `scrollWidth <= clientWidth` assertion.
  */
 export type Viewport = {
   name: string;

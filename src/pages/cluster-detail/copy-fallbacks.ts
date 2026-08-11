@@ -1,5 +1,5 @@
 /**
- * §7-5의 "없음" 문구 모음.
+ * Cluster-detail "없음" 문구 모음.
  *
  * 예전에는 mapper가 구워 넣은 영어 sentinel('Unknown Source', '-')을 화면에서
  * 되돌려 번역하고, `mirrorUrl === originalUrl` 문자열 비교로 "네이버 미러 없음"을
@@ -7,12 +7,12 @@
  * 문구로 바꾸기만 한다. 미러 유무는 `mirrorUrl !== null`로 직접 판정한다.
  */
 
-/** `publisherName`이 없을 때 (§7-5). */
+/** `publisherName`이 없을 때. */
 export function displaySource(source: string | null): string {
   return source && source.length > 0 ? source : '언론사 미확인';
 }
 
-/** `publishedAt`이 없거나 파싱 불가일 때 (§7-5). */
+/** `publishedAt`이 없거나 파싱 불가일 때. */
 export function displayPublishedAt(publishedAt: string | null): string {
   return publishedAt && publishedAt.length > 0
     ? publishedAt

@@ -6,9 +6,8 @@ import type { BatchStepRunView } from '@/lib/view-models';
 import { PipelineStages } from './pipeline-stages';
 
 /**
- * `steps` (BatchJobDetailResponse.steps) replaced the old currentStep/errorCode
- * inference — see `docs/design_v2/v2-decisions.md` §10. These tests cover
- * rendering the ordered execution history as-is, including retries.
+ * `steps` (BatchJobDetailResponse.steps) is the authoritative ordered
+ * execution history. These tests cover rendering it as-is, including retries.
  */
 describe('PipelineStages', () => {
   it('renders two AI_RETRY_GENERATE items as two rows in input order', () => {

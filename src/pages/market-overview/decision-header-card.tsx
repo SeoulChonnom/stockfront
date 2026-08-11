@@ -6,8 +6,8 @@ import type { MarketSnapshot } from '@/lib/view-models';
 import { MarketCompareStrip } from './market-compare-strip';
 
 /**
- * 결정 헤더 카드 — README §7-2 item 1. Latest와 Archive Detail이 공유하는
- * 첫 블록. h1은 mode에 따라 다르지만(§7-2 vs §7-3) 나머지 구조는 동일하다.
+ * 결정 헤더 카드. Latest와 Archive Detail이 공유하는 첫 블록. h1은 mode에
+ * 따라 다르지만 나머지 구조는 동일하다.
  */
 
 const NO_HEADLINE_COPY =

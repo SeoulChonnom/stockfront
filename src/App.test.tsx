@@ -117,11 +117,11 @@ function mockMatchMedia(matches: boolean) {
 
 /**
  * Pre-auth-resolve, none of the shell should exist at all — no brand mark,
- * no nav (old or new labels), no user chip. Updated for the Phase 4 shell
- * rebuild: the old brand had a "Financial Intelligence Console" subtitle
- * (removed, README §5 has no subtitle in the brand mark) and English nav/
+ * no nav (old or new labels), no user chip. The current shell replaced an
+ * older brand that had a "Financial Intelligence Console" subtitle
+ * (the brand mark has no subtitle) and English nav/
  * user-chip labels ("Batch Status", "Admin.Ops") that are now "배치 운영"/
- * "ops.analyst" (README §5's literal Korean nav tree + user chip).
+ * "ops.analyst" (the literal Korean nav tree plus user chip).
  */
 function expectProtectedShellToBeHidden() {
   expect(screen.queryByText('Market Brief')).not.toBeInTheDocument();
@@ -455,7 +455,7 @@ describe('App routing', () => {
     expect(
       screen.getByRole('heading', { level: 1, name: '아카이브' })
     ).toBeInTheDocument();
-    // v2: 페이지 표시는 공용 Pagination의 mono `page / totalPages` 이고,
+    // 페이지 표시는 공용 Pagination의 mono `page / totalPages` 이고,
     // 적용 버튼은 draft/applied 분리를 반영한 '필터 적용'이다.
     expect(screen.getByText('2 / 3')).toBeInTheDocument();
     expect(
@@ -503,7 +503,7 @@ describe('App routing', () => {
     expect(
       screen.getByRole('heading', { name: '배치 운영' })
     ).toBeInTheDocument();
-    // v2: master-detail 목록 헤딩. 상세는 jobId 선택 시에만 렌더된다.
+    // master-detail 목록 헤딩. 상세는 jobId 선택 시에만 렌더된다.
     expect(screen.getByText('실행 이력')).toBeInTheDocument();
   });
 
@@ -537,7 +537,7 @@ describe('App routing', () => {
     });
   });
 
-  it('focuses #page-title on a pathname route change, and leaves query-only changes to the page (§7-1, §9)', async () => {
+  it('focuses #page-title on a pathname route change, and leaves query-only changes to the page', async () => {
     vi.stubEnv('VITE_API_HOST', 'http://localhost:8000');
     vi.stubEnv('VITE_APP_ENV', 'development');
     vi.stubGlobal(
@@ -565,7 +565,7 @@ describe('App routing', () => {
     // Move focus away, then change ONLY the query string (pathname stays
     // identical).
     //
-    // §9 assigns query-only transitions to the PAGE, not the shell: Archive
+    // Query-only transitions belong to the page, not the shell: Archive
     // 필터 적용 and pagination focus the 결과 heading, 검증 실패 focuses the
     // first invalid field, Batch `jobId` selection focuses the 상세 heading.
     // Because `App.tsx` is the parent, its effect commits after the page's,
@@ -587,7 +587,7 @@ describe('App routing', () => {
     expect(document.activeElement?.id).not.toBe('page-title');
   });
 
-  it('focuses a title mounted by a child rerender after the route skeleton (§9)', async () => {
+  it('focuses a title mounted by a child rerender after the route skeleton', async () => {
     vi.stubEnv('VITE_API_HOST', 'http://localhost:8000');
     vi.stubEnv('VITE_APP_ENV', 'development');
     vi.stubGlobal(
@@ -638,7 +638,7 @@ describe('App routing', () => {
     });
   });
 
-  it('scrolls a brand-new URL to the top, and restores a saved scroll position when returning to a visited one (§7-1, §9)', async () => {
+  it('scrolls a brand-new URL to the top, and restores a saved scroll position when returning to a visited one', async () => {
     vi.stubEnv('VITE_API_HOST', 'http://localhost:8000');
     vi.stubEnv('VITE_APP_ENV', 'development');
     vi.stubGlobal(

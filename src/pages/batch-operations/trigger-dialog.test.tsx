@@ -12,7 +12,7 @@ import { useStartBatchRunMutation } from '@/lib/query-hooks';
 import { TriggerDialog } from './trigger-dialog';
 
 /**
- * README §7-7 lifecycle: idle → pending → success/409/403/422/429/5xx/
+ * Trigger lifecycle: idle → pending → success/409/403/422/429/5xx/
  * network, duplicate submit structurally impossible during pending, input
  * preserved after a failure. Exercises the REAL `useStartBatchRunMutation`
  * (not a hand-rolled fake mutation object) against a mocked `startBatchRun`
@@ -294,7 +294,7 @@ describe('TriggerDialog', () => {
       expectMessage: '배치 실행 요청을 처리하지 못했습니다.',
     },
   ])(
-    'maps a $status response to its exact §7-7 error copy',
+    'maps a $status response to its exact product error copy',
     async ({ status, body, expectMessage, expectCode, expectExisting }) => {
       const user = userEvent.setup();
       mockStartBatchRun.mockRejectedValue(new ApiError('failed', status, body));

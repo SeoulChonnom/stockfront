@@ -1,13 +1,11 @@
 import { ApiError } from '@/lib/api/client';
 
 /**
- * Maps a query error into the scoped, region-local presentation README §8
- * requires for Latest/Archive Detail's FAILED/5xx/offline/401/429/malformed
- * equivalence classes. Copy follows the design reference's error catalog
- * (`docs/design_v2/handoff_v2/fixtures.js` `ERRORS`) where it matches the
- * implemented behavior; the 429 message explicitly asks for a manual retry
- * because this client does not schedule automatic retries. README's prose
- * only spells out the Archive-404 case in full for this screen.
+ * Maps a query error into the scoped, region-local presentation used for
+ * Latest/Archive Detail's FAILED/5xx/offline/401/429/malformed
+ * equivalence classes. The 429 message explicitly asks for a manual retry
+ * because this client does not schedule automatic retries. Archive 404 uses
+ * a dedicated no-snapshot state instead of the generic retry presentation.
  *
  * `ApiError.status` (from `src/lib/api/client.ts`) is `0` for a network
  * failure (no response at all) and the real HTTP status otherwise, which is
@@ -90,7 +88,7 @@ export function buildFetchErrorPresentation(
 
     // 200-with-thrown (e.g. `client.ts`'s "no data payload" / envelope
     // shape errors) surfaces here — this is the closest analogue this repo
-    // has to README's "malformed(`markets` 없음)" class; the mapper itself
+    // has to the malformed-response class; the mapper itself
     // is defensive about a missing `markets` array (see report), so a
     // genuinely malformed *envelope* is what actually reaches this branch.
     return {

@@ -1,4 +1,4 @@
-/** Only `http:`/`https:` URLs are rendered as real links (README carries this rule over from the pre-v2 page — a malformed or `javascript:`/`data:` URL degrades to plain text instead of an `<a>`). */
+/** Only `http:`/`https:` URLs become links; malformed or executable URLs degrade to plain text. */
 export function getSafeExternalUrl(
   url: string | null | undefined
 ): string | null {

@@ -53,7 +53,7 @@ describe('Pagination', () => {
     expect(screen.getByRole('button', { name: '다음' })).toBeDisabled();
   });
 
-  it("renders only the mono page indicator — the design has no count-range text next to the pager (D5/C2: that range now lives in each list panel's own heading)", () => {
+  it("renders only the mono page indicator because count ranges live in each list panel's heading", () => {
     render(<Pagination onPageChange={vi.fn()} page={2} totalPages={3} />);
 
     expect(screen.getByText('2 / 3')).toBeInTheDocument();

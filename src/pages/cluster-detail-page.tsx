@@ -11,7 +11,7 @@ import { ClusterHeader } from './cluster-detail/cluster-header';
 import { ClusterRepresentativeAside } from './cluster-detail/cluster-representative-aside';
 
 /**
- * Cluster Detail (`/market/cluster/:uuid`) — README §7-5.
+ * Cluster Detail (`/market/cluster/:uuid`).
  *
  * Two confirmed data-layer gaps this page works around (both in
  * `src/lib/mappers.ts`/`view-models.ts`, out of this phase's file
@@ -66,7 +66,7 @@ export function ClusterDetailPage({ clusterId }: { clusterId: string }) {
       />
       <ClusterHeader detail={detail} origin={origin} />
 
-      {/* C11: aside column is the design's `--md` shell track (400px), not 320px. */}
+      {/* The aside uses a 400px track to preserve its metadata layout. */}
       <div className='grid min-w-0 grid-cols-1 gap-[var(--gap)] min-[1181px]:grid-cols-[minmax(0,1fr)_400px] min-[1181px]:items-start'>
         <div className='flex min-w-0 flex-col gap-[var(--gap)]'>
           <ClusterAnalysis

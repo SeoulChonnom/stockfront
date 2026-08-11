@@ -27,7 +27,7 @@ export type BatchDetailPanelProps = {
   canRetryAi: boolean;
   isCurrentRetryJob: (jobId: number) => boolean;
   retryAiMutation: RetryAiMutationState;
-  /** Hidden below the master-detail breakpoint unless `view=detail` is active (README §7-6 drill-in). */
+  /** Hidden below the master-detail breakpoint unless `view=detail` is active. */
   hiddenOnNarrowView: boolean;
 };
 
@@ -79,11 +79,8 @@ export function BatchDetailPanel({
     <Card
       className={cn('min-w-0', hiddenOnNarrowView && 'max-[1180px]:hidden')}
     >
-      {/* design's detail panel content padding is 16px vertical / 18px
-          horizontal (`<div style="padding:16px 18px">` around the detail
-          body in the reference), not the shared `CardContent` default's
-          uniform 16px — the 2px-per-side horizontal shortfall was pushing
-          every measured child (heading, dl) 2px left and 4px narrower. */}
+      {/* Detail content uses 16px vertical and 18px horizontal padding so
+          headings and description lists align with the panel header. */}
       <CardContent
         className='flex min-w-0 flex-col gap-4 px-[18px] py-4'
         aria-busy={isLoading}

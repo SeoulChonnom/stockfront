@@ -1,5 +1,5 @@
 /**
- * README §7-5 "AI 심층 분석" — spec calls for `summary.long`(14px) followed
+ * "AI 심층 분석" renders `summary.long`(14px) followed
  * by each `summary.analysis[]` paragraph with a left quote rule.
  *
  * `summary.long` reaches this component as `analysisLead`, distinct from

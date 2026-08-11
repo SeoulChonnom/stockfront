@@ -89,9 +89,8 @@ export function ArchiveResultsTable({
 }) {
   return (
     <TableScrollWrapper>
-      {/* B6: the panel around this table now carries 0 padding, so each
-          cell owns its own horizontal inset (18px at the row edges, 12px
-          between columns — matches the design's per-cell padding). */}
+      {/* The panel has no padding, so cells own their horizontal insets:
+          18px at row edges and 12px between columns. */}
       <Table aria-labelledby='archive-results-heading' minWidth={520}>
         <TableHeader>
           <TableRow>
@@ -104,7 +103,7 @@ export function ArchiveResultsTable({
             <TableHead className='h-auto' padding='compact'>
               상태
             </TableHead>
-            {/* D3: design left-aligns 생성 시각, the app right-aligned it. */}
+            {/* Keep 생성 시각 left-aligned with the column content. */}
             <TableHead className='hidden h-auto py-[9px] pr-[18px] pl-3 text-left min-[1181px]:table-cell'>
               생성 시각
             </TableHead>
@@ -120,15 +119,14 @@ export function ArchiveResultsTable({
                 key={record.pageId}
                 tone={record.status === 'FAILED' ? 'danger' : undefined}
               >
-                {/* D1: row pitch — design's body cell vertical padding is
-                    12px, not the shared `TableCell` default (18px). */}
+                {/* This dense table uses 12px vertical cell padding. */}
                 <TableCell className='py-3 pr-3 pl-[18px] align-top'>
                   <a
                     className='mono text-body font-semibold text-fg underline-offset-2 hover:text-[color:var(--primary)] hover:underline'
                     href={withBasePath(href)}
                     onClick={onOpen}
                   >
-                    {/* D1: ISO date, mono — not the ko-KR dotted format. */}
+                    {/* Render the business date in monospaced ISO format. */}
                     {record.businessDate}
                   </a>
                   <div className='mono mt-0 text-label text-faint'>

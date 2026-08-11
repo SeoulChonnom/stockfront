@@ -1,9 +1,8 @@
 import type { MarketAnalysis } from '@/lib/view-models';
 
 /**
- * 분석 2열 — README §7-2 "배경(불릿) / 핵심 테마(칩) + 관전 포인트".
- * 세 항목 모두 비어 있으면(디자인 레퍼런스의 각 `sc-if`처럼) 아무것도
- * 렌더링하지 않는다.
+ * 분석 2열 — "배경(불릿) / 핵심 테마(칩) + 관전 포인트".
+ * 세 항목 모두 비어 있으면 아무것도 렌더링하지 않는다.
  */
 export function MarketAnalysisBlock({
   analysis,

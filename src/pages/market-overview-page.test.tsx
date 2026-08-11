@@ -10,7 +10,6 @@ import type { MarketSnapshot } from '../lib/view-models';
 import { MarketOverviewPage } from './market-overview-page';
 
 /**
- * Phase 6 rebuild (README `docs/design_v2/handoff_v2/README.md` §7-2/§7-3).
  * The pre-rebuild version of this file asserted on the old card-grid layout
  * (`Source View`/`Detail View` links) — that structure no longer exists, so
  * every case below is new, covering the acceptance list from the task brief:
@@ -98,8 +97,8 @@ describe('MarketOverviewPage — 대표 지수 표', () => {
     expect(screen.getByText('+0.23%')).toBeInTheDocument();
     // The 고가/저가 columns are hidden below 640px with `sm:hidden`/
     // `sm:table-cell` (CSS-only), never unmounted — this subline node must
-    // exist in the DOM regardless of viewport, per README §11 ("같은 값을
-    // 우선순위 행의 보조 줄로 노출한다").
+    // exist in the DOM regardless of viewport, with the same values exposed
+    // in the priority row's supporting line.
     expect(screen.getByText('고 5,499.80 · 저 5,455.22')).toBeInTheDocument();
   });
 

@@ -5,9 +5,9 @@ import { withBasePath } from '../../lib/router';
 import { getOriginLink } from './origin-link';
 
 /**
- * README §7-5 breadcrumb: `nav[aria-label="위치"]`, origin-aware first
+ * `nav[aria-label="위치"]` breadcrumb with an origin-aware first
  * segment, market label, current page. Clicking the first segment is what
- * actually satisfies the §9 "Cluster 진입" Back contract ("Back: 원점
+ * satisfies the browser-Back contract ("Back: 원점
  * route") — `App.tsx`'s generic route-change effect restores that route's
  * scroll position for free once `navigate()` lands there, since the origin
  * page is responsible for having saved its own scroll before sending the
@@ -37,10 +37,10 @@ export function ClusterBreadcrumb({
         >
           {label}
         </a>
-        {/* D13: design separator is a plain "/", not a chevron icon. */}
+        {/* Breadcrumb separators are plain slashes, not chevron icons. */}
         <span aria-hidden='true'>/</span>
         <span className='wrap-anywhere'>{marketLabel}</span>
-        {/* D13: design separator is a plain "/", not a chevron icon. */}
+        {/* Keep the same separator for every breadcrumb level. */}
         <span aria-hidden='true'>/</span>
         <span aria-current='page' className='font-semibold text-fg-soft'>
           이슈 상세

@@ -27,11 +27,11 @@ vi.mock('@/lib/api/batch', () => ({
 }));
 
 /**
- * `AppShell` is the single-nav rail/mobile-header/drawer shell (README §5,
- * §7-1). These tests replace the old single "topbar search is disabled"
+ * `AppShell` is the single-nav rail/mobile-header/drawer shell. These tests
+ * replace the old single "topbar search is disabled"
  * assertion (`placeholder` no longer exists as a prop — the whole topbar
- * search field was deleted per §5's "Won't" list) with coverage for the
- * requirements that actually drive Phase 4: exactly one primary nav, the
+ * search field was deliberately removed) with coverage for the
+ * current shell requirements: exactly one primary nav, the
  * admin-only 운영 group is genuinely absent from the DOM for a non-admin
  * user (not just hidden), the skip link, the mobile drawer's
  * open/close/focus-return behaviour, and the single live region clearing on
@@ -109,7 +109,7 @@ describe('AppShell', () => {
     expect(inactive).not.toHaveAttribute('aria-current');
   });
 
-  it('renders the rail theme control as a full-width text button and keeps the mobile control icon-only', async () => {
+  it('keeps the rail and mobile theme controls icon-only', async () => {
     const user = userEvent.setup();
     const onToggleTheme = vi.fn();
     renderShell({ onToggleTheme, theme: 'dark' });
@@ -118,8 +118,7 @@ describe('AppShell', () => {
       'button',
       { name: '라이트 테마로 전환' }
     );
-    expect(railToggle).toHaveTextContent('라이트 테마로 전환');
-    expect(railToggle).toHaveClass('w-full');
+    expect(railToggle).not.toHaveTextContent('라이트 테마로 전환');
 
     const mobileToggle = within(screen.getByRole('banner')).getByRole(
       'button',
@@ -140,7 +139,7 @@ describe('AppShell', () => {
     ).toHaveLength(2);
   });
 
-  it('never renders the 운영 nav group for a non-admin user — not even hidden (§10, §16-11)', () => {
+  it('never renders the 운영 nav group for a non-admin user — not even hidden', () => {
     setRoleOverride('user');
     const { container } = renderShell();
 
@@ -395,7 +394,7 @@ describe('AppShell', () => {
     fireEvent.click(screen.getByRole('button', { name: '발표' }));
     expect(liveRegion).toHaveTextContent('검색 결과 46건을 찾았습니다.');
 
-    // A QUERY-ONLY change must NOT clear it. §9 pairs announcements with
+    // A query-only change must not clear it. Announcements pair with
     // exactly these transitions — Pagination announces "N페이지를 불러옵니다."
     // in the same synchronous call as the `navigate()` that sets `page=2`.
     // Clearing on pathname+search swallowed those announcements 100% of the
@@ -414,7 +413,7 @@ describe('AppShell', () => {
     expect(liveRegion).toHaveTextContent('검색 결과 46건을 찾았습니다.');
 
     // A pathname change IS a real route change — the stale message from the
-    // previous screen must not survive it (§7-1).
+    // previous screen must not survive it.
     rerender(
       <AppShell
         onToggleTheme={() => undefined}

@@ -2,13 +2,11 @@ import { expect, test } from './fixtures/console-guard';
 import { installMockApi, shiftDate, TODAY } from './fixtures/mock-api';
 
 /**
- * Phase 9 §16 items 2 (filter apply/reset), 3 (validation), 4 (Archive
- * pagination), 5 (browser Back for Archive Search), 9 (Retry preserving
- * filters + previous results), 12 (live region — the subset this screen
- * owns).
+ * Covers filter apply/reset, validation, pagination, browser Back restoration,
+ * retry with previous results preserved, and this screen's live regions.
  */
 
-test.describe('§16-2 filter apply / reset', () => {
+test.describe('filter apply / reset', () => {
   test('typing does not change the URL; 필터 적용 sets query + page=1; 초기화 restores the default range', async ({
     page,
   }) => {
@@ -33,7 +31,7 @@ test.describe('§16-2 filter apply / reset', () => {
   });
 });
 
-test.describe('§16-3 validation', () => {
+test.describe('validation', () => {
   test('future date: URL unchanged, field message shown, focus on the field', async ({
     page,
   }) => {
@@ -92,7 +90,7 @@ test.describe('§16-3 validation', () => {
   });
 });
 
-test.describe('§16-4 pagination (Archive: 46/20 -> 3 pages)', () => {
+test.describe('pagination (Archive: 46/20 -> 3 pages)', () => {
   test('paginates through all 3 pages and reflects `page` in the URL', async ({
     page,
   }) => {
@@ -113,7 +111,7 @@ test.describe('§16-4 pagination (Archive: 46/20 -> 3 pages)', () => {
   });
 });
 
-test.describe('§16-5 browser Back (Archive Search)', () => {
+test.describe('browser Back (Archive Search)', () => {
   test('Back restores filters, page, and scroll position', async ({ page }) => {
     await installMockApi(page, { scenario: 'ready' });
     await page.setViewportSize({ width: 1280, height: 700 });
@@ -176,7 +174,7 @@ test.describe('§16-5 browser Back (Archive Search)', () => {
   });
 });
 
-test.describe('§16-9 Retry (Archive Search)', () => {
+test.describe('Retry (Archive Search)', () => {
   test('a failed re-fetch keeps filters + previous rows visible; retry recovers', async ({
     page,
     consoleGuard,
@@ -222,7 +220,7 @@ test.describe('§16-9 Retry (Archive Search)', () => {
     await page.getByRole('button', { name: '필터 적용' }).click();
 
     await expect(page.getByText('데이터를 불러오지 못했습니다')).toBeVisible();
-    // §9 Retry contract: filters + PREVIOUS rows stay visible through the error.
+    // Filters and previous rows stay visible through a failed refresh.
     await expect(
       page
         .locator('table tbody tr')
@@ -241,7 +239,7 @@ test.describe('§16-9 Retry (Archive Search)', () => {
   });
 });
 
-test.describe('§16-12 live region (Archive Search)', () => {
+test.describe('live region (Archive Search)', () => {
   const LIVE_REGION = '[aria-live="polite"]';
 
   test('announces result count on apply, and page moves', async ({ page }) => {

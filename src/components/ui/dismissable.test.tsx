@@ -8,7 +8,7 @@ import { Drawer } from './drawer';
 
 /**
  * Behaviour-level tests for the shared focus-trap/Escape/overlay-click/
- * return-focus contract (README §5 Drawer, §7-7 Dialog, §15). Both
+ * return-focus contract shared by Drawer and Dialog. Both
  * components share `useDismissable`, so the same scenarios are asserted for
  * each rather than testing the hook in isolation.
  */

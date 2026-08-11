@@ -256,7 +256,7 @@ describe('ArchiveSearchPage', () => {
     expect(refetch).toHaveBeenCalled();
   });
 
-  it('renders the design error title, HTTP code, message, and retry action for a 500 response', () => {
+  it('renders the error title, HTTP code, message, and retry action for a 500 response', () => {
     const refetch = vi.fn();
     mockUseArchiveList.mockReturnValue({
       data: undefined,

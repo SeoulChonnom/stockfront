@@ -5,12 +5,11 @@ import { createNavigateHandler } from '../lib/app-state';
 import { withBasePath } from '../lib/router';
 
 /**
- * 404 — README §7-8. Renders inside `AppShell`'s `<main>` (nav rail/header
+ * 404 page. Renders inside `AppShell`'s `<main>` (nav rail/header
  * stay visible; this is a normal in-app route, unlike the shell-less
  * auth-bootstrap states in `App.tsx`), so `fullScreen={false}`.
  *
- * `titleId="page-title"` is what makes the route-focus contract (§7-1,
- * §9 — "이동 후 `document.activeElement` === `#page-title`") work for this
+ * `titleId="page-title"` makes route changes focus the page title for this
  * route the same way it already does for the other four pages that have
  * had a `#page-title` heading since before this phase.
  */

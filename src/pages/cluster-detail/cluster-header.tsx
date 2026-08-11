@@ -9,7 +9,7 @@ import type { ClusterDetail } from '../../lib/view-models';
 import { getOriginLink } from './origin-link';
 
 /**
- * README §7-5 header card. The "돌아가기" action is origin-aware (D14),
+ * Header card. The "돌아가기" action is origin-aware,
  * sharing `ClusterBreadcrumb`'s `getOriginLink` three-way branch
  * (latest / archive date / direct-entry) so its label and destination
  * always agree with the breadcrumb's own first segment — the second

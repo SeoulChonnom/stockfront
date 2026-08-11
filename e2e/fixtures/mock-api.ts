@@ -1,18 +1,14 @@
 /**
  * Network-routing mock API for Playwright.
  *
- * This is an independent TypeScript port of the fixture factories in
- * `docs/design_v2/handoff_v2/fixtures.js` (that file is a design reference —
- * it is never imported or edited from here). The factory functions
+ * These fixture factories intentionally model the application's API DTOs. The
+ * factory functions
  * (`pageFixture`, `archiveFixture`, `clusterFixture`, `batchListFixture`,
  * `batchDetailFixture`, `triggerResult`, `ERRORS`, `LONG_SAMPLES`, `NOW_KST`,
- * `TODAY`, `shiftDate`) are kept structurally identical to the original
- * (same field names/shapes) where the original still matches the real DTO
- * contract. The `Batch` section is the one deliberate exception: it now
- * follows `docs/api_spec.json` (the real OpenAPI spec, jobType-split model)
- * instead of `docs/api_spec_doc.md` §4 (the old single-batch model the
- * design fixture still uses) — see the `Batch` section's own comments for
- * what changed and why. Everything else is still JS -> TS only.
+ * `TODAY`, `shiftDate`) match the real DTO contract. The `Batch` section
+ * follows `docs/api_spec.json`, including its
+ * jobType-split model; see that section's comments for fixture choices where
+ * the wire contract does not define an enum or example.
  *
  * `installMockApi(page, options)` is the actual Playwright integration: it
  * intercepts every request the app makes via `page.route()` and responds
@@ -20,16 +16,15 @@
  * expects (see that file's `apiRequest()` — it throws unless the parsed body
  * has a `data` key and `success !== false`).
  *
- * Kept intentionally reusable beyond the Phase 8 overflow sweep (per-resource
- * overrides, scenario coverage for 401/403/409/422/429/5xx/network) since
- * this harness is also the foundation for Phase 9.
+ * Kept intentionally reusable across responsive and behavioral coverage, with
+ * per-resource overrides and 401/403/409/422/429/5xx/network scenarios.
  */
 import type { Page, Route } from '@playwright/test';
 
 import type { ApiEnvelope } from '../../src/lib/api/types';
 
 // ---------------------------------------------------------------------------
-// Shared constants / helpers (ported from fixtures.js)
+// Shared constants / helpers
 // ---------------------------------------------------------------------------
 
 export const NOW_KST = '2026-07-27T08:24:31';
@@ -53,8 +48,8 @@ function rep<T>(n: number, f: (i: number) => T): T[] {
 // ---------------------------------------------------------------------------
 // DTO-shaped types (mirrors docs/api_spec_doc.md §4, not `src/lib/api/types.ts`
 // verbatim — the app's TS types declare price fields as `string`, but the
-// real backend spec and `fixtures.js` both use `number`; the mock matches the
-// documented wire format).
+// real backend spec uses `number`; the mock matches the documented wire
+// format).
 // ---------------------------------------------------------------------------
 
 export type MarketType = 'US' | 'KR';
@@ -1044,20 +1039,13 @@ export function clusterFixture(mode: string, clusterId: string): ClusterDetail {
 // ---------------------------------------------------------------------------
 
 /**
- * Per-jobType pipeline stage KEYS — the snake_case identifiers from the
- * design source (`docs/design_v2/handoff_v2/fixtures.js:418-434`'s
- * `BATCH_STAGES`, whose entries carry both a `key` and a Korean `label`).
- * Kept as a second, independent copy on purpose (see this file's header
- * comment on why it's an "independent port," not an import).
+ * Per-jobType pipeline stage keys used to exercise snake_case wire values.
  *
  * Deliberately the `key` form, not the Korean `label`: the OpenAPI spec
- * gives `currentStep` no enum/example, but the same design source's log
- * fixtures print `step=load_search_result`, so a snake_case key is the more
- * likely real wire value. `src/lib/batch-type.ts` matches `currentStep`
- * against BOTH key and label, and the unit tests cover the label path — so
- * emitting keys here makes the visual-audit harness exercise the path the
- * real backend most likely takes. Still a best-effort stand-in, not a
- * confirmed wire value.
+ * gives `currentStep` no enum/example, so snake_case is a best-effort stand-in
+ * for a likely wire value. `src/lib/batch-type.ts` matches `currentStep`
+ * against both key and label, and unit tests cover the label path. These
+ * values are not a confirmed backend enum.
  */
 const BATCH_STAGE_KEYS: Readonly<Record<BatchJobType, readonly string[]>> = {
   NEWS_COLLECTION: [
@@ -1152,11 +1140,9 @@ function batchItem(
       : `${shiftDate(businessDate, 1)}T${hh}:${pad(endMinute)}:${pad((duration ?? 0) % 60)}`,
     durationSeconds: duration,
     marketScope: 'GLOBAL',
-    // `BatchJobListItemResponse` (docs/api_spec.json) declares all three
-    // count fields as non-nullable required integers — unlike the design
-    // source (`fixtures.js:466-470`), which uses `null` for the field that
-    // doesn't apply to a given jobType. Mirrored here with 0 instead of
-    // null to stay spec-accurate: NEWS_COLLECTION collects raw/processed
+    // `BatchJobListItemResponse` declares all three count fields as required
+    // non-nullable integers. Use 0 when a field does not apply to a job type:
+    // NEWS_COLLECTION collects raw/processed
     // news and never clusters (clusterCount stays 0); MARKET_SNAPSHOT
     // consumes already-collected news (processedNewsCount = input count
     // read) and never touches raw articles (rawNewsCount stays 0).
@@ -1174,8 +1160,7 @@ function batchItem(
 }
 
 // 같은 기준일에 검색 결과 저장(NEWS_COLLECTION) → 스냅샷 생성
-// (MARKET_SNAPSHOT) 순으로 실행되므로 목록은 스냅샷이 위에 온다 — 디자인
-// 소스(`fixtures.js:480-490`)와 동일한 interleaving.
+// (MARKET_SNAPSHOT) 순으로 실행되므로 목록은 스냅샷이 위에 온다.
 const BATCH_ALL: BatchListItem[] = (() => {
   const out: BatchListItem[] = [];
   let id = 1042;
@@ -1207,9 +1192,8 @@ export function batchListFixture(
     };
   }
   // `scoped` = jobType-filtered but NOT status-filtered — the summary tiles
-  // count statuses WITHIN the applied type scope, matching the design
-  // source's own `batchListFixture` (`fixtures.js:498-511`, its `scoped`
-  // var). Filtering `scoped` again by status before counting statuses
+  // count statuses WITHIN the applied type scope. Filtering `scoped` again
+  // by status before counting statuses
   // would make every summary count read as either 0 or "all of them."
   const scoped = jobType
     ? BATCH_ALL.filter((r) => r.jobType === jobType)
@@ -1272,7 +1256,8 @@ const LONG_LOG = (() => {
  * response: it would report itself as `jobId: 1042` (a different, unrelated
  * job) while being served FOR a request that asked for 1043. Synthesizing a
  * plausible RUNNING record for any unseeded jobId instead keeps the
- * response's own `jobId` truthful for §16-10's "작업 상세 보기"/"작업 보기"
+ * response's own `jobId` truthful for post-trigger navigation via
+ * "작업 상세 보기"/"작업 보기".
  * navigation after a successful Trigger. Always MARKET_SNAPSHOT: the only
  * in-scope trigger endpoint (`/batch/market-daily`) has no jobType concept
  * of its own (`BatchRunResponse` carries no `jobType` field — confirmed
@@ -1754,7 +1739,7 @@ export const LONG_SAMPLES: { token: string; url: string; log: string } = {
 // Playwright network routing
 // ---------------------------------------------------------------------------
 
-/** §16 scenario keys required by the Phase 8 overflow sweep (README §11/§16-13). */
+/** Scenario keys exercised by the responsive overflow sweep. */
 export type Scenario =
   | 'ready'
   | 'partial'
@@ -1767,16 +1752,16 @@ export type Scenario =
 
 export type InstallMockApiOptions = {
   scenario: Scenario;
-  /** `businessDate` used by `/pages/daily/latest` (prototype convention: the "latest" snapshot is dated 2026-07-26, one day behind `TODAY`). */
+  /** `businessDate` used by `/pages/daily/latest`; the default latest snapshot is one day behind `TODAY`. */
   latestBusinessDate?: string;
-  /** Archive SEARCH list result mode — independent of `scenario` because §16-13 needs both "results" and "0 results" under the same otherwise-`ready` scenario. */
+  /** Archive search result mode, independent so one scenario can cover populated and empty results. */
   archiveSearchMode?: 'results' | 'noResults';
-  /** Cluster detail fixture mode — independent of `scenario` because `long` (unbroken token/URL) and `heavy` (50 articles/20 tags) are different equivalence classes in `fixtures.js`. Defaults from `scenario` when omitted. */
+  /** Cluster detail fixture mode — independent of `scenario` because `long` (unbroken token/URL) and `heavy` (50 articles/20 tags) cover different equivalence classes. Defaults from `scenario` when omitted. */
   clusterMode?: 'sparse' | 'heavy' | 'long';
   /** Batch detail log mode — `'longLog'` forces the full 4,000-char log (only takes effect for a FAILED job; see `batchDetailFixture`). Defaults from `scenario`. */
   batchDetailMode?: 'longLog';
   /**
-   * Phase 9 §16-11 (permissions). Exercises the REAL role source
+   * Exercises the real role source for permission coverage.
    * (`src/lib/capabilities.ts#getRole()` reads `auth-bootstrap.ts`'s parsed
    * `roles`, which come from the `POST /api/users/token` response body's
    * `roleList` field — see `readRoleList()` in that file) instead of a
@@ -1789,7 +1774,7 @@ export type InstallMockApiOptions = {
    */
   role?: 'user' | 'admin';
   /**
-   * Phase 9 §16-10 (Trigger lifecycle). Selects what `POST
+   * Selects what the trigger lifecycle's `POST
    * /stock/api/batch/market-daily` resolves to; mirrors `triggerResult()`'s
    * mode strings one-to-one. Defaults to `'success'` (the pre-existing
    * hardcoded behavior). `'offline'` genuinely `route.abort()`s instead of
@@ -1807,7 +1792,7 @@ export type InstallMockApiOptions = {
     | 'rate429'
     | 'error500'
     | 'offline';
-  /** Phase 1c AI-summary retry lifecycle. Defaults to an accepted 202 response. */
+  /** AI-summary retry lifecycle. Defaults to an accepted 202 response. */
   retryAiMode?:
     | 'success'
     | 'conflict409'
@@ -1895,9 +1880,9 @@ export async function installMockApi(
   // (rather than aborting the request) exercises the REAL integration path —
   // `bootstrapAuth()` -> `readAccessToken`/`readRoleList()` ->
   // `capabilities.ts`'s `getRole()` — instead of a test-only role backdoor
-  // (README §16-11). The body matches the settled backend contract
-  // (docs/design_v2/v2-backend-requests.md P-01): `accessToken` + `username`
-  // + `name` + `roleList`. `roleList` is only present when `options.role` is
+  // (the non-admin E2E coverage asserts this boundary). The body matches the
+  // settled auth contract: `accessToken` + `username` + `name` + `roleList`.
+  // `roleList` is only present when `options.role` is
   // given (`'admin'` -> `['USER', 'ADMIN']`, `'user'` -> `['USER']`); omitted
   // entirely otherwise so `readRoleList()` returns `[]` and `getRole()`
   // falls through to its own default ('admin' under this suite's
@@ -1967,7 +1952,7 @@ export async function installMockApi(
 
     const pageIdMatch = /^\/stock\/api\/pages\/(\d+)$/.exec(pathname);
     if (method === 'GET' && pageIdMatch) {
-      // §16-6 deep link (`?pageId=`): derive the businessDate that this
+      // For a `?pageId=` deep link, derive the businessDate that this
       // pageId "belongs to" using the SAME formula `archiveItem()` above
       // uses to seed `ARCHIVE_ALL` (`pageId = 501 - i`, `businessDate =
       // shiftDate('2026-07-26', -i)`), inverted. Previously this always
@@ -2078,8 +2063,8 @@ export async function installMockApi(
         requestedBusinessDate = undefined;
       }
 
-      // Small artificial delay so the dialog's "pending" state (README
-      // §7-7) is actually observable by a test — an instantly-resolving
+      // Small artificial delay so the dialog's pending state is observable by
+      // a test — an instantly-resolving
       // mock would make idle -> pending -> success/error indistinguishable
       // from idle -> success/error in a real assertion.
       await new Promise((resolve) => setTimeout(resolve, 300));
