@@ -1,7 +1,8 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
-import { DirectionIndicator, directionTextClass } from './direction-indicator';
+import { DirectionIndicator } from './direction-indicator';
+import { directionTextClass } from './direction-text-class';
 
 describe('DirectionIndicator', () => {
   it('states 상승 in words next to the up glyph', () => {
@@ -9,6 +10,7 @@ describe('DirectionIndicator', () => {
 
     expect(screen.getByText('상승')).toBeInTheDocument();
     expect(screen.getByText('상승')).toHaveClass('sr-only');
+    expect(screen.getByText('상승')).not.toHaveAttribute('aria-hidden');
     expect(screen.getByText('▲')).toHaveAttribute('aria-hidden', 'true');
   });
 

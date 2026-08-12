@@ -1,8 +1,5 @@
-export {
-  type Direction,
-  DirectionIndicator,
-  directionTextClass,
-} from './direction-indicator';
+export { DirectionIndicator } from './direction-indicator';
+export { type Direction, directionTextClass } from './direction-text-class';
 export { EmptyState } from './empty-state';
 export { InlineAlert } from './inline-alert';
 export { PermissionState } from './permission-state';
