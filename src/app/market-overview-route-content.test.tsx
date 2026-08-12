@@ -1,6 +1,6 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { AnnounceProvider } from '@/components/shell/announce-context';
 import { ApiError } from '@/lib/api/client';
@@ -11,17 +11,30 @@ import {
 
 import { MarketOverviewRouteContent } from './market-overview-route-content';
 
-const { mockUseArchiveMarketPage, mockUseLatestMarketPage } = vi.hoisted(
-  () => ({
-    mockUseArchiveMarketPage: vi.fn(),
-    mockUseLatestMarketPage: vi.fn(),
-  })
-);
+const {
+  mockUseArchiveList,
+  mockUseArchiveMarketPage,
+  mockUseLatestMarketPage,
+} = vi.hoisted(() => ({
+  mockUseArchiveList: vi.fn(),
+  mockUseArchiveMarketPage: vi.fn(),
+  mockUseLatestMarketPage: vi.fn(),
+}));
 
 vi.mock('@/lib/query-hooks', () => ({
+  useArchiveList: mockUseArchiveList,
   useArchiveMarketPage: mockUseArchiveMarketPage,
   useLatestMarketPage: mockUseLatestMarketPage,
 }));
+
+// The 404 and error/no-data shells both render `ArchiveModeBand` via
+// `useAdjacentSnapshotDates`, which calls `useArchiveList` directly (not
+// through `useArchiveMarketPage`/`useLatestMarketPage`). None of the cases
+// below assert on the band's prev/next dates, so an empty-rows default is
+// enough to keep the hook from throwing on an unmocked export.
+beforeEach(() => {
+  mockUseArchiveList.mockReturnValue({ data: { rows: [] }, isLoading: false });
+});
 
 function setLocation(pathname: string) {
   window.history.replaceState(null, '', pathname);
@@ -54,6 +67,7 @@ afterEach(() => {
   // and throw (see archive-search-page.test.tsx's afterEach comment).
   cleanup();
   resetRoleOverrideForTesting();
+  mockUseArchiveList.mockReset();
   mockUseArchiveMarketPage.mockReset();
   mockUseLatestMarketPage.mockReset();
   window.history.replaceState(null, '', '/');

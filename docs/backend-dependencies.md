@@ -28,12 +28,13 @@ Backend requests raised by the 2026-08-12 UI overhaul are tracked separately in
   a ±90 day window around the current business date and enable only the
   neighbours that actually exist. Labels show the target date. A neighbour
   further than 90 days away is still reported as absent, and every archive
-  detail view costs one extra list request. The 404 and error shells around
-  Archive Detail (`archive-not-found-state.tsx`,
-  `market-overview-route-shell.tsx`) still use plain calendar arithmetic for
-  their own prev/next band, since firing another list request from an
-  already-broken page isn't worth it — they only suppress a next link that is
-  clearly in the future.
+  detail view costs one extra list request. This applies uniformly to the
+  ready-page band, the 404 screen (`archive-not-found-state.tsx`), and the
+  loading/error shell (`market-overview-route-shell.tsx`) — all three reuse
+  the same `useAdjacentSnapshotDates` hook, so a user who lands on a
+  dead-end date (the exact scenario this fallback exists for) is not
+  offered a prev/next pair computed by calendar arithmetic that could route
+  them straight into another dead end.
 - **Backend dependency:** Provide the existing previous and next business dates
   for a given `businessDate`, either through a dedicated endpoint or archive
   cursor metadata.

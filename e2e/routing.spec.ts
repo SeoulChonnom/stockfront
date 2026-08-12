@@ -152,6 +152,36 @@ test.describe('deep link', () => {
   });
 });
 
+test.describe('Archive Detail — adjacent snapshot navigation', () => {
+  // `useAdjacentSnapshotDates` resolves prev/next from the mocked archive
+  // list, which seeds 46 contiguous days ending at 2026-07-26
+  // (`ARCHIVE_ALL` in mock-api.ts). 2026-07-26 is the newest day in that
+  // fixture, so it has a real previous neighbour (2026-07-25) but no next
+  // one — exercising both the "enable with the real date" and "no snapshot
+  // -> stay disabled" paths from a single page, without fabricating a date
+  // arithmetic would have guessed at.
+  test('enables the real previous date and disables next when no newer snapshot exists', async ({
+    page,
+  }) => {
+    await installMockApi(page, { scenario: 'ready' });
+    await page.goto('market/archive/2026-07-26');
+
+    const prevButton = page.getByRole('button', { name: '이전 2026-07-25' });
+    const nextButton = page.getByRole('button', { name: '다음 브리프 없음' });
+
+    await expect(prevButton).toBeEnabled();
+    await expect(nextButton).toBeDisabled();
+
+    // Confirm the enabled button actually lands on a real snapshot, not
+    // just that it carries the right label — this is the loop the task
+    // exists to break.
+    await prevButton.click();
+    await expect(page).toHaveURL(/market\/archive\/2026-07-25$/);
+    // Confirms this landed on a real snapshot, not another dead end.
+    await expect(page.getByText('아카이브 스냅샷')).toBeVisible();
+  });
+});
+
 test.describe('route focus', () => {
   test('a pathname navigation focuses #page-title', async ({ page }) => {
     await installMockApi(page, { scenario: 'ready' });

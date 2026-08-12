@@ -5,17 +5,19 @@ import { errorCodeCopy, marketNotFoundCopy } from '@/lib/audience-copy';
 import { navigate, withBasePath } from '@/lib/router';
 
 import { ArchiveModeBand } from './archive-mode-band';
-import { getTodayBusinessDateKst, shiftBusinessDate } from './date-utils';
 import { extractFilterQuery } from './navigation';
+import { useAdjacentSnapshotDates } from './use-adjacent-snapshot-dates';
 
 /**
  * Archive Detail 404는 해당 날짜 스냅샷이 없을 때 상태 화면을 보여준다.
- * 인접 날짜 이동 API가 없으므로(D-05) prev/next는
- * 여기서도 순수 날짜 산술이다 — 그래서 404 화면에서도 정상 스냅샷과 같은
- * `ArchiveModeBand`를 재사용해 날짜 내비게이션을 그대로 유지한다.
+ * 인접 날짜 이동 API가 없으므로(D-05) prev/next는 같은 `ArchiveModeBand`가
+ * `useAdjacentSnapshotDates`로 ±90일 아카이브 목록을 조회해 실제 존재하는
+ * 이웃 날짜만 활성화한다 — 이 화면은 이미 "스냅샷 없는 날짜"에 도착한
+ * 상태이므로, prev/next가 순수 날짜 산술이면 다음 클릭이 곧바로 또 다른
+ * 404로 이어지는 루프가 된다.
  *
  * `canViewOps`는 호출부(`market-overview-route-content.tsx`)가 이미 계산해
- * 둔 값을 그대로 받는다 — 이 컴포넌트에서 훅을 새로 호출하지 않는다.
+ * 둔 값을 그대로 받는다 — 이 컴포넌트에서 그 훅은 새로 호출하지 않는다.
  */
 export function ArchiveNotFoundState({
   businessDate,
@@ -27,13 +29,7 @@ export function ArchiveNotFoundState({
   searchParams: URLSearchParams;
 }) {
   const audience = { canViewOps };
-  const prevDate = shiftBusinessDate(businessDate, -1);
-  const rawNextDate = shiftBusinessDate(businessDate, 1);
-  // No adjacent-date endpoint exists (D-05); this 404 screen still can't
-  // confirm a neighbour snapshot actually exists, so it keeps the coarser
-  // "not later than today" heuristic rather than firing an extra list query
-  // from an already-broken page.
-  const nextDate = rawNextDate > getTodayBusinessDateKst() ? null : rawNextDate;
+  const adjacent = useAdjacentSnapshotDates(businessDate);
   const filterQuery = extractFilterQuery(searchParams);
 
   return (
@@ -41,9 +37,9 @@ export function ArchiveNotFoundState({
       <ArchiveModeBand
         businessDate={businessDate}
         filterQuery={filterQuery}
-        nextDate={nextDate}
+        nextDate={adjacent.next}
         pageId={null}
-        prevDate={prevDate}
+        prevDate={adjacent.previous}
         versionNo={null}
       />
       <StatusCard
