@@ -621,6 +621,8 @@ describe('restored daily page fields', () => {
             clusterCount: 7,
             lastUpdatedAt: '2026-07-27T06:12:10',
             partialMessage: null,
+            sourceDate: '2026-07-25',
+            expectedSessionDate: '2026-07-27',
           },
         },
       ],
@@ -657,6 +659,8 @@ describe('restored daily page fields', () => {
       clusterCount: 7,
       lastUpdatedAt: '2026-07-27 06:12 KST',
       partialMessage: null,
+      sourceDate: '2026-07-25',
+      expectedSessionDate: '2026-07-27',
     });
     const articleLinks = market.articleLinks ?? [];
     expect(articleLinks).toHaveLength(2);
@@ -832,6 +836,8 @@ describe('restored daily page fields', () => {
       clusterCount: 0,
       lastUpdatedAt: null,
       partialMessage: null,
+      sourceDate: null,
+      expectedSessionDate: null,
     });
     // Non-record entries are filtered out; the one plain-object entry
     // survives with safe fallbacks for its missing fields.

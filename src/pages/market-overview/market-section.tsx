@@ -1,3 +1,4 @@
+import { noNarrativeCopy } from '@/lib/audience-copy';
 import type { MarketSnapshot } from '@/lib/view-models';
 
 import { MarketAnalysisBlock } from './market-analysis-block';
@@ -14,15 +15,13 @@ import type { ClusterOriginQuery } from './navigation';
  * this section header.
  */
 
-const NO_NARRATIVE_COPY =
-  '이 시장의 요약이 생성되지 않았습니다. 수집된 기사가 임계값에 미달했거나 AI 요약이 실패한 경우입니다. 지수와 원문은 아래에서 그대로 확인할 수 있습니다.';
-
 export type MarketSectionProps = {
   market: MarketSnapshot['markets'][number];
   index: number;
   originQuery: ClusterOriginQuery;
   currentPathname: string;
   currentSearch: string;
+  canViewOps: boolean;
 };
 
 export function MarketSection({
@@ -31,10 +30,12 @@ export function MarketSection({
   originQuery,
   currentPathname,
   currentSearch,
+  canViewOps,
 }: MarketSectionProps) {
   const headingId = `mk-section-heading-${index}`;
   const metadata = market.metadata;
   const hasNarrative = (market.summaryBody ?? '').trim().length > 0;
+  const audience = { canViewOps };
 
   return (
     <section
@@ -93,7 +94,7 @@ export function MarketSection({
         <MarketAnalysisBlock analysis={market.analysis} />
         {hasNarrative ? null : (
           <p className='m-0 rounded-[var(--r-md)] border border-dashed border-[color:var(--line-strong)] px-3.5 py-3 text-[13px] text-faint'>
-            {NO_NARRATIVE_COPY}
+            {noNarrativeCopy(audience)}
           </p>
         )}
       </div>
@@ -104,7 +105,7 @@ export function MarketSection({
           {market.indices.length}종
         </span>
       </div>
-      <MarketIndexTable indices={market.indices} />
+      <MarketIndexTable canViewOps={canViewOps} indices={market.indices} />
 
       <div className='flex items-baseline gap-2.5 border-t border-line bg-[color:var(--surface-2)] px-[18px] py-3'>
         <h3 className='m-0 text-body font-semibold'>핵심 이슈</h3>

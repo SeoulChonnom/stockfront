@@ -90,6 +90,8 @@ function mapMarketMetadata(value: unknown): MarketMetadata {
     clusterCount: asNonNegativeSafeInteger(record.clusterCount, 0),
     lastUpdatedAt: formatKstDateTime(record.lastUpdatedAt),
     partialMessage: asNullableString(record.partialMessage),
+    sourceDate: asNullableString(record.sourceDate),
+    expectedSessionDate: asNullableString(record.expectedSessionDate),
   };
 }
 

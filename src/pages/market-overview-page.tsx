@@ -89,6 +89,7 @@ export function MarketOverviewPage({
         // compare strip links to.
         snapshot.markets.map((market, index) => (
           <MarketSection
+            canViewOps={canViewOps}
             currentPathname={url.pathname}
             currentSearch={currentSearch}
             index={index}

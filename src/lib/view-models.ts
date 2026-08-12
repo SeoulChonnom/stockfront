@@ -52,6 +52,10 @@ export type MarketMetadata = {
   clusterCount: number;
   lastUpdatedAt: string | null;
   partialMessage: string | null;
+  /** 실제 사용된 데이터 기준일. 누락 경고의 "사용된 데이터 기준일"에 쓰인다. */
+  sourceDate: string | null;
+  /** 원래 있어야 할 장 마감 기준일. sourceDate와 다르면 대체 데이터를 쓴 것이다. */
+  expectedSessionDate: string | null;
 };
 
 export type PageMetadata = {

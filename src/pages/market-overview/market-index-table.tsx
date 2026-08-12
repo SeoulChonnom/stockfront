@@ -7,6 +7,7 @@ import {
   TableRow,
   TableScrollWrapper,
 } from '@/components/ui/table';
+import { noIndexDataCopy } from '@/lib/audience-copy';
 import { cn } from '@/lib/utils';
 import type { MarketIndex } from '@/lib/view-models';
 
@@ -22,12 +23,17 @@ import type { MarketIndex } from '@/lib/view-models';
  * The nullable `MarketIndex.code` is already mapped into the view model; this
  * table renders it as the mono subline beside each index name.
  */
-export function MarketIndexTable({ indices }: { indices: MarketIndex[] }) {
+export function MarketIndexTable({
+  indices,
+  canViewOps,
+}: {
+  indices: MarketIndex[];
+  canViewOps: boolean;
+}) {
   if (indices.length === 0) {
     return (
       <p className='m-0 px-[18px] py-4 text-[13px] text-faint'>
-        지수 데이터가 수집되지 않았습니다. provider 응답 실패 시 부분 실패로
-        처리되며, 재수집은 배치 운영에서 같은 기준일로 실행합니다.
+        {noIndexDataCopy({ canViewOps })}
       </p>
     );
   }

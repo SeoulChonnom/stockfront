@@ -67,6 +67,8 @@ function buildSnapshot(
           clusterCount: 7,
           lastUpdatedAt: '2026-03-17 09:31 KST',
           partialMessage: null,
+          sourceDate: null,
+          expectedSessionDate: null,
         },
       },
     ],
@@ -215,7 +217,7 @@ describe('MarketOverviewPage — 대표 지수 표', () => {
 });
 
 describe('MarketOverviewPage — PARTIAL 배너', () => {
-  it('lists the page-level message and each market’s metadata.partialMessage', () => {
+  it('admin: shows the raw page-level message and each market’s missing-data detail', () => {
     const snapshot = buildSnapshot({
       status: 'partial',
       partialMessage: '한국 증시 섹션이 일부 누락된 상태로 생성됐습니다.',
@@ -232,6 +234,7 @@ describe('MarketOverviewPage — PARTIAL 배너', () => {
       },
     };
 
+    setRoleOverride('admin');
     render(
       <MarketOverviewPage mode='latest' now={FIXED_NOW} snapshot={snapshot} />
     );
@@ -242,11 +245,59 @@ describe('MarketOverviewPage — PARTIAL 배너', () => {
     expect(
       screen.getByText('한국 증시 섹션이 일부 누락된 상태로 생성됐습니다.')
     ).toBeInTheDocument();
+    // The market-level detail now lives in the "상세 정보" description
+    // list as separate 영향받은 시장/누락된 데이터 fields instead of a
+    // single concatenated "시장명 — 메시지" line.
+    expect(screen.getAllByText('미국 증시').length).toBeGreaterThan(0);
+    // This message also renders inline in the market section's own notice
+    // (unrelated to the banner), so it legitimately appears twice.
     expect(
-      screen.getByText(
-        '미국 증시 — 뉴스 수집이 지연되어 일부 기사가 누락됐습니다.'
-      )
+      screen.getAllByText('뉴스 수집이 지연되어 일부 기사가 누락됐습니다.')
+        .length
+    ).toBeGreaterThan(0);
+    // The market fixture has no sourceDate, so the detail falls back to the
+    // "확인되지 않음" placeholder rather than showing an empty value.
+    expect(screen.getByText('확인되지 않음')).toBeInTheDocument();
+  });
+
+  it('user: shows the reference-only copy and market detail, without the raw batch message', () => {
+    const snapshot = buildSnapshot({
+      status: 'partial',
+      partialMessage: '한국 증시 섹션이 일부 누락된 상태로 생성됐습니다.',
+    });
+    const baseMetadata = snapshot.markets[0].metadata;
+    if (!baseMetadata) {
+      throw new Error('buildSnapshot fixture must define market metadata');
+    }
+    snapshot.markets[0] = {
+      ...snapshot.markets[0],
+      metadata: {
+        ...baseMetadata,
+        partialMessage: '뉴스 수집이 지연되어 일부 기사가 누락됐습니다.',
+      },
+    };
+
+    setRoleOverride('user');
+    render(
+      <MarketOverviewPage mode='latest' now={FIXED_NOW} snapshot={snapshot} />
+    );
+
+    expect(
+      screen.getByText('일부 데이터가 누락된 브리프입니다')
     ).toBeInTheDocument();
+    expect(screen.getByText(/참고용/)).toBeInTheDocument();
+    // The raw batch-facing page-level message must not leak to regular users.
+    expect(
+      screen.queryByText('한국 증시 섹션이 일부 누락된 상태로 생성됐습니다.')
+    ).not.toBeInTheDocument();
+    // The structured missing-market detail is still available to everyone.
+    expect(screen.getAllByText('미국 증시').length).toBeGreaterThan(0);
+    // This message also renders inline in the market section's own notice
+    // (unrelated to the banner), so it legitimately appears twice.
+    expect(
+      screen.getAllByText('뉴스 수집이 지연되어 일부 기사가 누락됐습니다.')
+        .length
+    ).toBeGreaterThan(0);
   });
 
   it('gates "배치 운영에서 원인 보기" on can(\'ops.view\') — a non-admin user must not see it', () => {
@@ -360,9 +411,25 @@ describe('MarketOverviewPage — 근거 원문', () => {
 });
 
 describe('MarketOverviewPage — 글로벌 헤드라인', () => {
-  it('renders the exact fallback copy when there is no headline', () => {
+  it('renders the regular-user fallback copy when there is no headline', () => {
     const snapshot = buildSnapshot({ globalHeadline: '' });
 
+    setRoleOverride('user');
+    render(
+      <MarketOverviewPage mode='latest' now={FIXED_NOW} snapshot={snapshot} />
+    );
+
+    expect(
+      screen.getByText(
+        '오늘의 헤드라인이 아직 준비되지 않았습니다. 아래 시장별 지수와 이슈는 그대로 확인할 수 있습니다.'
+      )
+    ).toBeInTheDocument();
+  });
+
+  it('renders the operator fallback copy when there is no headline', () => {
+    const snapshot = buildSnapshot({ globalHeadline: '' });
+
+    setRoleOverride('admin');
     render(
       <MarketOverviewPage mode='latest' now={FIXED_NOW} snapshot={snapshot} />
     );
