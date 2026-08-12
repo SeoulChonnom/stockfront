@@ -11,6 +11,13 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Pagination } from '@/components/ui/pagination';
 import { ApiError } from '@/lib/api/client';
+import type { Audience } from '@/lib/audience-copy';
+import {
+  errorCodeCopy,
+  rawErrorMessageCopy,
+  unknownErrorMessageCopy,
+} from '@/lib/audience-copy';
+import { useCapabilities } from '@/lib/capabilities';
 import { parseListFilters } from '../lib/app-state';
 import { formatInteger } from '../lib/formatters';
 import { useArchiveList } from '../lib/query-hooks';
@@ -27,18 +34,24 @@ import { useLastGoodData } from './archive-search/use-last-good-data';
 const PAGE_SIZE = 20;
 
 type ArchiveSearchErrorPresentation = {
-  code: string;
+  code: string | null;
   title: string;
   message: string;
 };
 
+/**
+ * 아카이브 검색 전용 오류 매퍼. `error-presentation.ts`(Latest/Archive
+ * Detail)와 액션 종류·복구 경로가 달라 통합하지 않고 별도로 유지한다. 코드
+ * 배지와 원문 메시지는 `audience-copy.ts`를 통해 감사자에게만 노출한다.
+ */
 function getArchiveSearchErrorPresentation(
-  error: Error
+  error: Error,
+  audience: Audience
 ): ArchiveSearchErrorPresentation {
   if (error instanceof ApiError) {
     if (error.status === 0) {
       return {
-        code: 'NETWORK_ERROR',
+        code: errorCodeCopy(audience, 'NETWORK_ERROR'),
         title: '네트워크에 연결할 수 없습니다',
         message:
           '연결을 확인한 뒤 다시 시도해 주세요. 필터와 마지막 검색 결과는 그대로 유지됩니다.',
@@ -47,7 +60,7 @@ function getArchiveSearchErrorPresentation(
 
     if (error.status === 429) {
       return {
-        code: '429 · RATE_LIMITED',
+        code: errorCodeCopy(audience, '429 · RATE_LIMITED'),
         title: '요청이 너무 많습니다',
         message: '잠시 기다린 뒤 다시 시도해 주세요.',
       };
@@ -55,7 +68,7 @@ function getArchiveSearchErrorPresentation(
 
     if (error.status >= 500) {
       return {
-        code: `${error.status} · INTERNAL_ERROR`,
+        code: errorCodeCopy(audience, `${error.status} · INTERNAL_ERROR`),
         title: '데이터를 불러오지 못했습니다',
         message:
           '서버가 요청을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.',
@@ -63,16 +76,16 @@ function getArchiveSearchErrorPresentation(
     }
 
     return {
-      code: `${error.status} · REQUEST_FAILED`,
+      code: errorCodeCopy(audience, `${error.status} · REQUEST_FAILED`),
       title: '아카이브 요청을 처리하지 못했습니다',
-      message: error.message,
+      message: rawErrorMessageCopy(audience, error.message),
     };
   }
 
   return {
-    code: 'REQUEST_FAILED',
+    code: errorCodeCopy(audience, 'REQUEST_FAILED'),
     title: '아카이브 요청을 처리하지 못했습니다',
-    message: error.message || '알 수 없는 오류가 발생했습니다.',
+    message: unknownErrorMessageCopy(audience, error.message),
   };
 }
 
@@ -96,6 +109,8 @@ export function ArchiveSearchPage({
   const resultsHeadingRef = useRef<HTMLHeadingElement>(null);
   const pendingApplyAnnounceKeyRef = useRef<string | null>(null);
   const appliedKey = buildFiltersKey(applied);
+  const { can } = useCapabilities();
+  const audience: Audience = { canViewOps: can('ops.view') };
 
   const archiveQuery = useArchiveList({
     fromDate: applied.from,
@@ -110,7 +125,7 @@ export function ArchiveSearchPage({
   const hasData = displayData !== null;
   const isInitialLoading = archiveQuery.isLoading && !hasData;
   const errorPresentation = archiveQuery.error
-    ? getArchiveSearchErrorPresentation(archiveQuery.error)
+    ? getArchiveSearchErrorPresentation(archiveQuery.error, audience)
     : null;
 
   useEffect(() => {
@@ -211,9 +226,11 @@ export function ArchiveSearchPage({
           title={
             <span className='flex flex-wrap items-center gap-2.5'>
               <span>{errorPresentation.title}</span>
-              <span className='mono rounded-[var(--r-sm)] border border-[color:var(--danger-line)] bg-[color:var(--danger-soft)] px-2 py-0.5 text-caption font-semibold text-[color:var(--danger)]'>
-                {errorPresentation.code}
-              </span>
+              {errorPresentation.code ? (
+                <span className='mono rounded-[var(--r-sm)] border border-[color:var(--danger-line)] bg-[color:var(--danger-soft)] px-2 py-0.5 text-caption font-semibold text-[color:var(--danger)]'>
+                  {errorPresentation.code}
+                </span>
+              ) : null}
             </span>
           }
           tone='danger'

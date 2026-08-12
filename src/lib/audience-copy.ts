@@ -45,3 +45,42 @@ export function partialBannerCopy(audience: Audience): {
     body: '일부 데이터가 누락되어 이 브리프는 참고용으로 제공됩니다. 누락된 시장과 기준일을 확인해 주세요.',
   };
 }
+
+/**
+ * 오류 배지 코드. 운영자에게는 원래 코드를 그대로 보여주고, 일반
+ * 사용자에게는 아예 배지를 렌더링하지 않도록 null을 반환한다 — 영어 오류
+ * 코드는 내부 진단 정보이지 사용자 안내가 아니다.
+ */
+export function errorCodeCopy(audience: Audience, code: string): string | null {
+  return audience.canViewOps ? code : null;
+}
+
+/**
+ * 백엔드/클라이언트가 던진 원문 메시지. 운영자에게는 진단을 위해 그대로
+ * 노출하고, 일반 사용자에게는 원문 대신 일반화된 안내문으로 대체한다.
+ */
+export function rawErrorMessageCopy(
+  audience: Audience,
+  rawMessage: string
+): string {
+  return audience.canViewOps
+    ? rawMessage
+    : '요청을 처리하는 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.';
+}
+
+/** `rawErrorMessageCopy`와 같은 원칙을 적용하되, 원문이 비어 있을 수 있는 미분류 오류용. */
+export function unknownErrorMessageCopy(
+  audience: Audience,
+  rawMessage: string
+): string {
+  return audience.canViewOps
+    ? rawMessage || '알 수 없는 오류가 발생했습니다.'
+    : '알 수 없는 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.';
+}
+
+/** Archive 404/스냅샷 없음 상태의 원인 설명. 일반 사용자에게는 배치 용어를 노출하지 않는다. */
+export function marketNotFoundCopy(audience: Audience): string {
+  return audience.canViewOps
+    ? '배치가 실행되지 않았거나 실패한 날짜일 수 있습니다.'
+    : '해당 날짜의 브리프가 아직 생성되지 않았습니다.';
+}

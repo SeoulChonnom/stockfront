@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -6,6 +6,10 @@ import { AnnounceProvider } from '@/components/shell/announce-context';
 
 import type { ArchiveListParams } from '../lib/api/archive';
 import { ApiError } from '../lib/api/client';
+import {
+  resetRoleOverrideForTesting,
+  setRoleOverride,
+} from '../lib/capabilities';
 import { withBasePath } from '../lib/router';
 import { ArchiveSearchPage } from './archive-search-page';
 
@@ -88,6 +92,14 @@ function getLiveRegionText() {
 }
 
 afterEach(() => {
+  // Unmount deterministically before touching shared state: resetting the
+  // role override synchronously notifies `useCapabilities()` subscribers,
+  // and if the page were still mounted when that fires, the `useArchiveList`
+  // mock reset below would leave it returning `undefined` for that stray
+  // re-render and throw. Explicit `cleanup()` guarantees the unmount
+  // happens before either reset runs, regardless of hook registration order.
+  cleanup();
+  resetRoleOverrideForTesting();
   window.history.replaceState(null, '', '/');
   mockUseArchiveList.mockReset();
 });
@@ -256,7 +268,7 @@ describe('ArchiveSearchPage', () => {
     expect(refetch).toHaveBeenCalled();
   });
 
-  it('renders the error title, HTTP code, message, and retry action for a 500 response', () => {
+  it('operator: renders the error title, HTTP code, message, and retry action for a 500 response', () => {
     const refetch = vi.fn();
     mockUseArchiveList.mockReturnValue({
       data: undefined,
@@ -266,6 +278,7 @@ describe('ArchiveSearchPage', () => {
       refetch,
     });
 
+    setRoleOverride('admin');
     renderPage(new URLSearchParams());
 
     const alert = screen.getByRole('alert');
@@ -279,6 +292,50 @@ describe('ArchiveSearchPage', () => {
     ).toBeInTheDocument();
   });
 
+  it('regular user: hides the HTTP code badge for the same 500 response', () => {
+    mockUseArchiveList.mockReturnValue({
+      data: undefined,
+      error: new ApiError('API request failed with status 500.', 500, null),
+      isLoading: false,
+      isFetching: false,
+      refetch: vi.fn(),
+    });
+
+    setRoleOverride('user');
+    renderPage(new URLSearchParams());
+
+    const alert = screen.getByRole('alert');
+    expect(alert).toHaveTextContent('데이터를 불러오지 못했습니다');
+    expect(alert).not.toHaveTextContent('INTERNAL_ERROR');
+    expect(alert).toHaveTextContent(
+      '서버가 요청을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.'
+    );
+  });
+
+  it('regular user: never shows the raw error.message or an HTTP code for a non-5xx request failure', () => {
+    mockUseArchiveList.mockReturnValue({
+      data: undefined,
+      error: new ApiError(
+        'batch pipeline provider threshold rejected the request',
+        400,
+        null
+      ),
+      isLoading: false,
+      isFetching: false,
+      refetch: vi.fn(),
+    });
+
+    setRoleOverride('user');
+    renderPage(new URLSearchParams());
+
+    const alert = screen.getByRole('alert');
+    expect(alert).toHaveTextContent('아카이브 요청을 처리하지 못했습니다');
+    expect(alert).not.toHaveTextContent('REQUEST_FAILED');
+    expect(alert).not.toHaveTextContent(
+      'batch pipeline provider threshold rejected the request'
+    );
+  });
+
   it('uses the archive page label in request errors', () => {
     mockUseArchiveList.mockReturnValue({
       data: undefined,
@@ -288,6 +345,7 @@ describe('ArchiveSearchPage', () => {
       refetch: vi.fn(),
     });
 
+    setRoleOverride('admin');
     renderPage(new URLSearchParams());
 
     expect(screen.getByRole('alert')).toHaveTextContent(
