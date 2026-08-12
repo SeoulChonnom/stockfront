@@ -5,19 +5,31 @@ import { Button } from '@/components/ui/button';
 
 import type { ClusterArticle } from '../../lib/view-models';
 import {
+  ARTICLE_PAGE_SIZE,
+  type ArticleFilters,
+  type ArticleSort,
+  applyArticleFilters,
+  listSources,
+} from './cluster-article-controls';
+import {
   displayArticleTitle,
   displayPublishedAt,
   displaySource,
 } from './copy-fallbacks';
 import { getSafeExternalUrl } from './url-safety';
 
-const INITIAL_VISIBLE_COUNT = 10;
+const DEFAULT_FILTERS: ArticleFilters = {
+  sort: 'relevance',
+  source: '',
+  query: '',
+};
 
 function ClusterArticleRow({ article }: { article: ClusterArticle }) {
   const originalUrl = getSafeExternalUrl(article.originalUrl);
   const mirrorUrl = article.mirrorUrl
     ? getSafeExternalUrl(article.mirrorUrl)
     : null;
+  const title = displayArticleTitle(article.title);
 
   // Keep each article to two logical lines: title first, then publisher,
   // date, original-source badge, and mirror link together below.
@@ -30,12 +42,10 @@ function ClusterArticleRow({ article }: { article: ClusterArticle }) {
           rel='noopener noreferrer'
           target='_blank'
         >
-          {displayArticleTitle(article.title)} ↗
+          {title} ↗
         </a>
       ) : (
-        <span className='wrap-anywhere font-medium text-fg'>
-          {displayArticleTitle(article.title)}
-        </span>
+        <span className='wrap-anywhere font-medium text-fg'>{title}</span>
       )}
       <div className='mono mt-1 flex flex-wrap items-center gap-2 text-caption text-faint'>
         <span>{displaySource(article.source)}</span>
@@ -47,9 +57,12 @@ function ClusterArticleRow({ article }: { article: ClusterArticle }) {
         <span className='rounded-[var(--r-sm)] border border-[color:var(--line-strong)] px-1.5 py-0.5 text-caption font-semibold text-faint'>
           원문
         </span>
-        {/* 네이버 미러 uses a bordered chip matching the 원문 badge. */}
+        {/* 네이버 미러 uses a bordered chip matching the 원문 배지. The
+            aria-label repeats the article title so a screen reader doesn't
+            hear a bare, repeated "네이버 미러" across every row. */}
         {mirrorUrl ? (
           <a
+            aria-label={`${title} 네이버 미러 (새 창)`}
             className='rounded-[var(--r-sm)] border border-line px-1.5 py-0.5 text-fg-soft no-underline'
             href={mirrorUrl}
             rel='noopener noreferrer'
@@ -68,11 +81,21 @@ export function ClusterArticlesList({
 }: {
   articles: ClusterArticle[];
 }) {
-  const [expanded, setExpanded] = useState(false);
-  const visible = expanded
-    ? articles
-    : articles.slice(0, INITIAL_VISIBLE_COUNT);
-  const remaining = articles.length - INITIAL_VISIBLE_COUNT;
+  const [filters, setFilters] = useState<ArticleFilters>(DEFAULT_FILTERS);
+  const [visibleCount, setVisibleCount] = useState(ARTICLE_PAGE_SIZE);
+
+  // A filter change can only shrink the match set relative to what's on
+  // screen, so re-showing whatever visibleCount had reached before would
+  // dump every match at once — the exact "show everything" bug this
+  // control replaces. Reset to one page whenever filters change.
+  function updateFilters(patch: Partial<ArticleFilters>) {
+    setFilters((current) => ({ ...current, ...patch }));
+    setVisibleCount(ARTICLE_PAGE_SIZE);
+  }
+
+  const filtered = applyArticleFilters(articles, filters);
+  const visible = filtered.slice(0, visibleCount);
+  const remaining = filtered.length - visible.length;
 
   return (
     // Header, body, and pager own their padding.
@@ -91,23 +114,73 @@ export function ClusterArticlesList({
         <span className='mono text-caption text-faint'>
           관련 기사 {articles.length}건
         </span>
-        {remaining > 0 ? (
-          <Button
-            aria-expanded={expanded}
-            className='ml-auto'
-            onClick={() => setExpanded((current) => !current)}
-            size='sm'
-            type='button'
-            variant='secondary'
-          >
-            {expanded ? '간략히 보기' : `남은 ${remaining}건 더 보기`}
-          </Button>
-        ) : null}
       </div>
+
+      {articles.length > 0 ? (
+        <div className='flex flex-wrap items-end gap-3 border-b border-line px-[18px] py-3'>
+          <div className='flex flex-col gap-1'>
+            <label className='text-label text-faint' htmlFor='article-sort'>
+              정렬
+            </label>
+            <select
+              className='min-h-tap rounded-[var(--r-md)] border border-line bg-[color:var(--surface)] px-2 text-body'
+              id='article-sort'
+              onChange={(event) =>
+                updateFilters({ sort: event.target.value as ArticleSort })
+              }
+              value={filters.sort}
+            >
+              <option value='relevance'>관련도순</option>
+              <option value='latest'>최신순</option>
+            </select>
+          </div>
+
+          <div className='flex flex-col gap-1'>
+            <label className='text-label text-faint' htmlFor='article-source'>
+              언론사
+            </label>
+            <select
+              className='min-h-tap rounded-[var(--r-md)] border border-line bg-[color:var(--surface)] px-2 text-body'
+              id='article-source'
+              onChange={(event) =>
+                updateFilters({ source: event.target.value })
+              }
+              value={filters.source}
+            >
+              <option value=''>전체</option>
+              {listSources(articles).map((source) => (
+                <option key={source} value={source}>
+                  {source}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className='flex min-w-0 flex-1 flex-col gap-1'>
+            <label className='text-label text-faint' htmlFor='article-query'>
+              제목 검색
+            </label>
+            <input
+              className='min-h-tap min-w-0 rounded-[var(--r-md)] border border-line bg-[color:var(--surface)] px-2 text-body'
+              id='article-query'
+              onChange={(event) => updateFilters({ query: event.target.value })}
+              type='search'
+              value={filters.query}
+            />
+          </div>
+        </div>
+      ) : null}
 
       {articles.length === 0 ? (
         <div className='p-[18px]'>
           <EmptyState kind='no-articles' />
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className='p-[18px]'>
+          <EmptyState
+            description='조건에 맞는 기사가 없습니다.'
+            kind='search-results'
+          />
         </div>
       ) : (
         <ul className='m-0 list-none p-0'>
@@ -116,6 +189,20 @@ export function ClusterArticlesList({
           ))}
         </ul>
       )}
+
+      {remaining > 0 ? (
+        <div className='border-t border-line px-[18px] py-3'>
+          <Button
+            onClick={() =>
+              setVisibleCount((current) => current + ARTICLE_PAGE_SIZE)
+            }
+            type='button'
+            variant='secondary'
+          >
+            {`기사 ${Math.min(ARTICLE_PAGE_SIZE, remaining)}건 더 보기`}
+          </Button>
+        </div>
+      ) : null}
     </section>
   );
 }
