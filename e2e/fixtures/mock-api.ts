@@ -4,8 +4,8 @@
  * These fixture factories intentionally model the application's API DTOs. The
  * factory functions
  * (`pageFixture`, `archiveFixture`, `clusterFixture`, `batchListFixture`,
- * `batchDetailFixture`, `triggerResult`, `ERRORS`, `LONG_SAMPLES`, `NOW_KST`,
- * `TODAY`, `shiftDate`) match the real DTO contract. The `Batch` section
+ * `batchDetailFixture`, `ERRORS`, `LONG_SAMPLES`, `NOW_KST`, `TODAY`,
+ * `shiftDate`) match the real DTO contract. The `Batch` section
  * follows `docs/api_spec.json`, including its
  * jobType-split model; see that section's comments for fixture choices where
  * the wire contract does not define an enum or example.
@@ -308,27 +308,6 @@ export type BatchDetail = {
   steps: BatchJobStepRunResponse[];
 };
 
-export type TriggerSuccess = {
-  jobId: number;
-  jobName: string;
-  businessDate: string;
-  status: string;
-  startedAt: string;
-};
-
-export type TriggerErrorBody = {
-  http: number;
-  code: string;
-  message: string;
-  existingJobId?: number;
-  field?: string;
-  retryAfter?: number;
-};
-
-export type TriggerResult =
-  | { data: TriggerSuccess }
-  | { error: TriggerErrorBody };
-
 export type AiRetrySuccess = {
   jobId: number;
   jobName: string;
@@ -341,9 +320,15 @@ export type AiRetrySuccess = {
   startedAt: string;
 };
 
+export type AiRetryErrorBody = {
+  http: number;
+  code: string;
+  message: string;
+};
+
 export type AiRetryResult =
   | { data: AiRetrySuccess }
-  | { error: TriggerErrorBody };
+  | { error: AiRetryErrorBody };
 
 // ---------------------------------------------------------------------------
 // Indices / articles / clusters (static seed data)
@@ -1248,45 +1233,6 @@ const LONG_LOG = (() => {
 })();
 
 /**
- * A job just created by `POST /stock/api/batch/market-daily` (mock
- * `jobId: 1043`, see `triggerResult()`) isn't one of `BATCH_ALL`'s 27 seeded
- * historical rows — a real backend WOULD return it (it just started), but
- * this static fixture set has no such entry. Falling back to `BATCH_ALL[0]`
- * (as this function used to, unconditionally) silently mislabels the
- * response: it would report itself as `jobId: 1042` (a different, unrelated
- * job) while being served FOR a request that asked for 1043. Synthesizing a
- * plausible RUNNING record for any unseeded jobId instead keeps the
- * response's own `jobId` truthful for post-trigger navigation via
- * "작업 상세 보기"/"작업 보기".
- * navigation after a successful Trigger. Always MARKET_SNAPSHOT: the only
- * in-scope trigger endpoint (`/batch/market-daily`) has no jobType concept
- * of its own (`BatchRunResponse` carries no `jobType` field — confirmed
- * against `docs/api_spec.json`); `POST /batch/news-collection` is a
- * separate, out-of-scope trigger this mock doesn't wire up.
- */
-function syntheticRunningJob(jobId: number): BatchListItem {
-  const jobType: BatchJobType = 'MARKET_SNAPSHOT';
-  return {
-    jobId,
-    jobType,
-    jobName: 'market_daily_batch',
-    businessDate: TODAY,
-    status: 'RUNNING',
-    currentStep: BATCH_STAGE_KEYS[jobType][1],
-    startedAt: NOW_KST,
-    endedAt: null,
-    durationSeconds: null,
-    marketScope: 'GLOBAL',
-    rawNewsCount: 0,
-    processedNewsCount: 0,
-    clusterCount: 0,
-    pageId: null,
-    pageVersionNo: null,
-    partialMessage: null,
-  };
-}
-
-/**
  * Step codes actually implemented per jobType (see `src/lib/batch-type.ts`'s
  * `BATCH_STEP_LABELS`), in persisted execution order. Independent from
  * `BATCH_STAGE_KEYS` above (which only feeds `currentStep`, a field the
@@ -1410,9 +1356,14 @@ function buildAiRetryStepRuns(afterIso: string): BatchJobStepRunResponse[] {
   ];
 }
 
-export function batchDetailFixture(jobId: number, mode?: string): BatchDetail {
-  const item =
-    BATCH_ALL.find((r) => r.jobId === jobId) ?? syntheticRunningJob(jobId);
+export function batchDetailFixture(
+  jobId: number,
+  mode?: string
+): BatchDetail | null {
+  const item = BATCH_ALL.find((r) => r.jobId === jobId);
+  if (!item) {
+    return null;
+  }
   const failed = item.status === 'FAILED';
   const partial = item.status === 'PARTIAL';
   const running = item.status === 'RUNNING';
@@ -1522,77 +1473,6 @@ export function batchDetailFixture(jobId: number, mode?: string): BatchDetail {
         },
     steps,
   };
-}
-
-export function triggerResult(
-  mode: string,
-  businessDate?: string
-): TriggerResult {
-  const base: TriggerSuccess = {
-    jobId: 1043,
-    jobName: 'market_daily_batch',
-    businessDate: businessDate || TODAY,
-    status: 'RUNNING',
-    startedAt: '2026-07-27T08:24:31',
-  };
-  if (mode === 'conflict409') {
-    return {
-      error: {
-        http: 409,
-        code: 'BATCH_ALREADY_RUNNING',
-        message: `${businessDate || TODAY} 배치가 이미 실행 중입니다.`,
-        existingJobId: 1042,
-      },
-    };
-  }
-  if (mode === 'forbidden403') {
-    return {
-      error: {
-        http: 403,
-        code: 'FORBIDDEN',
-        message: '수동 실행 권한이 없습니다. 관리자(ADMIN) 권한이 필요합니다.',
-      },
-    };
-  }
-  if (mode === 'validation422') {
-    return {
-      error: {
-        http: 422,
-        code: 'INVALID_BUSINESS_DATE',
-        message: '미래 날짜는 실행할 수 없습니다.',
-        field: 'businessDate',
-      },
-    };
-  }
-  if (mode === 'rate429') {
-    return {
-      error: {
-        http: 429,
-        code: 'RATE_LIMITED',
-        message: '요청이 너무 많습니다. 60초 후 다시 시도해 주세요.',
-        retryAfter: 60,
-      },
-    };
-  }
-  if (mode === 'error500') {
-    return {
-      error: {
-        http: 500,
-        code: 'INTERNAL_BATCH_ERROR',
-        message: '배치 실행 요청을 처리하지 못했습니다.',
-      },
-    };
-  }
-  if (mode === 'offline') {
-    return {
-      error: {
-        http: 0,
-        code: 'NETWORK_ERROR',
-        message: '네트워크에 연결할 수 없습니다.',
-      },
-    };
-  }
-  return { data: base };
 }
 
 export function aiRetryResult(
@@ -1773,25 +1653,6 @@ export type InstallMockApiOptions = {
    * every pre-existing test's behavior unchanged.
    */
   role?: 'user' | 'admin';
-  /**
-   * Selects what the trigger lifecycle's `POST
-   * /stock/api/batch/market-daily` resolves to; mirrors `triggerResult()`'s
-   * mode strings one-to-one. Defaults to `'success'` (the pre-existing
-   * hardcoded behavior). `'offline'` genuinely `route.abort()`s instead of
-   * fulfilling a body, so it produces a real Playwright `requestfailed`
-   * event and a real `fetch()` rejection — the same failure mode a
-   * disconnected network would produce — rather than faking status 0 through
-   * a JSON body (which `route.fulfill` cannot even represent: HTTP status
-   * codes below 100 are invalid).
-   */
-  triggerMode?:
-    | 'success'
-    | 'conflict409'
-    | 'forbidden403'
-    | 'validation422'
-    | 'rate429'
-    | 'error500'
-    | 'offline';
   /** AI-summary retry lifecycle. Defaults to an accepted 202 response. */
   retryAiMode?:
     | 'success'
@@ -1873,7 +1734,6 @@ export async function installMockApi(
     options.clusterMode ?? CLUSTER_MODE_BY_SCENARIO[scenario] ?? 'ready';
   const batchDetailMode =
     options.batchDetailMode ?? (scenario === 'long' ? 'longLog' : undefined);
-  const triggerMode = options.triggerMode ?? 'success';
   const retryAiMode = options.retryAiMode ?? 'success';
 
   // Auth bootstrap (`src/lib/auth-bootstrap.ts`): fulfilling a real 200 body
@@ -2012,11 +1872,19 @@ export async function installMockApi(
     const batchJobIdMatch = /^\/stock\/api\/batch\/jobs\/(\d+)$/.exec(pathname);
     if (method === 'GET' && batchJobIdMatch) {
       const jobId = Number(batchJobIdMatch[1]);
-      await fulfillJson(
-        route,
-        200,
-        envelope(batchDetailFixture(jobId, batchDetailMode))
-      );
+      const detail = batchDetailFixture(jobId, batchDetailMode);
+      if (!detail) {
+        await fulfillJson(route, 404, {
+          success: false,
+          error: {
+            code: 'BATCH_JOB_NOT_FOUND',
+            message: `Batch job ${jobId} was not found.`,
+          },
+        });
+        return;
+      }
+
+      await fulfillJson(route, 200, envelope(detail));
       return;
     }
 
@@ -2028,8 +1896,7 @@ export async function installMockApi(
       const idempotencyKey =
         request.headers()['idempotency-key']?.trim() || null;
 
-      // Keep the pending state observable in browser tests, just like the
-      // manual trigger fixture above.
+      // Keep the pending state observable in browser tests.
       await new Promise((resolve) => setTimeout(resolve, 300));
 
       const result = aiRetryResult(retryAiMode, sourceJobId, idempotencyKey);
@@ -2048,49 +1915,6 @@ export async function installMockApi(
       }
 
       await fulfillJson(route, 202, envelope(result.data));
-      return;
-    }
-
-    if (method === 'POST' && pathname === '/stock/api/batch/market-daily') {
-      let requestedBusinessDate: string | undefined;
-      try {
-        const body = request.postDataJSON() as { businessDate?: unknown };
-        requestedBusinessDate =
-          typeof body?.businessDate === 'string'
-            ? body.businessDate
-            : undefined;
-      } catch {
-        requestedBusinessDate = undefined;
-      }
-
-      // Small artificial delay so the dialog's pending state is observable by
-      // a test — an instantly-resolving
-      // mock would make idle -> pending -> success/error indistinguishable
-      // from idle -> success/error in a real assertion.
-      await new Promise((resolve) => setTimeout(resolve, 300));
-
-      const result = triggerResult(triggerMode, requestedBusinessDate);
-
-      if ('error' in result) {
-        if (triggerMode === 'offline') {
-          // A genuine network-level failure (real `requestfailed` event,
-          // real `fetch()` rejection) rather than a JSON body — `route
-          // .fulfill({status: 0})` isn't valid (HTTP status codes below 100
-          // are rejected), and faking it any other way wouldn't exercise the
-          // same `apiRequest()` catch path (`client.ts`) a real offline
-          // client hits.
-          await route.abort('internetdisconnected');
-          return;
-        }
-
-        await fulfillJson(route, result.error.http, {
-          success: false,
-          error: result.error,
-        });
-        return;
-      }
-
-      await fulfillJson(route, 200, envelope(result.data));
       return;
     }
 

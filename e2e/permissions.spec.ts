@@ -32,7 +32,7 @@ test.describe('non-admin user permissions', () => {
     await expect(page.getByRole('link', { name: '배치 운영' })).toHaveCount(0);
   });
 
-  test('direct entry to /ops/batches renders the 403 screen, with trigger/log/detail nodes absent from the DOM', async ({
+  test('direct entry to /ops/batches renders the 403 screen, with ops nodes absent from the DOM', async ({
     page,
   }) => {
     await installMockApi(page, { scenario: 'ready', role: 'user' });
@@ -45,7 +45,6 @@ test.describe('non-admin user permissions', () => {
     await expect(page.getByText('현재 계정은 일반 사용자입니다')).toBeVisible();
 
     // Absent from the DOM, not merely hidden.
-    await expect(page.locator('#trigger-btn')).toHaveCount(0);
     await expect(page.getByRole('dialog')).toHaveCount(0);
     await expect(page.getByText('실행 이력')).toHaveCount(0);
     await expect(page.getByText('실행 로그')).toHaveCount(0);
@@ -74,7 +73,7 @@ test.describe('non-admin user permissions', () => {
 });
 
 test.describe('admin permissions (control group)', () => {
-  test('the ops nav item and trigger button ARE present, and /ops/batches renders the admin screen', async ({
+  test('the ops nav item is present and /ops/batches renders the admin screen', async ({
     page,
   }) => {
     await installMockApi(page, { scenario: 'ready', role: 'admin' });
@@ -86,7 +85,9 @@ test.describe('admin permissions (control group)', () => {
     await expect(
       page.getByRole('heading', { name: '배치 운영' })
     ).toBeVisible();
-    await expect(page.locator('#trigger-btn')).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: '수동 실행' })
+    ).toHaveCount(0);
     await expect(page.getByText('403 · FORBIDDEN')).toHaveCount(0);
   });
 });
