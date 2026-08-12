@@ -9,8 +9,8 @@
   --text-body: var(--fs-body);
   --text-body-sm: var(--fs-sm);
   --text-label: var(--fs-label);
-  --text-caption: 11.5px;
-  --text-card-heading: 14.5px;
+  --text-caption: var(--fs-label);
+  --text-card-heading: var(--fs-h3);
 
   /* --color-* → text-/bg-/border-{name} (color utilities). */
   --color-fg: var(--text);
