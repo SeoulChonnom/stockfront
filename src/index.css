@@ -17,4 +17,7 @@
   --color-fg-soft: var(--text-soft);
   --color-faint: var(--text-faint);
   --color-line: var(--line);
+
+  /* --spacing-* → min-h-{name} / size-{name} (touch targets). */
+  --spacing-tap: var(--tap-min);
 }
