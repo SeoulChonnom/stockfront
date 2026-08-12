@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button';
+import { emptyMarketsReasonCopy } from '@/lib/audience-copy';
 import { navigate } from '@/lib/router';
 import type { MarketSnapshot } from '@/lib/view-models';
 
@@ -12,10 +13,7 @@ export function EmptyMarketsPanel({
   status: MarketSnapshot['status'];
   canViewOps: boolean;
 }) {
-  const reason =
-    status === 'failed'
-      ? '이 날짜의 배치가 뉴스 수집 단계에서 실패해 시장 섹션이 생성되지 않았습니다.'
-      : '배치는 완료됐지만 시장 섹션이 비어 있습니다. 수집 결과가 0건이었을 수 있습니다.';
+  const reason = emptyMarketsReasonCopy({ canViewOps }, status);
 
   return (
     <section

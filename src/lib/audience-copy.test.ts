@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  emptyMarketsReasonCopy,
   errorCodeCopy,
   marketNotFoundCopy,
   noHeadlineCopy,
@@ -46,6 +47,8 @@ describe('audience-copy', () => {
       partialBannerCopy(user).title,
       partialBannerCopy(user).body,
       marketNotFoundCopy(user),
+      emptyMarketsReasonCopy(user, 'failed'),
+      emptyMarketsReasonCopy(user, 'ready'),
       rawErrorMessageCopy(user, rawMessageWithOpsTerms),
       unknownErrorMessageCopy(user, rawMessageWithOpsTerms),
     ].join(' ');
@@ -66,6 +69,18 @@ describe('audience-copy', () => {
   it('drops the 배치 mention from the regular-user snapshot-not-found message but keeps it for operators', () => {
     expect(marketNotFoundCopy(user)).not.toContain('배치');
     expect(marketNotFoundCopy(operator)).toContain('배치');
+  });
+
+  it('drops 배치/수집 vocabulary from the empty-markets reason for regular users but keeps it for operators, for both the FAILED and non-FAILED branches', () => {
+    expect(emptyMarketsReasonCopy(user, 'failed')).not.toContain('배치');
+    expect(emptyMarketsReasonCopy(user, 'failed')).not.toContain('수집');
+    expect(emptyMarketsReasonCopy(operator, 'failed')).toContain('배치');
+    expect(emptyMarketsReasonCopy(operator, 'failed')).toContain('수집');
+
+    expect(emptyMarketsReasonCopy(user, 'ready')).not.toContain('배치');
+    expect(emptyMarketsReasonCopy(user, 'ready')).not.toContain('수집');
+    expect(emptyMarketsReasonCopy(operator, 'ready')).toContain('배치');
+    expect(emptyMarketsReasonCopy(operator, 'ready')).toContain('수집');
   });
 
   it('passes the raw error message through to operators but replaces it for regular users', () => {

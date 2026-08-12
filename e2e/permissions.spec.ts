@@ -94,13 +94,29 @@ test.describe('admin permissions (control group)', () => {
 
 test.describe('regular-user copy isolation', () => {
   // `src/lib/audience-copy.ts` gates operator vocabulary and raw error
-  // codes behind `canViewOps`. `provider` is deliberately checkable only on
-  // these `ready`/`error5xx` scenarios: it also appears inside the raw
-  // per-market `partialMessage` text the `partial` scenario renders to
-  // every audience by design (Task 5's ruling, tracked as backend
-  // dependency D-13 in `.superpowers/sdd/.../progress.md`) — that is
-  // documented, accepted behavior, not a regression this suite should flag.
-  const OPERATOR_TERMS = ['운영 콘솔', '배치 운영', '재실행', 'provider'];
+  // codes behind `canViewOps`. This is the exact `OPS_TERMS` list
+  // `src/lib/audience-copy.test.ts` already uses as the source of truth for
+  // every pure copy function — kept identical here so the e2e layer checks
+  // the same constraint the unit layer does, not a narrower one. (`배치`
+  // subsumes the previous, narrower `배치 운영` entry.)
+  //
+  // Deliberately NOT tested here: the `partial` scenario. It intentionally
+  // shows the raw per-market `metadata.partialMessage` (which can contain
+  // e.g. "provider") to every audience by design — Task 5's ruling, tracked
+  // as backend dependency D-13 in `.superpowers/sdd/.../progress.md`. That
+  // is documented, accepted behavior, not a regression this suite should
+  // flag. The `ready`/`error5xx`/`failed`/`emptyMarkets` scenarios exercised
+  // below never reach that code path.
+  const OPERATOR_TERMS = [
+    '운영 콘솔',
+    '배치',
+    '재실행',
+    '재수집',
+    'provider',
+    '임계값',
+    '로그',
+    '파이프라인',
+  ];
 
   // The English badge codes `errorCodeCopy` (`audience-copy.ts`) composes
   // for operators only, drawn from `error-presentation.ts`,
@@ -172,4 +188,57 @@ test.describe('regular-user copy isolation', () => {
       }
     });
   }
+
+  // `markets: []` renders `EmptyMarketsPanel`
+  // (`src/pages/market-overview/empty-markets-panel.tsx`) — its reason text
+  // now routes through `emptyMarketsReasonCopy` (`src/lib/audience-copy.ts`)
+  // for both the FAILED and non-FAILED ('emptyMarkets') branches. Only
+  // `market/latest` is exercised here: `archive search`/`cluster detail` have
+  // their own, independent mock fixtures that this `scenario` knob doesn't
+  // affect (`PAGE_MODE_BY_SCENARIO` in `mock-api.ts` only maps the Latest/
+  // Archive Detail page), so re-visiting them here would just repeat the
+  // `ready` case above.
+  const EMPTY_MARKET_SCENARIOS: ReadonlyArray<{
+    name: string;
+    scenario: 'failed' | 'emptyMarkets';
+  }> = [
+    { name: 'FAILED', scenario: 'failed' },
+    { name: 'non-FAILED', scenario: 'emptyMarkets' },
+  ];
+
+  for (const { name, scenario } of EMPTY_MARKET_SCENARIOS) {
+    test(`never shows operator vocabulary to a regular user (latest / empty markets, ${name})`, async ({
+      page,
+    }) => {
+      await installMockApi(page, { scenario, role: 'user' });
+      await page.goto('market/latest');
+      await expect(
+        page.getByText('시장 섹션이 생성되지 않았습니다')
+      ).toBeVisible();
+
+      const body = await page.locator('body').innerText();
+      for (const term of OPERATOR_TERMS) {
+        expect(body).not.toContain(term);
+      }
+    });
+  }
+
+  // Control group: proves the widened `OPERATOR_TERMS` list still catches a
+  // real leak rather than passing merely because the copy vanished for
+  // every audience — an operator on the same FAILED empty-markets scenario
+  // must still see the batch/collection vocabulary this whole describe
+  // block exists to keep away from a regular user.
+  test('still shows the batch/collection vocabulary to an operator (latest / empty markets, FAILED)', async ({
+    page,
+  }) => {
+    await installMockApi(page, { scenario: 'failed', role: 'admin' });
+    await page.goto('market/latest');
+    await expect(
+      page.getByRole('heading', { name: '시장 섹션이 생성되지 않았습니다' })
+    ).toBeVisible();
+
+    const body = await page.locator('body').innerText();
+    expect(body).toContain('배치');
+    expect(body).toContain('수집');
+  });
 });

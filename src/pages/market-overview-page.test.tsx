@@ -542,7 +542,12 @@ describe('MarketOverviewPage — 데이터 정보', () => {
 });
 
 describe('MarketOverviewPage — markets:[] 빈 상태', () => {
-  it('shows the FAILED-specific reason and hides the ops action for a non-admin user', () => {
+  // `EmptyMarketsPanel`'s reason text now routes through
+  // `emptyMarketsReasonCopy` (`src/lib/audience-copy.ts`), so FAILED/non-FAILED
+  // and admin/user are each asserted against the copy that audience should
+  // actually see — not the operator-only raw text regardless of role, which
+  // is the bug this suite used to (unknowingly) assert as correct.
+  it('shows a plain-language reason and hides the ops action for a non-admin user (FAILED)', () => {
     const snapshot = buildSnapshot({ status: 'failed', markets: [] });
 
     setRoleOverride('user');
@@ -554,15 +559,36 @@ describe('MarketOverviewPage — markets:[] 빈 상태', () => {
       screen.getByText('시장 섹션이 생성되지 않았습니다')
     ).toBeInTheDocument();
     expect(
-      screen.getByText(
+      screen.getByText('이 날짜의 브리프가 생성되지 못했습니다.')
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(
         '이 날짜의 배치가 뉴스 수집 단계에서 실패해 시장 섹션이 생성되지 않았습니다.'
       )
-    ).toBeInTheDocument();
+    ).not.toBeInTheDocument();
     expect(
       screen.queryByRole('button', { name: '배치 상태 확인' })
     ).not.toBeInTheDocument();
     expect(
       screen.getByRole('button', { name: '다른 날짜 찾기' })
+    ).toBeInTheDocument();
+  });
+
+  it('shows the FAILED-specific batch/collection reason to an admin', () => {
+    const snapshot = buildSnapshot({ status: 'failed', markets: [] });
+
+    setRoleOverride('admin');
+    render(
+      <MarketOverviewPage mode='latest' now={FIXED_NOW} snapshot={snapshot} />
+    );
+
+    expect(
+      screen.getByText(
+        '이 날짜의 배치가 뉴스 수집 단계에서 실패해 시장 섹션이 생성되지 않았습니다.'
+      )
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: '배치 상태 확인' })
     ).toBeInTheDocument();
   });
 
@@ -582,5 +608,26 @@ describe('MarketOverviewPage — markets:[] 빈 상태', () => {
     expect(
       screen.getByRole('button', { name: '배치 상태 확인' })
     ).toBeInTheDocument();
+  });
+
+  it('shows a plain-language non-FAILED reason to a non-admin user and hides the ops action', () => {
+    const snapshot = buildSnapshot({ status: 'ready', markets: [] });
+
+    setRoleOverride('user');
+    render(
+      <MarketOverviewPage mode='latest' now={FIXED_NOW} snapshot={snapshot} />
+    );
+
+    expect(
+      screen.getByText('이 날짜에 표시할 시장 데이터가 없습니다.')
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(
+        '배치는 완료됐지만 시장 섹션이 비어 있습니다. 수집 결과가 0건이었을 수 있습니다.'
+      )
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: '배치 상태 확인' })
+    ).not.toBeInTheDocument();
   });
 });

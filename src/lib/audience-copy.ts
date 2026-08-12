@@ -2,6 +2,7 @@
  * 권한별 문구 선택. 컴포넌트마다 분기를 흩뿌리지 않기 위해 한 곳에 모은다.
  * 일반 사용자에게는 내부 파이프라인 용어와 접근할 수 없는 복구 수단을 노출하지 않는다.
  */
+import type { MarketSnapshot } from './view-models';
 
 export type Audience = { canViewOps: boolean };
 
@@ -83,4 +84,23 @@ export function marketNotFoundCopy(audience: Audience): string {
   return audience.canViewOps
     ? '배치가 실행되지 않았거나 실패한 날짜일 수 있습니다.'
     : '해당 날짜의 브리프가 아직 생성되지 않았습니다.';
+}
+
+/**
+ * `markets: []` 빈 상태의 원인 설명(`EmptyMarketsPanel`). 일반 사용자에게는
+ * 배치/수집 파이프라인 용어를 노출하지 않는다.
+ */
+export function emptyMarketsReasonCopy(
+  audience: Audience,
+  status: MarketSnapshot['status']
+): string {
+  if (status === 'failed') {
+    return audience.canViewOps
+      ? '이 날짜의 배치가 뉴스 수집 단계에서 실패해 시장 섹션이 생성되지 않았습니다.'
+      : '이 날짜의 브리프가 생성되지 못했습니다.';
+  }
+
+  return audience.canViewOps
+    ? '배치는 완료됐지만 시장 섹션이 비어 있습니다. 수집 결과가 0건이었을 수 있습니다.'
+    : '이 날짜에 표시할 시장 데이터가 없습니다.';
 }
