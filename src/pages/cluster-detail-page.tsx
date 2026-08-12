@@ -86,6 +86,12 @@ export function ClusterDetailPage({ clusterId }: { clusterId: string }) {
           <ClusterAnalysis
             analysis={detail.analysis}
             analysisLead={detail.analysisLead}
+            // `updatedAt` is a non-nullable `string` in the view model, but
+            // `mapClusterDetailToView` (src/lib/mappers/cluster.ts) falls
+            // back to the sentinel '-' when the DTO's `lastUpdatedAt` is
+            // missing/invalid — pass that through as null so the card omits
+            // the label instead of showing a meaningless "생성 기준 -".
+            generatedAt={detail.updatedAt === '-' ? null : detail.updatedAt}
           />
           <ClusterArticlesList articles={detail.articles} />
         </div>
