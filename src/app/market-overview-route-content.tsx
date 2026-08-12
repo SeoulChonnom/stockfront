@@ -59,6 +59,7 @@ export function MarketOverviewRouteContent({
       return (
         <ArchiveNotFoundState
           businessDate={businessDateFromRoute}
+          canViewOps={canViewOps}
           searchParams={url.searchParams}
         />
       );

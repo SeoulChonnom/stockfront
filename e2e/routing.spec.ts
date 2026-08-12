@@ -38,8 +38,10 @@ test.describe('route / query parsing', () => {
     }
   });
 
-  test('malformed business date -> 404', async ({ page }) => {
-    await installMockApi(page, { scenario: 'ready' });
+  test('malformed business date -> 404 (operator sees the badge)', async ({
+    page,
+  }) => {
+    await installMockApi(page, { scenario: 'ready', role: 'admin' });
     // app-state.ts's archiveMarketRoutePattern requires `\d{4}-\d{2}-\d{2}`;
     // "2026-7-6" (unpadded month/day) does not match it.
     await page.goto('market/archive/2026-7-6');
@@ -49,8 +51,21 @@ test.describe('route / query parsing', () => {
     await expect(page.getByText('404 · ROUTE_NOT_FOUND')).toBeVisible();
   });
 
-  test('malformed cluster UUID -> 404', async ({ page }) => {
-    await installMockApi(page, { scenario: 'ready' });
+  test('malformed business date -> 404 (regular user does not see the badge)', async ({
+    page,
+  }) => {
+    await installMockApi(page, { scenario: 'ready', role: 'user' });
+    await page.goto('market/archive/2026-7-6');
+    await expect(page.locator('#page-title')).toHaveText(
+      '이 주소에 해당하는 화면이 없습니다'
+    );
+    await expect(page.getByText('404 · ROUTE_NOT_FOUND')).toHaveCount(0);
+  });
+
+  test('malformed cluster UUID -> 404 (operator sees the badge)', async ({
+    page,
+  }) => {
+    await installMockApi(page, { scenario: 'ready', role: 'admin' });
     await page.goto('market/cluster/not-a-real-uuid');
     await expect(page.locator('#page-title')).toHaveText(
       '이 주소에 해당하는 화면이 없습니다'

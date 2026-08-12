@@ -1,9 +1,13 @@
-import { render, screen } from '@testing-library/react';
+import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { AnnounceProvider } from '@/components/shell/announce-context';
 import { ApiError } from '@/lib/api/client';
+import {
+  resetRoleOverrideForTesting,
+  setRoleOverride,
+} from '@/lib/capabilities';
 
 import { MarketOverviewRouteContent } from './market-overview-route-content';
 
@@ -44,6 +48,12 @@ function mockQuery(error: Error, refetch = vi.fn()) {
 }
 
 afterEach(() => {
+  // Unmount before resetting the role override: the reset can synchronously
+  // notify `useCapabilities()` subscribers, and a stray re-render after the
+  // query mocks are cleared would call them with no return value configured
+  // and throw (see archive-search-page.test.tsx's afterEach comment).
+  cleanup();
+  resetRoleOverrideForTesting();
   mockUseArchiveMarketPage.mockReset();
   mockUseLatestMarketPage.mockReset();
   window.history.replaceState(null, '', '/');
@@ -111,6 +121,52 @@ describe('MarketOverviewRouteContent error context', () => {
     expect(screen.getByText('403 · FORBIDDEN')).toBeInTheDocument();
     expect(
       screen.getByText('이 화면에 접근할 권한이 없습니다')
+    ).toBeInTheDocument();
+  });
+});
+
+describe('MarketOverviewRouteContent — Archive 404 (ArchiveNotFoundState)', () => {
+  function renderArchive404() {
+    mockUseLatestMarketPage.mockReturnValue({
+      data: undefined,
+      error: null,
+      isFetching: false,
+      isLoading: false,
+      refetch: vi.fn(),
+    });
+    mockUseArchiveMarketPage.mockReturnValue(
+      mockQuery(new ApiError('not found', 404, null))
+    );
+
+    return renderRoute('/market/archive/2026-03-17');
+  }
+
+  it('operator: shows the 404 badge and the batch-facing explanation', () => {
+    setRoleOverride('admin');
+    renderArchive404();
+
+    expect(
+      screen.getByText('해당 날짜의 스냅샷이 없습니다')
+    ).toBeInTheDocument();
+    expect(screen.getByText('404 · PAGE_NOT_FOUND')).toBeInTheDocument();
+    expect(
+      screen.getByText('배치가 실행되지 않았거나 실패한 날짜일 수 있습니다.')
+    ).toBeInTheDocument();
+  });
+
+  it('regular user: hides the 404 badge and the 배치 wording', () => {
+    setRoleOverride('user');
+    renderArchive404();
+
+    expect(
+      screen.getByText('해당 날짜의 스냅샷이 없습니다')
+    ).toBeInTheDocument();
+    expect(screen.queryByText('404 · PAGE_NOT_FOUND')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('배치가 실행되지 않았거나 실패한 날짜일 수 있습니다.')
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByText('해당 날짜의 브리프가 아직 생성되지 않았습니다.')
     ).toBeInTheDocument();
   });
 });

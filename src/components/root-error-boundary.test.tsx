@@ -2,6 +2,10 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import {
+  resetRoleOverrideForTesting,
+  setRoleOverride,
+} from '../lib/capabilities';
 import { RootErrorBoundary } from './root-error-boundary';
 
 function ThrowingChild(): never {
@@ -11,6 +15,7 @@ function ThrowingChild(): never {
 describe('RootErrorBoundary', () => {
   afterEach(() => {
     vi.restoreAllMocks();
+    resetRoleOverrideForTesting();
   });
 
   it('shows an accessible recovery fallback when a child throws during render', () => {
@@ -28,6 +33,35 @@ describe('RootErrorBoundary', () => {
     expect(
       screen.getByRole('button', { name: '다시 시도' })
     ).toBeInTheDocument();
+  });
+
+  it('operator: shows the 500 · RENDER_ERROR badge', () => {
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    setRoleOverride('admin');
+
+    render(
+      <RootErrorBoundary>
+        <ThrowingChild />
+      </RootErrorBoundary>
+    );
+
+    expect(screen.getByText('500 · RENDER_ERROR')).toBeInTheDocument();
+  });
+
+  it('regular user: hides the 500 · RENDER_ERROR badge', () => {
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    setRoleOverride('user');
+
+    render(
+      <RootErrorBoundary>
+        <ThrowingChild />
+      </RootErrorBoundary>
+    );
+
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      '페이지를 표시할 수 없습니다'
+    );
+    expect(screen.queryByText('500 · RENDER_ERROR')).not.toBeInTheDocument();
   });
 
   it('retries rendering its children after the recovery action', async () => {
