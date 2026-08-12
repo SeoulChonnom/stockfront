@@ -17,13 +17,21 @@ test.describe('route / query parsing', () => {
   test('all 6 routes render their own page-title heading', async ({ page }) => {
     await installMockApi(page, { scenario: 'ready' });
 
+    // `#page-title` is now the promoted global headline (`decision-header-card.tsx`),
+    // not the old "최신 시장 브리프"/"<date> 시장 브리프" label — the mock
+    // API's `ready` scenario returns the same `globalHeadline` for both the
+    // latest and archive-detail pages (`pageFixture` in mock-api.ts), so both
+    // cases below expect that literal headline text.
+    const READY_HEADLINE =
+      '금리 경계 속 기술주 강세, 아시아는 반도체 수급 개선에 주목';
+
     const cases: Array<{ path: string; expectHeadingText: string | RegExp }> = [
-      { path: '', expectHeadingText: '최신 시장 브리프' }, // '/' -> replace-redirects to /market/latest
-      { path: 'market/latest', expectHeadingText: '최신 시장 브리프' },
+      { path: '', expectHeadingText: READY_HEADLINE }, // '/' -> replace-redirects to /market/latest
+      { path: 'market/latest', expectHeadingText: READY_HEADLINE },
       { path: 'market/archive/search', expectHeadingText: '아카이브' },
       {
         path: 'market/archive/2026-07-06',
-        expectHeadingText: /2026-07-06 시장 브리프/,
+        expectHeadingText: READY_HEADLINE,
       },
       { path: `market/cluster/${CLUSTER_ID}`, expectHeadingText: /.+/ },
       { path: 'ops/batches', expectHeadingText: '배치 운영' },
@@ -98,8 +106,9 @@ test.describe('deep link', () => {
   }) => {
     await installMockApi(page, { scenario: 'ready' });
     await page.goto('market/archive/2026-07-06?pageId=481');
+    // Same promoted-headline contract as the routing sweep above.
     await expect(page.locator('#page-title')).toHaveText(
-      /2026-07-06 시장 브리프/
+      '금리 경계 속 기술주 강세, 아시아는 반도체 수급 개선에 주목'
     );
     await expect(page.getByText('아카이브 스냅샷')).toBeVisible();
   });
@@ -123,6 +132,23 @@ test.describe('deep link', () => {
     // archive snapshot, not a bare "no info" dead end.
     await page.goto(`market/cluster/${CLUSTER_ID}`);
     await expect(page.getByText(/진입 경로 정보가 없어/)).toBeVisible();
+  });
+
+  test('?market=kr on Latest selects the Korean market tab directly', async ({
+    page,
+  }) => {
+    await installMockApi(page, { scenario: 'ready' });
+    await page.goto('market/latest?market=kr');
+
+    const krTab = page.getByRole('tab', { name: /한국 증시/ });
+    await expect(krTab).toHaveAttribute('aria-selected', 'true');
+    await expect(page.getByRole('tab', { name: /미국 증시/ })).toHaveAttribute(
+      'aria-selected',
+      'false'
+    );
+    await expect(
+      page.getByRole('heading', { level: 2, name: '한국 증시' })
+    ).toBeVisible();
   });
 });
 
@@ -160,5 +186,56 @@ test.describe('route focus', () => {
 
     // pathname itself never changed during that transition.
     expect(new URL(page.url()).pathname).toBe('/stock/market/archive/search');
+  });
+
+  test('switching market tabs (adding ?market=) does NOT refocus #page-title', async ({
+    page,
+  }) => {
+    await installMockApi(page, { scenario: 'ready' });
+    await page.goto('market/latest');
+    await expect(page.locator('#page-title')).toBeFocused();
+
+    // Move focus away — App.tsx's route-focus effect is keyed on `pathname`
+    // only (see its own comment), so a `?market=` query-only change from a
+    // tab click must not pull focus back to #page-title.
+    await page.getByRole('tab', { name: /한국 증시/ }).focus();
+    await expect(page.locator('#page-title')).not.toBeFocused();
+
+    await page.getByRole('tab', { name: /한국 증시/ }).click();
+    await expect(page).toHaveURL(/market=kr/);
+    await expect(page.locator('#page-title')).not.toBeFocused();
+  });
+});
+
+test.describe('browser Back (market tabs)', () => {
+  test('Back from a cluster detail page restores the selected tab and scroll position', async ({
+    page,
+  }) => {
+    await installMockApi(page, { scenario: 'ready' });
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.goto('market/latest');
+
+    // Scroll-restoration keys on pathname + search (`buildScrollKey`), so
+    // `?market=kr` must be part of the key the whole way through this flow.
+    await page.getByRole('tab', { name: /한국 증시/ }).click();
+    await expect(page).toHaveURL(/market=kr/);
+
+    await page.evaluate(() => window.scrollTo(0, 400));
+    await page.waitForTimeout(50);
+    const scrollYBeforeNavigation = await page.evaluate(() => window.scrollY);
+    expect(scrollYBeforeNavigation).toBeGreaterThan(0);
+
+    await page.getByRole('link', { name: '이슈 상세' }).first().click();
+    await expect(page).toHaveURL(/market\/cluster\//);
+
+    await page.goBack();
+    await expect(page).toHaveURL(/market=kr/);
+    await expect(page.getByRole('tab', { name: /한국 증시/ })).toHaveAttribute(
+      'aria-selected',
+      'true'
+    );
+    await expect
+      .poll(() => page.evaluate(() => window.scrollY))
+      .toBe(scrollYBeforeNavigation);
   });
 });

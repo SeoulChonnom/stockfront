@@ -1,10 +1,12 @@
-import { noNarrativeCopy } from '@/lib/audience-copy';
+import { noIndexDataCopy, noNarrativeCopy } from '@/lib/audience-copy';
 import type { MarketSnapshot } from '@/lib/view-models';
 
 import { MarketAnalysisBlock } from './market-analysis-block';
 import { MarketArticleLinks } from './market-article-links';
+import { MarketIndexCards } from './market-index-cards';
 import { MarketIndexTable } from './market-index-table';
 import { MarketIssueList } from './market-issue-list';
+import { marketPanelId, marketTabId } from './market-tab-ids';
 import type { ClusterOriginQuery } from './navigation';
 
 /**
@@ -35,13 +37,15 @@ export function MarketSection({
   const headingId = `mk-section-heading-${index}`;
   const metadata = market.metadata;
   const hasNarrative = (market.summaryBody ?? '').trim().length > 0;
+  const hasIndices = market.indices.length > 0;
   const audience = { canViewOps };
 
   return (
     <section
-      aria-labelledby={headingId}
-      className='flex min-w-0 scroll-mt-[calc(var(--section-nav-height)+var(--gap))] flex-col overflow-hidden rounded-[var(--r-lg)] border border-line bg-[color:var(--surface)] max-[1025px]:scroll-mt-[calc(var(--topbar-height)+var(--section-nav-height)+var(--gap))]'
-      id={`mk-section-${index}`}
+      aria-labelledby={marketTabId(index)}
+      className='flex min-w-0 flex-col overflow-hidden rounded-[var(--r-lg)] border border-line bg-[color:var(--surface)]'
+      id={marketPanelId(index)}
+      role='tabpanel'
     >
       <div className='flex flex-wrap items-baseline gap-x-3 gap-y-2 border-b border-line px-[18px] py-4'>
         {/* Show the market scope before its name. */}
@@ -51,7 +55,7 @@ export function MarketSection({
           </span>
         ) : null}
         <h2
-          className='m-0 text-[17px] font-semibold outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--focus)]'
+          className='m-0 text-[length:var(--fs-h2)] font-semibold outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--focus)]'
           id={headingId}
           tabIndex={-1}
         >
@@ -60,12 +64,6 @@ export function MarketSection({
         {market.summaryTitle ? (
           <span className='text-pretty text-[14px] text-fg-soft'>
             — {market.summaryTitle}
-          </span>
-        ) : null}
-        {metadata ? (
-          <span className='mono ml-auto text-caption text-faint'>
-            원문 {metadata.rawNewsCount}건 · 정제 {metadata.processedNewsCount}
-            건 · 클러스터 {metadata.clusterCount}건
           </span>
         ) : null}
       </div>
@@ -105,7 +103,18 @@ export function MarketSection({
           {market.indices.length}종
         </span>
       </div>
-      <MarketIndexTable canViewOps={canViewOps} indices={market.indices} />
+      <div className='hidden sm:block'>
+        <MarketIndexTable canViewOps={canViewOps} indices={market.indices} />
+      </div>
+      <div className='sm:hidden'>
+        {hasIndices ? (
+          <MarketIndexCards indices={market.indices} />
+        ) : (
+          <p className='m-0 px-[18px] py-4 text-body text-faint'>
+            {noIndexDataCopy(audience)}
+          </p>
+        )}
+      </div>
 
       <div className='flex items-baseline gap-2.5 border-t border-line bg-[color:var(--surface-2)] px-[18px] py-3'>
         <h3 className='m-0 text-body font-semibold'>핵심 이슈</h3>

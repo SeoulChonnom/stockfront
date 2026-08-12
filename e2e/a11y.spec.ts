@@ -15,9 +15,9 @@ test.describe('skip link', () => {
   // ?.blur()` does NOT reliably move Chromium's sequential-focus-navigation
   // cursor back to the true top of the document (verified empirically: a
   // blur + Tab from a focus deep inside `<main>` lands on the next
-  // focusable element AFTER that point in DOM order, e.g. a "섹션 이동"
-  // button inside the market comparison strip — not the skip link, which
-  // sits BEFORE the nav rail near the very top of `<body>`). So this
+  // focusable element AFTER that point in DOM order, e.g. a market tab
+  // inside the US/KR tablist — not the skip link, which sits BEFORE the
+  // nav rail near the very top of `<body>`). So this
   // exercises the skip link's own contract directly (it receives focus,
   // becomes visible, and activating it moves focus to `#main-content`)
   // rather than asserting a literal "first Tab stop from a cold load"

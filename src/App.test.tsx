@@ -672,9 +672,10 @@ describe('App routing', () => {
     });
 
     await waitFor(() => {
-      expect(
-        screen.getByRole('heading', { name: '최신 시장 브리프' })
-      ).toHaveFocus();
+      // The h1 now renders the promoted headline (`decision-header-card.tsx`),
+      // not the old "최신 시장 브리프" label — that copy moved to a small
+      // caption above it.
+      expect(screen.getByRole('heading', { name: 'headline' })).toHaveFocus();
     });
   });
 

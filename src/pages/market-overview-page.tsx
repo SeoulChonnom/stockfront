@@ -1,5 +1,5 @@
 import { useCapabilities } from '@/lib/capabilities';
-import { useUrlState } from '@/lib/router';
+import { buildUrl, navigate, useUrlState } from '@/lib/router';
 import type { MarketSnapshot } from '@/lib/view-models';
 
 import { ArchiveModeBand } from './market-overview/archive-mode-band';
@@ -9,13 +9,36 @@ import {
 } from './market-overview/date-utils';
 import { DecisionHeaderCard } from './market-overview/decision-header-card';
 import { EmptyMarketsPanel } from './market-overview/empty-markets-panel';
-import { MarketSectionNavigation } from './market-overview/market-compare-strip';
 import { MarketSection } from './market-overview/market-section';
+import { MarketTabs } from './market-overview/market-tabs';
 import {
   type ClusterOriginQuery,
   extractFilterQuery,
 } from './market-overview/navigation';
+import { PageDataDetails } from './market-overview/page-data-details';
 import { PartialBanner } from './market-overview/partial-banner';
+
+/**
+ * `market` 쿼리에서 선택된 시장 인덱스를 읽는다. `marketType`(대소문자
+ * 무시)과 매칭하고, 값이 없거나 매칭되지 않으면 배열의 첫 시장(0)으로
+ * 되돌아간다.
+ */
+function resolveSelectedMarketIndex(
+  markets: MarketSnapshot['markets'],
+  searchParams: URLSearchParams
+): number {
+  const marketParam = searchParams.get('market');
+
+  if (!marketParam) {
+    return 0;
+  }
+
+  const index = markets.findIndex(
+    (market) => market.marketType?.toLowerCase() === marketParam.toLowerCase()
+  );
+
+  return index === -1 ? 0 : index;
+}
 
 /**
  * Latest (`/market/latest`)와 Archive Detail
@@ -53,6 +76,25 @@ export function MarketOverviewPage({
     ...(filterQuery ?? {}),
   };
 
+  const selectedIndex = resolveSelectedMarketIndex(
+    snapshot.markets,
+    url.searchParams
+  );
+
+  function handleSelectMarket(index: number) {
+    const market = snapshot.markets[index];
+    const marketValue = market.marketType
+      ? market.marketType.toLowerCase()
+      : String(index);
+
+    navigate(
+      buildUrl(url.pathname, {
+        ...Object.fromEntries(url.searchParams),
+        market: marketValue,
+      })
+    );
+  }
+
   return (
     <div className='flex flex-col gap-[var(--gap)]'>
       {mode === 'archive' ? (
@@ -77,29 +119,29 @@ export function MarketOverviewPage({
         snapshot={snapshot}
       />
 
-      <MarketSectionNavigation markets={snapshot.markets} />
-
       <PartialBanner canViewOps={canViewOps} snapshot={snapshot} />
 
       {snapshot.markets.length === 0 ? (
         <EmptyMarketsPanel canViewOps={canViewOps} status={snapshot.status} />
       ) : (
-        // Position *is* the identity here — the same `index` is passed down as
-        // a prop and drives the `mk-section-{index}` anchor targets that the
-        // compare strip links to.
-        snapshot.markets.map((market, index) => (
+        <>
+          <MarketTabs
+            markets={snapshot.markets}
+            onSelect={handleSelectMarket}
+            selectedIndex={selectedIndex}
+          />
           <MarketSection
             canViewOps={canViewOps}
             currentPathname={url.pathname}
             currentSearch={currentSearch}
-            index={index}
-            // biome-ignore lint/suspicious/noArrayIndexKey: position is the identity — see above
-            key={`${market.label}-${index}`}
-            market={market}
+            index={selectedIndex}
+            market={snapshot.markets[selectedIndex]}
             originQuery={originQuery}
           />
-        ))
+        </>
       )}
+
+      <PageDataDetails snapshot={snapshot} />
     </div>
   );
 }

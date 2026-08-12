@@ -135,7 +135,10 @@ test.describe('browser Back (Archive Search)', () => {
     // position this test is meant to verify. Dispatch the click in place so
     // the app sees the true pre-navigation offset.
     await firstRowLink.dispatchEvent('click');
-    await expect(page.locator('#page-title')).toHaveText(/시장 브리프/);
+    // `#page-title` now renders the promoted headline text rather than a
+    // "<date> 시장 브리프" label, so the archive-detail waypoint is checked
+    // via its "아카이브 스냅샷" badge instead of the old heading text.
+    await expect(page.getByText('아카이브 스냅샷')).toBeVisible();
 
     await page.goBack();
     await expect(page).toHaveURL(/page=2/);

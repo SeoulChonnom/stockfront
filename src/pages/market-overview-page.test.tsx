@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 
 import {
   resetRoleOverrideForTesting,
@@ -78,6 +78,7 @@ function buildSnapshot(
 
 afterEach(() => {
   resetRoleOverrideForTesting();
+  window.history.replaceState(null, '', '/');
 });
 
 describe('MarketOverviewPage — 대표 지수 표', () => {
@@ -90,129 +91,141 @@ describe('MarketOverviewPage — 대표 지수 표', () => {
       />
     );
 
-    // "S&P 500" legitimately renders twice — once as the compare strip's
-    // lead-index label, once as the index table's row header — so this
-    // asserts presence via `getAllByText` rather than the single-match
-    // `getByText`.
+    // "S&P 500" legitimately renders twice — once in the desktop index
+    // table (CSS-hidden below 640px via `hidden sm:block`), once in the
+    // mobile index cards (CSS-hidden above via `sm:hidden`) — both mount
+    // unconditionally, so this asserts presence via `getAllByText` rather
+    // than the single-match `getByText`.
     expect(screen.getAllByText('S&P 500').length).toBeGreaterThan(0);
-    expect(screen.getByText('+12.34')).toBeInTheDocument();
-    expect(screen.getByText('+0.23%')).toBeInTheDocument();
+    // "+12.34"/"+0.23%" render in both the desktop table and the mobile
+    // cards for the same reason — assert presence, not a single match.
+    expect(screen.getAllByText('+12.34').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('+0.23%').length).toBeGreaterThan(0);
     // The 고가/저가 columns are hidden below 640px with `sm:hidden`/
     // `sm:table-cell` (CSS-only), never unmounted — this subline node must
     // exist in the DOM regardless of viewport, with the same values exposed
     // in the priority row's supporting line.
     expect(screen.getByText('고 5,499.80 · 저 5,455.22')).toBeInTheDocument();
   });
+});
 
-  it('scrolls to and focuses the destination market heading from 섹션 이동', async () => {
-    const user = userEvent.setup();
-    const scrollIntoView = vi.fn();
-    const previousScrollIntoView = Object.getOwnPropertyDescriptor(
-      HTMLElement.prototype,
-      'scrollIntoView'
-    );
-    Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
-      configurable: true,
-      value: scrollIntoView,
-      writable: true,
-    });
+describe('MarketOverviewPage — 시장 탭', () => {
+  function twoMarketSnapshot(overrides: Partial<MarketSnapshot> = {}) {
+    const base = buildSnapshot();
 
-    try {
-      render(
-        <MarketOverviewPage
-          mode='latest'
-          now={FIXED_NOW}
-          snapshot={buildSnapshot()}
-        />
-      );
-
-      await user.click(screen.getByRole('button', { name: /섹션 이동/ }));
-
-      const heading = screen.getByRole('heading', {
-        level: 2,
-        name: '미국 증시',
-      });
-      expect(heading).toHaveAttribute('tabindex', '-1');
-      expect(heading).toHaveFocus();
-      expect(scrollIntoView).toHaveBeenCalledWith({
-        behavior: 'smooth',
-        block: 'start',
-      });
-    } finally {
-      if (previousScrollIntoView) {
-        Object.defineProperty(
-          HTMLElement.prototype,
-          'scrollIntoView',
-          previousScrollIntoView
-        );
-      } else {
-        delete (HTMLElement.prototype as { scrollIntoView?: unknown })
-          .scrollIntoView;
-      }
-    }
-  });
-
-  it('keeps section navigation sticky below the mobile shell and horizontally contained', () => {
-    const snapshot = buildSnapshot({
+    return buildSnapshot({
       markets: [
-        buildSnapshot().markets[0],
+        base.markets[0],
         {
-          ...buildSnapshot().markets[0],
+          ...base.markets[0],
           label: '한국 증시',
           marketType: 'KR',
         },
       ],
+      ...overrides,
     });
+  }
 
-    render(
-      <MarketOverviewPage mode='latest' now={FIXED_NOW} snapshot={snapshot} />
-    );
+  it('renders only the selected market panel, and switching tabs updates the panel and ?market=', async () => {
+    const user = userEvent.setup();
+    window.history.replaceState(null, '', '/market/latest');
 
-    const navigation = screen.getByRole('navigation', {
-      name: '시장 섹션 탐색',
-    });
-    expect(
-      navigation.closest('section[aria-labelledby="page-title"]')
-    ).toBeNull();
-    expect(navigation).toHaveClass('sticky', 'top-0', 'z-(--z-sticky)');
-    expect(navigation).toHaveClass('max-[1025px]:top-(--topbar-height)');
-    expect(
-      [...navigation.classList].some((className) =>
-        className.includes('safe-area-inset-bottom')
-      )
-    ).toBe(false);
-
-    const scroller = navigation.querySelector('[data-section-nav-scroll]');
-    expect(scroller).not.toBeNull();
-    expect(scroller).toHaveClass(
-      'min-w-0',
-      'max-w-full',
-      'overflow-x-auto',
-      'ps-[max(0.5rem,env(safe-area-inset-left))]',
-      'pe-[max(0.5rem,env(safe-area-inset-right))]'
-    );
-    expect(screen.getAllByRole('button', { name: /섹션 이동/ })).toHaveLength(
-      2
-    );
-  });
-
-  it('gives market sections enough scroll margin for the shell and sticky navigation', () => {
     render(
       <MarketOverviewPage
         mode='latest'
         now={FIXED_NOW}
-        snapshot={buildSnapshot()}
+        snapshot={twoMarketSnapshot()}
       />
     );
 
-    const section = document.getElementById('mk-section-0');
-    expect(section).not.toBeNull();
-    expect(section).toHaveClass(
-      'scroll-mt-[calc(var(--section-nav-height)+var(--gap))]'
+    expect(screen.getAllByRole('tabpanel')).toHaveLength(1);
+    expect(
+      screen.getByRole('heading', { level: 2, name: '미국 증시' })
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('heading', { level: 2, name: '한국 증시' })
+    ).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('tab', { name: /한국 증시/ }));
+
+    expect(window.location.search).toBe('?market=kr');
+    expect(screen.getAllByRole('tabpanel')).toHaveLength(1);
+    expect(
+      screen.getByRole('heading', { level: 2, name: '한국 증시' })
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('heading', { level: 2, name: '미국 증시' })
+    ).not.toBeInTheDocument();
+  });
+
+  it('reads ?market=kr from the URL on mount and selects the matching tab', () => {
+    window.history.replaceState(null, '', '/market/latest?market=kr');
+
+    render(
+      <MarketOverviewPage
+        mode='latest'
+        now={FIXED_NOW}
+        snapshot={twoMarketSnapshot()}
+      />
     );
-    expect(section).toHaveClass(
-      'max-[1025px]:scroll-mt-[calc(var(--topbar-height)+var(--section-nav-height)+var(--gap))]'
+
+    expect(screen.getByRole('tab', { selected: true })).toHaveTextContent(
+      '한국 증시'
     );
+    expect(
+      screen.getByRole('heading', { level: 2, name: '한국 증시' })
+    ).toBeInTheDocument();
+  });
+
+  it('falls back to the first market when ?market= does not match any marketType', () => {
+    window.history.replaceState(null, '', '/market/latest?market=jp');
+
+    render(
+      <MarketOverviewPage
+        mode='latest'
+        now={FIXED_NOW}
+        snapshot={twoMarketSnapshot()}
+      />
+    );
+
+    expect(screen.getByRole('tab', { selected: true })).toHaveTextContent(
+      '미국 증시'
+    );
+  });
+
+  // Regression for the Archive Detail return-state contract: `extractFilterQuery`
+  // (navigation.ts) reads `from`/`to`/`status`/`page` off the URL, and
+  // Archive Detail only renders "검색 결과로 돌아가기" when that returns
+  // non-null. Adding `?market=` on a tab switch must not drop those four
+  // params, or the return link would silently disappear.
+  it('preserves from/to/status/page (the archive return-state contract) when switching tabs', async () => {
+    const user = userEvent.setup();
+    window.history.replaceState(
+      null,
+      '',
+      '/market/archive/2026-03-17?from=2026-01-01&to=2026-01-05&status=FAILED&page=2'
+    );
+
+    render(
+      <MarketOverviewPage
+        mode='archive'
+        now={FIXED_NOW}
+        snapshot={twoMarketSnapshot({ businessDate: '2026-03-17' })}
+      />
+    );
+
+    expect(
+      screen.getByRole('button', { name: '검색 결과로 돌아가기' })
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole('tab', { name: /한국 증시/ }));
+
+    expect(window.location.search).toBe(
+      '?from=2026-01-01&to=2026-01-05&status=FAILED&page=2&market=kr'
+    );
+    expect(
+      screen.getByRole('button', { name: '검색 결과로 돌아가기' })
+    ).toBeInTheDocument();
   });
 });
 
@@ -439,6 +452,52 @@ describe('MarketOverviewPage — 글로벌 헤드라인', () => {
         '글로벌 헤드라인이 생성되지 않았습니다. AI 요약 단계가 실패했을 수 있습니다 — 아래 상태와 배치 로그에서 원인을 확인하세요.'
       )
     ).toBeInTheDocument();
+  });
+
+  it('promotes the headline to the focusable #page-title h1, demoting the mode label to a small caption', () => {
+    render(
+      <MarketOverviewPage
+        mode='latest'
+        now={FIXED_NOW}
+        snapshot={buildSnapshot()}
+      />
+    );
+
+    const h1 = screen.getByRole('heading', {
+      level: 1,
+      name: '연준 발언에 기술주 랠리, 반도체 지수 강세',
+    });
+    expect(h1).toHaveAttribute('id', 'page-title');
+    expect(h1).toHaveAttribute('tabindex', '-1');
+    // The old h1 copy ("최신 시장 브리프") now renders as a small caption
+    // above the headline, not as a heading.
+    expect(
+      screen.queryByRole('heading', { name: '최신 시장 브리프' })
+    ).toBeNull();
+    expect(screen.getByText('최신 시장 브리프')).toBeInTheDocument();
+  });
+});
+
+describe('MarketOverviewPage — 데이터 정보', () => {
+  it('moves pageId/versionNo/pipeline counts into a collapsed 데이터 정보 block at the bottom of the page', () => {
+    render(
+      <MarketOverviewPage
+        mode='latest'
+        now={FIXED_NOW}
+        snapshot={buildSnapshot()}
+      />
+    );
+
+    const details = screen.getByText('데이터 정보').closest('details');
+    expect(details).not.toBeNull();
+    // Collapsed by default so it never competes with the conclusion above it.
+    expect(details).not.toHaveAttribute('open');
+
+    expect(details).toHaveTextContent(
+      '원문 174건 → 정제 114건 → 클러스터 21건'
+    );
+    expect(details).toHaveTextContent('pageId 501 · v3');
+    expect(details).toHaveTextContent('마지막 갱신 2026-03-17 09:31 KST');
   });
 });
 
