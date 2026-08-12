@@ -228,20 +228,6 @@ export type BatchJobListResponse = {
   };
 };
 
-export type BatchRunRequest = {
-  businessDate?: string | null;
-  force?: boolean;
-  rebuildPageOnly?: boolean;
-};
-
-export type BatchRunResponse = {
-  jobId: number;
-  jobName: string;
-  businessDate: string;
-  status: string;
-  startedAt: string;
-};
-
 export type AiRetryRunResponse = {
   jobId: number;
   jobName: string;

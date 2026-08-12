@@ -111,12 +111,10 @@ describe('capabilities', () => {
     expect(can('ops.view', 'user')).toBe(false);
     expect(can('ops.trigger', 'user')).toBe(false);
     expect(can('ops.viewLogs', 'user')).toBe(false);
-    expect(can('ops.advancedTriggerOptions', 'user')).toBe(false);
 
     expect(can('ops.view', 'admin')).toBe(true);
     expect(can('ops.trigger', 'admin')).toBe(true);
     expect(can('ops.viewLogs', 'admin')).toBe(true);
-    expect(can('ops.advancedTriggerOptions', 'admin')).toBe(true);
   });
 
   it('useRole() re-renders when the override changes', () => {

@@ -6,7 +6,6 @@ import {
   getBatchJobDetail,
   getBatchJobs,
   retryAiSummary,
-  startBatchRun,
 } from './api/batch';
 import { getClusterDetail } from './api/news';
 import {
@@ -14,7 +13,6 @@ import {
   getDailyPageByPageId,
   getLatestDailyPage,
 } from './api/pages';
-import type { BatchRunRequest } from './api/types';
 import {
   mapArchiveListToView,
   mapBatchDetailToRun,
@@ -127,25 +125,6 @@ export function useBatchJobDetail(jobId: number | null) {
       shouldPollBatchJobDetail(query.state.data)
         ? BATCH_POLL_INTERVAL_MS
         : false,
-  });
-}
-
-/**
- * Manual Trigger callers supply `businessDate`/`force`/
- * `rebuildPageOnly` as the mutation variable instead of the hook hardcoding
- * `startBatchRun({})` and discarding whatever the dialog collected.
- */
-export function useStartBatchRunMutation() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (payload: BatchRunRequest) => startBatchRun(payload),
-    onSuccess: async () => {
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['batch-jobs'] }),
-        queryClient.invalidateQueries({ queryKey: ['batch-job-detail'] }),
-      ]);
-    },
   });
 }
 

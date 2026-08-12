@@ -21,7 +21,6 @@ const {
   mockUseClusterDetail,
   mockUseLatestMarketPage,
   mockUseRetryAiMutation,
-  mockUseStartBatchRunMutation,
 } = vi.hoisted(() => ({
   mockUseArchiveList: vi.fn(),
   mockUseArchiveMarketPage: vi.fn(),
@@ -30,7 +29,6 @@ const {
   mockUseClusterDetail: vi.fn(),
   mockUseLatestMarketPage: vi.fn(),
   mockUseRetryAiMutation: vi.fn(),
-  mockUseStartBatchRunMutation: vi.fn(),
 }));
 
 vi.mock('./lib/query-hooks', () => ({
@@ -40,7 +38,6 @@ vi.mock('./lib/query-hooks', () => ({
   useBatchJobs: mockUseBatchJobs,
   useBatchJobDetail: mockUseBatchJobDetail,
   useRetryAiMutation: mockUseRetryAiMutation,
-  useStartBatchRunMutation: mockUseStartBatchRunMutation,
   useClusterDetail: mockUseClusterDetail,
 }));
 
@@ -171,11 +168,6 @@ describe('App routing', () => {
       isLoading: false,
     });
     mockUseBatchJobDetail.mockReturnValue({ data: null });
-    mockUseStartBatchRunMutation.mockReturnValue({
-      isError: false,
-      isPending: false,
-      mutate: vi.fn(),
-    });
     mockUseRetryAiMutation.mockReturnValue({
       data: undefined,
       error: null,

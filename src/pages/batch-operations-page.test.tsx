@@ -15,15 +15,10 @@ import type { BatchRunRow } from './../lib/query-hooks';
 import { BatchOperationsPage } from './batch-operations-page';
 
 /**
- * `/ops/batches`. Rewritten for the current master-detail and trigger UI:
+ * `/ops/batches`. Rewritten for the current master-detail UI:
  * non-admin 403 gating with NO batch request issued, failure-first summary
  * tiles, real pagination, `?jobId=` deep link, list/detail INDEPENDENT
- * loading/error, and the ≤1180px column collapse. Trigger dialog lifecycle
- * (idle→pending→success/409/403/422/429/5xx/network, duplicate-submit
- * impossibility, input preservation) is covered in the colocated
- * `batch-operations/trigger-dialog.test.tsx` instead of here, since it's
- * independently unit-testable against a real `useStartBatchRunMutation` and
- * doesn't need this page's list/detail wiring around it.
+ * loading/error, the ≤1180px column collapse, and AI-summary retry.
  */
 
 type BatchJobsQueryResult = {
@@ -74,20 +69,17 @@ const {
   mockUseBatchJobs,
   mockUseBatchJobDetail,
   mockUseRetryAiMutation,
-  mockUseStartBatchRunMutation,
 } = vi.hoisted(() => ({
   mockUseBatchJobs: vi.fn<(params: BatchJobsParams) => BatchJobsQueryResult>(),
   mockUseBatchJobDetail:
     vi.fn<(jobId: number | null) => BatchJobDetailQueryResult>(),
   mockUseRetryAiMutation: vi.fn<() => RetryAiMutationResult>(),
-  mockUseStartBatchRunMutation: vi.fn(),
 }));
 
 vi.mock('@/lib/query-hooks', () => ({
   useBatchJobs: mockUseBatchJobs,
   useBatchJobDetail: mockUseBatchJobDetail,
   useRetryAiMutation: mockUseRetryAiMutation,
-  useStartBatchRunMutation: mockUseStartBatchRunMutation,
 }));
 
 function createRow(overrides: Partial<BatchRunRow> = {}): BatchRunRow {
@@ -200,17 +192,7 @@ beforeEach(() => {
   mockUseBatchJobs.mockReset();
   mockUseBatchJobDetail.mockReset();
   mockUseRetryAiMutation.mockReset();
-  mockUseStartBatchRunMutation.mockReset();
   mockUseRetryAiMutation.mockReturnValue(retryAiReady());
-  mockUseStartBatchRunMutation.mockReturnValue({
-    isPending: false,
-    isError: false,
-    isSuccess: false,
-    data: undefined,
-    error: null,
-    mutate: vi.fn(),
-    reset: vi.fn(),
-  });
 });
 
 afterEach(() => {
@@ -239,17 +221,12 @@ describe('BatchOperationsPage — non-admin user', () => {
 
     expect(mockUseBatchJobs).not.toHaveBeenCalled();
     expect(mockUseBatchJobDetail).not.toHaveBeenCalled();
-    expect(mockUseStartBatchRunMutation).not.toHaveBeenCalled();
+    expect(mockUseRetryAiMutation).not.toHaveBeenCalled();
   });
 
   it('never renders the trigger button, log box, or detail/summary nodes — not merely hidden', () => {
     const { container } = renderPage();
 
-    // Note: PermissionState's OWN explanatory copy legitimately contains the
-    // substring "수동 실행" ("...파이프라인 로그와 수동 실행을 포함하므로...") —
-    // the requirement is that the TRIGGER BUTTON/list/detail nodes don't
-    // exist, not that the two words never co-occur in prose, so this
-    // asserts absence by role/heading rather than raw substring search.
     expect(
       screen.queryByRole('button', { name: '수동 실행' })
     ).not.toBeInTheDocument();

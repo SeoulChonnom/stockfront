@@ -13,8 +13,7 @@ export type Role = 'user' | 'admin';
 export type Capability =
   | 'ops.view'
   | 'ops.trigger'
-  | 'ops.viewLogs'
-  | 'ops.advancedTriggerOptions';
+  | 'ops.viewLogs';
 
 type Listener = () => void;
 
@@ -106,7 +105,6 @@ const CAPABILITIES_BY_ROLE: Readonly<Record<Role, ReadonlySet<Capability>>> =
       'ops.view',
       'ops.trigger',
       'ops.viewLogs',
-      'ops.advancedTriggerOptions',
     ]),
   });
 

@@ -3,8 +3,6 @@ import type {
   AiRetryRunResponse,
   BatchJobDetailResponse,
   BatchJobListResponse,
-  BatchRunRequest,
-  BatchRunResponse,
 } from './types';
 
 export type BatchJobsParams = {
@@ -26,17 +24,6 @@ export function getBatchJobs(params: BatchJobsParams, signal?: AbortSignal) {
 
 export function getBatchJobDetail(jobId: number, signal?: AbortSignal) {
   return apiRequest<BatchJobDetailResponse>(`/stock/api/batch/jobs/${jobId}`, {
-    signal,
-  });
-}
-
-export function startBatchRun(
-  payload: BatchRunRequest = {},
-  signal?: AbortSignal
-) {
-  return apiRequest<BatchRunResponse>('/stock/api/batch/market-daily', {
-    method: 'POST',
-    body: payload,
     signal,
   });
 }
