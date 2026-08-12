@@ -1,14 +1,13 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 
 import { useAnnounce } from '@/components/shell/use-announce';
 import { PermissionState } from '@/components/state';
 import { parseListFilters } from '@/lib/app-state';
-import { can, useCapabilities } from '@/lib/capabilities';
+import { useCapabilities } from '@/lib/capabilities';
 import {
   useBatchJobDetail,
   useBatchJobs,
   useRetryAiMutation,
-  useStartBatchRunMutation,
 } from '@/lib/query-hooks';
 import { navigate } from '@/lib/router';
 
@@ -18,10 +17,6 @@ import { BatchFilters } from './batch-operations/batch-filters';
 import { BatchHeader } from './batch-operations/batch-header';
 import { BatchHistoryList } from './batch-operations/batch-history-list';
 import { BatchSummaryTiles } from './batch-operations/batch-summary-tiles';
-import {
-  BatchTriggerBanner,
-  type TriggerBannerState,
-} from './batch-operations/batch-trigger-banner';
 import {
   type BatchFilters as BatchFiltersState,
   buildBatchOperationsUrl,
@@ -33,7 +28,6 @@ import {
   BATCH_STATUSES,
   type BatchFilterDraft,
 } from './batch-operations/filter-copy';
-import { TriggerDialog } from './batch-operations/trigger-dialog';
 
 const PAGE_SIZE = 20;
 
@@ -118,15 +112,7 @@ function AdminBatchOperations({
   selectedJobIdRef.current = selectedJobId;
   const detailQuery = useBatchJobDetail(selectedJobId);
 
-  const startBatchMutation = useStartBatchRunMutation();
   const retryAiMutation = useRetryAiMutation();
-  const [triggerDialog, setTriggerDialog] = useState<{
-    open: boolean;
-    prefillDate?: string;
-  }>({ open: false });
-  const [triggerBanner, setTriggerBanner] = useState<TriggerBannerState | null>(
-    null
-  );
 
   function goTo(
     filters: Partial<{
@@ -176,15 +162,7 @@ function AdminBatchOperations({
 
   return (
     <div className='flex min-w-0 flex-col gap-[var(--gap)]'>
-      <BatchHeader onOpenTrigger={() => setTriggerDialog({ open: true })} />
-
-      {triggerBanner ? (
-        <BatchTriggerBanner
-          banner={triggerBanner}
-          onDismiss={() => setTriggerBanner(null)}
-          onOpenDetail={(jobId) => goTo({}, { jobId, view: 'detail' })}
-        />
-      ) : null}
+      <BatchHeader />
 
       <BatchFilters
         applied={applied}
@@ -257,9 +235,6 @@ function AdminBatchOperations({
           isLoading={detailQuery.isLoading}
           onAnnounce={announce}
           onBackToList={() => goTo({}, { view: null })}
-          onReRun={(businessDate) =>
-            setTriggerDialog({ open: true, prefillDate: businessDate })
-          }
           onRetry={() => {
             void detailQuery.refetch();
           }}
@@ -270,25 +245,6 @@ function AdminBatchOperations({
         />
       </div>
 
-      <TriggerDialog
-        canUseAdvancedOptions={can('ops.advancedTriggerOptions')}
-        initialBusinessDate={triggerDialog.prefillDate}
-        isOpen={triggerDialog.open}
-        mutation={startBatchMutation}
-        onClose={() => setTriggerDialog({ open: false })}
-        onOpenJobDetail={(jobId) => {
-          setTriggerDialog({ open: false });
-          goTo({}, { jobId, view: 'detail' });
-        }}
-        onTriggered={(result) => {
-          setTriggerBanner({
-            jobId: result.jobId,
-            status: result.status,
-            businessDate: result.businessDate,
-            startedAt: result.startedAt,
-          });
-        }}
-      />
     </div>
   );
 }

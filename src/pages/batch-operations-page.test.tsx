@@ -765,19 +765,24 @@ describe('BatchOperationsPage — admin', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('opens the Manual Trigger dialog from the header button', async () => {
-    const user = userEvent.setup();
+  it('does not expose manual batch execution while preserving AI retry', () => {
     mockUseBatchJobs.mockReturnValue(jobsReady());
-    mockUseBatchJobDetail.mockReturnValue(detailReady(createRow()));
+    mockUseBatchJobDetail.mockReturnValue(
+      detailReady(createRow({ rawStatus: 'PARTIAL', status: 'PARTIAL' }))
+    );
 
     renderPage();
 
-    await user.click(screen.getByRole('button', { name: '수동 실행' }));
-
     expect(
-      screen.getByRole('dialog', { name: '배치 수동 실행' })
+      screen.queryByRole('button', { name: '수동 실행' })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: '같은 기준일 재실행' })
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText(/재실행 (가능|불필요)/)).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'AI 요약만 재시도' })
     ).toBeInTheDocument();
-    expect(screen.getByLabelText('기준일 (KST)')).toBeInTheDocument();
   });
 
   it('shows AI 요약만 재시도 only for a selected PARTIAL job', () => {

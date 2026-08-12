@@ -6,11 +6,6 @@ export function isRunningStatus(rawStatus: string): boolean {
   return rawStatus.trim().toUpperCase() === 'RUNNING';
 }
 
-export function isRetryableStatus(rawStatus: string): boolean {
-  const normalized = rawStatus.trim().toUpperCase();
-  return normalized === 'FAILED' || normalized === 'PARTIAL';
-}
-
 /** Distinguishes absent snapshots from unsupported job types; unknown types stay explicit. */
 export function getSnapshotLabel(run: {
   jobType: string;

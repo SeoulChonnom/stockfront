@@ -46,7 +46,6 @@ function createProps(
     detailHeadingRef: createRef<HTMLHeadingElement>(),
     isCurrentRetryJob: () => true,
     onAnnounce: vi.fn(),
-    onReRun: vi.fn(),
     retryAiMutation: {
       data: undefined,
       error: null,
@@ -62,11 +61,8 @@ function createProps(
 }
 
 describe('BatchDetailContent', () => {
-  it('renders detail fields, status, snapshot navigation, and same-date rerun action', async () => {
-    const user = userEvent.setup();
-    const onReRun = vi.fn();
-
-    render(<BatchDetailContent {...createProps({ onReRun })} />);
+  it('renders detail fields, status, and snapshot navigation', () => {
+    render(<BatchDetailContent {...createProps()} />);
 
     expect(
       screen.getByRole('heading', { level: 2, name: 'job 101' })
@@ -79,11 +75,6 @@ describe('BatchDetailContent', () => {
       'href',
       expect.stringContaining('/market/archive/2026-07-26')
     );
-
-    await user.click(
-      screen.getByRole('button', { name: '같은 기준일 재실행' })
-    );
-    expect(onReRun).toHaveBeenCalledWith('2026-07-26');
   });
 
   it('keeps PARTIAL AI retry action disabled while pending without a second request', async () => {

@@ -23,7 +23,6 @@ export type BatchDetailPanelProps = {
   onRetry: () => void;
   onAnnounce: (message: string) => void;
   onBackToList: () => void;
-  onReRun: (businessDate: string) => void;
   canRetryAi: boolean;
   isCurrentRetryJob: (jobId: number) => boolean;
   retryAiMutation: RetryAiMutationState;
@@ -41,7 +40,6 @@ export function BatchDetailPanel({
   onRetry,
   onAnnounce,
   onBackToList,
-  onReRun,
   canRetryAi,
   isCurrentRetryJob,
   retryAiMutation,
@@ -132,7 +130,6 @@ export function BatchDetailPanel({
             canRetryAi={canRetryAi}
             detailHeadingRef={detailHeadingRef}
             isCurrentRetryJob={isCurrentRetryJob}
-            onReRun={onReRun}
             onAnnounce={onAnnounce}
             retryAiMutation={retryAiMutation}
             run={run}

@@ -19,7 +19,6 @@ import { isRecord } from '@/lib/utils';
 import {
   deriveUserImpact,
   getSnapshotLabel,
-  isRetryableStatus,
   isRunningStatus,
 } from './format-batch';
 
@@ -41,7 +40,6 @@ export type BatchDetailContentProps = {
   detailHeadingRef: RefObject<HTMLHeadingElement | null>;
   isCurrentRetryJob: (jobId: number) => boolean;
   onAnnounce: (message: string) => void;
-  onReRun: (businessDate: string) => void;
   retryAiMutation: RetryAiMutationState;
   run: BatchRunRow;
 };
@@ -99,10 +97,8 @@ export function BatchDetailContent({
   onAnnounce,
   run,
   retryAiMutation,
-  onReRun,
 }: BatchDetailContentProps) {
   const running = isRunningStatus(run.rawStatus);
-  const retryable = isRetryableStatus(run.rawStatus);
   const impacts = deriveUserImpact({
     jobType: run.jobType,
     rawStatus: run.rawStatus,
@@ -265,14 +261,6 @@ export function BatchDetailContent({
             {run.businessDate} 스냅샷 열기
           </a>
         ) : null}
-        <Button
-          onClick={() => onReRun(run.businessDate)}
-          size='sm'
-          type='button'
-          variant='ghost'
-        >
-          같은 기준일 재실행
-        </Button>
         {canRetryAi && run.rawStatus === 'PARTIAL' ? (
           <Button
             disabled={isRetryPendingForRun}
@@ -285,9 +273,6 @@ export function BatchDetailContent({
             AI 요약만 재시도
           </Button>
         ) : null}
-        <span className='mono text-[12px] font-semibold text-faint'>
-          {retryable ? '재실행 가능' : '재실행 불필요'}
-        </span>
       </div>
     </div>
   );

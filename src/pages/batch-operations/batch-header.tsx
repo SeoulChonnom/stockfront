@@ -1,6 +1,4 @@
-import { Button } from '@/components/ui/button';
-
-export function BatchHeader({ onOpenTrigger }: { onOpenTrigger: () => void }) {
+export function BatchHeader() {
   return (
     <header className='flex flex-wrap items-end gap-3'>
       <div className='min-w-0 flex-1'>
@@ -17,14 +15,6 @@ export function BatchHeader({ onOpenTrigger }: { onOpenTrigger: () => void }) {
           확인합니다.
         </p>
       </div>
-      <Button
-        id='trigger-btn'
-        onClick={onOpenTrigger}
-        type='button'
-        variant='primary'
-      >
-        수동 실행
-      </Button>
     </header>
   );
 }
