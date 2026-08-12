@@ -34,7 +34,6 @@ export function MarketSection({
   currentSearch,
   canViewOps,
 }: MarketSectionProps) {
-  const headingId = `mk-section-heading-${index}`;
   const metadata = market.metadata;
   const hasNarrative = (market.summaryBody ?? '').trim().length > 0;
   const hasIndices = market.indices.length > 0;
@@ -56,7 +55,6 @@ export function MarketSection({
         ) : null}
         <h2
           className='m-0 text-[length:var(--fs-h2)] font-semibold outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--focus)]'
-          id={headingId}
           tabIndex={-1}
         >
           {market.label}

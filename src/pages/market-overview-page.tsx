@@ -20,8 +20,10 @@ import { PartialBanner } from './market-overview/partial-banner';
 
 /**
  * `market` 쿼리에서 선택된 시장 인덱스를 읽는다. `marketType`(대소문자
- * 무시)과 매칭하고, 값이 없거나 매칭되지 않으면 배열의 첫 시장(0)으로
- * 되돌아간다.
+ * 무시)과 먼저 매칭하고, `marketType`이 null인 시장을 위해 `buildMarketParam`이
+ * 쓰는 배열 위치 폴백도 함께 받는다. 두 함수는 같은 값 집합을 다뤄야 한다 —
+ * 읽기만 위치 폴백을 모르면 그런 시장은 새로고침 때 조용히 첫 탭으로 돌아간다.
+ * 값이 없거나 어느 쪽으로도 매칭되지 않으면 배열의 첫 시장(0)이다.
  */
 function resolveSelectedMarketIndex(
   markets: MarketSnapshot['markets'],
@@ -33,11 +35,27 @@ function resolveSelectedMarketIndex(
     return 0;
   }
 
-  const index = markets.findIndex(
+  const byMarketType = markets.findIndex(
     (market) => market.marketType?.toLowerCase() === marketParam.toLowerCase()
   );
 
-  return index === -1 ? 0 : index;
+  if (byMarketType !== -1) {
+    return byMarketType;
+  }
+
+  const byPosition = markets.findIndex(
+    (market, index) => !market.marketType && String(index) === marketParam
+  );
+
+  return byPosition === -1 ? 0 : byPosition;
+}
+
+/** 위 reader가 되돌려 읽을 수 있는 형태로만 `market` 값을 만든다. */
+function buildMarketParam(
+  market: MarketSnapshot['markets'][number],
+  index: number
+): string {
+  return market.marketType ? market.marketType.toLowerCase() : String(index);
 }
 
 /**
@@ -82,15 +100,10 @@ export function MarketOverviewPage({
   );
 
   function handleSelectMarket(index: number) {
-    const market = snapshot.markets[index];
-    const marketValue = market.marketType
-      ? market.marketType.toLowerCase()
-      : String(index);
-
     navigate(
       buildUrl(url.pathname, {
         ...Object.fromEntries(url.searchParams),
-        market: marketValue,
+        market: buildMarketParam(snapshot.markets[index], index),
       })
     );
   }

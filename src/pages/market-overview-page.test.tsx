@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it } from 'vitest';
 
@@ -190,6 +190,33 @@ describe('MarketOverviewPage — 시장 탭', () => {
 
     expect(screen.getByRole('tab', { selected: true })).toHaveTextContent(
       '미국 증시'
+    );
+  });
+
+  // `marketType` is nullable in the mapper, so a market can have no code to
+  // put in the URL. The writer falls back to the array position; the reader
+  // has to accept that same value or such a market silently reverts to the
+  // first tab on reload.
+  it('round-trips a market that has no marketType through the URL', async () => {
+    const user = userEvent.setup();
+    const snapshot = twoMarketSnapshot();
+    snapshot.markets[1].marketType = null;
+
+    render(
+      <MarketOverviewPage mode='latest' now={FIXED_NOW} snapshot={snapshot} />
+    );
+
+    await user.click(screen.getByRole('tab', { name: /한국 증시/ }));
+
+    expect(window.location.search).toBe('?market=1');
+
+    cleanup();
+    render(
+      <MarketOverviewPage mode='latest' now={FIXED_NOW} snapshot={snapshot} />
+    );
+
+    expect(screen.getByRole('tab', { selected: true })).toHaveTextContent(
+      '한국 증시'
     );
   });
 
