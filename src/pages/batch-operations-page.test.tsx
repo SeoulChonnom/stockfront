@@ -426,6 +426,75 @@ describe('BatchOperationsPage — admin', () => {
     expect(params.get('page')).toBe('1');
   });
 
+  it('drops a stale selection when a quick filter excludes it from the new result', async () => {
+    const user = userEvent.setup();
+    const successRow = createRow({
+      id: 101,
+      status: 'SUCCESS',
+      rawStatus: 'SUCCESS',
+    });
+    const failedRow = createRow({
+      id: 202,
+      businessDate: '2026-07-25',
+      status: 'FAILED',
+      rawStatus: 'FAILED',
+    });
+    mockUseBatchJobs.mockReturnValue(
+      jobsReady({
+        rows: [successRow, failedRow],
+        counts: {
+          successCount: 1,
+          partialCount: 0,
+          failedCount: 1,
+          avgDurationSeconds: 100,
+        },
+      })
+    );
+    mockUseBatchJobDetail.mockImplementation((jobId) =>
+      detailReady(jobId === 202 ? failedRow : successRow)
+    );
+
+    const { rerender } = renderPage();
+
+    // No ?jobId= yet, so the selection falls back to the first row.
+    expect(
+      screen.getByRole('heading', { level: 2, name: 'job 101' })
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: '실패만 보기' }));
+
+    expect(new URLSearchParams(window.location.search).get('jobId')).toBeNull();
+
+    // Simulate the real query hook now returning only the FAILED row for
+    // this filter (the app-level router rerenders this component with the
+    // URL's new search params; this test drives that directly).
+    mockUseBatchJobs.mockReturnValue(
+      jobsReady({
+        rows: [failedRow],
+        counts: {
+          successCount: 0,
+          partialCount: 0,
+          failedCount: 1,
+          avgDurationSeconds: 100,
+        },
+      })
+    );
+    rerender(
+      <AnnounceProvider pathname='/test'>
+        <BatchOperationsPage
+          searchParams={new URLSearchParams(window.location.search)}
+        />
+      </AnnounceProvider>
+    );
+
+    expect(
+      screen.queryByRole('heading', { level: 2, name: 'job 101' })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { level: 2, name: 'job 202' })
+    ).toBeInTheDocument();
+  });
+
   it('pagination reflects the page query param and paging updates the URL', async () => {
     const user = userEvent.setup();
     mockUseBatchJobs.mockReturnValue(
@@ -695,7 +764,16 @@ describe('BatchOperationsPage — admin', () => {
         },
       ],
     });
-    mockUseBatchJobs.mockReturnValue(jobsReady({ rows: [], totalCount: 0 }));
+    // The list mock is intentionally decoupled from `newsRun` (only the id
+    // has to match) — the derived selection now falls back to the first row
+    // unless the deep-linked jobId is present in the loaded result, so a row
+    // with this id must exist for the detail-only assertions below to hold.
+    mockUseBatchJobs.mockReturnValue(
+      jobsReady({
+        rows: [createRow({ id: 201, counts: '0 / 0 / 0' })],
+        totalCount: 1,
+      })
+    );
     mockUseBatchJobDetail.mockReturnValue(detailReady(newsRun));
 
     renderPage(new URLSearchParams('jobId=201'));
@@ -724,7 +802,16 @@ describe('BatchOperationsPage — admin', () => {
       // empty state, never an invented stage list keyed off jobType.
       steps: [],
     });
-    mockUseBatchJobs.mockReturnValue(jobsReady({ rows: [], totalCount: 0 }));
+    // See the comment in the NEWS_COLLECTION test above: the list mock only
+    // needs a row with the matching id for the deep-linked selection to
+    // survive; its other fields are irrelevant to the detail-only
+    // assertions below.
+    mockUseBatchJobs.mockReturnValue(
+      jobsReady({
+        rows: [createRow({ id: 303, counts: '0 / 0 / 0' })],
+        totalCount: 1,
+      })
+    );
     mockUseBatchJobDetail.mockReturnValue(detailReady(unknownRun));
 
     renderPage(new URLSearchParams('jobId=303'));
