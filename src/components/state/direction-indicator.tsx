@@ -17,8 +17,8 @@ import type { Direction } from './direction-text-class';
  * not the paint/DOM chain.
  */
 
-const GLYPH: Record<Direction, string> = { up: '▲', down: '▼' };
-const WORD: Record<Direction, string> = { up: '상승', down: '하락' };
+const GLYPH: Record<'up' | 'down', string> = { up: '▲', down: '▼' };
+const WORD: Record<'up' | 'down', string> = { up: '상승', down: '하락' };
 
 export function DirectionIndicator({
   direction,
@@ -27,6 +27,12 @@ export function DirectionIndicator({
   direction: Direction;
   className?: string;
 }) {
+  // 등락 방향을 알 수 없으면(changeValue 누락) 화살표도, 상승/하락 낭독도
+  // 하지 않는다 — 없는 방향을 지어내지 않는다.
+  if (direction === 'none') {
+    return null;
+  }
+
   return (
     <span className={cn('relative inline-flex items-center gap-1', className)}>
       <span aria-hidden='true'>{GLYPH[direction]}</span>

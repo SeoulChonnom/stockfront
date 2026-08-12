@@ -6,7 +6,7 @@ export type MarketIndex = {
   value: string;
   change: string;
   changeRate: string;
-  direction: 'up' | 'down';
+  direction: 'up' | 'down' | 'none';
   high: string;
   low: string;
 };

@@ -24,5 +24,16 @@ describe('DirectionIndicator', () => {
   it('maps each direction to its own colour token class', () => {
     expect(directionTextClass('up')).toContain('--up');
     expect(directionTextClass('down')).toContain('--down');
+    expect(directionTextClass('none')).toContain('faint');
+  });
+
+  it('renders nothing for a neutral direction — no glyph, no 상승/하락 claim', () => {
+    const { container } = render(<DirectionIndicator direction='none' />);
+
+    expect(container).toBeEmptyDOMElement();
+    expect(screen.queryByText('상승')).not.toBeInTheDocument();
+    expect(screen.queryByText('하락')).not.toBeInTheDocument();
+    expect(screen.queryByText('▲')).not.toBeInTheDocument();
+    expect(screen.queryByText('▼')).not.toBeInTheDocument();
   });
 });
