@@ -19,10 +19,10 @@ const buttonVariants = cva(
           'border-[color:var(--danger-line)] bg-[color:var(--danger-soft)] text-[color:var(--danger)] hover:-translate-y-px',
       },
       size: {
-        default: 'min-h-11 px-[18px] text-body',
-        sm: 'min-h-10 px-3.5 text-body-sm',
+        default: 'min-h-tap px-[18px] text-body',
+        sm: 'min-h-tap px-3.5 text-body-sm',
         lg: 'min-h-12 px-[18px] text-body',
-        icon: 'size-11',
+        icon: 'size-tap',
       },
     },
     defaultVariants: {

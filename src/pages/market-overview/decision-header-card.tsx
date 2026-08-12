@@ -1,17 +1,14 @@
 import { RefetchBadge, StatusBadge } from '@/components/state';
+import { noHeadlineCopy } from '@/lib/audience-copy';
+import { useCapabilities } from '@/lib/capabilities';
 import { formatKstDateTime, formatRelativeFreshness } from '@/lib/formatters';
 import { cn } from '@/lib/utils';
 import type { MarketSnapshot } from '@/lib/view-models';
-
-import { MarketCompareStrip } from './market-compare-strip';
 
 /**
  * 결정 헤더 카드. Latest와 Archive Detail이 공유하는 첫 블록. h1은 mode에
  * 따라 다르지만 나머지 구조는 동일하다.
  */
-
-const NO_HEADLINE_COPY =
-  '글로벌 헤드라인이 생성되지 않았습니다. AI 요약 단계가 실패했을 수 있습니다 — 아래 상태와 배치 로그에서 원인을 확인하세요.';
 
 export type DecisionHeaderCardProps = {
   snapshot: MarketSnapshot;
@@ -34,8 +31,9 @@ export function DecisionHeaderCard({
   const generatedDisplay =
     formatKstDateTime(snapshot.generatedAtIso) ?? snapshot.generatedAt;
   const freshness = formatRelativeFreshness(snapshot.generatedAtIso, now);
-  const metadata = snapshot.metadata;
   const hasHeadline = (snapshot.globalHeadline ?? '').trim().length > 0;
+  const { can } = useCapabilities();
+  const audience = { canViewOps: can('ops.view') };
 
   return (
     <section
@@ -62,44 +60,23 @@ export function DecisionHeaderCard({
       </div>
 
       <div>
-        <h1
-          className='m-0 mb-2 text-[15px] font-semibold tracking-[0.01em] text-faint'
-          id='page-title'
-          tabIndex={-1}
-        >
+        <p className='m-0 mb-2 text-body-sm font-semibold tracking-[0.01em] text-faint'>
           {mode === 'latest'
             ? '최신 시장 브리프'
             : `${snapshot.businessDate} 시장 브리프`}
-        </h1>
-        <p
+        </p>
+        <h1
           className={cn(
             'm-0 wrap-anywhere text-pretty',
             hasHeadline
               ? 'text-[length:var(--fs-display)] leading-[var(--lh-display)] font-semibold tracking-[var(--ls-display)] text-fg'
               : 'text-[length:var(--fs-lead)] leading-[var(--lh-lead)] text-faint'
           )}
+          id='page-title'
+          tabIndex={-1}
         >
-          {hasHeadline ? snapshot.globalHeadline : NO_HEADLINE_COPY}
-        </p>
-      </div>
-
-      <MarketCompareStrip markets={snapshot.markets} />
-
-      <div className='mono flex flex-wrap gap-x-4.5 gap-y-2 border-t border-line pt-3 text-caption text-faint'>
-        {metadata ? (
-          <span className='whitespace-nowrap'>
-            원문 {metadata.rawNewsCount}건 → 정제 {metadata.processedNewsCount}
-            건 → 클러스터 {metadata.clusterCount}건
-          </span>
-        ) : null}
-        <span className='whitespace-nowrap'>
-          pageId {snapshot.pageId} · v{snapshot.versionNo}
-        </span>
-        {metadata?.lastUpdatedAt ? (
-          <span className='whitespace-nowrap'>
-            마지막 갱신 {metadata.lastUpdatedAt}
-          </span>
-        ) : null}
+          {hasHeadline ? snapshot.globalHeadline : noHeadlineCopy(audience)}
+        </h1>
       </div>
     </section>
   );

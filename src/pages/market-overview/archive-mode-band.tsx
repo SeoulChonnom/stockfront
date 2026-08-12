@@ -6,16 +6,19 @@ import { buildArchiveSearchHref, type FilterQueryParams } from './navigation';
 /**
  * 아카이브 모드 밴드. Archive Detail만 Latest 위에 얹는 상단 밴드. 정상
  * 스냅샷과 인접 날짜 스냅샷이 없는 404 양쪽
- * 화면에서 재사용한다 — 두 경우 모두 날짜 산술 내비게이션은 그대로 필요하다.
+ * 화면에서 재사용한다 — 두 경우 모두 날짜 내비게이션은 그대로 필요하다.
+ *
+ * `prevDate`/`nextDate`는 실제로 스냅샷이 존재하는 날짜만 담는다 — `null`이면
+ * 그 방향에 인접 스냅샷이 없다는 뜻이고(로딩 중이거나 조회가 실패한 경우도
+ * 포함), 버튼은 `disabled`로 렌더링되며 라벨도 이유를 그대로 말한다.
  */
 export type ArchiveModeBandProps = {
   businessDate: string;
   pageId: number | null;
   versionNo: number | null;
   filterQuery: FilterQueryParams | null;
-  prevDate: string;
-  nextDate: string;
-  nextDisabled: boolean;
+  prevDate: string | null;
+  nextDate: string | null;
 };
 
 export function ArchiveModeBand({
@@ -25,7 +28,6 @@ export function ArchiveModeBand({
   filterQuery,
   prevDate,
   nextDate,
-  nextDisabled,
 }: ArchiveModeBandProps) {
   return (
     <div className='flex flex-wrap items-center gap-x-3.5 gap-y-2.5 rounded-[var(--r-lg)] border border-[color:var(--warning-line)] border-l-4 border-l-[color:var(--warning)] bg-[color:var(--warning-soft)] px-4 py-3'>
@@ -52,22 +54,31 @@ export function ArchiveModeBand({
         ) : null}
         <Button
           className='mono min-h-9 px-3 text-body-sm'
-          onClick={() => navigate(`/market/archive/${prevDate}`)}
+          disabled={prevDate === null}
+          onClick={() => {
+            if (prevDate) {
+              navigate(`/market/archive/${prevDate}`);
+            }
+          }}
           size='sm'
           type='button'
           variant='secondary'
         >
-          ← {prevDate}
+          {prevDate ? `이전 ${prevDate}` : '이전 브리프 없음'}
         </Button>
         <Button
           className='mono min-h-9 px-3 text-body-sm'
-          disabled={nextDisabled}
-          onClick={() => navigate(`/market/archive/${nextDate}`)}
+          disabled={nextDate === null}
+          onClick={() => {
+            if (nextDate) {
+              navigate(`/market/archive/${nextDate}`);
+            }
+          }}
           size='sm'
           type='button'
           variant='secondary'
         >
-          {nextDate} →
+          {nextDate ? `다음 ${nextDate}` : '다음 브리프 없음'}
         </Button>
         <Button
           className='min-h-9 px-3 text-body-sm'

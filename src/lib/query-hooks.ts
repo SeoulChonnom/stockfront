@@ -83,11 +83,12 @@ export function useArchiveMarketPage(
   });
 }
 
-export function useArchiveList(params: ArchiveListParams) {
+export function useArchiveList(params: ArchiveListParams, enabled = true) {
   return useQuery({
     queryKey: ['archive-list', params],
     queryFn: ({ signal }) => getArchiveList(params, signal),
     select: mapArchiveListToView,
+    enabled,
   });
 }
 

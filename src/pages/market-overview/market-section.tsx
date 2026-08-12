@@ -1,9 +1,12 @@
+import { noIndexDataCopy, noNarrativeCopy } from '@/lib/audience-copy';
 import type { MarketSnapshot } from '@/lib/view-models';
 
 import { MarketAnalysisBlock } from './market-analysis-block';
 import { MarketArticleLinks } from './market-article-links';
+import { MarketIndexCards } from './market-index-cards';
 import { MarketIndexTable } from './market-index-table';
 import { MarketIssueList } from './market-issue-list';
+import { marketPanelId, marketTabId } from './market-tab-ids';
 import type { ClusterOriginQuery } from './navigation';
 
 /**
@@ -14,15 +17,13 @@ import type { ClusterOriginQuery } from './navigation';
  * this section header.
  */
 
-const NO_NARRATIVE_COPY =
-  '이 시장의 요약이 생성되지 않았습니다. 수집된 기사가 임계값에 미달했거나 AI 요약이 실패한 경우입니다. 지수와 원문은 아래에서 그대로 확인할 수 있습니다.';
-
 export type MarketSectionProps = {
   market: MarketSnapshot['markets'][number];
   index: number;
   originQuery: ClusterOriginQuery;
   currentPathname: string;
   currentSearch: string;
+  canViewOps: boolean;
 };
 
 export function MarketSection({
@@ -31,16 +32,19 @@ export function MarketSection({
   originQuery,
   currentPathname,
   currentSearch,
+  canViewOps,
 }: MarketSectionProps) {
-  const headingId = `mk-section-heading-${index}`;
   const metadata = market.metadata;
   const hasNarrative = (market.summaryBody ?? '').trim().length > 0;
+  const hasIndices = market.indices.length > 0;
+  const audience = { canViewOps };
 
   return (
     <section
-      aria-labelledby={headingId}
-      className='flex min-w-0 scroll-mt-[calc(var(--section-nav-height)+var(--gap))] flex-col overflow-hidden rounded-[var(--r-lg)] border border-line bg-[color:var(--surface)] max-[1025px]:scroll-mt-[calc(var(--topbar-height)+var(--section-nav-height)+var(--gap))]'
-      id={`mk-section-${index}`}
+      aria-labelledby={marketTabId(index)}
+      className='flex min-w-0 flex-col overflow-hidden rounded-[var(--r-lg)] border border-line bg-[color:var(--surface)]'
+      id={marketPanelId(index)}
+      role='tabpanel'
     >
       <div className='flex flex-wrap items-baseline gap-x-3 gap-y-2 border-b border-line px-[18px] py-4'>
         {/* Show the market scope before its name. */}
@@ -50,8 +54,7 @@ export function MarketSection({
           </span>
         ) : null}
         <h2
-          className='m-0 text-[17px] font-semibold outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--focus)]'
-          id={headingId}
+          className='m-0 text-[length:var(--fs-h2)] font-semibold outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--focus)]'
           tabIndex={-1}
         >
           {market.label}
@@ -59,12 +62,6 @@ export function MarketSection({
         {market.summaryTitle ? (
           <span className='text-pretty text-[14px] text-fg-soft'>
             — {market.summaryTitle}
-          </span>
-        ) : null}
-        {metadata ? (
-          <span className='mono ml-auto text-caption text-faint'>
-            원문 {metadata.rawNewsCount}건 · 정제 {metadata.processedNewsCount}
-            건 · 클러스터 {metadata.clusterCount}건
           </span>
         ) : null}
       </div>
@@ -77,7 +74,7 @@ export function MarketSection({
           >
             !
           </span>
-          <p className='m-0 text-[13px] text-fg'>
+          <p className='m-0 text-body text-fg'>
             <strong className='font-semibold'>누락 </strong>
             {metadata.partialMessage}
           </p>
@@ -92,8 +89,8 @@ export function MarketSection({
         ) : null}
         <MarketAnalysisBlock analysis={market.analysis} />
         {hasNarrative ? null : (
-          <p className='m-0 rounded-[var(--r-md)] border border-dashed border-[color:var(--line-strong)] px-3.5 py-3 text-[13px] text-faint'>
-            {NO_NARRATIVE_COPY}
+          <p className='m-0 rounded-[var(--r-md)] border border-dashed border-[color:var(--line-strong)] px-3.5 py-3 text-body text-faint'>
+            {noNarrativeCopy(audience)}
           </p>
         )}
       </div>
@@ -104,7 +101,18 @@ export function MarketSection({
           {market.indices.length}종
         </span>
       </div>
-      <MarketIndexTable indices={market.indices} />
+      <div className='hidden sm:block'>
+        <MarketIndexTable canViewOps={canViewOps} indices={market.indices} />
+      </div>
+      <div className='sm:hidden'>
+        {hasIndices ? (
+          <MarketIndexCards indices={market.indices} />
+        ) : (
+          <p className='m-0 px-[18px] py-4 text-body text-faint'>
+            {noIndexDataCopy(audience)}
+          </p>
+        )}
+      </div>
 
       <div className='flex items-baseline gap-2.5 border-t border-line bg-[color:var(--surface-2)] px-[18px] py-3'>
         <h3 className='m-0 text-body font-semibold'>핵심 이슈</h3>
@@ -113,6 +121,7 @@ export function MarketSection({
         </span>
       </div>
       <MarketIssueList
+        canViewOps={canViewOps}
         clusters={market.clusters}
         currentPathname={currentPathname}
         currentSearch={currentSearch}

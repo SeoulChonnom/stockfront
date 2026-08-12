@@ -1,5 +1,6 @@
 import { CircleUserRound } from 'lucide-react';
 import type { ThemeMode } from '@/lib/app-state';
+import { serviceTagline } from '@/lib/audience-copy';
 import { useCapabilities } from '@/lib/capabilities';
 
 import { DevRoleSimulator } from './dev-role-simulator';
@@ -26,7 +27,7 @@ export function NavRail({
   theme: ThemeMode;
   onToggleTheme: () => void;
 }) {
-  const { role } = useCapabilities();
+  const { can, role } = useCapabilities();
 
   return (
     <aside className='sticky top-0 hidden h-screen w-[248px] shrink-0 flex-col border-r border-line bg-[color:var(--surface)] min-[1025px]:flex'>
@@ -37,7 +38,7 @@ export function NavRail({
         </p>
         {/* Keep secondary context visible beneath the rail wordmark. */}
         <p className='m-0 text-[12px] text-faint'>
-          일간 시장 브리프 · 운영 콘솔
+          {serviceTagline({ canViewOps: can('ops.view') })}
         </p>
       </div>
 

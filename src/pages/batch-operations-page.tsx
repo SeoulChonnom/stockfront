@@ -106,7 +106,18 @@ function AdminBatchOperations({
 
   const rows = jobsQuery.data?.rows ?? [];
   const fallbackJobId = rows[0]?.id ?? null;
-  const selectedJobId = jobIdParam ?? fallbackJobId;
+  // Filter/page changes can push the URL's jobId outside the new result.
+  // Fall back to the first row so the detail panel never contradicts the
+  // filtered list. While the query is loading or has failed, rows is empty
+  // and we can't yet judge membership, so a deep-linked jobId is kept as-is
+  // (a list error already keeps the previous filters and selection).
+  const hasSelectedInRows =
+    jobIdParam !== null && rows.some((row) => row.id === jobIdParam);
+  const selectedJobId =
+    jobIdParam !== null &&
+    (jobsQuery.isLoading || jobsQuery.isError || hasSelectedInRows)
+      ? jobIdParam
+      : fallbackJobId;
   // Child mutation callbacks read this ref to reject stale completions after unmount.
   const selectedJobIdRef = useRef(selectedJobId);
   selectedJobIdRef.current = selectedJobId;
@@ -145,7 +156,7 @@ function AdminBatchOperations({
   function handleFilterApply(next: BatchFilterDraft) {
     const target: BatchFiltersState = { ...next, page: 1 };
     pendingApplyAnnounceKeyRef.current = buildFiltersKey(target);
-    goTo(target);
+    goTo(target, { jobId: null, view: null });
   }
 
   /** Cancels a pending result announcement when another filter action wins. */
@@ -176,11 +187,11 @@ function AdminBatchOperations({
             failedCount={counts.failedCount}
             onFilterFailed={() => {
               cancelPendingApplyAnnounce();
-              goTo({ status: 'FAILED', page: 1 });
+              goTo({ status: 'FAILED', page: 1 }, { jobId: null, view: null });
             }}
             onFilterPartial={() => {
               cancelPendingApplyAnnounce();
-              goTo({ status: 'PARTIAL', page: 1 });
+              goTo({ status: 'PARTIAL', page: 1 }, { jobId: null, view: null });
             }}
             partialCount={counts.partialCount}
           />
@@ -205,9 +216,12 @@ function AdminBatchOperations({
           onAnnounce={announce}
           onClearFilters={() => {
             cancelPendingApplyAnnounce();
-            goTo({ status: '', type: '', page: 1 });
+            goTo(
+              { status: '', type: '', page: 1 },
+              { jobId: null, view: null }
+            );
           }}
-          onPageChange={(page) => goTo({ page })}
+          onPageChange={(page) => goTo({ page }, { jobId: null, view: null })}
           onRetry={() => {
             void jobsQuery.refetch();
           }}

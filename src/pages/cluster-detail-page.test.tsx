@@ -1,7 +1,11 @@
-import { render, screen } from '@testing-library/react';
+import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { ApiError } from '../lib/api/client';
+import {
+  resetRoleOverrideForTesting,
+  setRoleOverride,
+} from '../lib/capabilities';
 import type { ClusterDetail } from '../lib/view-models';
 import { ClusterDetailPage } from './cluster-detail-page';
 
@@ -62,6 +66,13 @@ function setLocation(search = '') {
 }
 
 afterEach(() => {
+  // See archive-search-page.test.tsx's afterEach comment: unmount
+  // deterministically first, since resetting the role override can
+  // synchronously notify `useCapabilities()` subscribers, and a stray
+  // re-render after `mockUseClusterDetail.mockReset()` would call the mock
+  // with no return value configured and throw.
+  cleanup();
+  resetRoleOverrideForTesting();
   window.history.replaceState(null, '', '/');
   mockUseClusterDetail.mockReset();
 });
@@ -210,7 +221,7 @@ describe('ClusterDetailPage', () => {
     expect(status.children[2]).toHaveClass('h-[160px]');
   });
 
-  it('shows the HTTP/code badge, actual API message, retry, and origin back action for an error', () => {
+  it('operator: shows the HTTP/code badge, actual API message, retry, and origin back action for an error', () => {
     setLocation('?origin=latest');
     mockUseClusterDetail.mockReturnValue({
       isLoading: false,
@@ -219,6 +230,7 @@ describe('ClusterDetailPage', () => {
       refetch: vi.fn(),
     });
 
+    setRoleOverride('admin');
     render(<ClusterDetailPage clusterId='cluster-1' />);
 
     expect(screen.getByText('이 이슈를 찾을 수 없습니다')).toBeInTheDocument();
@@ -233,6 +245,69 @@ describe('ClusterDetailPage', () => {
     expect(
       screen.getByRole('button', { name: '최신 브리프로 돌아가기' })
     ).toBeInTheDocument();
+  });
+
+  it('regular user: hides the HTTP/code badge and the raw API message for the same error', () => {
+    setLocation('?origin=latest');
+    mockUseClusterDetail.mockReturnValue({
+      isLoading: false,
+      error: new ApiError(
+        'provider batch pipeline threshold rejected the request',
+        404,
+        null
+      ),
+      data: undefined,
+      refetch: vi.fn(),
+    });
+
+    setRoleOverride('user');
+    render(<ClusterDetailPage clusterId='cluster-1' />);
+
+    const alert = screen.getByRole('alert');
+    expect(screen.getByText('이 이슈를 찾을 수 없습니다')).toBeInTheDocument();
+    expect(alert).not.toHaveTextContent('REQUEST_FAILED');
+    expect(alert).not.toHaveTextContent(
+      'provider batch pipeline threshold rejected the request'
+    );
+    expect(
+      screen.getByRole('button', { name: '다시 시도' })
+    ).toBeInTheDocument();
+  });
+
+  it('regular user: hides a backend-supplied error body code the same way as the hardcoded literals', () => {
+    setLocation('?origin=latest');
+    mockUseClusterDetail.mockReturnValue({
+      isLoading: false,
+      error: new ApiError('validation failed', 422, {
+        code: 'VALIDATION_ERROR',
+      }),
+      data: undefined,
+      refetch: vi.fn(),
+    });
+
+    setRoleOverride('user');
+    render(<ClusterDetailPage clusterId='cluster-1' />);
+
+    expect(screen.getByRole('alert')).not.toHaveTextContent('VALIDATION_ERROR');
+  });
+
+  it('operator: still sees a backend-supplied error body code', () => {
+    setLocation('?origin=latest');
+    mockUseClusterDetail.mockReturnValue({
+      isLoading: false,
+      error: new ApiError('validation failed', 422, {
+        code: 'VALIDATION_ERROR',
+      }),
+      data: undefined,
+      refetch: vi.fn(),
+    });
+
+    setRoleOverride('admin');
+    render(<ClusterDetailPage clusterId='cluster-1' />);
+
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      '422 · VALIDATION_ERROR'
+    );
   });
 
   it('shows a generic retry alert for a non-404 error', () => {

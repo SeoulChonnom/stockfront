@@ -9,6 +9,7 @@
     "lint": "biome check",
     "lint:fix": "biome check --write",
     "test": "vitest run",
+    "contrast": "node scripts/contrast-audit.mjs",
     "preview": "vite preview",
     "e2e": "playwright test",
     "knip": "knip"

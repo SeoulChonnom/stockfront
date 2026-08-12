@@ -1,21 +1,59 @@
 import { useCapabilities } from '@/lib/capabilities';
-import { useUrlState } from '@/lib/router';
+import { buildUrl, navigate, useUrlState } from '@/lib/router';
 import type { MarketSnapshot } from '@/lib/view-models';
 
 import { ArchiveModeBand } from './market-overview/archive-mode-band';
-import {
-  getTodayBusinessDateKst,
-  shiftBusinessDate,
-} from './market-overview/date-utils';
 import { DecisionHeaderCard } from './market-overview/decision-header-card';
 import { EmptyMarketsPanel } from './market-overview/empty-markets-panel';
-import { MarketSectionNavigation } from './market-overview/market-compare-strip';
 import { MarketSection } from './market-overview/market-section';
+import { MarketTabs } from './market-overview/market-tabs';
 import {
   type ClusterOriginQuery,
   extractFilterQuery,
 } from './market-overview/navigation';
+import { PageDataDetails } from './market-overview/page-data-details';
 import { PartialBanner } from './market-overview/partial-banner';
+import { useAdjacentSnapshotDates } from './market-overview/use-adjacent-snapshot-dates';
+
+/**
+ * `market` 쿼리에서 선택된 시장 인덱스를 읽는다. `marketType`(대소문자
+ * 무시)과 먼저 매칭하고, `marketType`이 null인 시장을 위해 `buildMarketParam`이
+ * 쓰는 배열 위치 폴백도 함께 받는다. 두 함수는 같은 값 집합을 다뤄야 한다 —
+ * 읽기만 위치 폴백을 모르면 그런 시장은 새로고침 때 조용히 첫 탭으로 돌아간다.
+ * 값이 없거나 어느 쪽으로도 매칭되지 않으면 배열의 첫 시장(0)이다.
+ */
+function resolveSelectedMarketIndex(
+  markets: MarketSnapshot['markets'],
+  searchParams: URLSearchParams
+): number {
+  const marketParam = searchParams.get('market');
+
+  if (!marketParam) {
+    return 0;
+  }
+
+  const byMarketType = markets.findIndex(
+    (market) => market.marketType?.toLowerCase() === marketParam.toLowerCase()
+  );
+
+  if (byMarketType !== -1) {
+    return byMarketType;
+  }
+
+  const byPosition = markets.findIndex(
+    (market, index) => !market.marketType && String(index) === marketParam
+  );
+
+  return byPosition === -1 ? 0 : byPosition;
+}
+
+/** 위 reader가 되돌려 읽을 수 있는 형태로만 `market` 값을 만든다. */
+function buildMarketParam(
+  market: MarketSnapshot['markets'][number],
+  index: number
+): string {
+  return market.marketType ? market.marketType.toLowerCase() : String(index);
+}
 
 /**
  * Latest (`/market/latest`)와 Archive Detail
@@ -45,6 +83,12 @@ export function MarketOverviewPage({
   const capabilities = useCapabilities();
   const canViewOps = capabilities.can('ops.view');
   const currentSearch = url.searchParams.toString();
+  // Scoped away from the Latest route via `enabled` — hooks can't be called
+  // conditionally, and this query would be pointless there anyway (D-05).
+  const adjacent = useAdjacentSnapshotDates(
+    snapshot.businessDate,
+    mode === 'archive'
+  );
 
   const filterQuery =
     mode === 'archive' ? extractFilterQuery(url.searchParams) : null;
@@ -53,19 +97,29 @@ export function MarketOverviewPage({
     ...(filterQuery ?? {}),
   };
 
+  const selectedIndex = resolveSelectedMarketIndex(
+    snapshot.markets,
+    url.searchParams
+  );
+
+  function handleSelectMarket(index: number) {
+    navigate(
+      buildUrl(url.pathname, {
+        ...Object.fromEntries(url.searchParams),
+        market: buildMarketParam(snapshot.markets[index], index),
+      })
+    );
+  }
+
   return (
     <div className='flex flex-col gap-[var(--gap)]'>
       {mode === 'archive' ? (
         <ArchiveModeBand
           businessDate={snapshot.businessDate}
           filterQuery={filterQuery}
-          nextDate={shiftBusinessDate(snapshot.businessDate, 1)}
-          nextDisabled={
-            shiftBusinessDate(snapshot.businessDate, 1) >
-            getTodayBusinessDateKst(now)
-          }
+          nextDate={adjacent.next}
           pageId={snapshot.pageId}
-          prevDate={shiftBusinessDate(snapshot.businessDate, -1)}
+          prevDate={adjacent.previous}
           versionNo={snapshot.versionNo}
         />
       ) : null}
@@ -77,28 +131,29 @@ export function MarketOverviewPage({
         snapshot={snapshot}
       />
 
-      <MarketSectionNavigation markets={snapshot.markets} />
-
       <PartialBanner canViewOps={canViewOps} snapshot={snapshot} />
 
       {snapshot.markets.length === 0 ? (
         <EmptyMarketsPanel canViewOps={canViewOps} status={snapshot.status} />
       ) : (
-        // Position *is* the identity here — the same `index` is passed down as
-        // a prop and drives the `mk-section-{index}` anchor targets that the
-        // compare strip links to.
-        snapshot.markets.map((market, index) => (
+        <>
+          <MarketTabs
+            markets={snapshot.markets}
+            onSelect={handleSelectMarket}
+            selectedIndex={selectedIndex}
+          />
           <MarketSection
+            canViewOps={canViewOps}
             currentPathname={url.pathname}
             currentSearch={currentSearch}
-            index={index}
-            // biome-ignore lint/suspicious/noArrayIndexKey: position is the identity — see above
-            key={`${market.label}-${index}`}
-            market={market}
+            index={selectedIndex}
+            market={snapshot.markets[selectedIndex]}
             originQuery={originQuery}
           />
-        ))
+        </>
       )}
+
+      <PageDataDetails snapshot={snapshot} />
     </div>
   );
 }

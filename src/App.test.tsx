@@ -11,6 +11,10 @@ import {
   authBootstrapNavigation,
   resetAuthBootstrapForTesting,
 } from './lib/auth-bootstrap';
+import {
+  resetRoleOverrideForTesting,
+  setRoleOverride,
+} from './lib/capabilities';
 import { navigate, withBasePath } from './lib/router';
 
 const {
@@ -187,6 +191,7 @@ describe('App routing', () => {
     setMockLatestQuery = undefined;
     resetAuthBootstrapForTesting();
     resetScrollPositionsForTesting();
+    resetRoleOverrideForTesting();
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
     vi.unstubAllEnvs();
@@ -304,6 +309,49 @@ describe('App routing', () => {
     expect(
       screen.queryByText('표시할 데이터가 없습니다')
     ).not.toBeInTheDocument();
+  });
+
+  it('operator: shows the 401 · AUTH_BOOTSTRAP_FAILED badge on the same failure state', async () => {
+    vi.stubEnv('VITE_API_HOST', '');
+    vi.stubGlobal(
+      'fetch',
+      vi.fn<
+        (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>
+      >()
+    );
+    window.history.replaceState(null, '', '/');
+    setRoleOverride('admin');
+
+    await act(async () => {
+      render(<App />);
+      await Promise.resolve();
+    });
+
+    const failureMessage = await screen.findByRole('alert');
+    expect(failureMessage).toHaveTextContent('401 · AUTH_BOOTSTRAP_FAILED');
+  });
+
+  it('regular user: hides the 401 · AUTH_BOOTSTRAP_FAILED badge on the same failure state', async () => {
+    vi.stubEnv('VITE_API_HOST', '');
+    vi.stubGlobal(
+      'fetch',
+      vi.fn<
+        (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>
+      >()
+    );
+    window.history.replaceState(null, '', '/');
+    setRoleOverride('user');
+
+    await act(async () => {
+      render(<App />);
+      await Promise.resolve();
+    });
+
+    const failureMessage = await screen.findByRole('alert');
+    expect(failureMessage).toHaveTextContent(
+      '로그인 상태를 확인할 수 없습니다'
+    );
+    expect(failureMessage).not.toHaveTextContent('401 · AUTH_BOOTSTRAP_FAILED');
   });
 
   it('redirects to the exact production login URL when bootstrap payload is malformed from a trailing-slash host', async () => {
@@ -624,9 +672,10 @@ describe('App routing', () => {
     });
 
     await waitFor(() => {
-      expect(
-        screen.getByRole('heading', { name: '최신 시장 브리프' })
-      ).toHaveFocus();
+      // The h1 now renders the promoted headline (`decision-header-card.tsx`),
+      // not the old "최신 시장 브리프" label — that copy moved to a small
+      // caption above it.
+      expect(screen.getByRole('heading', { name: 'headline' })).toHaveFocus();
     });
   });
 

@@ -1,6 +1,7 @@
 import { PermissionState } from '@/components/state';
 import { ApiError } from '@/lib/api/client';
 import { parseRoute } from '@/lib/app-state';
+import { errorCodeCopy } from '@/lib/audience-copy';
 import { useCapabilities } from '@/lib/capabilities';
 import { useArchiveMarketPage, useLatestMarketPage } from '@/lib/query-hooks';
 import { useUrlState } from '@/lib/router';
@@ -48,7 +49,7 @@ export function MarketOverviewRouteContent({
   }
 
   if (error) {
-    const presentation = buildFetchErrorPresentation(error);
+    const presentation = buildFetchErrorPresentation(error, { canViewOps });
 
     if (
       mode === 'archive' &&
@@ -58,6 +59,7 @@ export function MarketOverviewRouteContent({
       return (
         <ArchiveNotFoundState
           businessDate={businessDateFromRoute}
+          canViewOps={canViewOps}
           searchParams={url.searchParams}
         />
       );
@@ -101,7 +103,7 @@ export function MarketOverviewRouteContent({
           headingLevel='h2'
           onRetry={onRetry}
           presentation={{
-            code: 'NO_DATA',
+            code: errorCodeCopy({ canViewOps }, 'NO_DATA'),
             title: '표시할 데이터가 없습니다',
             message: '시장 브리프 데이터를 불러오지 못했습니다.',
             actionLabel: '다시 시도',

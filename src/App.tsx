@@ -19,11 +19,14 @@ import {
 } from './components/shell/status-card';
 import { Button } from './components/ui/button';
 import { parseRoute, type ThemeMode } from './lib/app-state';
+import type { Audience } from './lib/audience-copy';
+import { errorCodeCopy } from './lib/audience-copy';
 import {
   bootstrapAuth,
   getAuthBootstrapState,
   subscribeToAuthBootstrap,
 } from './lib/auth-bootstrap';
+import { useCapabilities } from './lib/capabilities';
 import { navigate, useUrlState } from './lib/router';
 import {
   applyTheme,
@@ -37,7 +40,7 @@ type AuthBootstrapStatus = ReturnType<typeof getAuthBootstrapState>['status'];
 
 type AuthStatusCardConfig = {
   tone: StatusCardTone;
-  badge: string;
+  badge: string | null;
   title: string;
   description: string;
   role: 'status' | 'alert';
@@ -49,14 +52,19 @@ function isAuthResolved(status: AuthBootstrapStatus) {
   return status === 'authenticated' || status === 'bypassed';
 }
 
-/** Product-approved not-found copy; do not paraphrase. */
+/**
+ * Product-approved not-found copy; do not paraphrase. `redirecting`/
+ * `checking` badges are already plain Korean status phrases, not English
+ * error codes, so only the `failed` branch routes through `errorCodeCopy`.
+ */
 function getAuthBootstrapMessage(
-  status: AuthBootstrapStatus
+  status: AuthBootstrapStatus,
+  audience: Audience
 ): AuthStatusCardConfig {
   if (status === 'failed') {
     return {
       tone: 'danger',
-      badge: '401 · AUTH_BOOTSTRAP_FAILED',
+      badge: errorCodeCopy(audience, '401 · AUTH_BOOTSTRAP_FAILED'),
       title: '로그인 상태를 확인할 수 없습니다',
       description:
         '잠시 후 다시 시도하거나 로그인 페이지에서 다시 접속해 주세요. 인증이 끝나면 마지막으로 보던 화면으로 돌아옵니다.',
@@ -101,6 +109,7 @@ function App() {
     getAuthBootstrapState
   );
   const authResolved = isAuthResolved(authBootstrapState.status);
+  const capabilities = useCapabilities();
   const [theme, setThemeState] = useState<ThemeMode>(() =>
     resolveInitialTheme()
   );
@@ -214,7 +223,9 @@ function App() {
   }, [authResolved, routeKey]);
 
   if (!authResolved) {
-    const message = getAuthBootstrapMessage(authBootstrapState.status);
+    const message = getAuthBootstrapMessage(authBootstrapState.status, {
+      canViewOps: capabilities.can('ops.view'),
+    });
 
     return (
       <StatusCard

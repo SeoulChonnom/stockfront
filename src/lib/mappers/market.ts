@@ -39,13 +39,23 @@ function mapIndex(item: IndexCardResponse): MarketIndex {
         ? Number(item.changeValue)
         : null;
 
+  // A missing/unparseable changeValue has no direction to report — mapping
+  // it to 'down' would tell users (and screen readers) a decline that never
+  // happened. 'none' keeps the value visible without a false claim.
+  const direction: MarketIndex['direction'] =
+    changeValue === null || Number.isNaN(changeValue)
+      ? 'none'
+      : changeValue >= 0
+        ? 'up'
+        : 'down';
+
   return {
     label: asString(item.indexName, '-'),
     code: asNullableString(item.indexCode),
     value: formatNumericText(item.closePrice),
     change: formatSignedNumber(item.changeValue),
     changeRate: formatPercent(item.changePercent),
-    direction: changeValue !== null && changeValue >= 0 ? 'up' : 'down',
+    direction,
     high: formatNumericText(item.highPrice),
     low: formatNumericText(item.lowPrice),
   };
@@ -90,6 +100,8 @@ function mapMarketMetadata(value: unknown): MarketMetadata {
     clusterCount: asNonNegativeSafeInteger(record.clusterCount, 0),
     lastUpdatedAt: formatKstDateTime(record.lastUpdatedAt),
     partialMessage: asNullableString(record.partialMessage),
+    sourceDate: asNullableString(record.sourceDate),
+    expectedSessionDate: asNullableString(record.expectedSessionDate),
   };
 }
 

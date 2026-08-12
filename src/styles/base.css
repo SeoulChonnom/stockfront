@@ -11,17 +11,17 @@
   --line-strong: #c2ccdb;
   --text: #0f2743;
   --text-soft: #4a6180;
-  --text-faint: #7288a5;
+  --text-faint: #576d8a;
 
   --primary: #0f5bff;
   --primary-fg: #ffffff;
   --primary-soft: #eaf1ff;
   --primary-line: #bdd2ff;
 
-  --up: #0d8b5f;
+  --up: #07724c;
   --down: #be3348;
 
-  --success: #0d8b5f;
+  --success: #07724c;
   --success-soft: #e7f6ef;
   --success-line: #a8dcc5;
   --warning: #8a5a00;
@@ -44,32 +44,32 @@
   --font-display: var(--font-sans);
   --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 
-  --fs-display: 26px;
-  --fs-h1: 22px;
-  --fs-h2: 17px;
-  --fs-h3: 14px;
-  --fs-lead: 16px;
-  --fs-body: 13.5px;
-  --fs-sm: 12.5px;
-  --fs-label: 11px;
-  --fs-mono-sm: 11px;
-  --fs-mono: 12.5px;
-  --fs-mono-lg: 14px;
+  --fs-display: 30px;
+  --fs-h1: 28px;
+  --fs-h2: 20px;
+  --fs-h3: 17px;
+  --fs-lead: 17px;
+  --fs-body: 15px;
+  --fs-sm: 13.5px;
+  --fs-label: 13px;
+  --fs-mono-sm: 13px;
+  --fs-mono: 13.5px;
+  --fs-mono-lg: 15px;
 
   --fw-regular: 400;
   --fw-semibold: 600;
   --fw-bold: 700;
 
-  --lh-display: 1.35;
-  --lh-lead: 1.65;
-  --lh-body: 1.5;
+  --lh-display: 1.3;
+  --lh-lead: 1.7;
+  --lh-body: 1.65;
   --lh-tight: 1.2;
 
   --ls-display: -0.015em;
   --ls-caps: 0.07em;
   --ls-caps-wide: 0.08em;
 
-  --measure-summary: 76ch;
+  --measure-summary: 72ch;
   --measure-error: 62ch;
   --measure-analysis: 74ch;
 
@@ -82,6 +82,8 @@
   --pad-card-body: 16px;
   --pad-cell-y: 10px;
   --pad-cell-x: 14px;
+
+  --tap-min: 44px;
 
   --r-sm: 4px;
   --r-md: 8px;
@@ -98,7 +100,6 @@
   --dur-spinner: 0.9s;
 
   --topbar-height: 64px;
-  --section-nav-height: 48px;
 
   --z-sticky: 40;
   --z-drawer-overlay: 60;
@@ -170,8 +171,11 @@
   :root {
     --pad: 14px;
     --gap: 12px;
-    --fs-display: 21px;
-    --fs-lead: 15px;
+    --fs-display: 24px;
+    --fs-h1: 24px;
+    --fs-h2: 19px;
+    --fs-lead: 16px;
+    --fs-body: 16px;
   }
 }
 
@@ -189,8 +193,8 @@ body,
 
 /* Keep app body sizing on #root; changing html would alter the rem basis. */
 #root {
-  font-size: 14px;
-  line-height: 1.6;
+  font-size: 15px;
+  line-height: 1.65;
 }
 
 body {
@@ -247,6 +251,20 @@ img {
 
 .min-w-0 {
   min-width: 0;
+}
+
+/* Visually hidden but exposed to assistive technology. Used to pair a
+   direction glyph with the words 상승/하락 so state is never color-only. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
 }
 
 .wrap-anywhere {

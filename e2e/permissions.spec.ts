@@ -91,3 +91,221 @@ test.describe('admin permissions (control group)', () => {
     await expect(page.getByText('403 · FORBIDDEN')).toHaveCount(0);
   });
 });
+
+test.describe('regular-user copy isolation', () => {
+  // `src/lib/audience-copy.ts` gates operator vocabulary and raw error
+  // codes behind `canViewOps`. This is the exact `OPS_TERMS` list
+  // `src/lib/audience-copy.test.ts` already uses as the source of truth for
+  // every pure copy function — kept identical here so the e2e layer checks
+  // the same constraint the unit layer does, not a narrower one. (`배치`
+  // subsumes the previous, narrower `배치 운영` entry.)
+  //
+  // The whole-body `OPERATOR_TERMS` scan below deliberately excludes the
+  // `partial` scenario: `MarketSection`'s own inline notice
+  // (`src/pages/market-overview/market-section.tsx`) intentionally shows the
+  // raw per-market `metadata.partialMessage` (which can contain e.g.
+  // "provider") to every audience by design — tracked as backend dependency
+  // D-13 in `.superpowers/sdd/.../progress.md`. That is documented, accepted
+  // behavior, not a regression this suite should flag. The
+  // `ready`/`error5xx`/`failed`/`emptyMarkets` scenarios exercised below
+  // never reach that code path.
+  //
+  // The `partial` scenario IS covered separately, below, scoped to
+  // `PartialBanner`'s own "상세 정보" details block — that one component
+  // must gate the raw message even though `MarketSection`'s copy of the
+  // same text does not.
+  const OPERATOR_TERMS = [
+    '운영 콘솔',
+    '배치',
+    '재실행',
+    '재수집',
+    '수집',
+    'provider',
+    '임계값',
+    '로그',
+    '파이프라인',
+  ];
+
+  // The English badge codes `errorCodeCopy` (`audience-copy.ts`) composes
+  // for operators only, drawn from `error-presentation.ts`,
+  // `archive-search-page.tsx`, and `cluster-detail-page.tsx`.
+  const ERROR_CODES = [
+    'PAGE_NOT_FOUND',
+    'NETWORK_ERROR',
+    'INTERNAL_ERROR',
+    'SESSION_EXPIRED',
+    'RATE_LIMITED',
+    'MALFORMED_RESPONSE',
+    'REQUEST_FAILED',
+    'ROUTE_NOT_FOUND',
+  ];
+
+  const CLUSTER_ID = '51f0d9a0-9fc5-4f15-a4f9-62856f128683';
+
+  // The three routes a regular user can actually reach — `/ops/batches`
+  // renders the 403 screen for this role (covered above) and is excluded.
+  const ROUTES: ReadonlyArray<{ name: string; path: string }> = [
+    { name: 'latest', path: 'market/latest' },
+    { name: 'archive search', path: 'market/archive/search' },
+    { name: 'cluster detail', path: `market/cluster/${CLUSTER_ID}` },
+  ];
+
+  for (const { name, path } of ROUTES) {
+    test(`never shows operator vocabulary to a regular user (${name})`, async ({
+      page,
+    }) => {
+      await installMockApi(page, { scenario: 'ready', role: 'user' });
+      await page.goto(path);
+      // `#page-title` is the shared ready-state heading id across all three
+      // routes (see `routing.spec.ts`'s "all 6 routes render their own
+      // page-title heading") — waiting on it confirms the ready content, not
+      // a loading skeleton, is what got scanned below.
+      await expect(page.locator('#page-title')).toBeVisible();
+
+      const body = await page.locator('body').innerText();
+      for (const term of OPERATOR_TERMS) {
+        expect(body).not.toContain(term);
+      }
+    });
+  }
+
+  for (const { name, path } of ROUTES) {
+    test(`never shows an English error code to a regular user (${name} / 5xx)`, async ({
+      page,
+      consoleGuard,
+    }) => {
+      // The deliberately-injected 500 makes Chromium log its own "Failed to
+      // load resource ... 500" console error — expected fallout from this
+      // test's own fault injection, not an app bug (same allow-list idiom
+      // as `archive-search.spec.ts`/`batch-ops.spec.ts`).
+      consoleGuard.allowConsoleError(/Failed to load resource.*500/);
+      await installMockApi(page, { scenario: 'error5xx', role: 'user' });
+      await page.goto(path);
+      // Every scoped error state in this app (`MarketOverviewErrorPanel`,
+      // `ArchiveSearchPage`'s `InlineAlert`, `ClusterDetailErrorState`) uses
+      // `role="alert"` — waiting on it confirms the error branch actually
+      // rendered before the body is scanned.
+      await expect(page.getByRole('alert')).toBeVisible();
+
+      const body = await page.locator('body').innerText();
+      for (const code of ERROR_CODES) {
+        expect(body).not.toContain(code);
+      }
+      for (const term of OPERATOR_TERMS) {
+        expect(body).not.toContain(term);
+      }
+    });
+  }
+
+  // `markets: []` renders `EmptyMarketsPanel`
+  // (`src/pages/market-overview/empty-markets-panel.tsx`) — its reason text
+  // now routes through `emptyMarketsReasonCopy` (`src/lib/audience-copy.ts`)
+  // for both the FAILED and non-FAILED ('emptyMarkets') branches. Only
+  // `market/latest` is exercised here: `archive search`/`cluster detail` have
+  // their own, independent mock fixtures that this `scenario` knob doesn't
+  // affect (`PAGE_MODE_BY_SCENARIO` in `mock-api.ts` only maps the Latest/
+  // Archive Detail page), so re-visiting them here would just repeat the
+  // `ready` case above.
+  const EMPTY_MARKET_SCENARIOS: ReadonlyArray<{
+    name: string;
+    scenario: 'failed' | 'emptyMarkets';
+  }> = [
+    { name: 'FAILED', scenario: 'failed' },
+    { name: 'non-FAILED', scenario: 'emptyMarkets' },
+  ];
+
+  for (const { name, scenario } of EMPTY_MARKET_SCENARIOS) {
+    test(`never shows operator vocabulary to a regular user (latest / empty markets, ${name})`, async ({
+      page,
+    }) => {
+      await installMockApi(page, { scenario, role: 'user' });
+      await page.goto('market/latest');
+      await expect(
+        page.getByText('시장 섹션이 생성되지 않았습니다')
+      ).toBeVisible();
+
+      const body = await page.locator('body').innerText();
+      for (const term of OPERATOR_TERMS) {
+        expect(body).not.toContain(term);
+      }
+    });
+  }
+
+  // Control group: proves the widened `OPERATOR_TERMS` list still catches a
+  // real leak rather than passing merely because the copy vanished for
+  // every audience — an operator on the same FAILED empty-markets scenario
+  // must still see the batch/collection vocabulary this whole describe
+  // block exists to keep away from a regular user.
+  test('still shows the batch/collection vocabulary to an operator (latest / empty markets, FAILED)', async ({
+    page,
+  }) => {
+    await installMockApi(page, { scenario: 'failed', role: 'admin' });
+    await page.goto('market/latest');
+    await expect(
+      page.getByRole('heading', { name: '시장 섹션이 생성되지 않았습니다' })
+    ).toBeVisible();
+
+    const body = await page.locator('body').innerText();
+    expect(body).toContain('배치');
+    expect(body).toContain('수집');
+  });
+
+  // `PartialBanner` (`src/pages/market-overview/partial-banner.tsx`)'s
+  // "상세 정보" `<details>` block used to render each market's raw
+  // `metadata.partialMessage` verbatim in its "누락된 데이터" row, with no
+  // `canViewOps` gate — unlike the rest of the same component, which does
+  // gate its own copies of comparable raw text. The KR market in the
+  // `partial` fixture (`e2e/fixtures/mock-api.ts`) carries the message
+  // "KRX 300, USD/KRW 지수 수집이 provider 타임아웃으로 실패했습니다.",
+  // which is exactly the kind of pipeline sentence a regular user must never
+  // see. This test expands the details block and checks its content
+  // directly, rather than scanning the whole page body — the page's other,
+  // documented exception (D-13, see the comment above) legitimately shows
+  // this same text elsewhere on the page.
+  test('PARTIAL page: a regular user never sees the raw per-market message inside the banner’s expanded details block', async ({
+    page,
+  }) => {
+    await installMockApi(page, { scenario: 'partial', role: 'user' });
+    await page.goto('market/latest');
+    await expect(page.locator('#page-title')).toBeVisible();
+
+    const details = page.locator('details').filter({ hasText: '상세 정보' });
+    await details.locator('summary').click();
+
+    const detailsText = await details.innerText();
+    for (const term of OPERATOR_TERMS) {
+      expect(detailsText).not.toContain(term);
+    }
+
+    // The user must still learn *that* data is missing and for which
+    // market, plus the source date and last update — only the raw sentence
+    // itself is replaced.
+    expect(detailsText).toContain('영향받은 시장');
+    expect(detailsText).toContain('누락된 데이터');
+    expect(detailsText).toContain('사용된 데이터 기준일');
+    expect(detailsText).toContain('마지막 갱신 시각');
+    expect(detailsText).toContain('이 시장의 데이터 일부가 누락되었습니다.');
+    expect(detailsText).not.toContain(
+      'KRX 300, USD/KRW 지수 수집이 provider 타임아웃으로 실패했습니다.'
+    );
+  });
+
+  // Control group: an operator on the exact same PARTIAL page must still see
+  // the raw per-market message in the same details block, proving the gate
+  // above is audience-dependent and not just deleted copy.
+  test('PARTIAL page: an operator still sees the raw per-market message inside the banner’s expanded details block', async ({
+    page,
+  }) => {
+    await installMockApi(page, { scenario: 'partial', role: 'admin' });
+    await page.goto('market/latest');
+    await expect(page.locator('#page-title')).toBeVisible();
+
+    const details = page.locator('details').filter({ hasText: '상세 정보' });
+    await details.locator('summary').click();
+
+    const detailsText = await details.innerText();
+    expect(detailsText).toContain(
+      'KRX 300, USD/KRW 지수 수집이 provider 타임아웃으로 실패했습니다.'
+    );
+  });
+});

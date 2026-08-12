@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react';
 
 import { ArchiveModeBand } from './archive-mode-band';
-import { getTodayBusinessDateKst, shiftBusinessDate } from './date-utils';
 import { extractFilterQuery } from './navigation';
+import { useAdjacentSnapshotDates } from './use-adjacent-snapshot-dates';
 
 export type MarketOverviewRouteShellProps = {
   businessDate: string | null;
@@ -21,6 +21,15 @@ export function MarketOverviewRouteShell({
   searchParams = new URLSearchParams(),
 }: MarketOverviewRouteShellProps) {
   const isArchive = mode === 'archive' && businessDate !== null;
+  // This shell renders while the requested page itself failed to load
+  // (error or no-data — the pure loading state uses a separate skeleton).
+  // The same date the user requested is still known, so it's worth the same
+  // ±90 day archive-list lookup the working Archive Detail band uses
+  // (`use-adjacent-snapshot-dates.ts`, D-05) rather than calendar arithmetic
+  // that could route to another dead end. Scoped off via `enabled` so the
+  // Latest-mode error path never fires it (hooks can't be called
+  // conditionally, so the gate lives on the query, not on this call).
+  const adjacent = useAdjacentSnapshotDates(businessDate ?? '', isArchive);
 
   return (
     <div className='flex flex-col gap-[var(--gap)]'>
@@ -28,12 +37,9 @@ export function MarketOverviewRouteShell({
         <ArchiveModeBand
           businessDate={businessDate}
           filterQuery={extractFilterQuery(searchParams)}
-          nextDate={shiftBusinessDate(businessDate, 1)}
-          nextDisabled={
-            shiftBusinessDate(businessDate, 1) > getTodayBusinessDateKst()
-          }
+          nextDate={adjacent.next}
           pageId={pageId}
-          prevDate={shiftBusinessDate(businessDate, -1)}
+          prevDate={adjacent.previous}
           versionNo={null}
         />
       ) : null}

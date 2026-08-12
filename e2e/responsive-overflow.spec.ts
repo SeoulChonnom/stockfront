@@ -1,4 +1,4 @@
-import { test } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 
 import {
   type InstallMockApiOptions,
@@ -173,5 +173,50 @@ test.describe('responsive overflow sweep', () => {
         });
       }
     });
+  }
+});
+
+/**
+ * At <=640px (Tailwind `sm`), `MarketSection` mounts BOTH the desktop table
+ * (`MarketIndexTable`, wrapped in `<div class="hidden sm:block">`) and the
+ * mobile card list (`MarketIndexCards`, wrapped in `<div class="sm:hidden">`)
+ * for the one selected market panel — only one is visually shown, via CSS,
+ * not unmounting (`src/pages/market-overview/market-section.tsx`). A bare
+ * `getByText(name)` would therefore match twice (once per container) and
+ * fail Playwright's strict mode, so every lookup below is scoped to the
+ * `sm:hidden` container specifically. Its exact (single-class) `class`
+ * attribute is unique in the app — the only other element carrying the
+ * `sm:hidden` token is each table row's collapsed high/low subline, which
+ * always has additional classes alongside it, so an *exact* attribute match
+ * (`[class="sm:hidden"]`) does not also catch those.
+ *
+ * Index names come straight from `e2e/fixtures/mock-api.ts`'s `US_INDICES`/
+ * `KR_INDICES` (`indexName` field) rather than being guessed. The US market
+ * has 5 indices (S&P 500, NASDAQ, DOW JONES, RUSSELL 2000, VIX) — this only
+ * asserts the three the brief calls out are present among them, not that
+ * they are the only ones (`orderIndices` in
+ * `src/pages/market-overview/index-order.ts` never drops a representative
+ * index, ranked or not).
+ */
+test('keeps every representative index visible at 390px', async ({ page }) => {
+  await installMockApi(page, { scenario: 'ready' });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('market/latest');
+
+  const mobileIndexContainer = page.locator('div[class="sm:hidden"]');
+
+  for (const name of ['DOW JONES', 'S&P 500', 'NASDAQ']) {
+    await expect(
+      mobileIndexContainer.getByText(name, { exact: false })
+    ).toBeVisible();
+  }
+
+  await page.getByRole('tab', { name: /한국 증시/ }).click();
+  await expect(page).toHaveURL(/market=kr/);
+
+  for (const name of ['KOSPI', 'KOSDAQ']) {
+    await expect(
+      mobileIndexContainer.getByText(name, { exact: false })
+    ).toBeVisible();
   }
 });

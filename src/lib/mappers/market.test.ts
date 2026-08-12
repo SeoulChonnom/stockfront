@@ -444,10 +444,66 @@ describe('mappers - market', () => {
       value: '-',
       change: '-',
       changeRate: '-',
-      direction: 'down',
+      // changeValue is an object here, not a usable number — the mapper
+      // cannot know the real direction, so it must not claim 'down'.
+      direction: 'none',
       high: '-',
       low: '-',
     });
+  });
+
+  it('maps a null changeValue to a neutral direction instead of a false decline', () => {
+    const snapshot = mapDailyPageToSnapshot({
+      pageId: 1,
+      businessDate: '2026-03-31',
+      versionNo: 2,
+      pageTitle: 'Latest',
+      status: 'READY',
+      globalHeadline: 'headline',
+      generatedAt: '2026-03-31T06:12:00Z',
+      partialMessage: null,
+      metadata: {
+        rawNewsCount: 1,
+        processedNewsCount: 1,
+        clusterCount: 1,
+        lastUpdatedAt: '2026-03-31T06:12:00Z',
+      },
+      markets: [
+        {
+          marketType: 'US',
+          marketLabel: '미국 증시',
+          summaryTitle: '요약 제목',
+          summaryBody: '요약 본문',
+          analysis: { background: [], keyThemes: [], outlook: null },
+          indices: [
+            {
+              indexCode: 'IX',
+              indexName: 'NASDAQ',
+              // closePrice is present, but changeValue is missing — before
+              // this fix, a null changeValue silently mapped to 'down'.
+              closePrice: '16274.94',
+              changeValue: null,
+              changePercent: null,
+              highPrice: '16302.11',
+              lowPrice: '16180.45',
+            },
+          ],
+          topClusters: [],
+          articleLinks: [],
+          metadata: {
+            rawNewsCount: 1,
+            processedNewsCount: 1,
+            clusterCount: 1,
+            lastUpdatedAt: '2026-03-31T06:12:00Z',
+            partialMessage: null,
+          },
+        },
+      ],
+    } as unknown as DailyPageResponse);
+
+    expect(snapshot.markets[0].indices[0].direction).toBe('none');
+    // The close price is still shown; only the direction claim is dropped.
+    expect(snapshot.markets[0].indices[0].value).toBe('16,274.94');
   });
 
   it('falls back to a safe daily business date when the DTO value is not a string', () => {
@@ -621,6 +677,8 @@ describe('restored daily page fields', () => {
             clusterCount: 7,
             lastUpdatedAt: '2026-07-27T06:12:10',
             partialMessage: null,
+            sourceDate: '2026-07-25',
+            expectedSessionDate: '2026-07-27',
           },
         },
       ],
@@ -657,6 +715,8 @@ describe('restored daily page fields', () => {
       clusterCount: 7,
       lastUpdatedAt: '2026-07-27 06:12 KST',
       partialMessage: null,
+      sourceDate: '2026-07-25',
+      expectedSessionDate: '2026-07-27',
     });
     const articleLinks = market.articleLinks ?? [];
     expect(articleLinks).toHaveLength(2);
@@ -832,6 +892,8 @@ describe('restored daily page fields', () => {
       clusterCount: 0,
       lastUpdatedAt: null,
       partialMessage: null,
+      sourceDate: null,
+      expectedSessionDate: null,
     });
     // Non-record entries are filtered out; the one plain-object entry
     // survives with safe fallbacks for its missing fields.

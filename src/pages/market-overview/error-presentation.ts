@@ -1,4 +1,11 @@
 import { ApiError } from '@/lib/api/client';
+import type { Audience } from '@/lib/audience-copy';
+import {
+  errorCodeCopy,
+  marketNotFoundCopy,
+  rawErrorMessageCopy,
+  unknownErrorMessageCopy,
+} from '@/lib/audience-copy';
 
 /**
  * Maps a query error into the scoped, region-local presentation used for
@@ -12,10 +19,15 @@ import { ApiError } from '@/lib/api/client';
  * what lets this module tell offline/401/429/5xx/other apart without any
  * new prop being threaded down from `app-page-content.tsx` (out of this
  * agent's file-ownership scope — see the report for that constraint).
+ *
+ * `code`/`message` are audience-gated via `audience-copy.ts`: regular users
+ * never see the raw English badge code or backend/client `error.message`
+ * text, only operators do (see `errorCodeCopy`/`rawErrorMessageCopy`/
+ * `unknownErrorMessageCopy`/`marketNotFoundCopy`).
  */
 
 export type FetchErrorPresentation = {
-  code: string;
+  code: string | null;
   title: string;
   message: string;
   actionLabel: string;
@@ -26,14 +38,15 @@ export type FetchErrorPresentation = {
 };
 
 export function buildFetchErrorPresentation(
-  error: Error
+  error: Error,
+  audience: Audience
 ): FetchErrorPresentation {
   if (error instanceof ApiError) {
     if (error.status === 404) {
       return {
-        code: '404 · PAGE_NOT_FOUND',
+        code: errorCodeCopy(audience, '404 · PAGE_NOT_FOUND'),
         title: '해당 날짜의 스냅샷이 없습니다',
-        message: '배치가 실행되지 않았거나 실패한 날짜일 수 있습니다.',
+        message: marketNotFoundCopy(audience),
         actionLabel: '아카이브에서 찾기',
         isNotFound: true,
         actionKind: 'archive-search',
@@ -42,7 +55,7 @@ export function buildFetchErrorPresentation(
 
     if (error.status === 401) {
       return {
-        code: '401 · SESSION_EXPIRED',
+        code: errorCodeCopy(audience, '401 · SESSION_EXPIRED'),
         title: '세션이 만료됐습니다',
         message: '다시 로그인하면 마지막으로 보던 화면으로 돌아옵니다.',
         actionLabel: '다시 로그인',
@@ -53,7 +66,7 @@ export function buildFetchErrorPresentation(
 
     if (error.status === 429) {
       return {
-        code: '429 · RATE_LIMITED',
+        code: errorCodeCopy(audience, '429 · RATE_LIMITED'),
         title: '요청이 너무 많습니다',
         message: '잠시 기다린 뒤 다시 시도해 주세요.',
         actionLabel: '지금 다시 시도',
@@ -64,7 +77,7 @@ export function buildFetchErrorPresentation(
 
     if (error.status === 0) {
       return {
-        code: 'NETWORK_ERROR',
+        code: errorCodeCopy(audience, 'NETWORK_ERROR'),
         title: '네트워크에 연결할 수 없습니다',
         message:
           '연결을 확인한 뒤 다시 시도해 주세요. 마지막으로 불러온 내용은 아래에 그대로 유지됩니다.',
@@ -76,7 +89,7 @@ export function buildFetchErrorPresentation(
 
     if (error.status >= 500) {
       return {
-        code: `${error.status} · INTERNAL_ERROR`,
+        code: errorCodeCopy(audience, `${error.status} · INTERNAL_ERROR`),
         title: '데이터를 불러오지 못했습니다',
         message:
           '서버가 요청을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.',
@@ -92,9 +105,9 @@ export function buildFetchErrorPresentation(
     // is defensive about a missing `markets` array (see report), so a
     // genuinely malformed *envelope* is what actually reaches this branch.
     return {
-      code: `${error.status} · MALFORMED_RESPONSE`,
+      code: errorCodeCopy(audience, `${error.status} · MALFORMED_RESPONSE`),
       title: '응답 형식이 올바르지 않습니다',
-      message: error.message,
+      message: rawErrorMessageCopy(audience, error.message),
       actionLabel: '배치 상태 열기',
       isNotFound: false,
       actionKind: 'ops',
@@ -102,9 +115,9 @@ export function buildFetchErrorPresentation(
   }
 
   return {
-    code: '오류',
+    code: errorCodeCopy(audience, '오류'),
     title: '데이터를 불러오지 못했습니다',
-    message: error.message || '알 수 없는 오류가 발생했습니다.',
+    message: unknownErrorMessageCopy(audience, error.message),
     actionLabel: '다시 시도',
     isNotFound: false,
     actionKind: 'retry',

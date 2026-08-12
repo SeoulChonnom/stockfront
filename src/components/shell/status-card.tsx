@@ -14,7 +14,8 @@ const TONE_BADGE_CLASSES: Readonly<Record<StatusCardTone, string>> = {
 
 export type StatusCardProps = {
   tone: StatusCardTone;
-  badge: string;
+  /** Null/undefined omits the badge entirely instead of rendering it empty. */
+  badge?: string | null;
   title: string;
   titleId?: string;
   headingLevel?: 'h1' | 'h2';
@@ -53,18 +54,20 @@ export function StatusCard({
         className='mx-auto w-full max-w-[440px] p-6 text-center'
         role={role}
       >
-        <span
-          className={cn(
-            'mono inline-flex items-center gap-1.5 rounded-[var(--r-sm)] border px-2 py-0.5 text-body-sm font-semibold',
-            TONE_BADGE_CLASSES[tone]
-          )}
-        >
-          {badge}
-        </span>
+        {badge ? (
+          <span
+            className={cn(
+              'mono inline-flex items-center gap-1.5 rounded-[var(--r-sm)] border px-2 py-0.5 text-body-sm font-semibold',
+              TONE_BADGE_CLASSES[tone]
+            )}
+          >
+            {badge}
+          </span>
+        ) : null}
         <Heading
           className={cn(
             'mb-2 font-semibold text-fg',
-            fullScreen ? 'mt-3 text-[22px]' : 'mt-[10px] text-[20px]'
+            fullScreen ? 'mt-3 text-h1' : 'mt-[10px] text-[20px]'
           )}
           id={titleId}
           tabIndex={-1}

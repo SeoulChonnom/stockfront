@@ -17,13 +17,21 @@ test.describe('route / query parsing', () => {
   test('all 6 routes render their own page-title heading', async ({ page }) => {
     await installMockApi(page, { scenario: 'ready' });
 
+    // `#page-title` is now the promoted global headline (`decision-header-card.tsx`),
+    // not the old "최신 시장 브리프"/"<date> 시장 브리프" label — the mock
+    // API's `ready` scenario returns the same `globalHeadline` for both the
+    // latest and archive-detail pages (`pageFixture` in mock-api.ts), so both
+    // cases below expect that literal headline text.
+    const READY_HEADLINE =
+      '금리 경계 속 기술주 강세, 아시아는 반도체 수급 개선에 주목';
+
     const cases: Array<{ path: string; expectHeadingText: string | RegExp }> = [
-      { path: '', expectHeadingText: '최신 시장 브리프' }, // '/' -> replace-redirects to /market/latest
-      { path: 'market/latest', expectHeadingText: '최신 시장 브리프' },
+      { path: '', expectHeadingText: READY_HEADLINE }, // '/' -> replace-redirects to /market/latest
+      { path: 'market/latest', expectHeadingText: READY_HEADLINE },
       { path: 'market/archive/search', expectHeadingText: '아카이브' },
       {
         path: 'market/archive/2026-07-06',
-        expectHeadingText: /2026-07-06 시장 브리프/,
+        expectHeadingText: READY_HEADLINE,
       },
       { path: `market/cluster/${CLUSTER_ID}`, expectHeadingText: /.+/ },
       { path: 'ops/batches', expectHeadingText: '배치 운영' },
@@ -38,8 +46,10 @@ test.describe('route / query parsing', () => {
     }
   });
 
-  test('malformed business date -> 404', async ({ page }) => {
-    await installMockApi(page, { scenario: 'ready' });
+  test('malformed business date -> 404 (operator sees the badge)', async ({
+    page,
+  }) => {
+    await installMockApi(page, { scenario: 'ready', role: 'admin' });
     // app-state.ts's archiveMarketRoutePattern requires `\d{4}-\d{2}-\d{2}`;
     // "2026-7-6" (unpadded month/day) does not match it.
     await page.goto('market/archive/2026-7-6');
@@ -49,8 +59,21 @@ test.describe('route / query parsing', () => {
     await expect(page.getByText('404 · ROUTE_NOT_FOUND')).toBeVisible();
   });
 
-  test('malformed cluster UUID -> 404', async ({ page }) => {
-    await installMockApi(page, { scenario: 'ready' });
+  test('malformed business date -> 404 (regular user does not see the badge)', async ({
+    page,
+  }) => {
+    await installMockApi(page, { scenario: 'ready', role: 'user' });
+    await page.goto('market/archive/2026-7-6');
+    await expect(page.locator('#page-title')).toHaveText(
+      '이 주소에 해당하는 화면이 없습니다'
+    );
+    await expect(page.getByText('404 · ROUTE_NOT_FOUND')).toHaveCount(0);
+  });
+
+  test('malformed cluster UUID -> 404 (operator sees the badge)', async ({
+    page,
+  }) => {
+    await installMockApi(page, { scenario: 'ready', role: 'admin' });
     await page.goto('market/cluster/not-a-real-uuid');
     await expect(page.locator('#page-title')).toHaveText(
       '이 주소에 해당하는 화면이 없습니다'
@@ -83,8 +106,9 @@ test.describe('deep link', () => {
   }) => {
     await installMockApi(page, { scenario: 'ready' });
     await page.goto('market/archive/2026-07-06?pageId=481');
+    // Same promoted-headline contract as the routing sweep above.
     await expect(page.locator('#page-title')).toHaveText(
-      /2026-07-06 시장 브리프/
+      '금리 경계 속 기술주 강세, 아시아는 반도체 수급 개선에 주목'
     );
     await expect(page.getByText('아카이브 스냅샷')).toBeVisible();
   });
@@ -108,6 +132,53 @@ test.describe('deep link', () => {
     // archive snapshot, not a bare "no info" dead end.
     await page.goto(`market/cluster/${CLUSTER_ID}`);
     await expect(page.getByText(/진입 경로 정보가 없어/)).toBeVisible();
+  });
+
+  test('?market=kr on Latest selects the Korean market tab directly', async ({
+    page,
+  }) => {
+    await installMockApi(page, { scenario: 'ready' });
+    await page.goto('market/latest?market=kr');
+
+    const krTab = page.getByRole('tab', { name: /한국 증시/ });
+    await expect(krTab).toHaveAttribute('aria-selected', 'true');
+    await expect(page.getByRole('tab', { name: /미국 증시/ })).toHaveAttribute(
+      'aria-selected',
+      'false'
+    );
+    await expect(
+      page.getByRole('heading', { level: 2, name: '한국 증시' })
+    ).toBeVisible();
+  });
+});
+
+test.describe('Archive Detail — adjacent snapshot navigation', () => {
+  // `useAdjacentSnapshotDates` resolves prev/next from the mocked archive
+  // list, which seeds 46 contiguous days ending at 2026-07-26
+  // (`ARCHIVE_ALL` in mock-api.ts). 2026-07-26 is the newest day in that
+  // fixture, so it has a real previous neighbour (2026-07-25) but no next
+  // one — exercising both the "enable with the real date" and "no snapshot
+  // -> stay disabled" paths from a single page, without fabricating a date
+  // arithmetic would have guessed at.
+  test('enables the real previous date and disables next when no newer snapshot exists', async ({
+    page,
+  }) => {
+    await installMockApi(page, { scenario: 'ready' });
+    await page.goto('market/archive/2026-07-26');
+
+    const prevButton = page.getByRole('button', { name: '이전 2026-07-25' });
+    const nextButton = page.getByRole('button', { name: '다음 브리프 없음' });
+
+    await expect(prevButton).toBeEnabled();
+    await expect(nextButton).toBeDisabled();
+
+    // Confirm the enabled button actually lands on a real snapshot, not
+    // just that it carries the right label — this is the loop the task
+    // exists to break.
+    await prevButton.click();
+    await expect(page).toHaveURL(/market\/archive\/2026-07-25$/);
+    // Confirms this landed on a real snapshot, not another dead end.
+    await expect(page.getByText('아카이브 스냅샷')).toBeVisible();
   });
 });
 
@@ -145,5 +216,63 @@ test.describe('route focus', () => {
 
     // pathname itself never changed during that transition.
     expect(new URL(page.url()).pathname).toBe('/stock/market/archive/search');
+  });
+
+  test('switching market tabs (adding ?market=) does NOT refocus #page-title', async ({
+    page,
+  }) => {
+    await installMockApi(page, { scenario: 'ready' });
+    await page.goto('market/latest');
+    await expect(page.locator('#page-title')).toBeFocused();
+
+    // Move focus away — App.tsx's route-focus effect is keyed on `pathname`
+    // only (see its own comment), so a `?market=` query-only change from a
+    // tab click must not pull focus back to #page-title.
+    await page.getByRole('tab', { name: /한국 증시/ }).focus();
+    await expect(page.locator('#page-title')).not.toBeFocused();
+
+    await page.getByRole('tab', { name: /한국 증시/ }).click();
+    await expect(page).toHaveURL(/market=kr/);
+    await expect(page.locator('#page-title')).not.toBeFocused();
+  });
+});
+
+test.describe('browser Back (market tabs)', () => {
+  test('Back from a cluster detail page restores the selected tab and scroll position', async ({
+    page,
+  }) => {
+    await installMockApi(page, { scenario: 'ready' });
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.goto('market/latest');
+
+    // Scroll-restoration keys on pathname + search (`buildScrollKey`), so
+    // `?market=kr` must be part of the key the whole way through this flow.
+    await page.getByRole('tab', { name: /한국 증시/ }).click();
+    await expect(page).toHaveURL(/market=kr/);
+
+    await page.evaluate(() => window.scrollTo(0, 400));
+    await page.waitForTimeout(50);
+    const scrollYBeforeNavigation = await page.evaluate(() => window.scrollY);
+    expect(scrollYBeforeNavigation).toBeGreaterThan(0);
+
+    // The 이슈 상세 button was removed (Task 8) — the issue title link is now
+    // the sole detail entry point, so click it directly.
+    await page
+      .getByRole('article')
+      .first()
+      .locator('a[href*="/market/cluster/"]')
+      .first()
+      .click();
+    await expect(page).toHaveURL(/market\/cluster\//);
+
+    await page.goBack();
+    await expect(page).toHaveURL(/market=kr/);
+    await expect(page.getByRole('tab', { name: /한국 증시/ })).toHaveAttribute(
+      'aria-selected',
+      'true'
+    );
+    await expect
+      .poll(() => page.evaluate(() => window.scrollY))
+      .toBe(scrollYBeforeNavigation);
   });
 });

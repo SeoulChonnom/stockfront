@@ -15,9 +15,9 @@ test.describe('skip link', () => {
   // ?.blur()` does NOT reliably move Chromium's sequential-focus-navigation
   // cursor back to the true top of the document (verified empirically: a
   // blur + Tab from a focus deep inside `<main>` lands on the next
-  // focusable element AFTER that point in DOM order, e.g. a "섹션 이동"
-  // button inside the market comparison strip — not the skip link, which
-  // sits BEFORE the nav rail near the very top of `<body>`). So this
+  // focusable element AFTER that point in DOM order, e.g. a market tab
+  // inside the US/KR tablist — not the skip link, which sits BEFORE the
+  // nav rail near the very top of `<body>`). So this
   // exercises the skip link's own contract directly (it receives focus,
   // becomes visible, and activating it moves focus to `#main-content`)
   // rather than asserting a literal "first Tab stop from a cold load"
@@ -114,5 +114,36 @@ test.describe('mobile nav Drawer — focus trap / Escape / return', () => {
 
     await page.keyboard.press('Escape');
     expect(page.url()).toBe(urlBefore);
+  });
+});
+
+test.describe('market tabs — keyboard-only switching', () => {
+  test('switches markets with the keyboard alone', async ({ page }) => {
+    await installMockApi(page, { scenario: 'ready' });
+    await page.goto('market/latest');
+
+    // `MarketTabs` (`src/pages/market-overview/market-tabs.tsx`) is a roving
+    // -tabindex ARIA tablist. The WAI-ARIA tabs pattern requires the newly
+    // selected tab to receive real DOM focus, not just visual/`aria-selected`
+    // state, so ArrowRight must move focus onto the KR tab, not merely fire
+    // its handler while focus stays on the US tab.
+    const usTab = page.getByRole('tab', { name: /미국 증시/ });
+    await expect(usTab).toHaveAttribute('aria-selected', 'true');
+    await usTab.focus();
+    await page.keyboard.press('ArrowRight');
+
+    // Selection actually moved to the other market, not just "some tab" —
+    // both the old and new tab's `aria-selected` are checked, plus the
+    // `?market=` URL and the tabpanel's own heading (only the selected
+    // market's `MarketSection` is mounted, so this also confirms the panel
+    // content itself changed, not merely the tab's visual state).
+    const krTab = page.getByRole('tab', { name: /한국 증시/ });
+    await expect(krTab).toHaveAttribute('aria-selected', 'true');
+    await expect(usTab).toHaveAttribute('aria-selected', 'false');
+    await expect(krTab).toBeFocused();
+    await expect(page).toHaveURL(/market=kr/);
+    await expect(
+      page.getByRole('heading', { level: 2, name: '한국 증시' })
+    ).toBeVisible();
   });
 });

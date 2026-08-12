@@ -2,6 +2,13 @@ import { Skeleton } from '@/components/state';
 import { Button } from '@/components/ui/button';
 
 import { ApiError } from '../lib/api/client';
+import type { Audience } from '../lib/audience-copy';
+import {
+  errorCodeCopy,
+  rawErrorMessageCopy,
+  unknownErrorMessageCopy,
+} from '../lib/audience-copy';
+import { useCapabilities } from '../lib/capabilities';
 import { useClusterDetail } from '../lib/query-hooks';
 import { navigate, useUrlState } from '../lib/router';
 import { ClusterAnalysis } from './cluster-detail/cluster-analysis';
@@ -41,6 +48,12 @@ export function ClusterDetailPage({ clusterId }: { clusterId: string }) {
   const url = useUrlState();
   const origin = url.searchParams.get('origin');
   const clusterQuery = useClusterDetail(clusterId);
+  // `app-page-content.tsx` (a different agent's file-ownership scope) only
+  // passes this page a bare `clusterId` (see the file doc comment above),
+  // so this reads its own audience via `useCapabilities()` rather than
+  // requiring a prop threaded through that file.
+  const { can } = useCapabilities();
+  const canViewOps = can('ops.view');
 
   if (clusterQuery.isLoading) {
     return <ClusterDetailSkeleton />;
@@ -49,6 +62,7 @@ export function ClusterDetailPage({ clusterId }: { clusterId: string }) {
   if (clusterQuery.error || !clusterQuery.data) {
     return (
       <ClusterDetailErrorState
+        canViewOps={canViewOps}
         error={clusterQuery.error}
         onRetry={() => void clusterQuery.refetch()}
       />
@@ -72,6 +86,12 @@ export function ClusterDetailPage({ clusterId }: { clusterId: string }) {
           <ClusterAnalysis
             analysis={detail.analysis}
             analysisLead={detail.analysisLead}
+            // `updatedAt` is a non-nullable `string` in the view model, but
+            // `mapClusterDetailToView` (src/lib/mappers/cluster.ts) falls
+            // back to the sentinel '-' when the DTO's `lastUpdatedAt` is
+            // missing/invalid — pass that through as null so the card omits
+            // the label instead of showing a meaningless "생성 기준 -".
+            generatedAt={detail.updatedAt === '-' ? null : detail.updatedAt}
           />
           <ClusterArticlesList articles={detail.articles} />
         </div>
@@ -97,18 +117,32 @@ function ClusterDetailSkeleton() {
 }
 
 function ClusterDetailErrorState({
+  canViewOps,
   error,
   onRetry,
 }: {
+  canViewOps: boolean;
   error: unknown;
   onRetry: () => void;
 }) {
+  const audience: Audience = { canViewOps };
   const status = error instanceof ApiError ? error.status : null;
-  const code = getClusterErrorCode(error);
+  const rawCode = getClusterErrorCode(error);
+  // Gate the whole composed badge (not just `rawCode`) so a null code never
+  // gets stringified into a stray "500 · null" — this also covers the
+  // `error.body.code` passthrough inside `getClusterErrorCode`, which is
+  // raw backend text and deserves the same protection as the hardcoded
+  // English literals.
+  const badge = errorCodeCopy(
+    audience,
+    status === null ? rawCode : `${status} · ${rawCode}`
+  );
   const message =
-    error instanceof Error
-      ? error.message
-      : '이슈 상세를 불러오는 중 오류가 발생했습니다.';
+    error instanceof ApiError
+      ? rawErrorMessageCopy(audience, error.message)
+      : error instanceof Error
+        ? unknownErrorMessageCopy(audience, error.message)
+        : '이슈 상세를 불러오는 중 오류가 발생했습니다.';
   const back = getErrorBackLink();
 
   return (
@@ -117,9 +151,11 @@ function ClusterDetailErrorState({
       className='min-w-0 rounded-[var(--r-lg)] border border-[color:var(--danger-line)] border-l-4 border-l-[color:var(--danger)] bg-[color:var(--surface)] p-5'
       role='alert'
     >
-      <span className='mono inline-flex rounded-[var(--r-sm)] border border-[color:var(--danger-line)] bg-[color:var(--danger-soft)] px-2 py-0.5 text-caption font-semibold text-[color:var(--danger)]'>
-        {status === null ? code : `${status} · ${code}`}
-      </span>
+      {badge ? (
+        <span className='mono inline-flex rounded-[var(--r-sm)] border border-[color:var(--danger-line)] bg-[color:var(--danger-soft)] px-2 py-0.5 text-caption font-semibold text-[color:var(--danger)]'>
+          {badge}
+        </span>
+      ) : null}
       <h1
         className='m-0 mt-2 mb-1.5 text-[19px] font-semibold text-fg'
         id='page-title'

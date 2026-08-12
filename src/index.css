@@ -6,15 +6,19 @@
 
 @theme inline {
   /* --text-* → text-{name} (font-size utilities). */
+  --text-h1: var(--fs-h1);
   --text-body: var(--fs-body);
   --text-body-sm: var(--fs-sm);
   --text-label: var(--fs-label);
-  --text-caption: 11.5px;
-  --text-card-heading: 14.5px;
+  --text-caption: var(--fs-label);
+  --text-card-heading: var(--fs-h3);
 
   /* --color-* → text-/bg-/border-{name} (color utilities). */
   --color-fg: var(--text);
   --color-fg-soft: var(--text-soft);
   --color-faint: var(--text-faint);
   --color-line: var(--line);
+
+  /* --spacing-* → min-h-{name} / size-{name} (touch targets). */
+  --spacing-tap: var(--tap-min);
 }

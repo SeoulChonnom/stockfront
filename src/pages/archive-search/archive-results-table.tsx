@@ -58,8 +58,24 @@ function createRowOpenHandler(href: string, scrollSearch: string) {
   };
 }
 
-function ReasonSubline({ record }: { record: ArchiveRecord }) {
-  if (!record.detail || record.status === 'READY') {
+/**
+ * `record.detail` is the raw per-page `partialMessage` from the backend
+ * (see `src/lib/mappers/archive.ts`) — the same unfiltered pipeline-sentence
+ * shape as `snapshot.partialMessage`, which `partial-banner.tsx` gates
+ * behind `canViewOps`, and as the per-market `metadata.partialMessage` its
+ * "누락된 데이터" details row gates via `missingDataDetailCopy`
+ * (`src/lib/audience-copy.ts`) (it can read like "뉴스 수집 단계에서
+ * provider 타임아웃이 발생했습니다."). This subline must follow the same
+ * rule: never render it to a regular user.
+ */
+function ReasonSubline({
+  record,
+  canViewOps,
+}: {
+  record: ArchiveRecord;
+  canViewOps: boolean;
+}) {
+  if (!canViewOps || !record.detail || record.status === 'READY') {
     return null;
   }
 
@@ -82,10 +98,12 @@ export function ArchiveResultsTable({
   rows,
   filters,
   scrollSearch,
+  canViewOps,
 }: {
   rows: ArchiveRecord[];
   filters: ArchiveRowFilters;
   scrollSearch: string;
+  canViewOps: boolean;
 }) {
   return (
     <TableScrollWrapper>
@@ -141,7 +159,7 @@ export function ArchiveResultsTable({
                   >
                     {record.headline}
                   </a>
-                  <ReasonSubline record={record} />
+                  <ReasonSubline canViewOps={canViewOps} record={record} />
                   <GeneratedAtSubline record={record} />
                 </TableCell>
                 <TableCell className='py-3 px-3 align-top'>

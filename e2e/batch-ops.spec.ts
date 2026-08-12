@@ -107,18 +107,14 @@ test.describe('Retry (Batch list/detail independence)', () => {
       });
     });
 
-    // The attention banner's quick filter navigates immediately (no
-    // separate apply step) and keeps the current `jobId` in the URL
-    // (goTo() only overrides `jobId` when explicitly asked to), so the
-    // detail query key is untouched by this — the list failing is
-    // independent of it. `BATCH_ALL`'s seed guarantees FAILED rows exist
-    // (i%9===5), so the attention banner is showing. `exact: true` since
-    // "실패만 보기" is otherwise a substring match of the sibling "부분 실패만
-    // 보기" button too.
-    await page
-      .getByRole('button', { name: '실패만 보기', exact: true })
-      .click();
-    await expect(page).toHaveURL(/status=FAILED/);
+    // Refresh the list only — not a filter/quick-filter action — so `jobId`
+    // stays in the URL. The attention banner's quick filters and the list
+    // header's filter-clear/page-change actions now intentionally drop
+    // `jobId` themselves (the detail-panel/filter desync fix this covers),
+    // so they'd clear the selection before the list even has a chance to
+    // fail and wouldn't exercise the "list error keeps an unrelated,
+    // still-valid selection alive" path this test is about.
+    await page.getByRole('button', { name: '실행 이력 새로고침' }).click();
 
     await expect(
       page.getByText('배치 목록을 불러오지 못했습니다')
