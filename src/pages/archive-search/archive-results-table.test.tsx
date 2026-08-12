@@ -10,6 +10,7 @@ describe('ArchiveResultsTable', () => {
   it('links both the date and headline cells with pageId + filter context for return-context navigation', () => {
     render(
       <ArchiveResultsTable
+        canViewOps={false}
         filters={filters}
         rows={[
           {
@@ -41,9 +42,10 @@ describe('ArchiveResultsTable', () => {
     expect(screen.getByText('pageId 42')).toBeInTheDocument();
   });
 
-  it('marks FAILED rows with the danger tone and shows the failure reason as a subline', () => {
+  it('marks FAILED rows with the danger tone and shows the failure reason as a subline to an operator', () => {
     render(
       <ArchiveResultsTable
+        canViewOps={true}
         filters={filters}
         rows={[
           {
@@ -64,9 +66,38 @@ describe('ArchiveResultsTable', () => {
     ).toBeInTheDocument();
   });
 
+  // `record.detail` is the raw per-page `partialMessage` from the backend —
+  // the same unfiltered pipeline text (e.g. "provider 타임아웃") that
+  // `partial-banner.tsx` already gates behind `canViewOps` elsewhere in the
+  // app. A regular user must never see it here either.
+  it('never shows the failure reason subline to a regular user, even on a FAILED row', () => {
+    render(
+      <ArchiveResultsTable
+        canViewOps={false}
+        filters={filters}
+        rows={[
+          {
+            pageId: 41,
+            businessDate: '2026-03-30',
+            headline: '헤드라인 요약이 아직 생성되지 않았습니다.',
+            status: 'FAILED',
+            generatedAt: '2026-03-31 06:08 KST',
+            detail: '뉴스 수집 단계에서 provider 타임아웃이 발생했습니다.',
+          },
+        ]}
+        scrollSearch=''
+      />
+    );
+
+    expect(
+      screen.queryByText('뉴스 수집 단계에서 provider 타임아웃이 발생했습니다.')
+    ).not.toBeInTheDocument();
+  });
+
   it('keeps 생성 시각 present as an accessible subline under the headline cell — the collapsed desktop column never removes the value from the DOM', () => {
     render(
       <ArchiveResultsTable
+        canViewOps={false}
         filters={filters}
         rows={[
           {

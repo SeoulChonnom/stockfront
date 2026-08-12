@@ -241,6 +241,7 @@ export function ArchiveSearchPage({
 
       <ArchiveResultsCard
         applied={applied}
+        canViewOps={audience.canViewOps}
         data={displayData}
         isFetching={archiveQuery.isFetching}
         isInitialLoading={isInitialLoading}
@@ -255,6 +256,7 @@ export function ArchiveSearchPage({
 
 function ArchiveResultsCard({
   applied,
+  canViewOps,
   data,
   isFetching,
   isInitialLoading,
@@ -264,6 +266,7 @@ function ArchiveResultsCard({
   searchParams,
 }: {
   applied: { from: string; to: string; status: string; page: number };
+  canViewOps: boolean;
   data: ArchiveListView | null;
   isFetching: boolean;
   isInitialLoading: boolean;
@@ -317,6 +320,7 @@ function ArchiveResultsCard({
         </div>
       ) : data && rows.length > 0 ? (
         <ArchiveResultsTable
+          canViewOps={canViewOps}
           filters={applied}
           rows={rows}
           scrollSearch={searchParams.toString()}
