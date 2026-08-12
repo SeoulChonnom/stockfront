@@ -8,6 +8,9 @@ truth. Historical design notes and prototypes are not API contracts.
 Until a dependency below is resolved, the frontend keeps the documented
 fallback behavior.
 
+Backend requests raised by the 2026-08-12 UI overhaul are tracked separately in
+`docs/backend-requests-2026-08-12.md`.
+
 ## `metadata.isLatest`
 
 - **Current fallback:** Daily-page metadata reads `isLatest` defensively as an
