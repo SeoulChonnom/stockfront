@@ -65,21 +65,3 @@ export function deriveUserImpact(run: {
 
   return [];
 }
-
-function getKstDateParts(date: Date) {
-  const parts = new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'Asia/Seoul',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).formatToParts(date);
-
-  const get = (type: string) =>
-    parts.find((p) => p.type === type)?.value ?? '01';
-  return `${get('year')}-${get('month')}-${get('day')}`;
-}
-
-/** Today's KST calendar date as `YYYY-MM-DD`, used as the Trigger dialog's default `businessDate`. */
-export function getTodayKstDateString(now: Date = new Date()): string {
-  return getKstDateParts(now);
-}

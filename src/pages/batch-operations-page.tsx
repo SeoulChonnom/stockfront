@@ -244,7 +244,6 @@ function AdminBatchOperations({
           selectedJobId={selectedJobId}
         />
       </div>
-
     </div>
   );
 }

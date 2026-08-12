@@ -85,9 +85,9 @@ test.describe('admin permissions (control group)', () => {
     await expect(
       page.getByRole('heading', { name: '배치 운영' })
     ).toBeVisible();
-    await expect(
-      page.getByRole('button', { name: '수동 실행' })
-    ).toHaveCount(0);
+    await expect(page.getByRole('button', { name: '수동 실행' })).toHaveCount(
+      0
+    );
     await expect(page.getByText('403 · FORBIDDEN')).toHaveCount(0);
   });
 });

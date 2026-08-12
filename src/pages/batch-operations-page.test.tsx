@@ -65,16 +65,14 @@ type RetryAiMutationResult = {
   reset: () => void;
 };
 
-const {
-  mockUseBatchJobs,
-  mockUseBatchJobDetail,
-  mockUseRetryAiMutation,
-} = vi.hoisted(() => ({
-  mockUseBatchJobs: vi.fn<(params: BatchJobsParams) => BatchJobsQueryResult>(),
-  mockUseBatchJobDetail:
-    vi.fn<(jobId: number | null) => BatchJobDetailQueryResult>(),
-  mockUseRetryAiMutation: vi.fn<() => RetryAiMutationResult>(),
-}));
+const { mockUseBatchJobs, mockUseBatchJobDetail, mockUseRetryAiMutation } =
+  vi.hoisted(() => ({
+    mockUseBatchJobs:
+      vi.fn<(params: BatchJobsParams) => BatchJobsQueryResult>(),
+    mockUseBatchJobDetail:
+      vi.fn<(jobId: number | null) => BatchJobDetailQueryResult>(),
+    mockUseRetryAiMutation: vi.fn<() => RetryAiMutationResult>(),
+  }));
 
 vi.mock('@/lib/query-hooks', () => ({
   useBatchJobs: mockUseBatchJobs,

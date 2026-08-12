@@ -10,10 +10,7 @@ import { isDevelopmentBypassEnabled } from './auth-config';
 
 export type Role = 'user' | 'admin';
 
-export type Capability =
-  | 'ops.view'
-  | 'ops.trigger'
-  | 'ops.viewLogs';
+export type Capability = 'ops.view' | 'ops.trigger' | 'ops.viewLogs';
 
 type Listener = () => void;
 
@@ -101,11 +98,7 @@ export function useRole(): Role {
 const CAPABILITIES_BY_ROLE: Readonly<Record<Role, ReadonlySet<Capability>>> =
   Object.freeze({
     user: new Set<Capability>(),
-    admin: new Set<Capability>([
-      'ops.view',
-      'ops.trigger',
-      'ops.viewLogs',
-    ]),
+    admin: new Set<Capability>(['ops.view', 'ops.trigger', 'ops.viewLogs']),
   });
 
 export function can(capability: Capability, role: Role = getRole()): boolean {
