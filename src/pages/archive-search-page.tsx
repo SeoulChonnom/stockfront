@@ -189,7 +189,7 @@ export function ArchiveSearchPage({
     <div className='flex min-w-0 flex-col gap-[var(--gap)]'>
       <section className='flex flex-col gap-1.5'>
         <h1
-          className='m-0 text-[22px] font-semibold text-fg focus:outline-none'
+          className='m-0 text-h1 font-semibold text-fg focus:outline-none'
           id='page-title'
           tabIndex={-1}
         >

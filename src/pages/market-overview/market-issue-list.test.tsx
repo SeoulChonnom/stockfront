@@ -25,6 +25,7 @@ describe('MarketIssueList semantic actions', () => {
   it('makes the title link the sole detail entry point and names external links by article title', () => {
     render(
       <MarketIssueList
+        canViewOps={false}
         clusters={[cluster]}
         currentPathname='/market/latest'
         currentSearch=''
@@ -79,6 +80,7 @@ describe('MarketIssueList semantic actions', () => {
 
     render(
       <MarketIssueList
+        canViewOps={false}
         clusters={clusters}
         currentPathname='/market/latest'
         currentSearch=''
@@ -113,6 +115,7 @@ describe('MarketIssueList semantic actions', () => {
 
     render(
       <MarketIssueList
+        canViewOps={false}
         clusters={clusters}
         currentPathname='/market/latest'
         currentSearch=''
@@ -126,5 +129,37 @@ describe('MarketIssueList semantic actions', () => {
     expect(
       screen.getByRole('link', { name: /대표 기사 제목/ })
     ).toBeInTheDocument();
+  });
+});
+
+describe('MarketIssueList — empty clusters', () => {
+  it('shows a plain-language reason to a regular user, without the collection-pipeline vocabulary', () => {
+    render(
+      <MarketIssueList
+        canViewOps={false}
+        clusters={[]}
+        currentPathname='/market/latest'
+        currentSearch=''
+        originQuery={{ origin: 'latest' }}
+      />
+    );
+
+    expect(screen.getByText(/묶인 이슈가 없습니다/)).toBeInTheDocument();
+    expect(screen.queryByText(/수집/)).not.toBeInTheDocument();
+  });
+
+  it('keeps the collection-pipeline reason for an operator', () => {
+    render(
+      <MarketIssueList
+        canViewOps
+        clusters={[]}
+        currentPathname='/market/latest'
+        currentSearch=''
+        originQuery={{ origin: 'latest' }}
+      />
+    );
+
+    expect(screen.getByText(/묶인 이슈가 없습니다/)).toBeInTheDocument();
+    expect(screen.getByText(/수집 기사 수가 부족해/)).toBeInTheDocument();
   });
 });

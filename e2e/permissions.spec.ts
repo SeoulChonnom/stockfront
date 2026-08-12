@@ -100,18 +100,26 @@ test.describe('regular-user copy isolation', () => {
   // the same constraint the unit layer does, not a narrower one. (`배치`
   // subsumes the previous, narrower `배치 운영` entry.)
   //
-  // Deliberately NOT tested here: the `partial` scenario. It intentionally
-  // shows the raw per-market `metadata.partialMessage` (which can contain
-  // e.g. "provider") to every audience by design — Task 5's ruling, tracked
-  // as backend dependency D-13 in `.superpowers/sdd/.../progress.md`. That
-  // is documented, accepted behavior, not a regression this suite should
-  // flag. The `ready`/`error5xx`/`failed`/`emptyMarkets` scenarios exercised
-  // below never reach that code path.
+  // The whole-body `OPERATOR_TERMS` scan below deliberately excludes the
+  // `partial` scenario: `MarketSection`'s own inline notice
+  // (`src/pages/market-overview/market-section.tsx`) intentionally shows the
+  // raw per-market `metadata.partialMessage` (which can contain e.g.
+  // "provider") to every audience by design — tracked as backend dependency
+  // D-13 in `.superpowers/sdd/.../progress.md`. That is documented, accepted
+  // behavior, not a regression this suite should flag. The
+  // `ready`/`error5xx`/`failed`/`emptyMarkets` scenarios exercised below
+  // never reach that code path.
+  //
+  // The `partial` scenario IS covered separately, below, scoped to
+  // `PartialBanner`'s own "상세 정보" details block — that one component
+  // must gate the raw message even though `MarketSection`'s copy of the
+  // same text does not.
   const OPERATOR_TERMS = [
     '운영 콘솔',
     '배치',
     '재실행',
     '재수집',
+    '수집',
     'provider',
     '임계값',
     '로그',
@@ -240,5 +248,64 @@ test.describe('regular-user copy isolation', () => {
     const body = await page.locator('body').innerText();
     expect(body).toContain('배치');
     expect(body).toContain('수집');
+  });
+
+  // `PartialBanner` (`src/pages/market-overview/partial-banner.tsx`)'s
+  // "상세 정보" `<details>` block used to render each market's raw
+  // `metadata.partialMessage` verbatim in its "누락된 데이터" row, with no
+  // `canViewOps` gate — unlike the rest of the same component, which does
+  // gate its own copies of comparable raw text. The KR market in the
+  // `partial` fixture (`e2e/fixtures/mock-api.ts`) carries the message
+  // "KRX 300, USD/KRW 지수 수집이 provider 타임아웃으로 실패했습니다.",
+  // which is exactly the kind of pipeline sentence a regular user must never
+  // see. This test expands the details block and checks its content
+  // directly, rather than scanning the whole page body — the page's other,
+  // documented exception (D-13, see the comment above) legitimately shows
+  // this same text elsewhere on the page.
+  test('PARTIAL page: a regular user never sees the raw per-market message inside the banner’s expanded details block', async ({
+    page,
+  }) => {
+    await installMockApi(page, { scenario: 'partial', role: 'user' });
+    await page.goto('market/latest');
+    await expect(page.locator('#page-title')).toBeVisible();
+
+    const details = page.locator('details').filter({ hasText: '상세 정보' });
+    await details.locator('summary').click();
+
+    const detailsText = await details.innerText();
+    for (const term of OPERATOR_TERMS) {
+      expect(detailsText).not.toContain(term);
+    }
+
+    // The user must still learn *that* data is missing and for which
+    // market, plus the source date and last update — only the raw sentence
+    // itself is replaced.
+    expect(detailsText).toContain('영향받은 시장');
+    expect(detailsText).toContain('누락된 데이터');
+    expect(detailsText).toContain('사용된 데이터 기준일');
+    expect(detailsText).toContain('마지막 갱신 시각');
+    expect(detailsText).toContain('이 시장의 데이터 일부가 누락되었습니다.');
+    expect(detailsText).not.toContain(
+      'KRX 300, USD/KRW 지수 수집이 provider 타임아웃으로 실패했습니다.'
+    );
+  });
+
+  // Control group: an operator on the exact same PARTIAL page must still see
+  // the raw per-market message in the same details block, proving the gate
+  // above is audience-dependent and not just deleted copy.
+  test('PARTIAL page: an operator still sees the raw per-market message inside the banner’s expanded details block', async ({
+    page,
+  }) => {
+    await installMockApi(page, { scenario: 'partial', role: 'admin' });
+    await page.goto('market/latest');
+    await expect(page.locator('#page-title')).toBeVisible();
+
+    const details = page.locator('details').filter({ hasText: '상세 정보' });
+    await details.locator('summary').click();
+
+    const detailsText = await details.innerText();
+    expect(detailsText).toContain(
+      'KRX 300, USD/KRW 지수 수집이 provider 타임아웃으로 실패했습니다.'
+    );
   });
 });

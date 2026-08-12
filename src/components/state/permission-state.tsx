@@ -30,7 +30,7 @@ export function PermissionState({
         403 · FORBIDDEN
       </span>
       <Heading
-        className='mt-3 mb-2 text-[22px] font-semibold text-fg'
+        className='mt-3 mb-2 text-h1 font-semibold text-fg'
         id={resolvedTitleId ?? undefined}
         tabIndex={-1}
       >

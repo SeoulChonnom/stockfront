@@ -2,6 +2,7 @@ import { useState } from 'react';
 
 import { useNarrowViewport } from '@/components/shell/use-narrow-viewport';
 import { Button } from '@/components/ui/button';
+import { emptyClustersCopy } from '@/lib/audience-copy';
 import { withBasePath } from '@/lib/router';
 import { cn } from '@/lib/utils';
 import type { ClusterCard } from '@/lib/view-models';
@@ -35,11 +36,13 @@ export function MarketIssueList({
   originQuery,
   currentPathname,
   currentSearch,
+  canViewOps,
 }: {
   clusters: ClusterCard[];
   originQuery: ClusterOriginQuery;
   currentPathname: string;
   currentSearch: string;
+  canViewOps: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
   const isNarrow = useNarrowViewport();
@@ -47,8 +50,7 @@ export function MarketIssueList({
   if (clusters.length === 0) {
     return (
       <p className='m-0 px-[18px] py-4 text-body-sm text-faint'>
-        묶인 이슈가 없습니다. 수집 기사 수가 부족해 클러스터가 만들어지지 않은
-        경우이며, 원문 목록이 있으면 아래에서 직접 확인할 수 있습니다.
+        {emptyClustersCopy({ canViewOps })}
       </p>
     );
   }

@@ -3,7 +3,7 @@ import {
   DescriptionList,
   DescriptionListItem,
 } from '@/components/ui/description-list';
-import { partialBannerCopy } from '@/lib/audience-copy';
+import { missingDataDetailCopy, partialBannerCopy } from '@/lib/audience-copy';
 import { navigate } from '@/lib/router';
 import type { MarketSnapshot } from '@/lib/view-models';
 
@@ -88,7 +88,10 @@ export function PartialBanner({
                     />
                     <DescriptionListItem
                       label='누락된 데이터'
-                      value={detail.message}
+                      value={missingDataDetailCopy(
+                        { canViewOps },
+                        detail.message
+                      )}
                     />
                     <DescriptionListItem
                       label='사용된 데이터 기준일'

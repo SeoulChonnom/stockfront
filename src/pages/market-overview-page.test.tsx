@@ -345,12 +345,17 @@ describe('MarketOverviewPage — PARTIAL 배너', () => {
     ).not.toBeInTheDocument();
     // The structured missing-market detail is still available to everyone.
     expect(screen.getAllByText('미국 증시').length).toBeGreaterThan(0);
-    // This message also renders inline in the market section's own notice
-    // (unrelated to the banner), so it legitimately appears twice.
+    // The raw per-market message still renders once, inline in the market
+    // section's own notice (a separate, accepted exception — tracked as
+    // backend dependency D-13 — unrelated to the banner). The banner's own
+    // "상세 정보" details row must NOT repeat it for a regular user: it
+    // shows a neutral label there instead.
     expect(
       screen.getAllByText('뉴스 수집이 지연되어 일부 기사가 누락됐습니다.')
-        .length
-    ).toBeGreaterThan(0);
+    ).toHaveLength(1);
+    expect(
+      screen.getByText('이 시장의 데이터 일부가 누락되었습니다.')
+    ).toBeInTheDocument();
   });
 
   it('gates "배치 운영에서 원인 보기" on can(\'ops.view\') — a non-admin user must not see it', () => {

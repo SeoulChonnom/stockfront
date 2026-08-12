@@ -76,4 +76,19 @@ describe('MarketIndexTable — per-row missing data', () => {
     expect(screen.queryByText('상승')).not.toBeInTheDocument();
     expect(screen.queryByText('하락')).not.toBeInTheDocument();
   });
+
+  // Only high/low missing (value/change/changeRate present) must hide the
+  // mobile subline entirely, matching `MarketIndexCards`, instead of
+  // printing the content-free "고 - · 저 -".
+  it('hides the 고/저 mobile subline when only high/low are missing', () => {
+    const onlyHighLowMissing = makeIndex({ high: '-', low: '-' });
+
+    render(
+      <MarketIndexTable canViewOps={false} indices={[onlyHighLowMissing]} />
+    );
+
+    expect(screen.getByText('2,765.53')).toBeInTheDocument();
+    expect(screen.queryByText(/고 -/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/저 -/)).not.toBeInTheDocument();
+  });
 });

@@ -67,7 +67,7 @@ export function StatusCard({
         <Heading
           className={cn(
             'mb-2 font-semibold text-fg',
-            fullScreen ? 'mt-3 text-[22px]' : 'mt-[10px] text-[20px]'
+            fullScreen ? 'mt-3 text-h1' : 'mt-[10px] text-[20px]'
           )}
           id={titleId}
           tabIndex={-1}

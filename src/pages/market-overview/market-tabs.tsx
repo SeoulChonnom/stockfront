@@ -1,4 +1,4 @@
-import type { KeyboardEvent } from 'react';
+import { type KeyboardEvent, useRef } from 'react';
 
 import { cn } from '@/lib/utils';
 import type { MarketSnapshot } from '@/lib/view-models';
@@ -22,30 +22,40 @@ export function MarketTabs({
   selectedIndex: number;
   onSelect: (index: number) => void;
 }) {
+  // Every tab button is always mounted (only the selected panel is
+  // conditionally rendered), so this ref array survives selection changes —
+  // moving DOM focus to the newly selected tab does not race a re-render.
+  const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
+
+  function selectAndFocus(index: number) {
+    onSelect(index);
+    tabRefs.current[index]?.focus();
+  }
+
   function handleKeyDown(event: KeyboardEvent<HTMLButtonElement>) {
     const last = markets.length - 1;
 
     if (event.key === 'ArrowRight') {
       event.preventDefault();
-      onSelect(selectedIndex === last ? 0 : selectedIndex + 1);
+      selectAndFocus(selectedIndex === last ? 0 : selectedIndex + 1);
       return;
     }
 
     if (event.key === 'ArrowLeft') {
       event.preventDefault();
-      onSelect(selectedIndex === 0 ? last : selectedIndex - 1);
+      selectAndFocus(selectedIndex === 0 ? last : selectedIndex - 1);
       return;
     }
 
     if (event.key === 'Home') {
       event.preventDefault();
-      onSelect(0);
+      selectAndFocus(0);
       return;
     }
 
     if (event.key === 'End') {
       event.preventDefault();
-      onSelect(last);
+      selectAndFocus(last);
     }
   }
 
@@ -74,6 +84,9 @@ export function MarketTabs({
             key={marketTabId(index)}
             onClick={() => onSelect(index)}
             onKeyDown={handleKeyDown}
+            ref={(el) => {
+              tabRefs.current[index] = el;
+            }}
             role='tab'
             tabIndex={selected ? 0 : -1}
             type='button'

@@ -35,6 +35,38 @@ describe('MarketTabs', () => {
     expect(onSelect).toHaveBeenCalledWith(1);
   });
 
+  // WAI-ARIA Authoring Practices' tabs pattern requires the newly selected
+  // tab to receive real DOM focus, not just `aria-selected`/roving
+  // `tabindex` — a screen-reader or sighted keyboard user must land on the
+  // tab they just moved to.
+  it('moves DOM focus to the newly selected tab on ArrowRight', async () => {
+    const onSelect = vi.fn();
+    const user = userEvent.setup();
+    render(
+      <MarketTabs markets={markets} onSelect={onSelect} selectedIndex={0} />
+    );
+
+    const tabs = screen.getAllByRole('tab');
+    await user.click(tabs[0]);
+    await user.keyboard('{ArrowRight}');
+
+    expect(tabs[1]).toHaveFocus();
+  });
+
+  it('moves DOM focus to the newly selected tab on Home/End', async () => {
+    const onSelect = vi.fn();
+    const user = userEvent.setup();
+    render(
+      <MarketTabs markets={markets} onSelect={onSelect} selectedIndex={1} />
+    );
+
+    const tabs = screen.getAllByRole('tab');
+    await user.click(tabs[1]);
+    await user.keyboard('{Home}');
+
+    expect(tabs[0]).toHaveFocus();
+  });
+
   it('wraps from the last tab to the first', async () => {
     const onSelect = vi.fn();
     const user = userEvent.setup();

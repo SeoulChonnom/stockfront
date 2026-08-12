@@ -217,6 +217,15 @@ f8a8865 feat(ui): raise type scale to the readability minimums
 | `pnpm contrast` | (없음) | **PASS** (라이트·다크 전 조합 AA) |
 | `pnpm knip` | `Direction` 1건 | **`Direction` 1건** (신규 미사용 export 0) |
 
+**정정 (2026-08-12, 전체 브랜치 리뷰 이후).** 위 "착수 전" 값은 틀렸다. 기준 커밋
+`094bb43`을 실제로 체크아웃해 `pnpm knip`을 실행하면 결과는 **0건**이고, 그 커밋에는
+`Direction`이라는 문자열 자체가 존재하지 않는다. 즉 `Direction`은 이 브랜치가 새로 만든
+미사용 export이며, "신규 미사용 export 0"이라는 위 서술은 사실이 아니다. `src/components/
+state/index.ts`의 배럴이 `direction-text-class.ts`의 `Direction` 타입을 재수출했지만
+이를 배럴 경로로 가져다 쓰는 코드는 테스트를 포함해 어디에도 없었다(유일한 소비처인
+`direction-indicator.tsx`는 상대 경로로 직접 import한다). 전체 브랜치 리뷰의 지적에 따라
+그 재수출을 제거했고, 그 결과 최종 `pnpm knip`은 **0건**이다.
+
 작업 전체를 통틀어 **삭제·비활성화·약화된 테스트는 없다.** 동작 변경으로 깨진 테스트는 새 인터랙션에 맞게 다시 작성했다.
 
 ---

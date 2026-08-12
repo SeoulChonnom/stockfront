@@ -123,9 +123,10 @@ test.describe('market tabs — keyboard-only switching', () => {
     await page.goto('market/latest');
 
     // `MarketTabs` (`src/pages/market-overview/market-tabs.tsx`) is a roving
-    // -tabindex ARIA tablist: ArrowRight fires its `onKeyDown` handler on
-    // whichever tab is currently focused, regardless of where DOM focus
-    // ends up afterward, so focusing the initially-selected tab is enough.
+    // -tabindex ARIA tablist. The WAI-ARIA tabs pattern requires the newly
+    // selected tab to receive real DOM focus, not just visual/`aria-selected`
+    // state, so ArrowRight must move focus onto the KR tab, not merely fire
+    // its handler while focus stays on the US tab.
     const usTab = page.getByRole('tab', { name: /미국 증시/ });
     await expect(usTab).toHaveAttribute('aria-selected', 'true');
     await usTab.focus();
@@ -139,6 +140,7 @@ test.describe('market tabs — keyboard-only switching', () => {
     const krTab = page.getByRole('tab', { name: /한국 증시/ });
     await expect(krTab).toHaveAttribute('aria-selected', 'true');
     await expect(usTab).toHaveAttribute('aria-selected', 'false');
+    await expect(krTab).toBeFocused();
     await expect(page).toHaveURL(/market=kr/);
     await expect(
       page.getByRole('heading', { level: 2, name: '한국 증시' })

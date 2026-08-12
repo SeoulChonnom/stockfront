@@ -60,11 +60,13 @@ function createRowOpenHandler(href: string, scrollSearch: string) {
 
 /**
  * `record.detail` is the raw per-page `partialMessage` from the backend
- * (see `src/lib/mappers/archive.ts`) — the same unfiltered pipeline text
- * `partial-banner.tsx` gates behind `canViewOps` on the Latest/Archive
- * Detail pages (it can read like "뉴스 수집 단계에서 provider 타임아웃이
- * 발생했습니다."). This subline must follow the same rule: never render it
- * to a regular user.
+ * (see `src/lib/mappers/archive.ts`) — the same unfiltered pipeline-sentence
+ * shape as `snapshot.partialMessage`, which `partial-banner.tsx` gates
+ * behind `canViewOps`, and as the per-market `metadata.partialMessage` its
+ * "누락된 데이터" details row gates via `missingDataDetailCopy`
+ * (`src/lib/audience-copy.ts`) (it can read like "뉴스 수집 단계에서
+ * provider 타임아웃이 발생했습니다."). This subline must follow the same
+ * rule: never render it to a regular user.
  */
 function ReasonSubline({
   record,

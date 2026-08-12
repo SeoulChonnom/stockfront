@@ -104,3 +104,30 @@ export function emptyMarketsReasonCopy(
     ? '배치는 완료됐지만 시장 섹션이 비어 있습니다. 수집 결과가 0건이었을 수 있습니다.'
     : '이 날짜에 표시할 시장 데이터가 없습니다.';
 }
+
+/**
+ * `MarketIssueList`의 빈 클러스터 안내(`clusters: []`). 원문은 "수집 기사
+ * 수가 부족해"처럼 파이프라인 용어를 담고 있어 일반 사용자에게는 평범한
+ * 안내문으로 대체한다.
+ */
+export function emptyClustersCopy(audience: Audience): string {
+  return audience.canViewOps
+    ? '묶인 이슈가 없습니다. 수집 기사 수가 부족해 클러스터가 만들어지지 않은 경우이며, 원문 목록이 있으면 아래에서 직접 확인할 수 있습니다.'
+    : '묶인 이슈가 없습니다. 원문 목록이 있으면 아래에서 직접 확인할 수 있습니다.';
+}
+
+/**
+ * `PartialBanner`의 "누락된 데이터" 상세 행. `market.metadata.partialMessage`
+ * 원문은 파이프라인 문구(예: "provider", "수집")를 포함할 수 있어 운영자에게만
+ * 그대로 보여주고, 일반 사용자에게는 어느 시장의 데이터가 빠졌는지를 같은
+ * 행의 다른 항목(영향받은 시장·기준일·갱신 시각)으로 이미 알 수 있으므로 이
+ * 값 자체는 중립적인 안내로 대체한다.
+ */
+export function missingDataDetailCopy(
+  audience: Audience,
+  rawMessage: string
+): string {
+  return audience.canViewOps
+    ? rawMessage
+    : '이 시장의 데이터 일부가 누락되었습니다.';
+}

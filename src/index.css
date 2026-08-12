@@ -6,6 +6,7 @@
 
 @theme inline {
   /* --text-* → text-{name} (font-size utilities). */
+  --text-h1: var(--fs-h1);
   --text-body: var(--fs-body);
   --text-body-sm: var(--fs-sm);
   --text-label: var(--fs-label);

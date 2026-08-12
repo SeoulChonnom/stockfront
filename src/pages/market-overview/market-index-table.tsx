@@ -114,9 +114,11 @@ function IndexRow({ item }: { item: MarketIndex }) {
       {labelCell}
       <TableCell className='mono text-right font-semibold' padding='compact'>
         {item.value}
-        <div className='text-body-sm font-normal whitespace-nowrap text-faint sm:hidden'>
-          {`고 ${item.high} · 저 ${item.low}`}
-        </div>
+        {item.high === NO_VALUE && item.low === NO_VALUE ? null : (
+          <div className='text-body-sm font-normal whitespace-nowrap text-faint sm:hidden'>
+            {`고 ${item.high} · 저 ${item.low}`}
+          </div>
+        )}
       </TableCell>
       <TableCell
         className={cn(
