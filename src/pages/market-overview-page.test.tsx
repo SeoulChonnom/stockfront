@@ -1,6 +1,6 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
   resetRoleOverrideForTesting,
@@ -8,6 +8,19 @@ import {
 } from '../lib/capabilities';
 import type { MarketSnapshot } from '../lib/view-models';
 import { MarketOverviewPage } from './market-overview-page';
+
+// This suite renders the real component tree with a plain `snapshot` prop —
+// it never wired up a QueryClientProvider. `useAdjacentSnapshotDates` (used
+// for the Archive Detail prev/next band) now goes through react-query, so it
+// is mocked here rather than dragging query-client plumbing into every case,
+// none of which assert on the band's prev/next labels.
+vi.mock('./market-overview/use-adjacent-snapshot-dates', () => ({
+  useAdjacentSnapshotDates: () => ({
+    previous: null,
+    next: null,
+    isLoading: false,
+  }),
+}));
 
 /**
  * The pre-rebuild version of this file asserted on the old card-grid layout

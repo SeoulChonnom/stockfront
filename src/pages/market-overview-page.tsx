@@ -3,10 +3,6 @@ import { buildUrl, navigate, useUrlState } from '@/lib/router';
 import type { MarketSnapshot } from '@/lib/view-models';
 
 import { ArchiveModeBand } from './market-overview/archive-mode-band';
-import {
-  getTodayBusinessDateKst,
-  shiftBusinessDate,
-} from './market-overview/date-utils';
 import { DecisionHeaderCard } from './market-overview/decision-header-card';
 import { EmptyMarketsPanel } from './market-overview/empty-markets-panel';
 import { MarketSection } from './market-overview/market-section';
@@ -17,6 +13,7 @@ import {
 } from './market-overview/navigation';
 import { PageDataDetails } from './market-overview/page-data-details';
 import { PartialBanner } from './market-overview/partial-banner';
+import { useAdjacentSnapshotDates } from './market-overview/use-adjacent-snapshot-dates';
 
 /**
  * `market` 쿼리에서 선택된 시장 인덱스를 읽는다. `marketType`(대소문자
@@ -86,6 +83,12 @@ export function MarketOverviewPage({
   const capabilities = useCapabilities();
   const canViewOps = capabilities.can('ops.view');
   const currentSearch = url.searchParams.toString();
+  // Scoped away from the Latest route via `enabled` — hooks can't be called
+  // conditionally, and this query would be pointless there anyway (D-05).
+  const adjacent = useAdjacentSnapshotDates(
+    snapshot.businessDate,
+    mode === 'archive'
+  );
 
   const filterQuery =
     mode === 'archive' ? extractFilterQuery(url.searchParams) : null;
@@ -114,13 +117,9 @@ export function MarketOverviewPage({
         <ArchiveModeBand
           businessDate={snapshot.businessDate}
           filterQuery={filterQuery}
-          nextDate={shiftBusinessDate(snapshot.businessDate, 1)}
-          nextDisabled={
-            shiftBusinessDate(snapshot.businessDate, 1) >
-            getTodayBusinessDateKst(now)
-          }
+          nextDate={adjacent.next}
           pageId={snapshot.pageId}
-          prevDate={shiftBusinessDate(snapshot.businessDate, -1)}
+          prevDate={adjacent.previous}
           versionNo={snapshot.versionNo}
         />
       ) : null}

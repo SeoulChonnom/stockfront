@@ -24,9 +24,16 @@ Backend requests raised by the 2026-08-12 UI overhaul are tracked separately in
 
 ## D-05: Adjacent business-date navigation
 
-- **Current fallback:** Archive previous/next links use calendar arithmetic
-  (one day backward or forward). A date without a page resolves to the normal
-  not-found state.
+- **Current fallback:** Archive previous/next links query the archive list for
+  a ±90 day window around the current business date and enable only the
+  neighbours that actually exist. Labels show the target date. A neighbour
+  further than 90 days away is still reported as absent, and every archive
+  detail view costs one extra list request. The 404 and error shells around
+  Archive Detail (`archive-not-found-state.tsx`,
+  `market-overview-route-shell.tsx`) still use plain calendar arithmetic for
+  their own prev/next band, since firing another list request from an
+  already-broken page isn't worth it — they only suppress a next link that is
+  clearly in the future.
 - **Backend dependency:** Provide the existing previous and next business dates
   for a given `businessDate`, either through a dedicated endpoint or archive
   cursor metadata.

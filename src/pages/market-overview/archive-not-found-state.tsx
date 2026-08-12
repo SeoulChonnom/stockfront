@@ -28,8 +28,12 @@ export function ArchiveNotFoundState({
 }) {
   const audience = { canViewOps };
   const prevDate = shiftBusinessDate(businessDate, -1);
-  const nextDate = shiftBusinessDate(businessDate, 1);
-  const nextDisabled = nextDate > getTodayBusinessDateKst();
+  const rawNextDate = shiftBusinessDate(businessDate, 1);
+  // No adjacent-date endpoint exists (D-05); this 404 screen still can't
+  // confirm a neighbour snapshot actually exists, so it keeps the coarser
+  // "not later than today" heuristic rather than firing an extra list query
+  // from an already-broken page.
+  const nextDate = rawNextDate > getTodayBusinessDateKst() ? null : rawNextDate;
   const filterQuery = extractFilterQuery(searchParams);
 
   return (
@@ -38,7 +42,6 @@ export function ArchiveNotFoundState({
         businessDate={businessDate}
         filterQuery={filterQuery}
         nextDate={nextDate}
-        nextDisabled={nextDisabled}
         pageId={null}
         prevDate={prevDate}
         versionNo={null}

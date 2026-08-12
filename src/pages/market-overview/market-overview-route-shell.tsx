@@ -21,6 +21,15 @@ export function MarketOverviewRouteShell({
   searchParams = new URLSearchParams(),
 }: MarketOverviewRouteShellProps) {
   const isArchive = mode === 'archive' && businessDate !== null;
+  // No adjacent-date endpoint exists (D-05); this shell renders while the
+  // page itself is unavailable (loading/error), so it keeps the coarser
+  // "not later than today" heuristic rather than firing an extra list query
+  // from an already-broken page.
+  const rawNextDate = isArchive ? shiftBusinessDate(businessDate, 1) : null;
+  const nextDate =
+    rawNextDate && rawNextDate <= getTodayBusinessDateKst()
+      ? rawNextDate
+      : null;
 
   return (
     <div className='flex flex-col gap-[var(--gap)]'>
@@ -28,10 +37,7 @@ export function MarketOverviewRouteShell({
         <ArchiveModeBand
           businessDate={businessDate}
           filterQuery={extractFilterQuery(searchParams)}
-          nextDate={shiftBusinessDate(businessDate, 1)}
-          nextDisabled={
-            shiftBusinessDate(businessDate, 1) > getTodayBusinessDateKst()
-          }
+          nextDate={nextDate}
           pageId={pageId}
           prevDate={shiftBusinessDate(businessDate, -1)}
           versionNo={null}
