@@ -1,3 +1,4 @@
+import { DirectionIndicator, directionTextClass } from '@/components/state';
 import {
   Table,
   TableBody,
@@ -10,6 +11,10 @@ import {
 import { noIndexDataCopy } from '@/lib/audience-copy';
 import { cn } from '@/lib/utils';
 import type { MarketIndex } from '@/lib/view-models';
+
+import { orderIndices } from './index-order';
+
+const NO_VALUE = '-';
 
 /**
  * 대표 지수 — 카드 대신 밀도 높은 표. ≤640px에서 고가/저가
@@ -32,7 +37,7 @@ export function MarketIndexTable({
 }) {
   if (indices.length === 0) {
     return (
-      <p className='m-0 px-[18px] py-4 text-[13px] text-faint'>
+      <p className='m-0 px-[18px] py-4 text-body text-faint'>
         {noIndexDataCopy({ canViewOps })}
       </p>
     );
@@ -40,7 +45,7 @@ export function MarketIndexTable({
 
   return (
     <TableScrollWrapper>
-      <Table className='border-collapse text-[13px]' minWidth={380}>
+      <Table className='border-collapse text-body' minWidth={380}>
         <TableHeader>
           <TableRow>
             <TableHead className='h-auto px-[18px] py-2 text-label'>
@@ -67,7 +72,7 @@ export function MarketIndexTable({
           {/* `MarketIndex.code` is nullable and `label` is not guaranteed
               unique, so the index is what keeps keys distinct. Rows are
               stateless and the list is replaced on each snapshot fetch. */}
-          {indices.map((item, index) => (
+          {orderIndices(indices).map((item, index) => (
             // biome-ignore lint/suspicious/noArrayIndexKey: stateless rows, no stable id available — see above
             <IndexRow item={item} key={`${item.label}-${index}`} />
           ))}
@@ -78,37 +83,58 @@ export function MarketIndexTable({
 }
 
 function IndexRow({ item }: { item: MarketIndex }) {
-  const directionClass =
-    item.direction === 'up'
-      ? 'text-[color:var(--up)]'
-      : item.direction === 'down'
-        ? 'text-[color:var(--down)]'
-        : 'text-faint';
+  const labelCell = (
+    <TableCell className='min-w-0 px-[18px] py-[9px] font-semibold'>
+      {item.label}
+      {item.code ? (
+        <div className='mono text-label font-normal text-faint'>
+          {item.code}
+        </div>
+      ) : null}
+    </TableCell>
+  );
+
+  if (item.value === NO_VALUE) {
+    return (
+      <TableRow>
+        {labelCell}
+        <TableCell
+          className='text-body-sm text-faint'
+          colSpan={5}
+          padding='compact'
+        >
+          데이터 없음
+        </TableCell>
+      </TableRow>
+    );
+  }
 
   return (
     <TableRow>
-      <TableCell className='min-w-0 px-[18px] py-[9px] font-semibold'>
-        {item.label}
-        {item.code ? (
-          <div className='mono text-label font-normal text-faint'>
-            {item.code}
-          </div>
-        ) : null}
-      </TableCell>
+      {labelCell}
       <TableCell className='mono text-right font-semibold' padding='compact'>
         {item.value}
-        <div className='text-[10.5px] font-normal whitespace-nowrap text-faint sm:hidden'>
+        <div className='text-body-sm font-normal whitespace-nowrap text-faint sm:hidden'>
           {`고 ${item.high} · 저 ${item.low}`}
         </div>
       </TableCell>
       <TableCell
-        className={cn('mono text-right font-semibold', directionClass)}
+        className={cn(
+          'mono text-right font-semibold',
+          directionTextClass(item.direction)
+        )}
         padding='compact'
       >
-        {item.change}
+        <span className='inline-flex items-center justify-end gap-1'>
+          <DirectionIndicator direction={item.direction} />
+          {item.change}
+        </span>
       </TableCell>
       <TableCell
-        className={cn('mono text-right font-semibold', directionClass)}
+        className={cn(
+          'mono text-right font-semibold',
+          directionTextClass(item.direction)
+        )}
         padding='compact'
       >
         {item.changeRate}
