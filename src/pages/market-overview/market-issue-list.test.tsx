@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 
 import type { ClusterCard } from '@/lib/view-models';
@@ -21,7 +22,7 @@ const cluster: ClusterCard = {
 };
 
 describe('MarketIssueList semantic actions', () => {
-  it('keeps issue detail as the primary action and demotes external sources to text links', () => {
+  it('makes the title link the sole detail entry point and names external links by article title', () => {
     render(
       <MarketIssueList
         clusters={[cluster]}
@@ -31,25 +32,99 @@ describe('MarketIssueList semantic actions', () => {
       />
     );
 
-    const detail = screen.getByRole('link', { name: '이슈 상세' });
+    const detail = screen.getByRole('link', {
+      name: '연준 위원 발언 이후 장기 금리 반등',
+    });
     expect(detail).toHaveAttribute(
       'href',
       '/market/cluster/cluster-1?origin=latest'
     );
-    expect(detail).toHaveClass('bg-[color:var(--primary)]');
 
-    const original = screen.getByRole('link', { name: '원문 ↗' });
+    expect(
+      screen.queryByRole('link', { name: '이슈 상세' })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('link', { name: '원문 ↗' })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('link', { name: '네이버 미러 ↗' })
+    ).not.toBeInTheDocument();
+
+    const original = screen.getByRole('link', {
+      name: '대표 기사 원문 (새 창)',
+    });
     expect(original).toHaveAttribute('href', 'https://example.com/original');
     expect(original).toHaveAttribute('target', '_blank');
     expect(original).toHaveAttribute('rel', 'noopener noreferrer');
-    expect(original).not.toHaveClass('border');
     expect(original).toHaveClass('underline');
 
-    const mirror = screen.getByRole('link', { name: '네이버 미러 ↗' });
+    const mirror = screen.getByRole('link', {
+      name: '대표 기사 네이버 미러 (새 창)',
+    });
     expect(mirror).toHaveAttribute('href', 'https://n.news.naver.com/mirror');
     expect(mirror).toHaveAttribute('target', '_blank');
     expect(mirror).toHaveAttribute('rel', 'noopener noreferrer');
-    expect(mirror).not.toHaveClass('border');
     expect(mirror).toHaveClass('underline');
+  });
+
+  it('shows five issues before expanding and reveals the rest on demand', async () => {
+    const clusters = Array.from({ length: 12 }, (_, index) => ({
+      id: `c-${index}`,
+      articleCount: 3,
+      title: `이슈 ${index}`,
+      summary: '요약',
+      tags: [],
+    }));
+    const user = userEvent.setup();
+
+    render(
+      <MarketIssueList
+        clusters={clusters}
+        currentPathname='/market/latest'
+        currentSearch=''
+        originQuery={{ origin: 'latest' }}
+      />
+    );
+
+    expect(screen.getAllByRole('article')).toHaveLength(5);
+
+    await user.click(screen.getByRole('button', { name: '이슈 7건 더 보기' }));
+
+    expect(screen.getAllByRole('article')).toHaveLength(12);
+  });
+
+  it('offers exactly one detail affordance per issue besides the title link', () => {
+    const clusters = [
+      {
+        id: 'c-0',
+        articleCount: 3,
+        title: '이슈 0',
+        summary: '요약',
+        tags: [],
+        representativeArticle: {
+          title: '대표 기사 제목',
+          source: '언론사',
+          publishedAt: '2026-08-12 07:00',
+          originalUrl: 'https://example.com/a',
+          mirrorUrl: null,
+        },
+      },
+    ];
+
+    render(
+      <MarketIssueList
+        clusters={clusters}
+        currentPathname='/market/latest'
+        currentSearch=''
+        originQuery={{ origin: 'latest' }}
+      />
+    );
+
+    expect(
+      screen.queryByRole('link', { name: '이슈 상세' })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('link', { name: /대표 기사 제목/ })
+    ).toBeInTheDocument();
   });
 });

@@ -225,7 +225,14 @@ test.describe('browser Back (market tabs)', () => {
     const scrollYBeforeNavigation = await page.evaluate(() => window.scrollY);
     expect(scrollYBeforeNavigation).toBeGreaterThan(0);
 
-    await page.getByRole('link', { name: '이슈 상세' }).first().click();
+    // The 이슈 상세 button was removed (Task 8) — the issue title link is now
+    // the sole detail entry point, so click it directly.
+    await page
+      .getByRole('article')
+      .first()
+      .locator('a[href*="/market/cluster/"]')
+      .first()
+      .click();
     await expect(page).toHaveURL(/market\/cluster\//);
 
     await page.goBack();
