@@ -116,3 +116,32 @@ test.describe('mobile nav Drawer — focus trap / Escape / return', () => {
     expect(page.url()).toBe(urlBefore);
   });
 });
+
+test.describe('market tabs — keyboard-only switching', () => {
+  test('switches markets with the keyboard alone', async ({ page }) => {
+    await installMockApi(page, { scenario: 'ready' });
+    await page.goto('market/latest');
+
+    // `MarketTabs` (`src/pages/market-overview/market-tabs.tsx`) is a roving
+    // -tabindex ARIA tablist: ArrowRight fires its `onKeyDown` handler on
+    // whichever tab is currently focused, regardless of where DOM focus
+    // ends up afterward, so focusing the initially-selected tab is enough.
+    const usTab = page.getByRole('tab', { name: /미국 증시/ });
+    await expect(usTab).toHaveAttribute('aria-selected', 'true');
+    await usTab.focus();
+    await page.keyboard.press('ArrowRight');
+
+    // Selection actually moved to the other market, not just "some tab" —
+    // both the old and new tab's `aria-selected` are checked, plus the
+    // `?market=` URL and the tabpanel's own heading (only the selected
+    // market's `MarketSection` is mounted, so this also confirms the panel
+    // content itself changed, not merely the tab's visual state).
+    const krTab = page.getByRole('tab', { name: /한국 증시/ });
+    await expect(krTab).toHaveAttribute('aria-selected', 'true');
+    await expect(usTab).toHaveAttribute('aria-selected', 'false');
+    await expect(page).toHaveURL(/market=kr/);
+    await expect(
+      page.getByRole('heading', { level: 2, name: '한국 증시' })
+    ).toBeVisible();
+  });
+});
