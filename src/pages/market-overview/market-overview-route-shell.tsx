@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 
 import { ArchiveModeBand } from './archive-mode-band';
 import { extractFilterQuery } from './navigation';
-import { useAdjacentSnapshotDates } from './use-adjacent-snapshot-dates';
+import { useAdjacentNavigation } from './use-adjacent-navigation';
 
 export type MarketOverviewRouteShellProps = {
   businessDate: string | null;
@@ -22,14 +22,14 @@ export function MarketOverviewRouteShell({
 }: MarketOverviewRouteShellProps) {
   const isArchive = mode === 'archive' && businessDate !== null;
   // This shell renders while the requested page itself failed to load
-  // (error or no-data — the pure loading state uses a separate skeleton).
-  // The same date the user requested is still known, so it's worth the same
-  // ±90 day archive-list lookup the working Archive Detail band uses
-  // (`use-adjacent-snapshot-dates.ts`, D-05) rather than calendar arithmetic
-  // that could route to another dead end. Scoped off via `enabled` so the
-  // Latest-mode error path never fires it (hooks can't be called
-  // conditionally, so the gate lives on the query, not on this call).
-  const adjacent = useAdjacentSnapshotDates(businessDate ?? '', isArchive);
+  // (error or no-data — the pure loading state uses a separate skeleton),
+  // so there is no daily-page response to read `navigation` off of. The
+  // same date the user requested is still known, so this calls the
+  // standalone `GET /pages/navigation` endpoint (B-5) rather than guessing
+  // via calendar arithmetic. Scoped off via `enabled` so the Latest-mode
+  // error path never fires it (hooks can't be called conditionally, so the
+  // gate lives on the query, not on this call).
+  const navigation = useAdjacentNavigation(businessDate ?? '', isArchive);
 
   return (
     <div className='flex flex-col gap-[var(--gap)]'>
@@ -37,9 +37,8 @@ export function MarketOverviewRouteShell({
         <ArchiveModeBand
           businessDate={businessDate}
           filterQuery={extractFilterQuery(searchParams)}
-          nextDate={adjacent.next}
+          navigation={navigation}
           pageId={pageId}
-          prevDate={adjacent.previous}
           versionNo={null}
         />
       ) : null}

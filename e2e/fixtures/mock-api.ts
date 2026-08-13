@@ -122,6 +122,33 @@ export type MarketSection = {
   metadata: MarketMetadata;
 };
 
+/** Embedded on `DailyPage.navigation` — the same lookup as the standalone `NavigationResponse` (B-5), scoped to the two fields a loaded page needs. */
+export type DailyPageNavigation = {
+  previousBusinessDate: string | null;
+  nextBusinessDate: string | null;
+};
+
+/** B-1 keyPoint enums. Closed by the backend (A-1-7). */
+export type KeyPointDirection = 'UP' | 'DOWN' | 'MIXED' | 'FLAT';
+
+/** `DailyPage.keyPoints[]` item — mirrors `KeyPointResponse` in `src/lib/api/types.ts`. */
+export type KeyPoint =
+  | {
+      kind: 'direction';
+      label: string;
+      text: string;
+      direction: KeyPointDirection;
+    }
+  | { kind: 'driver'; label: string; text: string }
+  | { kind: 'watch'; label: string; text: string };
+
+/** `DailyPage.issues[]` item — mirrors `PageIssueResponse`. */
+export type PageIssue = {
+  category: 'AI_SUMMARY';
+  code: 'KEY_POINTS_GENERATION_FAILED' | 'AI_SUMMARY_FALLBACK';
+  message: string;
+};
+
 export type DailyPage = {
   pageId: number;
   businessDate: string;
@@ -131,6 +158,11 @@ export type DailyPage = {
   globalHeadline: string | null;
   generatedAt: string;
   partialMessage: string | null;
+  navigation: DailyPageNavigation;
+  /** B-1: "오늘의 핵심" — all-or-nothing (exactly 3, direction→driver→watch, or []). */
+  keyPoints: KeyPoint[];
+  /** B-1: page-level generation issues, e.g. `KEY_POINTS_GENERATION_FAILED`. */
+  issues: PageIssue[];
   markets: MarketSection[];
   metadata: {
     rawNewsCount: number;
@@ -139,6 +171,14 @@ export type DailyPage = {
     lastUpdatedAt: string;
     isLatest: boolean;
   };
+};
+
+/** `GET /stock/api/pages/navigation` response (B-5). */
+export type NavigationResponse = {
+  businessDate: string;
+  pageExists: boolean;
+  previousBusinessDate: string | null;
+  nextBusinessDate: string | null;
 };
 
 export type ArchiveItem = {
@@ -665,6 +705,77 @@ const LONG_TOKEN =
 const LONG_URL =
   'https://research.example.com/reports/2026/07/global-market-daily-brief-semiconductor-supply-chain-recovery-and-foreign-net-buying-analysis-v3-final-confidential.pdf';
 
+// ---------------------------------------------------------------------------
+// B-5 adjacent business day (`GET /pages/navigation`)
+// ---------------------------------------------------------------------------
+//
+// Computed from `ARCHIVE_ALL` (defined further below — safe to reference
+// here since these are only called at request time, well after module
+// evaluation finishes), excluding FAILED-only dates the same way the real
+// backend does (A-1-9: a date whose every version is FAILED does not exist
+// for public navigation). `navigableDates`/`navigationFor` are also used to
+// embed `navigation` directly on `DailyPage` fixtures — the daily page
+// response carries the same lookup the standalone endpoint serves (A-6 "어느
+// 경로를 쓸 것인가").
+
+function navigableDates(): string[] {
+  return ARCHIVE_ALL.filter((item) => item.status !== 'FAILED')
+    .map((item) => item.businessDate)
+    .sort();
+}
+
+function navigationFor(businessDate: string): DailyPageNavigation {
+  const dates = navigableDates();
+  const earlier = dates.filter((date) => date < businessDate);
+  const later = dates.filter((date) => date > businessDate);
+
+  return {
+    previousBusinessDate:
+      earlier.length > 0 ? earlier[earlier.length - 1] : null,
+    nextBusinessDate: later.length > 0 ? later[0] : null,
+  };
+}
+
+export function navigationFixture(businessDate: string): NavigationResponse {
+  return {
+    businessDate,
+    pageExists: navigableDates().includes(businessDate),
+    ...navigationFor(businessDate),
+  };
+}
+
+// ---------------------------------------------------------------------------
+// B-1 오늘의 핵심 (`keyPoints`) + page-level `issues`
+// ---------------------------------------------------------------------------
+
+/** The server-guaranteed success shape: exactly 3, direction → driver → watch. */
+function keyPointsFixture(): KeyPoint[] {
+  return [
+    {
+      kind: 'direction',
+      label: '시장 방향',
+      text: '미국 증시는 상승했지만 한국 증시는 하락해 시장별 흐름이 엇갈렸습니다.',
+      direction: 'MIXED',
+    },
+    {
+      kind: 'driver',
+      label: '주요 원인',
+      text: '금리 인하 기대와 국내 반도체주 약세가 주요 변동 요인이었습니다.',
+    },
+    {
+      kind: 'watch',
+      label: '관전 포인트',
+      text: '미국 물가 지표와 외국인의 반도체주 수급을 확인할 필요가 있습니다.',
+    },
+  ];
+}
+
+const KEY_POINTS_GENERATION_FAILED_ISSUE: PageIssue = {
+  category: 'AI_SUMMARY',
+  code: 'KEY_POINTS_GENERATION_FAILED',
+  message: '오늘의 핵심 포인트를 준비하지 못했습니다.',
+};
+
 function basePage(overrides: Partial<DailyPage> = {}): DailyPage {
   return {
     pageId: 501,
@@ -676,6 +787,9 @@ function basePage(overrides: Partial<DailyPage> = {}): DailyPage {
       '금리 경계 속 기술주 강세, 아시아는 반도체 수급 개선에 주목',
     generatedAt: '2026-07-27T06:12:10',
     partialMessage: null,
+    keyPoints: keyPointsFixture(),
+    issues: [],
+    navigation: navigationFor('2026-07-26'),
     markets: [market('US'), market('KR')],
     metadata: {
       rawNewsCount: 174,
@@ -698,7 +812,8 @@ export type PageMode =
   | 'failed'
   | 'emptyMarkets'
   | 'sparse'
-  | 'long';
+  | 'long'
+  | 'keyPointsFailed';
 
 export function pageFixture(mode: string, businessDate?: string): DailyPage {
   const date = businessDate ?? '2026-07-26';
@@ -707,6 +822,7 @@ export function pageFixture(mode: string, businessDate?: string): DailyPage {
     businessDate: date,
     pageTitle: `글로벌 시장 일간 요약 - ${date}`,
     metadata: { ...p.metadata, isLatest: date === '2026-07-26' },
+    navigation: navigationFor(date),
   });
 
   if (mode === 'partial') {
@@ -741,6 +857,19 @@ export function pageFixture(mode: string, businessDate?: string): DailyPage {
     );
   }
 
+  // B-1: headline succeeds but keyPoints generation alone fails — PARTIAL
+  // status carries only the KEY_POINTS_GENERATION_FAILED issue, distinct
+  // from `partial`'s market-data-loss scenario above.
+  if (mode === 'keyPointsFailed') {
+    return withDate(
+      basePage({
+        status: 'PARTIAL',
+        keyPoints: [],
+        issues: [KEY_POINTS_GENERATION_FAILED_ISSUE],
+      })
+    );
+  }
+
   if (mode === 'failed') {
     return withDate(
       basePage({
@@ -748,6 +877,7 @@ export function pageFixture(mode: string, businessDate?: string): DailyPage {
         globalHeadline: null,
         partialMessage:
           '뉴스 수집 단계에서 실패해 이 날짜의 스냅샷이 완성되지 않았습니다.',
+        keyPoints: [],
         markets: [],
         metadata: {
           rawNewsCount: 21,
@@ -1627,6 +1757,7 @@ export type Scenario =
   | 'emptyMarkets'
   | 'sparse'
   | 'long'
+  | 'keyPointsFailed'
   | 'error5xx'
   | 'loading';
 
@@ -1705,6 +1836,7 @@ const PAGE_MODE_BY_SCENARIO: Partial<Record<Scenario, string>> = {
   emptyMarkets: 'emptyMarkets',
   sparse: 'sparse',
   long: 'long',
+  keyPointsFailed: 'keyPointsFailed',
 };
 
 const CLUSTER_MODE_BY_SCENARIO: Partial<
@@ -1828,6 +1960,12 @@ export async function installMockApi(
         200,
         envelope(pageFixture(pageMode, businessDate))
       );
+      return;
+    }
+
+    if (method === 'GET' && pathname === '/stock/api/pages/navigation') {
+      const businessDate = url.searchParams.get('businessDate') ?? '';
+      await fulfillJson(route, 200, envelope(navigationFixture(businessDate)));
       return;
     }
 

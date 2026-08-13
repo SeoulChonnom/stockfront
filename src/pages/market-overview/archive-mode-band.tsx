@@ -2,33 +2,66 @@ import { Button } from '@/components/ui/button';
 import { navigate } from '@/lib/router';
 
 import { buildArchiveSearchHref, type FilterQueryParams } from './navigation';
+import type { AdjacentNavigationState } from './use-adjacent-navigation';
 
 /**
  * 아카이브 모드 밴드. Archive Detail만 Latest 위에 얹는 상단 밴드. 정상
  * 스냅샷과 인접 날짜 스냅샷이 없는 404 양쪽
  * 화면에서 재사용한다 — 두 경우 모두 날짜 내비게이션은 그대로 필요하다.
  *
- * `prevDate`/`nextDate`는 실제로 스냅샷이 존재하는 날짜만 담는다 — `null`이면
- * 그 방향에 인접 스냅샷이 없다는 뜻이고(로딩 중이거나 조회가 실패한 경우도
- * 포함), 버튼은 `disabled`로 렌더링되며 라벨도 이유를 그대로 말한다.
+ * `navigation`이 `'ready'`일 때만 실제 날짜를 쓴다 — `null`은 "그 방향에
+ * 인접 스냅샷이 없음"(그 버튼 하나만 비활성화)이고, `'loading'`/`'error'`는
+ * "아직 모름"(양쪽 버튼 모두 비활성화, 추측하지 않음)이다. B-5 계약
+ * (`docs/backend-requests-2026-08-12.md#A-6`)의 구분을 그대로 따른다.
  */
 export type ArchiveModeBandProps = {
   businessDate: string;
   pageId: number | null;
   versionNo: number | null;
   filterQuery: FilterQueryParams | null;
-  prevDate: string | null;
-  nextDate: string | null;
+  navigation: AdjacentNavigationState;
 };
+
+function adjacentDate(
+  navigation: AdjacentNavigationState,
+  direction: 'previous' | 'next'
+): string | null {
+  if (navigation.status !== 'ready') {
+    return null;
+  }
+
+  return direction === 'previous'
+    ? navigation.previousBusinessDate
+    : navigation.nextBusinessDate;
+}
+
+function adjacentLabel(
+  navigation: AdjacentNavigationState,
+  direction: '이전' | '다음',
+  date: string | null
+): string {
+  if (navigation.status === 'loading') {
+    return `${direction} 확인 중`;
+  }
+
+  if (navigation.status === 'error') {
+    return `${direction} 확인 불가`;
+  }
+
+  return date ? `${direction} ${date}` : `${direction} 브리프 없음`;
+}
 
 export function ArchiveModeBand({
   businessDate,
   pageId,
   versionNo,
   filterQuery,
-  prevDate,
-  nextDate,
+  navigation,
 }: ArchiveModeBandProps) {
+  const prevDate = adjacentDate(navigation, 'previous');
+  const nextDate = adjacentDate(navigation, 'next');
+  const prevDisabled = navigation.status !== 'ready' || prevDate === null;
+  const nextDisabled = navigation.status !== 'ready' || nextDate === null;
   return (
     <div className='flex flex-wrap items-center gap-x-3.5 gap-y-2.5 rounded-[var(--r-lg)] border border-[color:var(--warning-line)] border-l-4 border-l-[color:var(--warning)] bg-[color:var(--warning-soft)] px-4 py-3'>
       <span className='text-caption font-bold tracking-[0.07em] text-[color:var(--warning)] uppercase'>
@@ -54,7 +87,7 @@ export function ArchiveModeBand({
         ) : null}
         <Button
           className='mono min-h-9 px-3 text-body-sm'
-          disabled={prevDate === null}
+          disabled={prevDisabled}
           onClick={() => {
             if (prevDate) {
               navigate(`/market/archive/${prevDate}`);
@@ -64,11 +97,11 @@ export function ArchiveModeBand({
           type='button'
           variant='secondary'
         >
-          {prevDate ? `이전 ${prevDate}` : '이전 브리프 없음'}
+          {adjacentLabel(navigation, '이전', prevDate)}
         </Button>
         <Button
           className='mono min-h-9 px-3 text-body-sm'
-          disabled={nextDate === null}
+          disabled={nextDisabled}
           onClick={() => {
             if (nextDate) {
               navigate(`/market/archive/${nextDate}`);
@@ -78,7 +111,7 @@ export function ArchiveModeBand({
           type='button'
           variant='secondary'
         >
-          {nextDate ? `다음 ${nextDate}` : '다음 브리프 없음'}
+          {adjacentLabel(navigation, '다음', nextDate)}
         </Button>
         <Button
           className='min-h-9 px-3 text-body-sm'

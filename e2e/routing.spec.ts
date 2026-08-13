@@ -153,13 +153,16 @@ test.describe('deep link', () => {
 });
 
 test.describe('Archive Detail — adjacent snapshot navigation', () => {
-  // `useAdjacentSnapshotDates` resolves prev/next from the mocked archive
-  // list, which seeds 46 contiguous days ending at 2026-07-26
-  // (`ARCHIVE_ALL` in mock-api.ts). 2026-07-26 is the newest day in that
-  // fixture, so it has a real previous neighbour (2026-07-25) but no next
-  // one — exercising both the "enable with the real date" and "no snapshot
-  // -> stay disabled" paths from a single page, without fabricating a date
-  // arithmetic would have guessed at.
+  // The daily page response's embedded `navigation` block (B-5) is derived
+  // from the same 46-contiguous-day `ARCHIVE_ALL` seed (`mock-api.ts`),
+  // ending at 2026-07-26. Since this page loads successfully, the app reads
+  // `navigation` straight off that response — it never calls the standalone
+  // `GET /pages/navigation` endpoint for an already-loaded page (A-6 "어느
+  // 경로를 쓸 것인가"). 2026-07-26 is the newest day in that fixture, so it
+  // has a real previous neighbour (2026-07-25) but no next one — exercising
+  // both the "enable with the real date" and "no snapshot -> stay disabled"
+  // paths from a single page, without fabricating a date arithmetic would
+  // have guessed at.
   test('enables the real previous date and disables next when no newer snapshot exists', async ({
     page,
   }) => {

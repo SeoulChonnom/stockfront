@@ -1,7 +1,8 @@
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { getNavigation } from '../lib/api/pages';
 import {
   resetRoleOverrideForTesting,
   setRoleOverride,
@@ -9,18 +10,20 @@ import {
 import type { MarketSnapshot } from '../lib/view-models';
 import { MarketOverviewPage } from './market-overview-page';
 
-// This suite renders the real component tree with a plain `snapshot` prop —
-// it never wired up a QueryClientProvider. `useAdjacentSnapshotDates` (used
-// for the Archive Detail prev/next band) now goes through react-query, so it
-// is mocked here rather than dragging query-client plumbing into every case,
-// none of which assert on the band's prev/next labels.
-vi.mock('./market-overview/use-adjacent-snapshot-dates', () => ({
-  useAdjacentSnapshotDates: () => ({
-    previous: null,
-    next: null,
-    isLoading: false,
-  }),
-}));
+// B-5: `MarketOverviewPage` always has an already-loaded daily-page
+// response, so its prev/next band reads `snapshot.navigation` directly —
+// it must never call the standalone `GET /pages/navigation` endpoint (that
+// path belongs only to the no-page-loaded routes: `market-overview-route-shell.tsx`,
+// `archive-not-found-state.tsx`). Spying on `getNavigation` here (rather
+// than mocking a hook) proves this component genuinely has no code path
+// that reaches the network client for it.
+vi.mock('../lib/api/pages', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../lib/api/pages')>();
+  return {
+    ...actual,
+    getNavigation: vi.fn(actual.getNavigation),
+  };
+});
 
 /**
  * The pre-rebuild version of this file asserted on the old card-grid layout
@@ -34,6 +37,26 @@ vi.mock('./market-overview/use-adjacent-snapshot-dates', () => ({
 
 const FIXED_NOW = new Date('2026-03-17T10:00:00+09:00');
 
+/** A valid B-1 keyPoints triplet in the server-guaranteed order. */
+const SAMPLE_KEY_POINTS: MarketSnapshot['keyPoints'] = [
+  {
+    kind: 'direction',
+    label: '시장 방향',
+    text: '미국 증시는 상승했지만 한국 증시는 하락해 시장별 흐름이 엇갈렸습니다.',
+    direction: 'MIXED',
+  },
+  {
+    kind: 'driver',
+    label: '주요 원인',
+    text: '금리 인하 기대와 국내 반도체주 약세가 주요 변동 요인이었습니다.',
+  },
+  {
+    kind: 'watch',
+    label: '관전 포인트',
+    text: '미국 물가 지표와 외국인의 반도체주 수급을 확인할 필요가 있습니다.',
+  },
+];
+
 function buildSnapshot(
   overrides: Partial<MarketSnapshot> = {}
 ): MarketSnapshot {
@@ -46,6 +69,9 @@ function buildSnapshot(
     status: 'ready',
     globalHeadline: '연준 발언에 기술주 랠리, 반도체 지수 강세',
     partialMessage: null,
+    keyPoints: SAMPLE_KEY_POINTS,
+    issues: [],
+    navigation: { previousBusinessDate: null, nextBusinessDate: null },
     metadata: {
       rawNewsCount: 174,
       processedNewsCount: 114,
@@ -92,6 +118,7 @@ function buildSnapshot(
 afterEach(() => {
   resetRoleOverrideForTesting();
   window.history.replaceState(null, '', '/');
+  vi.mocked(getNavigation).mockClear();
 });
 
 describe('MarketOverviewPage — 대표 지수 표', () => {
@@ -634,5 +661,217 @@ describe('MarketOverviewPage — markets:[] 빈 상태', () => {
     expect(
       screen.queryByRole('button', { name: '배치 상태 확인' })
     ).not.toBeInTheDocument();
+  });
+});
+
+describe('MarketOverviewPage — B-5 인접 영업일 (snapshot.navigation)', () => {
+  it('중간 날짜: both prev/next enabled with the real dates, and never calls GET /pages/navigation', () => {
+    const snapshot = buildSnapshot({
+      navigation: {
+        previousBusinessDate: '2026-03-16',
+        nextBusinessDate: '2026-03-18',
+      },
+    });
+
+    render(
+      <MarketOverviewPage mode='archive' now={FIXED_NOW} snapshot={snapshot} />
+    );
+
+    const prevButton = screen.getByRole('button', { name: '이전 2026-03-16' });
+    const nextButton = screen.getByRole('button', { name: '다음 2026-03-18' });
+    expect(prevButton).toBeEnabled();
+    expect(nextButton).toBeEnabled();
+    expect(getNavigation).not.toHaveBeenCalled();
+  });
+
+  it('가장 오래된 날짜: prev is null, so only the prev button is disabled', () => {
+    const snapshot = buildSnapshot({
+      navigation: {
+        previousBusinessDate: null,
+        nextBusinessDate: '2026-03-18',
+      },
+    });
+
+    render(
+      <MarketOverviewPage mode='archive' now={FIXED_NOW} snapshot={snapshot} />
+    );
+
+    expect(
+      screen.getByRole('button', { name: '이전 브리프 없음' })
+    ).toBeDisabled();
+    expect(
+      screen.getByRole('button', { name: '다음 2026-03-18' })
+    ).toBeEnabled();
+  });
+
+  it('최신 날짜: next is null, so only the next button is disabled', () => {
+    const snapshot = buildSnapshot({
+      navigation: {
+        previousBusinessDate: '2026-03-16',
+        nextBusinessDate: null,
+      },
+    });
+
+    render(
+      <MarketOverviewPage mode='archive' now={FIXED_NOW} snapshot={snapshot} />
+    );
+
+    expect(
+      screen.getByRole('button', { name: '이전 2026-03-16' })
+    ).toBeEnabled();
+    expect(
+      screen.getByRole('button', { name: '다음 브리프 없음' })
+    ).toBeDisabled();
+  });
+
+  it('양쪽 null: both buttons disabled without ever calling the standalone endpoint', () => {
+    const snapshot = buildSnapshot({
+      navigation: { previousBusinessDate: null, nextBusinessDate: null },
+    });
+
+    render(
+      <MarketOverviewPage mode='archive' now={FIXED_NOW} snapshot={snapshot} />
+    );
+
+    expect(
+      screen.getByRole('button', { name: '이전 브리프 없음' })
+    ).toBeDisabled();
+    expect(
+      screen.getByRole('button', { name: '다음 브리프 없음' })
+    ).toBeDisabled();
+    expect(getNavigation).not.toHaveBeenCalled();
+  });
+});
+
+describe('MarketOverviewPage — B-1 오늘의 핵심 (keyPoints)', () => {
+  it('성공 3개 정상 순서: renders direction → driver → watch with server-fixed labels visible as text', () => {
+    render(
+      <MarketOverviewPage
+        mode='latest'
+        now={FIXED_NOW}
+        snapshot={buildSnapshot()}
+      />
+    );
+
+    expect(
+      screen.getByRole('heading', { level: 2, name: '오늘의 핵심' })
+    ).toBeInTheDocument();
+
+    // Labels are the server's fixed strings, never FE-synthesized copy.
+    expect(screen.getByText('시장 방향')).toBeInTheDocument();
+    expect(screen.getByText('주요 원인')).toBeInTheDocument();
+    expect(screen.getByText('관전 포인트')).toBeInTheDocument();
+
+    expect(
+      screen.getByText(
+        '미국 증시는 상승했지만 한국 증시는 하락해 시장별 흐름이 엇갈렸습니다.'
+      )
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        '금리 인하 기대와 국내 반도체주 약세가 주요 변동 요인이었습니다.'
+      )
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        '미국 물가 지표와 외국인의 반도체주 수급을 확인할 필요가 있습니다.'
+      )
+    ).toBeInTheDocument();
+  });
+
+  it.each([
+    ['UP', '상승'],
+    ['DOWN', '하락'],
+    ['MIXED', '혼조'],
+    ['FLAT', '보합'],
+  ] as const)(
+    'direction %s는 색·아이콘뿐 아니라 눈에 보이는 단어(%s)로도 표현된다',
+    (direction, word) => {
+      render(
+        <MarketOverviewPage
+          mode='latest'
+          now={FIXED_NOW}
+          snapshot={buildSnapshot({
+            keyPoints: [
+              {
+                kind: 'direction',
+                label: SAMPLE_KEY_POINTS[0].label,
+                text: SAMPLE_KEY_POINTS[0].text,
+                direction,
+              },
+              SAMPLE_KEY_POINTS[1],
+              SAMPLE_KEY_POINTS[2],
+            ],
+          })}
+        />
+      );
+
+      // Scoped to the keyPoints section: the index table elsewhere on the
+      // page renders its own "상승"/"하락" sr-only text for `changeValue`
+      // direction (a different enum, `up`/`down`/`none`), which would
+      // otherwise collide with this assertion.
+      const section = screen
+        .getByRole('heading', { level: 2, name: '오늘의 핵심' })
+        .closest('section');
+      expect(section).not.toBeNull();
+      expect(
+        within(section as HTMLElement).getByText(word)
+      ).toBeInTheDocument();
+    }
+  );
+
+  it('[] 미표시: keyPoints가 비면 제목을 포함한 섹션 전체가 렌더되지 않는다 (빈 heading landmark 금지)', () => {
+    render(
+      <MarketOverviewPage
+        mode='latest'
+        now={FIXED_NOW}
+        snapshot={buildSnapshot({ keyPoints: [] })}
+      />
+    );
+
+    expect(
+      screen.queryByRole('heading', { name: '오늘의 핵심' })
+    ).not.toBeInTheDocument();
+  });
+
+  it('헤드라인 실패 + keyPoints 성공: globalHeadline이 null이어도 블록은 그대로 렌더된다', () => {
+    render(
+      <MarketOverviewPage
+        mode='latest'
+        now={FIXED_NOW}
+        snapshot={buildSnapshot({ globalHeadline: null })}
+      />
+    );
+
+    expect(
+      screen.getByRole('heading', { level: 2, name: '오늘의 핵심' })
+    ).toBeInTheDocument();
+  });
+
+  it('헤드라인 성공 + keyPoints 실패: PARTIAL 배너에 KEY_POINTS_GENERATION_FAILED 안내가 뜨고 섹션은 숨는다', () => {
+    render(
+      <MarketOverviewPage
+        mode='latest'
+        now={FIXED_NOW}
+        snapshot={buildSnapshot({
+          status: 'partial',
+          keyPoints: [],
+          issues: [
+            {
+              category: 'AI_SUMMARY',
+              code: 'KEY_POINTS_GENERATION_FAILED',
+              message: '오늘의 핵심 포인트를 준비하지 못했습니다.',
+            },
+          ],
+        })}
+      />
+    );
+
+    expect(
+      screen.queryByRole('heading', { name: '오늘의 핵심' })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByText('오늘의 핵심 포인트를 준비하지 못했습니다.')
+    ).toBeInTheDocument();
   });
 });

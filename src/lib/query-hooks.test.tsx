@@ -8,11 +8,13 @@ import type {
   BatchJobDetailResponse,
   BatchJobListResponse,
   DailyPageResponse,
+  NavigationResponse,
 } from './api/types';
 import {
   useArchiveMarketPage,
   useBatchJobDetail,
   useBatchJobs,
+  useNavigation,
   useRetryAiMutation,
 } from './query-hooks';
 
@@ -20,6 +22,7 @@ const {
   mockGetDailyPageByBusinessDate,
   mockGetDailyPageByPageId,
   mockGetLatestDailyPage,
+  mockGetNavigation,
   mockGetBatchJobs,
   mockGetBatchJobDetail,
   mockRetryAiSummary,
@@ -27,6 +30,7 @@ const {
   mockGetDailyPageByBusinessDate: vi.fn(),
   mockGetDailyPageByPageId: vi.fn(),
   mockGetLatestDailyPage: vi.fn(),
+  mockGetNavigation: vi.fn(),
   mockGetBatchJobs: vi.fn(),
   mockGetBatchJobDetail: vi.fn(),
   mockRetryAiSummary: vi.fn(),
@@ -36,6 +40,7 @@ vi.mock('./api/pages', () => ({
   getDailyPageByBusinessDate: mockGetDailyPageByBusinessDate,
   getDailyPageByPageId: mockGetDailyPageByPageId,
   getLatestDailyPage: mockGetLatestDailyPage,
+  getNavigation: mockGetNavigation,
 }));
 
 vi.mock('./api/batch', () => ({
@@ -53,6 +58,9 @@ const dailyPageResponse: DailyPageResponse = {
   globalHeadline: 'headline',
   generatedAt: '2026-03-31T06:12:00Z',
   partialMessage: null,
+  keyPoints: [],
+  issues: [],
+  navigation: { previousBusinessDate: '2026-03-30', nextBusinessDate: null },
   markets: [],
   metadata: {
     rawNewsCount: 0,
@@ -167,6 +175,56 @@ describe('useArchiveMarketPage', () => {
     expect(
       queryClient.getQueryData(['daily-page', 'archive', '2026-03-31', 42])
     ).toMatchObject({ pageId: 42, businessDate: '2026-03-31' });
+  });
+});
+
+describe('useNavigation (B-5)', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  const navigationResponse: NavigationResponse = {
+    businessDate: '2026-03-31',
+    pageExists: true,
+    previousBusinessDate: '2026-03-30',
+    nextBusinessDate: '2026-04-01',
+  };
+
+  it('composes the query key from businessDate only, distinct from the archive-list cache', async () => {
+    mockGetNavigation.mockResolvedValue(navigationResponse);
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+
+    const { result } = renderHook(() => useNavigation('2026-03-31'), {
+      wrapper: createWrapper(queryClient),
+    });
+
+    await waitFor(() => expect(result.current.data).toBeDefined());
+
+    expect(mockGetNavigation).toHaveBeenCalledWith(
+      '2026-03-31',
+      expect.any(AbortSignal)
+    );
+    expect(
+      queryClient.getQueryData(['navigation', '2026-03-31'])
+    ).toMatchObject({ previousBusinessDate: '2026-03-30' });
+    // A-6 "FE 구현 규칙": must not reuse or share the archive-list cache.
+    expect(
+      queryClient.getQueryCache().find({ queryKey: ['archive-list'] })
+    ).toBeUndefined();
+  });
+
+  it('does not fetch when disabled (the already-loaded-page path never fires this query)', () => {
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+
+    renderHook(() => useNavigation('2026-03-31', false), {
+      wrapper: createWrapper(queryClient),
+    });
+
+    expect(mockGetNavigation).not.toHaveBeenCalled();
   });
 });
 

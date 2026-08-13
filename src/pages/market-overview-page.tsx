@@ -5,6 +5,7 @@ import type { MarketSnapshot } from '@/lib/view-models';
 import { ArchiveModeBand } from './market-overview/archive-mode-band';
 import { DecisionHeaderCard } from './market-overview/decision-header-card';
 import { EmptyMarketsPanel } from './market-overview/empty-markets-panel';
+import { KeyPointsBlock } from './market-overview/key-points-block';
 import { MarketSection } from './market-overview/market-section';
 import { MarketTabs } from './market-overview/market-tabs';
 import {
@@ -13,7 +14,7 @@ import {
 } from './market-overview/navigation';
 import { PageDataDetails } from './market-overview/page-data-details';
 import { PartialBanner } from './market-overview/partial-banner';
-import { useAdjacentSnapshotDates } from './market-overview/use-adjacent-snapshot-dates';
+import type { AdjacentNavigationState } from './market-overview/use-adjacent-navigation';
 
 /**
  * `market` 쿼리에서 선택된 시장 인덱스를 읽는다. `marketType`(대소문자
@@ -83,12 +84,16 @@ export function MarketOverviewPage({
   const capabilities = useCapabilities();
   const canViewOps = capabilities.can('ops.view');
   const currentSearch = url.searchParams.toString();
-  // Scoped away from the Latest route via `enabled` — hooks can't be called
-  // conditionally, and this query would be pointless there anyway (D-05).
-  const adjacent = useAdjacentSnapshotDates(
-    snapshot.businessDate,
-    mode === 'archive'
-  );
+  // B-5: this screen already has a loaded daily-page response, so its
+  // `navigation` is reused directly instead of calling the standalone
+  // `GET /pages/navigation` endpoint a second time for the same date
+  // (A-6 "어느 경로를 쓸 것인가"). Never `'loading'`/`'error'` here — the
+  // snapshot itself already resolved successfully.
+  const navigation: AdjacentNavigationState = {
+    status: 'ready',
+    previousBusinessDate: snapshot.navigation.previousBusinessDate,
+    nextBusinessDate: snapshot.navigation.nextBusinessDate,
+  };
 
   const filterQuery =
     mode === 'archive' ? extractFilterQuery(url.searchParams) : null;
@@ -117,9 +122,8 @@ export function MarketOverviewPage({
         <ArchiveModeBand
           businessDate={snapshot.businessDate}
           filterQuery={filterQuery}
-          nextDate={adjacent.next}
+          navigation={navigation}
           pageId={snapshot.pageId}
-          prevDate={adjacent.previous}
           versionNo={snapshot.versionNo}
         />
       ) : null}
@@ -130,6 +134,8 @@ export function MarketOverviewPage({
         now={now}
         snapshot={snapshot}
       />
+
+      <KeyPointsBlock keyPoints={snapshot.keyPoints} />
 
       <PartialBanner canViewOps={canViewOps} snapshot={snapshot} />
 

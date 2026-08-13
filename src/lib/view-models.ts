@@ -67,11 +67,43 @@ export type PageMetadata = {
   isLatest: boolean | null;
 };
 
+/** `DailyPageResponse.navigation` (B-5) — the adjacent-business-day lookup this page's response already carries. */
+export type MarketSnapshotNavigation = {
+  previousBusinessDate: string | null;
+  nextBusinessDate: string | null;
+};
+
+export type KeyPointDirection = 'UP' | 'DOWN' | 'MIXED' | 'FLAT';
+
+/**
+ * B-1 "오늘의 핵심" item. Discriminated on `kind` so `direction` only exists
+ * on the `direction` item, mirroring `KeyPointResponse`'s compile-time
+ * constraint. `mapDailyPageToSnapshot` only ever produces an all-or-nothing
+ * `[]` or a valid 3-item `direction → driver → watch` array — see A-2 보장.
+ */
+export type KeyPoint =
+  | {
+      kind: 'direction';
+      label: string;
+      text: string;
+      direction: KeyPointDirection;
+    }
+  | { kind: 'driver'; label: string; text: string }
+  | { kind: 'watch'; label: string; text: string };
+
+/** Page-level generation issue (B-1's `KEY_POINTS_GENERATION_FAILED`, etc.). Server `message` is safe to render as-is (A-1-4). */
+export type PageIssue = {
+  category: 'AI_SUMMARY';
+  code: 'KEY_POINTS_GENERATION_FAILED' | 'AI_SUMMARY_FALLBACK';
+  message: string;
+};
+
 export type MarketSnapshot = {
   pageId: number;
   businessDate: string;
   versionNo: number;
   generatedAt: string;
+  navigation: MarketSnapshotNavigation;
   /** Raw instant used to recompute relative freshness. */
   // Optional for older page fixtures; the mapper always sets it.
   generatedAtIso?: string | null;
@@ -80,6 +112,10 @@ export type MarketSnapshot = {
   globalHeadline: string | null;
   /** Page-level PARTIAL message, distinct from each market's metadata message. */
   partialMessage?: string | null;
+  /** B-1: "오늘의 핵심". Empty means the section is hidden entirely — never partially rendered. */
+  keyPoints: KeyPoint[];
+  /** B-1: page-level generation issues (e.g. keyPoints generation failure). Never `undefined`; `[]` when none. */
+  issues: PageIssue[];
   // Optional for older page fixtures; the mapper always supplies it.
   metadata?: PageMetadata;
   markets: {

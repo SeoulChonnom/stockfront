@@ -1,5 +1,5 @@
 import { apiRequest } from './client';
-import type { DailyPageResponse } from './types';
+import type { DailyPageResponse, NavigationResponse } from './types';
 
 export function getLatestDailyPage(signal?: AbortSignal) {
   return apiRequest<DailyPageResponse>('/stock/api/pages/daily/latest', {
@@ -19,6 +19,14 @@ export function getDailyPageByBusinessDate(
 
 export function getDailyPageByPageId(pageId: number, signal?: AbortSignal) {
   return apiRequest<DailyPageResponse>(`/stock/api/pages/${pageId}`, {
+    signal,
+  });
+}
+
+/** `GET /stock/api/pages/navigation` (B-5). Only for screens with no loaded daily page to read `navigation` off of — see `useAdjacentNavigation`. */
+export function getNavigation(businessDate: string, signal?: AbortSignal) {
+  return apiRequest<NavigationResponse>('/stock/api/pages/navigation', {
+    query: { businessDate },
     signal,
   });
 }

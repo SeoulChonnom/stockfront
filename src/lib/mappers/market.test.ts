@@ -1,6 +1,26 @@
 import { describe, expect, it } from 'vitest';
-import type { DailyPageResponse } from '../api/types';
+import type { DailyPageResponse, KeyPointResponse } from '../api/types';
 import { mapDailyPageToSnapshot } from './market';
+
+/** A valid B-1 keyPoints triplet, in the server-guaranteed direction → driver → watch order. */
+const SAMPLE_KEY_POINTS: KeyPointResponse[] = [
+  {
+    kind: 'direction',
+    label: '시장 방향',
+    text: '미국 증시는 상승했지만 한국 증시는 하락해 시장별 흐름이 엇갈렸습니다.',
+    direction: 'MIXED',
+  },
+  {
+    kind: 'driver',
+    label: '주요 원인',
+    text: '금리 인하 기대와 국내 반도체주 약세가 주요 변동 요인이었습니다.',
+  },
+  {
+    kind: 'watch',
+    label: '관전 포인트',
+    text: '미국 물가 지표와 외국인의 반도체주 수급을 확인할 필요가 있습니다.',
+  },
+];
 
 describe('mappers - market', () => {
   it('maps a daily page response into the market snapshot view model', () => {
@@ -13,6 +33,12 @@ describe('mappers - market', () => {
       globalHeadline: 'headline',
       generatedAt: '2026-03-31T06:12:00Z',
       partialMessage: null,
+      keyPoints: SAMPLE_KEY_POINTS,
+      issues: [],
+      navigation: {
+        previousBusinessDate: '2026-03-30',
+        nextBusinessDate: '2026-04-01',
+      },
       metadata: {
         rawNewsCount: 1,
         processedNewsCount: 1,
@@ -71,6 +97,87 @@ describe('mappers - market', () => {
     expect(snapshot.markets[0].clusters[0].id).toBe('cluster-1');
     expect(snapshot.markets[0].clusters[0].title).toBe('cluster title');
     expect(snapshot.markets[0].clusters[0].summary).toBe('cluster summary');
+    // B-5: the daily page response's embedded `navigation` block reaches
+    // the view model as-is, so a screen with a loaded page never needs the
+    // standalone `GET /pages/navigation` endpoint (A-6 "어느 경로를 쓸
+    // 것인가").
+    expect(snapshot.navigation).toEqual({
+      previousBusinessDate: '2026-03-30',
+      nextBusinessDate: '2026-04-01',
+    });
+    // B-1: exactly 3 items, direction → driver → watch order preserved as-is.
+    expect(snapshot.keyPoints).toEqual([
+      {
+        kind: 'direction',
+        label: '시장 방향',
+        text: '미국 증시는 상승했지만 한국 증시는 하락해 시장별 흐름이 엇갈렸습니다.',
+        direction: 'MIXED',
+      },
+      {
+        kind: 'driver',
+        label: '주요 원인',
+        text: '금리 인하 기대와 국내 반도체주 약세가 주요 변동 요인이었습니다.',
+      },
+      {
+        kind: 'watch',
+        label: '관전 포인트',
+        text: '미국 물가 지표와 외국인의 반도체주 수급을 확인할 필요가 있습니다.',
+      },
+    ]);
+    expect(snapshot.issues).toEqual([]);
+  });
+
+  it('B-5: preserves a true null neighbour ("no such adjacent business day") distinctly from a missing/malformed navigation block', () => {
+    const nullNeighbours = mapDailyPageToSnapshot({
+      pageId: 1,
+      businessDate: '2026-03-31',
+      versionNo: 2,
+      pageTitle: 'Latest',
+      status: 'READY',
+      globalHeadline: 'headline',
+      generatedAt: '2026-03-31T06:12:00Z',
+      partialMessage: null,
+      keyPoints: [],
+      issues: [],
+      navigation: { previousBusinessDate: null, nextBusinessDate: null },
+      metadata: {
+        rawNewsCount: 1,
+        processedNewsCount: 1,
+        clusterCount: 1,
+        lastUpdatedAt: '2026-03-31T06:12:00Z',
+      },
+      markets: [],
+    });
+
+    expect(nullNeighbours.navigation).toEqual({
+      previousBusinessDate: null,
+      nextBusinessDate: null,
+    });
+
+    const malformedResponse = {
+      pageId: 1,
+      businessDate: '2026-03-31',
+      versionNo: 2,
+      pageTitle: 'Latest',
+      status: 'READY',
+      globalHeadline: 'headline',
+      generatedAt: '2026-03-31T06:12:00Z',
+      partialMessage: null,
+      navigation: 'not an object',
+      metadata: {
+        rawNewsCount: 1,
+        processedNewsCount: 1,
+        clusterCount: 1,
+        lastUpdatedAt: '2026-03-31T06:12:00Z',
+      },
+      markets: [],
+    } as unknown as DailyPageResponse;
+
+    expect(() => mapDailyPageToSnapshot(malformedResponse)).not.toThrow();
+    expect(mapDailyPageToSnapshot(malformedResponse).navigation).toEqual({
+      previousBusinessDate: null,
+      nextBusinessDate: null,
+    });
   });
 
   it.each([null, undefined, 123, { state: 'READY' }])(
@@ -85,6 +192,7 @@ describe('mappers - market', () => {
         globalHeadline: 'headline',
         generatedAt: '2026-03-31T06:12:00Z',
         partialMessage: null,
+        navigation: { previousBusinessDate: null, nextBusinessDate: null },
         metadata: {
           rawNewsCount: 1,
           processedNewsCount: 1,
@@ -108,6 +216,7 @@ describe('mappers - market', () => {
       globalHeadline: null,
       generatedAt: '2026-03-31T06:12:00Z',
       partialMessage: null,
+      navigation: { previousBusinessDate: null, nextBusinessDate: null },
       metadata: {
         rawNewsCount: 1,
         processedNewsCount: 1,
@@ -135,6 +244,7 @@ describe('mappers - market', () => {
       globalHeadline: null,
       generatedAt: '2026-03-31T06:12:00Z',
       partialMessage: null,
+      navigation: { previousBusinessDate: null, nextBusinessDate: null },
       metadata: {
         rawNewsCount: 1,
         processedNewsCount: 1,
@@ -220,6 +330,7 @@ describe('mappers - market', () => {
         globalHeadline: 'headline',
         generatedAt: '2026-03-31T06:12:00Z',
         partialMessage: null,
+        navigation: { previousBusinessDate: null, nextBusinessDate: null },
         metadata: {
           rawNewsCount: 1,
           processedNewsCount: 1,
@@ -276,6 +387,7 @@ describe('mappers - market', () => {
         globalHeadline: 'headline',
         generatedAt: '2026-03-31T06:12:00Z',
         partialMessage: null,
+        navigation: { previousBusinessDate: null, nextBusinessDate: null },
         metadata: {
           rawNewsCount: 1,
           processedNewsCount: 1,
@@ -330,6 +442,7 @@ describe('mappers - market', () => {
       globalHeadline: 123,
       generatedAt: '2026-03-31T06:12:00Z',
       partialMessage: null,
+      navigation: { previousBusinessDate: null, nextBusinessDate: null },
       metadata: {
         rawNewsCount: 1,
         processedNewsCount: 1,
@@ -396,6 +509,7 @@ describe('mappers - market', () => {
       globalHeadline: 'headline',
       generatedAt: '2026-03-31T06:12:00Z',
       partialMessage: null,
+      navigation: { previousBusinessDate: null, nextBusinessDate: null },
       metadata: {
         rawNewsCount: 1,
         processedNewsCount: 1,
@@ -462,6 +576,7 @@ describe('mappers - market', () => {
       globalHeadline: 'headline',
       generatedAt: '2026-03-31T06:12:00Z',
       partialMessage: null,
+      navigation: { previousBusinessDate: null, nextBusinessDate: null },
       metadata: {
         rawNewsCount: 1,
         processedNewsCount: 1,
@@ -516,6 +631,7 @@ describe('mappers - market', () => {
       globalHeadline: 'headline',
       generatedAt: '2026-03-31T06:12:00Z',
       partialMessage: null,
+      navigation: { previousBusinessDate: null, nextBusinessDate: null },
       metadata: {
         rawNewsCount: 1,
         processedNewsCount: 1,
@@ -538,6 +654,9 @@ describe('mappers - market', () => {
       globalHeadline: null,
       generatedAt: '2026-03-31T06:12:00Z',
       partialMessage: null,
+      keyPoints: [],
+      issues: [],
+      navigation: { previousBusinessDate: null, nextBusinessDate: null },
       metadata: {
         rawNewsCount: 1,
         processedNewsCount: 1,
@@ -610,6 +729,7 @@ describe('restored daily page fields', () => {
       globalHeadline: '금리 경계 속 기술주 강세',
       generatedAt: '2026-07-27T06:12:10',
       partialMessage: null,
+      navigation: { previousBusinessDate: null, nextBusinessDate: null },
       metadata: {
         rawNewsCount: 174,
         processedNewsCount: 114,
@@ -754,6 +874,7 @@ describe('restored daily page fields', () => {
       globalHeadline: null,
       generatedAt: '2026-07-27T06:12:10',
       partialMessage: null,
+      navigation: { previousBusinessDate: null, nextBusinessDate: null },
       metadata: {
         rawNewsCount: 12,
         processedNewsCount: 0,
@@ -827,6 +948,7 @@ describe('restored daily page fields', () => {
       generatedAt: '2026-07-27T06:12:10',
       partialMessage:
         '한국 증시 지수 2종과 미국 클러스터 요약 1건이 누락된 상태로 생성됐습니다.',
+      navigation: { previousBusinessDate: null, nextBusinessDate: null },
       metadata: {
         rawNewsCount: 126,
         processedNewsCount: 74,
@@ -854,6 +976,7 @@ describe('restored daily page fields', () => {
       globalHeadline: 'headline',
       generatedAt: '2026-07-27T06:12:10',
       partialMessage: null,
+      navigation: { previousBusinessDate: null, nextBusinessDate: null },
       metadata: 'not an object',
       markets: [
         {
@@ -930,6 +1053,7 @@ describe('restored daily page fields', () => {
       globalHeadline: `headline with token ${LONG_TOKEN}`,
       generatedAt: '2026-07-27T06:12:10',
       partialMessage: null,
+      navigation: { previousBusinessDate: null, nextBusinessDate: null },
       metadata: {
         rawNewsCount: 174,
         processedNewsCount: 114,
@@ -970,5 +1094,169 @@ describe('restored daily page fields', () => {
     expect(heavyLinks[49].mirrorUrl).toBeNull();
     expect(heavyLinks[0].title).toContain(LONG_TOKEN);
     expect(snapshot.markets[0].analysis?.outlook).toBe(LONG_TOKEN);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────
+// B-1: keyPoints ("오늘의 핵심") + page-level issues.
+// docs/backend-requests-2026-08-12.md#A-2 준비할 테스트 케이스: 성공 3개 정상
+// 순서 / direction 네 값 / [] / 헤드라인·keyPoints 성공·실패 조합 / 접근성은
+// component-level 테스트(key-points-block.test.tsx, market-overview-page.test.tsx)
+// 쪽에서 다룬다. 여기서는 매퍼의 all-or-nothing 강제와 알 수 없는 값에 대한
+// 런타임 관용(A-1-7)만 검증한다.
+// ─────────────────────────────────────────────────────────────────────────
+describe('mappers - market - B-1 keyPoints/issues', () => {
+  function baseResponse(
+    overrides: Partial<DailyPageResponse> = {}
+  ): DailyPageResponse {
+    return {
+      pageId: 1,
+      businessDate: '2026-08-13',
+      versionNo: 1,
+      pageTitle: 'Latest',
+      status: 'READY',
+      globalHeadline: 'headline',
+      generatedAt: '2026-08-13T06:12:00Z',
+      partialMessage: null,
+      keyPoints: [],
+      issues: [],
+      navigation: { previousBusinessDate: null, nextBusinessDate: null },
+      metadata: {
+        rawNewsCount: 1,
+        processedNewsCount: 1,
+        clusterCount: 1,
+        lastUpdatedAt: '2026-08-13T06:12:00Z',
+      },
+      markets: [],
+      ...overrides,
+    };
+  }
+
+  it.each(['UP', 'DOWN', 'MIXED', 'FLAT'] as const)(
+    'maps a valid 3-item keyPoints array with direction %s',
+    (direction) => {
+      const response = baseResponse({
+        keyPoints: [
+          { kind: 'direction', label: '시장 방향', text: '문장', direction },
+          { kind: 'driver', label: '주요 원인', text: '문장2' },
+          { kind: 'watch', label: '관전 포인트', text: '문장3' },
+        ],
+      });
+
+      expect(mapDailyPageToSnapshot(response).keyPoints).toEqual([
+        { kind: 'direction', label: '시장 방향', text: '문장', direction },
+        { kind: 'driver', label: '주요 원인', text: '문장2' },
+        { kind: 'watch', label: '관전 포인트', text: '문장3' },
+      ]);
+    }
+  );
+
+  it('collapses to [] when fewer than 3 items are present — partial success is not a real state (A-2 보장)', () => {
+    const response = baseResponse({
+      keyPoints: [
+        {
+          kind: 'direction',
+          label: '시장 방향',
+          text: '문장',
+          direction: 'UP',
+        },
+        { kind: 'driver', label: '주요 원인', text: '문장2' },
+      ],
+    });
+
+    expect(mapDailyPageToSnapshot(response).keyPoints).toEqual([]);
+  });
+
+  it('collapses to [] when the order is not direction → driver → watch', () => {
+    const response = baseResponse({
+      keyPoints: [
+        { kind: 'driver', label: '주요 원인', text: '문장2' },
+        {
+          kind: 'direction',
+          label: '시장 방향',
+          text: '문장',
+          direction: 'UP',
+        },
+        { kind: 'watch', label: '관전 포인트', text: '문장3' },
+      ],
+    });
+
+    expect(mapDailyPageToSnapshot(response).keyPoints).toEqual([]);
+  });
+
+  it('drops the whole array when a kind/direction falls outside the closed enum, instead of crashing (A-1-7)', () => {
+    const response = {
+      ...baseResponse(),
+      keyPoints: [
+        {
+          kind: 'direction',
+          label: '시장 방향',
+          text: '문장',
+          direction: 'SIDEWAYS',
+        },
+        { kind: 'driver', label: '주요 원인', text: '문장2' },
+        { kind: 'watch', label: '관전 포인트', text: '문장3' },
+      ],
+    } as unknown as DailyPageResponse;
+
+    expect(() => mapDailyPageToSnapshot(response)).not.toThrow();
+    expect(mapDailyPageToSnapshot(response).keyPoints).toEqual([]);
+  });
+
+  it('defensively maps a malformed (non-array) keyPoints field to []', () => {
+    const response = {
+      ...baseResponse(),
+      keyPoints: 'not an array',
+    } as unknown as DailyPageResponse;
+
+    expect(() => mapDailyPageToSnapshot(response)).not.toThrow();
+    expect(mapDailyPageToSnapshot(response).keyPoints).toEqual([]);
+  });
+
+  it('maps the KEY_POINTS_GENERATION_FAILED issue so it stays distinguishable from AI_SUMMARY_FALLBACK', () => {
+    const response = baseResponse({
+      status: 'PARTIAL',
+      issues: [
+        {
+          category: 'AI_SUMMARY',
+          code: 'KEY_POINTS_GENERATION_FAILED',
+          message: '오늘의 핵심 포인트를 준비하지 못했습니다.',
+        },
+      ],
+    });
+
+    expect(mapDailyPageToSnapshot(response).issues).toEqual([
+      {
+        category: 'AI_SUMMARY',
+        code: 'KEY_POINTS_GENERATION_FAILED',
+        message: '오늘의 핵심 포인트를 준비하지 못했습니다.',
+      },
+    ]);
+  });
+
+  it('drops an issue with an unrecognized category/code instead of crashing (A-1-7)', () => {
+    const response = {
+      ...baseResponse(),
+      issues: [
+        {
+          category: 'THEME_CLASSIFICATION',
+          code: 'THEME_CLASSIFICATION_MISSING',
+          message: '일부 뉴스 주제의 검색 테마를 분류하지 못했습니다.',
+        },
+      ],
+    } as unknown as DailyPageResponse;
+
+    expect(() => mapDailyPageToSnapshot(response)).not.toThrow();
+    expect(mapDailyPageToSnapshot(response).issues).toEqual([]);
+  });
+
+  it('defensively maps a malformed (non-array) issues field to []', () => {
+    const response = {
+      ...baseResponse(),
+      issues: 'nope',
+    } as unknown as DailyPageResponse;
+
+    expect(() => mapDailyPageToSnapshot(response)).not.toThrow();
+    expect(mapDailyPageToSnapshot(response).issues).toEqual([]);
   });
 });

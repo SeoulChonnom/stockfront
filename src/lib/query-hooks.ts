@@ -12,6 +12,7 @@ import {
   getDailyPageByBusinessDate,
   getDailyPageByPageId,
   getLatestDailyPage,
+  getNavigation,
 } from './api/pages';
 import {
   mapArchiveListToView,
@@ -19,6 +20,7 @@ import {
   mapBatchJobsToView,
   mapClusterDetailToView,
   mapDailyPageToSnapshot,
+  mapNavigationToView,
 } from './mappers';
 
 const BATCH_POLL_INTERVAL_MS = 5000;
@@ -89,6 +91,23 @@ export function useArchiveList(params: ArchiveListParams, enabled = true) {
     queryFn: ({ signal }) => getArchiveList(params, signal),
     select: mapArchiveListToView,
     enabled,
+  });
+}
+
+/**
+ * `GET /pages/navigation` (B-5). Query key is `businessDate` ONLY (A-6 "FE
+ * 구현 규칙") and intentionally does not share the `archive-list` cache — it
+ * is a different lookup with a different invalidation lifecycle. Only call
+ * this for screens with no loaded daily page to read `navigation` off of;
+ * a loaded page's own `navigation` field must be used instead (A-6 "어느
+ * 경로를 쓸 것인가").
+ */
+export function useNavigation(businessDate: string, enabled = true) {
+  return useQuery({
+    queryKey: ['navigation', businessDate],
+    queryFn: ({ signal }) => getNavigation(businessDate, signal),
+    select: mapNavigationToView,
+    enabled: enabled && businessDate.length > 0,
   });
 }
 

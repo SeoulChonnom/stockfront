@@ -68,6 +68,25 @@ export function PartialBanner({
           </h2>
           <p className='m-0 mb-3 text-body text-fg-soft'>{copy.body}</p>
 
+          {snapshot.issues.length > 0 ? (
+            // 서버 `message`는 provider endpoint·SQL·스택 트레이스를 담지
+            // 않도록 보장되어(A-1-4) 모든 사용자에게 그대로 노출해도 안전하다.
+            // `KEY_POINTS_GENERATION_FAILED`처럼 코드별로 구체적인 문구가
+            // 오기 때문에, 이 목록만으로 "핵심 포인트만 실패"와 "요약 전반
+            // 실패"(`AI_SUMMARY_FALLBACK`)가 서로 다른 문장으로 구분된다 —
+            // FE가 코드별 안내문을 별도로 합성하지 않는다.
+            <ul className='m-0 mb-3 flex list-none flex-col gap-1 p-0'>
+              {snapshot.issues.map((issue) => (
+                <li
+                  className='text-body text-fg-soft'
+                  key={`${issue.category}-${issue.code}`}
+                >
+                  {issue.message}
+                </li>
+              ))}
+            </ul>
+          ) : null}
+
           {canViewOps && snapshot.partialMessage ? (
             <p className='wrap-anywhere m-0 mb-3 text-body text-fg-soft'>
               {snapshot.partialMessage}

@@ -109,6 +109,23 @@ export function toUpperStatus<
   return allowed.includes(normalized as T) ? (normalized as T) : 'FAILED';
 }
 
+/**
+ * Validates `value` against a closed set of string literals, returning
+ * `null` for anything else (including non-strings). Used at mapper
+ * boundaries to keep DTO enum types narrow while staying lenient at runtime
+ * (A-1-7): an unrecognized value is excluded rather than crashing or being
+ * silently coerced to a guessed member.
+ */
+export function asEnumOrNull<T extends string>(
+  value: unknown,
+  allowed: readonly T[]
+): T | null {
+  return typeof value === 'string' &&
+    (allowed as readonly string[]).includes(value)
+    ? (value as T)
+    : null;
+}
+
 export function firstString(values: unknown[], fallback: string): string {
   return (
     values.find((value): value is string => typeof value === 'string') ??

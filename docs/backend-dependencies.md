@@ -22,24 +22,6 @@ Backend requests raised by the 2026-08-12 UI overhaul are tracked separately in
 - **Frontend follow-up:** Use the server value in the page view model instead
   of relying solely on route context.
 
-## D-05: Adjacent business-date navigation
-
-- **Current fallback:** Archive previous/next links query the archive list for
-  a ±90 day window around the current business date and enable only the
-  neighbours that actually exist. Labels show the target date. A neighbour
-  further than 90 days away is still reported as absent, and every archive
-  detail view costs one extra list request. This applies uniformly to the
-  ready-page band, the 404 screen (`archive-not-found-state.tsx`), and the
-  loading/error shell (`market-overview-route-shell.tsx`) — all three reuse
-  the same `useAdjacentSnapshotDates` hook, so a user who lands on a
-  dead-end date (the exact scenario this fallback exists for) is not
-  offered a prev/next pair computed by calendar arithmetic that could route
-  them straight into another dead end.
-- **Backend dependency:** Provide the existing previous and next business dates
-  for a given `businessDate`, either through a dedicated endpoint or archive
-  cursor metadata.
-- **Frontend follow-up:** Enable only links for dates known to exist.
-
 ## D-06: Multiple versions for one business date
 
 - **Current fallback:** A page can display its `pageId` and `versionNo`, but

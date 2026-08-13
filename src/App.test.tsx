@@ -24,6 +24,7 @@ const {
   mockUseBatchJobs,
   mockUseClusterDetail,
   mockUseLatestMarketPage,
+  mockUseNavigation,
   mockUseRetryAiMutation,
 } = vi.hoisted(() => ({
   mockUseArchiveList: vi.fn(),
@@ -32,6 +33,7 @@ const {
   mockUseBatchJobs: vi.fn(),
   mockUseClusterDetail: vi.fn(),
   mockUseLatestMarketPage: vi.fn(),
+  mockUseNavigation: vi.fn(),
   mockUseRetryAiMutation: vi.fn(),
 }));
 
@@ -43,6 +45,7 @@ vi.mock('./lib/query-hooks', () => ({
   useBatchJobDetail: mockUseBatchJobDetail,
   useRetryAiMutation: mockUseRetryAiMutation,
   useClusterDetail: mockUseClusterDetail,
+  useNavigation: mockUseNavigation,
 }));
 
 function createJsonResponse(body: unknown, init?: ResponseInit) {
@@ -74,6 +77,12 @@ type MockLatestSnapshot = {
   generatedAt: string;
   status: 'ready';
   globalHeadline: string;
+  navigation: {
+    previousBusinessDate: string | null;
+    nextBusinessDate: string | null;
+  };
+  keyPoints: [];
+  issues: [];
   markets: [];
 };
 
@@ -184,6 +193,19 @@ describe('App routing', () => {
       data: undefined,
       error: null,
       isLoading: false,
+    });
+    // B-5: only the no-loaded-page shells (`MarketOverviewRouteShell`,
+    // `ArchiveNotFoundState`) call this — a resolved, both-null default
+    // keeps them from throwing on an unmocked export. None of the cases
+    // below assert on the band's prev/next dates.
+    mockUseNavigation.mockReturnValue({
+      data: {
+        businessDate: '',
+        pageExists: false,
+        previousBusinessDate: null,
+        nextBusinessDate: null,
+      },
+      status: 'success',
     });
   });
 
@@ -659,6 +681,9 @@ describe('App routing', () => {
           businessDate: '2026-03-17',
           generatedAt: '2026. 03. 17. 09:30',
           globalHeadline: 'headline',
+          navigation: { previousBusinessDate: null, nextBusinessDate: null },
+          keyPoints: [],
+          issues: [],
           markets: [],
           pageId: 501,
           status: 'ready',

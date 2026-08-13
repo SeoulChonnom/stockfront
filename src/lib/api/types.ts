@@ -13,6 +13,45 @@ type PaginationResponse = {
   totalCount: number;
 };
 
+/** Embedded on `DailyPageResponse` — same lookup as `NavigationResponse` (B-5), scoped to the two fields a loaded page needs. */
+type DailyPageNavigationResponse = {
+  previousBusinessDate: string | null;
+  nextBusinessDate: string | null;
+};
+
+/** B-1 keyPoint enums (A-1-7). Closed by the backend — do not widen to `string`. */
+type KeyPointDirectionResponse = 'UP' | 'DOWN' | 'MIXED' | 'FLAT';
+
+/**
+ * `DailyPageResponse.keyPoints[]` item (B-1, docs/backend-requests-2026-08-12.md#A-2).
+ * Discriminated on `kind` so `direction` is only assignable when `kind: 'direction'` —
+ * the server rejects any `driver`/`watch` item carrying a `direction` field, so this
+ * type encodes the same constraint at compile time.
+ */
+export type KeyPointResponse =
+  | {
+      kind: 'direction';
+      label: string;
+      text: string;
+      direction: KeyPointDirectionResponse;
+    }
+  | { kind: 'driver'; label: string; text: string }
+  | { kind: 'watch'; label: string; text: string };
+
+/**
+ * `DailyPageResponse.issues[]` item (B-1 adds `KEY_POINTS_GENERATION_FAILED`
+ * under category `AI_SUMMARY`; `AI_SUMMARY_FALLBACK` is the pre-existing general
+ * AI-summary-failure code the doc names as the thing this must stay distinct
+ * from). Only the B-1-scoped category/codes are modeled here — a future
+ * category (e.g. B-3's `THEME_CLASSIFICATION`) is out of this task's scope and
+ * is dropped by the mapper rather than crashing (A-1-7 "런타임은 관대하게").
+ */
+type PageIssueResponse = {
+  category: 'AI_SUMMARY';
+  code: 'KEY_POINTS_GENERATION_FAILED' | 'AI_SUMMARY_FALLBACK';
+  message: string;
+};
+
 export type DailyPageResponse = {
   pageId: number;
   businessDate: string;
@@ -22,6 +61,11 @@ export type DailyPageResponse = {
   globalHeadline: string | null;
   generatedAt: string;
   partialMessage: string | null;
+  navigation: DailyPageNavigationResponse;
+  /** B-1: page-level "오늘의 핵심". All-or-nothing — exactly 3 (direction→driver→watch) or []. */
+  keyPoints: KeyPointResponse[];
+  /** B-1: page-level generation issues (e.g. `KEY_POINTS_GENERATION_FAILED`). Never omitted; `[]` when none. */
+  issues: PageIssueResponse[];
   markets: MarketSectionResponse[];
   metadata: {
     rawNewsCount: number;
@@ -29,6 +73,14 @@ export type DailyPageResponse = {
     clusterCount: number;
     lastUpdatedAt: string;
   };
+};
+
+/** `GET /stock/api/pages/navigation?businessDate=` (B-5). Contract: docs/backend-requests-2026-08-12.md#A-6. */
+export type NavigationResponse = {
+  businessDate: string;
+  pageExists: boolean;
+  previousBusinessDate: string | null;
+  nextBusinessDate: string | null;
 };
 
 type MarketSectionResponse = {

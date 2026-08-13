@@ -10,10 +10,13 @@ import { isRecord } from '../utils';
 import type {
   ArticleLink,
   ClusterRepresentativeArticle,
+  KeyPoint,
   MarketAnalysis,
   MarketIndex,
   MarketMetadata,
   MarketSnapshot,
+  MarketSnapshotNavigation,
+  PageIssue,
   PageMetadata,
 } from '../view-models';
 import {
@@ -21,6 +24,7 @@ import {
   asDailyClusterArray,
   asDailyMarketArray,
   asDisplayId,
+  asEnumOrNull,
   asFiniteNumber,
   asIndexArray,
   asNonNegativeSafeInteger,
@@ -30,6 +34,14 @@ import {
   asStringArray,
   firstString,
 } from './coerce';
+
+const KEY_POINT_KINDS = ['direction', 'driver', 'watch'] as const;
+const KEY_POINT_DIRECTIONS = ['UP', 'DOWN', 'MIXED', 'FLAT'] as const;
+const PAGE_ISSUE_CATEGORIES = ['AI_SUMMARY'] as const;
+const PAGE_ISSUE_CODES = [
+  'KEY_POINTS_GENERATION_FAILED',
+  'AI_SUMMARY_FALLBACK',
+] as const;
 
 function mapIndex(item: IndexCardResponse): MarketIndex {
   const changeValue =
@@ -118,6 +130,75 @@ function mapPageMetadata(value: unknown): PageMetadata {
   };
 }
 
+/** B-5: reads the adjacent-business-day pair the daily page response already embeds. Never issues its own request — see `useAdjacentNavigation` for the no-page-loaded path. */
+function mapNavigation(value: unknown): MarketSnapshotNavigation {
+  const record: Record<string, unknown> = isRecord(value) ? value : {};
+
+  return {
+    previousBusinessDate: asNullableString(record.previousBusinessDate),
+    nextBusinessDate: asNullableString(record.nextBusinessDate),
+  };
+}
+
+/** One `keyPoints[]` item, or `null` if `kind`/`direction` doesn't match the closed enum (A-1-7 leniency). */
+function mapKeyPoint(value: unknown): KeyPoint | null {
+  const record: Record<string, unknown> = isRecord(value) ? value : {};
+  const kind = asEnumOrNull(record.kind, KEY_POINT_KINDS);
+
+  if (!kind) {
+    return null;
+  }
+
+  const label = asString(record.label, '');
+  const text = asString(record.text, '');
+
+  if (kind === 'direction') {
+    const direction = asEnumOrNull(record.direction, KEY_POINT_DIRECTIONS);
+    return direction ? { kind, label, text, direction } : null;
+  }
+
+  return { kind, label, text };
+}
+
+/**
+ * B-1 서버 보장: 성공하면 정확히 3개(direction → driver → watch 순서),
+ * 실패하면 `[]`다. 부분 성공(1~2개)은 계약상 존재하지 않으므로, 이 조건을
+ * 만족하지 않는 어떤 입력이든 `[]`로 접어 UI가 `length === 3` 하나만
+ * 확인하면 되게 한다.
+ */
+function mapKeyPoints(value: unknown): KeyPoint[] {
+  const items = Array.isArray(value) ? value : [];
+  const mapped = items.map(mapKeyPoint);
+
+  const isValidTriplet =
+    mapped.length === 3 &&
+    mapped[0]?.kind === 'direction' &&
+    mapped[1]?.kind === 'driver' &&
+    mapped[2]?.kind === 'watch';
+
+  return isValidTriplet ? (mapped as KeyPoint[]) : [];
+}
+
+/** One `issues[]` item, or `null` if `category`/`code` fall outside the B-1-scoped closed set (A-1-7 leniency). */
+function mapPageIssue(value: unknown): PageIssue | null {
+  const record: Record<string, unknown> = isRecord(value) ? value : {};
+  const category = asEnumOrNull(record.category, PAGE_ISSUE_CATEGORIES);
+  const code = asEnumOrNull(record.code, PAGE_ISSUE_CODES);
+
+  if (!category || !code) {
+    return null;
+  }
+
+  return { category, code, message: asString(record.message, '') };
+}
+
+function mapPageIssues(value: unknown): PageIssue[] {
+  const items = Array.isArray(value) ? value : [];
+  return items
+    .map(mapPageIssue)
+    .filter((issue): issue is PageIssue => issue !== null);
+}
+
 function mapMarketAnalysis(value: unknown): MarketAnalysis {
   const record: Record<string, unknown> = isRecord(value) ? value : {};
 
@@ -149,6 +230,9 @@ export function mapDailyPageToSnapshot(
      */
     globalHeadline: asNullableString(response.globalHeadline),
     partialMessage: asNullableString(response.partialMessage),
+    keyPoints: mapKeyPoints(response.keyPoints),
+    issues: mapPageIssues(response.issues),
+    navigation: mapNavigation(response.navigation),
     metadata: mapPageMetadata(response.metadata),
     markets: markets.map((market) => {
       const label = asString(market.marketLabel, '시장');
