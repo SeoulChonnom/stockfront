@@ -26,7 +26,29 @@ function baseDetail(overrides: Partial<ClusterDetail> = {}): ClusterDetail {
     summary: 'cluster summary paragraph.',
     analysisLead: 'cluster analysis lead paragraph.',
     tags: ['반도체', 'AI'],
-    analysis: ['analysis paragraph one.', 'analysis paragraph two.'],
+    analysisStatus: 'READY',
+    analysisGeneratedAt: '2026-07-27 06:12 KST',
+    analysisIssues: [],
+    conflictStatus: 'NONE',
+    sections: [
+      {
+        kind: 'background',
+        title: '발생 배경',
+        paragraphs: [
+          {
+            sentences: [
+              {
+                text: 'analysis paragraph one.',
+                sourceArticleIds: [],
+                conflictStatus: 'NONE',
+                conflictingSourceArticleIds: [],
+                conflictNote: null,
+              },
+            ],
+          },
+        ],
+      },
+    ],
     articles: [
       {
         id: 'safe',
@@ -35,8 +57,16 @@ function baseDetail(overrides: Partial<ClusterDetail> = {}): ClusterDetail {
         title: 'safe article',
         originalUrl: 'https://example.com/original',
         mirrorUrl: 'https://n.news.naver.com/mirror',
+        similarGroupId: 'sim-safe',
+        isSimilarGroupRepresentative: true,
+        exactDuplicateCount: 0,
       },
     ],
+    articleGrouping: {
+      status: 'READY',
+      generatedAt: '2026-07-27 06:12',
+      issue: null,
+    },
     representative: {
       id: 'rep',
       source: 'Representative Source',
@@ -45,6 +75,9 @@ function baseDetail(overrides: Partial<ClusterDetail> = {}): ClusterDetail {
       originalUrl: 'https://example.com/representative',
       mirrorUrl: 'https://n.news.naver.com/representative-mirror',
       sourceSummary: 'summary',
+      similarGroupId: 'sim-rep',
+      isSimilarGroupRepresentative: true,
+      exactDuplicateCount: 0,
     },
     articleCount: 1,
     updatedAt: '2026-07-27 06:12',
@@ -90,6 +123,9 @@ describe('ClusterDetailPage', () => {
             title: 'safe article',
             originalUrl: 'https://example.com/original',
             mirrorUrl: 'https://n.news.naver.com/mirror',
+            similarGroupId: 'sim-safe',
+            isSimilarGroupRepresentative: true,
+            exactDuplicateCount: 0,
           },
           {
             id: 'unsafe',
@@ -98,6 +134,9 @@ describe('ClusterDetailPage', () => {
             title: 'unsafe article',
             originalUrl: 'javascript:alert(1)',
             mirrorUrl: 'data:text/html,boom',
+            similarGroupId: 'sim-unsafe',
+            isSimilarGroupRepresentative: true,
+            exactDuplicateCount: 0,
           },
           {
             id: 'no-mirror',
@@ -111,6 +150,9 @@ describe('ClusterDetailPage', () => {
             // 미러 없음 = null. 예전 mapper는 originLink로 backfill해서
             // 화면이 URL 문자열 비교로 추측해야 했다.
             mirrorUrl: null,
+            similarGroupId: 'sim-no-mirror',
+            isSimilarGroupRepresentative: true,
+            exactDuplicateCount: 0,
           },
         ],
       })
@@ -190,14 +232,32 @@ describe('ClusterDetailPage', () => {
     expect(screen.queryByText('#반도체')).not.toBeInTheDocument();
   });
 
-  it('shows the sparse-analysis fallback copy when analysis is empty', () => {
+  it('shows the UNAVAILABLE guidance state when the analysis has no sections, but keeps the summary lead', () => {
     setLocation('?origin=latest');
-    mockReady(baseDetail({ analysis: [] }));
+    mockReady(
+      baseDetail({
+        analysisStatus: 'UNAVAILABLE',
+        analysisGeneratedAt: null,
+        analysisIssues: [
+          {
+            code: 'NO_GROUNDED_SENTENCES',
+            message: '근거를 확인할 수 있는 분석 문장이 없습니다.',
+          },
+        ],
+        conflictStatus: 'NOT_CHECKED',
+        sections: [],
+      })
+    );
 
     render(<ClusterDetailPage clusterId='cluster-1' />);
 
     expect(
-      screen.getByText(/이 이슈의 심층 분석이 아직 생성되지 않았습니다/)
+      screen.getByText(/이 이슈는 근거를 확인할 수 있는 분석 문장이 없습니다/)
+    ).toBeInTheDocument();
+    // summary.short/long stay visible even when the analysis is unavailable (A-3).
+    expect(screen.getByText('cluster summary paragraph.')).toBeInTheDocument();
+    expect(
+      screen.getByText('cluster analysis lead paragraph.')
     ).toBeInTheDocument();
   });
 

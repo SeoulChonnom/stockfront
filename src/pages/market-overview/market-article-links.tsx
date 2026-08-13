@@ -68,6 +68,17 @@ function ArticleLinkRow({ link }: { link: ArticleLink }) {
         </span>
       )}
       <span className='mono wrap-anywhere text-caption text-faint'>{meta}</span>
+      {/* B-4 (docs/backend-requests-2026-08-12.md#A-5 "표시 규칙"): only
+          shown when > 0 — mirrors the same rule in
+          `cluster-detail/cluster-articles-list.tsx`. Never the similar
+          group's other-article count; this surface never renders group
+          collapse UI at all (cluster-detail only), only the duplicate
+          badge. */}
+      {link.exactDuplicateCount > 0 ? (
+        <span className='rounded-[var(--r-sm)] border border-line px-1.5 py-0.5 text-caption text-faint'>
+          원문 중복 {link.exactDuplicateCount}건
+        </span>
+      ) : null}
       {mirrorUrl ? (
         <a
           className='text-caption text-faint underline'

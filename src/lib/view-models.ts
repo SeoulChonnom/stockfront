@@ -44,6 +44,12 @@ export type ArticleLink = {
   publishedAt: string | null;
   originalUrl: string;
   mirrorUrl: string | null;
+  /** B-4 (A-5) — same field as `ClusterArticle.similarGroupId`; unused by this surface today but mapped for parity. */
+  similarGroupId: string;
+  /** B-4 (A-5). */
+  isSimilarGroupRepresentative: boolean;
+  /** B-4 (A-5) — shown as "원문 중복 N건" only when > 0 (A-5 "표시 규칙"). */
+  exactDuplicateCount: number;
 };
 
 export type MarketMetadata = {
@@ -150,6 +156,83 @@ export type ClusterArticle = {
   originalUrl: string;
   /** Null means no Naver mirror; do not backfill from originalUrl. */
   mirrorUrl: string | null;
+  /**
+   * B-4 similar-article-group id (A-5). Every article belongs to exactly
+   * one group (singletons included) — never used as a "no group" sentinel.
+   * Only meaningful within one cluster-detail response; never parsed.
+   */
+  similarGroupId: string;
+  /** B-4 (A-5) — exactly one article per `similarGroupId` has this `true`. */
+  isSimilarGroupRepresentative: boolean;
+  /**
+   * B-4 (A-5) — raw articles merged into this one, excluding itself.
+   * Distinct from "other articles in the similar group"; never substitute
+   * one count for the other.
+   */
+  exactDuplicateCount: number;
+};
+
+/** B-4 `articleGrouping.status` (docs/backend-requests-2026-08-12.md#A-5). */
+type ArticleGroupingStatus = 'READY' | 'UNAVAILABLE';
+
+/** B-4 `articleGrouping.issue` — server-fixed `message`, safe to render verbatim (A-1-4). */
+type ArticleGroupingIssue = {
+  code: 'SIMILARITY_GROUPING_FAILED';
+  message: string;
+};
+
+/**
+ * `ClusterDetail.articleGrouping` (B-4, A-5). Failure here is isolated to
+ * this cluster and never implies the page or the AI analysis failed.
+ */
+export type ArticleGrouping = {
+  status: ArticleGroupingStatus;
+  /** `null` exactly when `status === 'UNAVAILABLE'`. */
+  generatedAt: string | null;
+  /** Present exactly when `status === 'UNAVAILABLE'`. */
+  issue: ArticleGroupingIssue | null;
+};
+
+/** B-2 `summary.analysisStatus` (docs/backend-requests-2026-08-12.md#A-3). */
+export type AnalysisStatus = 'READY' | 'PARTIAL' | 'UNAVAILABLE';
+
+/** B-2 `conflictStatus` — used at both the aggregate `summary` level and per sentence. */
+export type ConflictStatus = 'NOT_CHECKED' | 'NONE' | 'FOUND';
+
+/** B-2 analysis section discriminator. Server-fixed order: background → impact → related → outlook. */
+type ClusterSectionKind = 'background' | 'impact' | 'related' | 'outlook';
+
+type AnalysisIssueCode =
+  | 'ANALYSIS_GENERATION_FAILED'
+  | 'NO_GROUNDED_SENTENCES'
+  | 'INVALID_SOURCE_REFERENCE'
+  | 'CONFLICT_CHECK_FAILED';
+
+/** Server-fixed `message` (A-3 "이슈 코드") — safe to render verbatim. */
+export type AnalysisIssue = { code: AnalysisIssueCode; message: string };
+
+/**
+ * B-2 sentence — the minimal unit of `summary → sections[] → paragraphs[] →
+ * sentences[]`. Source-article grounding and conflict info attach here, not
+ * at the paragraph/section level. `sourceArticleIds` /
+ * `conflictingSourceArticleIds` reference `ClusterArticle.id` values from
+ * the same response's `articles[]`.
+ */
+export type ClusterSentence = {
+  text: string;
+  sourceArticleIds: number[];
+  conflictStatus: ConflictStatus;
+  conflictingSourceArticleIds: number[];
+  conflictNote: string | null;
+};
+
+export type ClusterParagraph = { sentences: ClusterSentence[] };
+
+/** `title` is server-fixed (A-3 "FE는 제목을 만들지 않는다") — never inferred from body text. */
+export type ClusterSection = {
+  kind: ClusterSectionKind;
+  title: string;
+  paragraphs: ClusterParagraph[];
 };
 
 export type ClusterDetail = {
@@ -162,8 +245,21 @@ export type ClusterDetail = {
   /** DTO `summary.long` for AI analysis; it is not the short header summary. */
   analysisLead: string | null;
   tags: string[];
-  analysis: string[];
+  analysisStatus: AnalysisStatus;
+  /**
+   * Pre-formatted KST display string (A-1-5). `null` exactly when
+   * `analysisStatus === 'UNAVAILABLE'`. Distinct from `updatedAt` below —
+   * never show the cluster's own last-updated time as the analysis
+   * timestamp (A-7).
+   */
+  analysisGeneratedAt: string | null;
+  sections: ClusterSection[];
+  analysisIssues: AnalysisIssue[];
+  /** Aggregate of all sentence-level `conflictStatus` values; priority FOUND > NOT_CHECKED > NONE (A-3). */
+  conflictStatus: ConflictStatus;
   articles: ClusterArticle[];
+  /** B-4 (A-5) — cluster-scoped grouping result driving `articles[]`'s `similarGroupId`s. */
+  articleGrouping: ArticleGrouping;
   representative: ClusterArticle & {
     sourceSummary: string;
   };

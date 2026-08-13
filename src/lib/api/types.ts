@@ -141,6 +141,12 @@ export type ArticleLinkResponse = {
   publishedAt?: string | null;
   originLink: string;
   naverLink?: string | null;
+  /** B-4 (A-5) — mirrors `ClusterArticleResponse`'s field of the same name. */
+  similarGroupId: string;
+  /** B-4 (A-5). */
+  isSimilarGroupRepresentative: boolean;
+  /** B-4 (A-5) — raw articles merged into this one; excludes the article itself. */
+  exactDuplicateCount: number;
 };
 
 type ArchiveItemResponse = {
@@ -159,13 +165,103 @@ export type ArchiveListResponse = {
 };
 
 export type ClusterArticleResponse = {
-  processedArticleId?: number | null;
+  /** Required non-null integer (A-3/A-7) — the pre-B-2 optional/nullable form is gone. */
+  processedArticleId: number;
   title: string;
   publisherName?: string | null;
   publishedAt?: string | null;
   originLink: string;
   naverLink?: string | null;
   sourceSummary?: string | null;
+  /**
+   * B-4 similar-article-group identifier (A-5). Every article belongs to
+   * exactly one group, singletons included — never `null`/absent. Valid
+   * only within this response; do not parse it for meaning
+   * (format `sim-{clusterUid}-{groupRank}` is an opaque wire detail).
+   */
+  similarGroupId: string;
+  /** B-4 (A-5) — exactly one article per `similarGroupId` has this `true`. */
+  isSimilarGroupRepresentative: boolean;
+  /**
+   * B-4 (A-5) — raw articles merged into this processed article, excluding
+   * itself. Distinct from the similar-group's other-article count; the two
+   * are never interchangeable (A-5 opening table).
+   */
+  exactDuplicateCount: number;
+};
+
+/** B-4 `articleGrouping.status` (A-1-7). */
+export type ArticleGroupingStatusResponse = 'READY' | 'UNAVAILABLE';
+
+/** B-4 `articleGrouping.issue.code` (A-1-7). */
+type ArticleGroupingIssueResponse = {
+  code: 'SIMILARITY_GROUPING_FAILED';
+  message: string;
+};
+
+/**
+ * `ClusterDetailResponse.articleGrouping` (B-4, A-5). Cluster-scoped —
+ * failure here is isolated per cluster and never turns the page `PARTIAL`
+ * (A-5 "UNAVAILABLE 처리").
+ */
+type ArticleGroupingResponse = {
+  status: ArticleGroupingStatusResponse;
+  /** `null` exactly when `status === 'UNAVAILABLE'`. */
+  generatedAt: string | null;
+  /** Present exactly when `status === 'UNAVAILABLE'`, otherwise `null`. */
+  issue: ArticleGroupingIssueResponse | null;
+};
+
+/** B-2 analysis section discriminator (A-1-7). Server-fixed order: background → impact → related → outlook. */
+export type ClusterSectionKindResponse =
+  | 'background'
+  | 'impact'
+  | 'related'
+  | 'outlook';
+
+/** B-2 `summary.analysisStatus` (A-1-7). */
+export type AnalysisStatusResponse = 'READY' | 'PARTIAL' | 'UNAVAILABLE';
+
+/** B-2 `conflictStatus` — used at both `summary` (aggregate) and sentence level (A-1-7). */
+export type ConflictStatusResponse = 'NOT_CHECKED' | 'NONE' | 'FOUND';
+
+/**
+ * B-2 `analysisIssues[].code` (A-1-7). `message` is a server-fixed string
+ * safe to render verbatim (A-3 "이슈 코드").
+ */
+export type AnalysisIssueResponse = {
+  code:
+    | 'ANALYSIS_GENERATION_FAILED'
+    | 'NO_GROUNDED_SENTENCES'
+    | 'INVALID_SOURCE_REFERENCE'
+    | 'CONFLICT_CHECK_FAILED';
+  message: string;
+};
+
+/**
+ * B-2 sentence — the minimal unit of `summary → sections[] → paragraphs[] →
+ * sentences[]` (A-3). Source-article grounding and conflict info attach
+ * here, not at the paragraph/section level. `sourceArticleIds` and
+ * `conflictingSourceArticleIds` only ever reference `processedArticleId`s
+ * present in this same response's `articles[]` (server-guaranteed).
+ */
+type ClusterSentenceResponse = {
+  text: string;
+  sourceArticleIds: number[];
+  conflictStatus: ConflictStatusResponse;
+  conflictingSourceArticleIds: number[];
+  conflictNote: string | null;
+};
+
+type ClusterParagraphResponse = {
+  sentences: ClusterSentenceResponse[];
+};
+
+/** `kind`/`title` are both server-fixed — FE never infers either (A-3 "FE는 제목을 만들지 않는다"). */
+type ClusterSectionResponse = {
+  kind: ClusterSectionKindResponse;
+  title: string;
+  paragraphs: ClusterParagraphResponse[];
 };
 
 export type ClusterDetailResponse = {
@@ -176,12 +272,24 @@ export type ClusterDetailResponse = {
   title: string;
   tags: string[];
   summary: {
-    short?: string | null;
-    long?: string | null;
-    analysis: string[];
+    short: string | null;
+    long: string | null;
+    analysisStatus: AnalysisStatusResponse;
+    /**
+     * UTC `Z`, formatted for display via `formatKstDateTime` (A-1-5).
+     * `null` exactly when `analysisStatus === 'UNAVAILABLE'` — distinct
+     * from the cluster's own `lastUpdatedAt` (A-7).
+     */
+    analysisGeneratedAt: string | null;
+    analysisIssues: AnalysisIssueResponse[];
+    conflictStatus: ConflictStatusResponse;
+    /** `[]` exactly when `analysisStatus === 'UNAVAILABLE'` (A-3 "보장"). */
+    sections: ClusterSectionResponse[];
   };
   representativeArticle: ClusterArticleResponse;
   articles: ClusterArticleResponse[];
+  /** B-4 (A-5) — cluster-scoped grouping result for `articles[]`. */
+  articleGrouping: ArticleGroupingResponse;
   lastUpdatedAt: string;
   articleCount: number | null;
 };

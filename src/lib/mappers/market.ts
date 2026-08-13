@@ -21,6 +21,7 @@ import type {
 } from '../view-models';
 import {
   asArticleLinkArray,
+  asBoolean,
   asDailyClusterArray,
   asDailyMarketArray,
   asDisplayId,
@@ -100,6 +101,17 @@ function mapArticleLink(value: unknown, fallbackId: string): ArticleLink {
     publishedAt: formatKstDateTime(record.publishedAt),
     originalUrl: asString(record.originLink, ''),
     mirrorUrl: asNullableString(record.naverLink),
+    // B-4 (A-5) — mirrors `mapClusterArticle`'s fallback: a per-article
+    // unique id, never a shared constant that could merge unrelated links.
+    similarGroupId: asString(record.similarGroupId, `singleton-${fallbackId}`),
+    isSimilarGroupRepresentative: asBoolean(
+      record.isSimilarGroupRepresentative,
+      true
+    ),
+    exactDuplicateCount: asNonNegativeSafeInteger(
+      record.exactDuplicateCount,
+      0
+    ),
   };
 }
 

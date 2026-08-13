@@ -1,15 +1,24 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
-import { EmptyState } from '@/components/state';
+import { EmptyState, InlineAlert } from '@/components/state';
 import { Button } from '@/components/ui/button';
 
-import type { ClusterArticle } from '../../lib/view-models';
+import type { ArticleGrouping, ClusterArticle } from '../../lib/view-models';
 import {
-  ARTICLE_PAGE_SIZE,
+  ARTICLE_FOCUS_REQUEST_EVENT,
+  type ArticleFocusRequestDetail,
+} from './article-focus-event';
+import {
   type ArticleFilters,
+  type ArticleGroup,
   type ArticleSort,
   applyArticleFilters,
+  buildArticleGroups,
+  buildSingletonGroups,
+  countArticlesInGroups,
+  findGroupIndexForArticle,
   listSources,
+  revealMoreGroups,
 } from './cluster-article-controls';
 import {
   displayArticleTitle,
@@ -24,7 +33,39 @@ const DEFAULT_FILTERS: ArticleFilters = {
   query: '',
 };
 
-function ClusterArticleRow({ article }: { article: ClusterArticle }) {
+/** Most callers (tests, and any future surface without B-4 data) don't care about grouping — default to the common case rather than forcing every caller to pass it. */
+const DEFAULT_GROUPING: ArticleGrouping = {
+  status: 'READY',
+  generatedAt: null,
+  issue: null,
+};
+
+function computeGroups(
+  articles: ClusterArticle[],
+  filters: ArticleFilters,
+  status: ArticleGrouping['status']
+): ArticleGroup[] {
+  const visible = applyArticleFilters(articles, filters);
+  return status === 'READY'
+    ? buildArticleGroups(articles, visible)
+    : buildSingletonGroups(visible);
+}
+
+type GroupToggleProps = {
+  expanded: boolean;
+  otherCount: number;
+  onToggle: () => void;
+};
+
+function ClusterArticleRow({
+  article,
+  groupToggle,
+  isGroupMember = false,
+}: {
+  article: ClusterArticle;
+  groupToggle?: GroupToggleProps;
+  isGroupMember?: boolean;
+}) {
   const originalUrl = getSafeExternalUrl(article.originalUrl);
   const mirrorUrl = article.mirrorUrl
     ? getSafeExternalUrl(article.mirrorUrl)
@@ -33,8 +74,24 @@ function ClusterArticleRow({ article }: { article: ClusterArticle }) {
 
   // Keep each article to two logical lines: title first, then publisher,
   // date, original-source badge, and mirror link together below.
+  //
+  // `id` + `tabIndex={-1}` give this row a stable jump/focus target for
+  // `ClusterAnalysis`'s sentence-level citations (A-3 "근거 기사 참조 UX"):
+  // a citation click scrolls here and calls `.focus()`, expanding this
+  // row's similar-article group first if it's currently collapsed (B-4,
+  // A-5 — see `article-focus-event.ts`). The row isn't a natural tab stop,
+  // but `base.css`'s global `:focus-visible` rule still rings it once
+  // programmatically focused — no local outline override needed.
+  // `scroll-mt-24` matches the anchor-offset convention already used for
+  // `archive-search-page.tsx`'s results heading.
   return (
-    <li className='min-w-0 border-b border-line px-[18px] py-3'>
+    <li
+      className={`min-w-0 scroll-mt-24 border-b border-line px-[18px] py-3 ${
+        isGroupMember ? 'bg-[color:var(--surface-2)] ps-7' : ''
+      }`}
+      id={`cluster-article-${article.id}`}
+      tabIndex={-1}
+    >
       {originalUrl ? (
         <a
           className='wrap-anywhere font-medium text-fg underline-offset-2 hover:underline'
@@ -57,6 +114,13 @@ function ClusterArticleRow({ article }: { article: ClusterArticle }) {
         <span className='rounded-[var(--r-sm)] border border-[color:var(--line-strong)] px-1.5 py-0.5 text-caption font-semibold text-faint'>
           원문
         </span>
+        {/* B-4 (A-5 "표시 규칙"): only shown when > 0 — never a "0건"
+            badge, and never the similar-group's other-article count. */}
+        {article.exactDuplicateCount > 0 ? (
+          <span className='rounded-[var(--r-sm)] border border-line px-1.5 py-0.5 text-caption text-faint'>
+            원문 중복 {article.exactDuplicateCount}건
+          </span>
+        ) : null}
         {/* 네이버 미러 uses a bordered chip matching the 원문 배지. The
             aria-label repeats the article title so a screen reader doesn't
             hear a bare, repeated "네이버 미러" across every row. */}
@@ -71,31 +135,189 @@ function ClusterArticleRow({ article }: { article: ClusterArticle }) {
             네이버 미러 ↗
           </a>
         ) : null}
+        {groupToggle ? (
+          <button
+            aria-expanded={groupToggle.expanded}
+            className='ms-auto rounded-[var(--r-sm)] border border-[color:var(--line-strong)] bg-[color:var(--surface)] px-2 py-0.5 text-caption font-semibold text-fg-soft'
+            onClick={groupToggle.onToggle}
+            type='button'
+          >
+            {groupToggle.expanded
+              ? '유사 기사 접기'
+              : `유사 기사 ${groupToggle.otherCount}건 더 보기`}
+          </button>
+        ) : null}
       </div>
     </li>
   );
 }
 
+function ArticleGroupRows({
+  group,
+  expanded,
+  onToggle,
+}: {
+  group: ArticleGroup;
+  expanded: boolean;
+  onToggle: () => void;
+}) {
+  const others = group.articles.filter(
+    (article) => article.id !== group.representative.id
+  );
+  const hasOthers = others.length > 0;
+
+  return (
+    <>
+      <ClusterArticleRow
+        article={group.representative}
+        groupToggle={
+          hasOthers
+            ? { expanded, otherCount: others.length, onToggle }
+            : undefined
+        }
+      />
+      {hasOthers && expanded
+        ? others.map((article) => (
+            <ClusterArticleRow
+              article={article}
+              isGroupMember
+              key={article.id}
+            />
+          ))
+        : null}
+    </>
+  );
+}
+
 export function ClusterArticlesList({
   articles,
+  articleGrouping = DEFAULT_GROUPING,
 }: {
   articles: ClusterArticle[];
+  articleGrouping?: ArticleGrouping;
 }) {
   const [filters, setFilters] = useState<ArticleFilters>(DEFAULT_FILTERS);
-  const [visibleCount, setVisibleCount] = useState(ARTICLE_PAGE_SIZE);
+  const allGroups = computeGroups(articles, filters, articleGrouping.status);
+  const [visibleGroupCount, setVisibleGroupCount] = useState(
+    () => revealMoreGroups(allGroups, 0).length
+  );
+  const [expandedGroupIds, setExpandedGroupIds] = useState<Set<string>>(
+    () => new Set()
+  );
+  const [pendingFocusArticleId, setPendingFocusArticleId] = useState<
+    number | null
+  >(null);
 
   // A filter change can only shrink the match set relative to what's on
-  // screen, so re-showing whatever visibleCount had reached before would
-  // dump every match at once — the exact "show everything" bug this
+  // screen, so re-showing whatever visibleGroupCount had reached before
+  // would dump every match at once — the exact "show everything" bug this
   // control replaces. Reset to one page whenever filters change.
   function updateFilters(patch: Partial<ArticleFilters>) {
-    setFilters((current) => ({ ...current, ...patch }));
-    setVisibleCount(ARTICLE_PAGE_SIZE);
+    const nextFilters = { ...filters, ...patch };
+    setFilters(nextFilters);
+    const nextGroups = computeGroups(
+      articles,
+      nextFilters,
+      articleGrouping.status
+    );
+    setVisibleGroupCount(revealMoreGroups(nextGroups, 0).length);
   }
 
-  const filtered = applyArticleFilters(articles, filters);
-  const visible = filtered.slice(0, visibleCount);
-  const remaining = filtered.length - visible.length;
+  const visibleGroups = allGroups.slice(0, visibleGroupCount);
+  const totalArticleCount = countArticlesInGroups(allGroups);
+  const shownArticleCount = countArticlesInGroups(visibleGroups);
+  const remaining = totalArticleCount - shownArticleCount;
+  const nextRevealCount =
+    remaining > 0
+      ? countArticlesInGroups(revealMoreGroups(allGroups, shownArticleCount)) -
+        shownArticleCount
+      : 0;
+
+  function showMore() {
+    setVisibleGroupCount(revealMoreGroups(allGroups, shownArticleCount).length);
+  }
+
+  // Bridge for B-2 citations that need to reach a row B-4 grouping has
+  // collapsed (see `article-focus-event.ts`'s doc comment).
+  useEffect(() => {
+    function handleFocusRequest(event: Event) {
+      const detail = (event as CustomEvent<ArticleFocusRequestDetail>).detail;
+      if (detail) {
+        setPendingFocusArticleId(detail.articleId);
+      }
+    }
+
+    document.addEventListener(ARTICLE_FOCUS_REQUEST_EVENT, handleFocusRequest);
+    return () =>
+      document.removeEventListener(
+        ARTICLE_FOCUS_REQUEST_EVENT,
+        handleFocusRequest
+      );
+  }, []);
+
+  useEffect(() => {
+    if (pendingFocusArticleId === null) {
+      return;
+    }
+
+    const target = document.getElementById(
+      `cluster-article-${pendingFocusArticleId}`
+    );
+    if (target) {
+      target.focus({ preventScroll: true });
+      if (typeof target.scrollIntoView === 'function') {
+        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      setPendingFocusArticleId(null);
+      return;
+    }
+
+    const groupIndex = findGroupIndexForArticle(
+      allGroups,
+      String(pendingFocusArticleId)
+    );
+    if (groupIndex === -1) {
+      // Not in the currently filtered/grouped view (e.g. hidden by the
+      // title search or publisher filter) — nothing to reveal, matching
+      // the pre-existing no-op-when-truly-missing behavior.
+      setPendingFocusArticleId(null);
+      return;
+    }
+
+    const targetGroup = allGroups[groupIndex];
+    let changed = false;
+
+    if (
+      targetGroup.articles.length > 1 &&
+      !expandedGroupIds.has(targetGroup.id)
+    ) {
+      setExpandedGroupIds((current) => new Set(current).add(targetGroup.id));
+      changed = true;
+    }
+
+    if (visibleGroupCount <= groupIndex) {
+      setVisibleGroupCount(groupIndex + 1);
+      changed = true;
+    }
+
+    if (!changed) {
+      // Already expanded and revealed, yet the row still isn't there —
+      // stop retrying rather than leaving a dangling pending focus.
+      setPendingFocusArticleId(null);
+    }
+  }, [pendingFocusArticleId, allGroups, expandedGroupIds, visibleGroupCount]);
+
+  function toggleGroup(groupId: string) {
+    setExpandedGroupIds((current) => {
+      const next = new Set(current);
+      if (next.has(groupId)) {
+        next.delete(groupId);
+      } else {
+        next.add(groupId);
+      }
+      return next;
+    });
+  }
 
   return (
     // Header, body, and pager own their padding.
@@ -115,6 +337,18 @@ export function ClusterArticlesList({
           관련 기사 {articles.length}건
         </span>
       </div>
+
+      {/* B-4 (A-5 "UNAVAILABLE 처리"): one non-blocking notice, no collapse
+          UI. This never changes the page's own status — grouping failure
+          is isolated to this cluster. */}
+      {articles.length > 0 && articleGrouping.status === 'UNAVAILABLE' ? (
+        <div className='border-b border-line px-[18px] py-3'>
+          <InlineAlert tone='info'>
+            {articleGrouping.issue?.message ??
+              '유사 기사 묶음을 표시할 수 없어 전체 목록을 보여드립니다.'}
+          </InlineAlert>
+        </div>
+      ) : null}
 
       {articles.length > 0 ? (
         <div className='flex flex-wrap items-end gap-3 border-b border-line px-[18px] py-3'>
@@ -175,7 +409,7 @@ export function ClusterArticlesList({
         <div className='p-[18px]'>
           <EmptyState kind='no-articles' />
         </div>
-      ) : filtered.length === 0 ? (
+      ) : totalArticleCount === 0 ? (
         <div className='p-[18px]'>
           <EmptyState
             description='조건에 맞는 기사가 없습니다.'
@@ -184,22 +418,21 @@ export function ClusterArticlesList({
         </div>
       ) : (
         <ul className='m-0 list-none p-0'>
-          {visible.map((article) => (
-            <ClusterArticleRow article={article} key={article.id} />
+          {visibleGroups.map((group) => (
+            <ArticleGroupRows
+              expanded={expandedGroupIds.has(group.id)}
+              group={group}
+              key={group.id}
+              onToggle={() => toggleGroup(group.id)}
+            />
           ))}
         </ul>
       )}
 
       {remaining > 0 ? (
         <div className='border-t border-line px-[18px] py-3'>
-          <Button
-            onClick={() =>
-              setVisibleCount((current) => current + ARTICLE_PAGE_SIZE)
-            }
-            type='button'
-            variant='secondary'
-          >
-            {`기사 ${Math.min(ARTICLE_PAGE_SIZE, remaining)}건 더 보기`}
+          <Button onClick={showMore} type='button' variant='secondary'>
+            {`기사 ${nextRevealCount}건 더 보기`}
           </Button>
         </div>
       ) : null}

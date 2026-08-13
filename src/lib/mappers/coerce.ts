@@ -57,6 +57,10 @@ export function asOptionalBoolean(value: unknown): boolean | null {
   return typeof value === 'boolean' ? value : null;
 }
 
+export function asBoolean(value: unknown, fallback: boolean): boolean {
+  return typeof value === 'boolean' ? value : fallback;
+}
+
 export function asFiniteNumber(value: unknown, fallback: number): number {
   return typeof value === 'number' && Number.isFinite(value) ? value : fallback;
 }
@@ -72,6 +76,16 @@ export function asNonNegativeSafeInteger(
 
 export function asNullableFiniteNumber(value: unknown): number | null {
   return typeof value === 'number' && Number.isFinite(value) ? value : null;
+}
+
+/** Filters to finite numbers, dropping anything else. Used for id arrays like `sourceArticleIds`. */
+export function asNumberArray(value: unknown): number[] {
+  return Array.isArray(value)
+    ? value.filter(
+        (item): item is number =>
+          typeof item === 'number' && Number.isFinite(item)
+      )
+    : [];
 }
 
 export function asOptionalString(value: unknown): string | undefined {

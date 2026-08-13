@@ -849,6 +849,12 @@ describe('restored daily page fields', () => {
       publishedAt: '2026-07-26 22:41 KST',
       originalUrl: 'https://example.com/article/fed-1',
       mirrorUrl: 'https://n.news.naver.com/article/fed1',
+      // B-4 (A-5): fixture omits these, so the mapper's lenient fallback
+      // applies — a singleton group id derived from this article's index,
+      // sole representative, zero merged duplicates.
+      similarGroupId: 'singleton-article-link-0',
+      isSimilarGroupRepresentative: true,
+      exactDuplicateCount: 0,
     });
     // naverLink is null for the second article — mirrorUrl must stay null,
     // not fall back to the origin link (that fallback belongs only to the

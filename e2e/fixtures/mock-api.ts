@@ -62,6 +62,39 @@ export type ArticleResponse = {
   publishedAt: string;
   originLink: string;
   naverLink: string | null;
+  /**
+   * B-4 (docs/backend-requests-2026-08-12.md#A-5). Every article belongs to
+   * exactly one group, singletons included — `article()` below defaults
+   * every article to its own singleton, mirroring the "현재 서버 동작"
+   * shape; `clusterFixture`'s `articleGroupingReady`/`articleGroupingUnavailable`
+   * modes override these to exercise multi-article groups.
+   */
+  similarGroupId: string;
+  /** B-4 (A-5) — exactly one article per `similarGroupId` has this `true`. */
+  isSimilarGroupRepresentative: boolean;
+  /** B-4 (A-5) — raw articles merged into this one, excluding itself. */
+  exactDuplicateCount: number;
+};
+
+/** B-4 `articleGrouping.status` (A-1-7). */
+export type ArticleGroupingStatus = 'READY' | 'UNAVAILABLE';
+
+/** B-4 `articleGrouping.issue` (A-5). */
+export type ArticleGroupingIssue = {
+  code: 'SIMILARITY_GROUPING_FAILED';
+  message: string;
+};
+
+/**
+ * `ClusterDetail.articleGrouping` (B-4, A-5). Cluster-scoped — failure here
+ * never turns the page/analysis `PARTIAL`/`UNAVAILABLE`.
+ */
+export type ArticleGrouping = {
+  status: ArticleGroupingStatus;
+  /** `null` exactly when `status === 'UNAVAILABLE'`. */
+  generatedAt: string | null;
+  /** Present exactly when `status === 'UNAVAILABLE'`. */
+  issue: ArticleGroupingIssue | null;
 };
 
 export type RepresentativeArticleResponse = {
@@ -197,12 +230,65 @@ export type ArchiveList = {
 };
 
 export type ClusterArticle = {
-  processedArticleId: number | null;
+  /** Required non-null integer (A-3/A-7) — the pre-B-2 optional/nullable form is gone. */
+  processedArticleId: number;
   title: string;
   publisherName: string | null;
   publishedAt: string | null;
   originLink: string;
   naverLink: string | null;
+  /** B-4 (A-5) — see `ArticleResponse`'s field of the same name above. */
+  similarGroupId: string;
+  isSimilarGroupRepresentative: boolean;
+  exactDuplicateCount: number;
+};
+
+/**
+ * B-2 structured cluster analysis contract
+ * (docs/backend-requests-2026-08-12.md#A-3). `summary.analysis: string[]`
+ * is gone — this is the `sections[] → paragraphs[] → sentences[]`
+ * replacement, with source-article grounding and conflict info attached at
+ * the sentence.
+ */
+export type AnalysisStatus = 'READY' | 'PARTIAL' | 'UNAVAILABLE';
+export type ConflictStatus = 'NOT_CHECKED' | 'NONE' | 'FOUND';
+export type AnalysisSectionKind =
+  | 'background'
+  | 'impact'
+  | 'related'
+  | 'outlook';
+export type AnalysisIssueCode =
+  | 'ANALYSIS_GENERATION_FAILED'
+  | 'NO_GROUNDED_SENTENCES'
+  | 'INVALID_SOURCE_REFERENCE'
+  | 'CONFLICT_CHECK_FAILED';
+
+export type AnalysisIssue = { code: AnalysisIssueCode; message: string };
+
+export type ClusterSentence = {
+  text: string;
+  sourceArticleIds: number[];
+  conflictStatus: ConflictStatus;
+  conflictingSourceArticleIds: number[];
+  conflictNote: string | null;
+};
+
+export type ClusterParagraph = { sentences: ClusterSentence[] };
+
+export type ClusterSection = {
+  kind: AnalysisSectionKind;
+  title: string;
+  paragraphs: ClusterParagraph[];
+};
+
+export type ClusterSummary = {
+  short: string | null;
+  long: string | null;
+  analysisStatus: AnalysisStatus;
+  analysisGeneratedAt: string | null;
+  analysisIssues: AnalysisIssue[];
+  conflictStatus: ConflictStatus;
+  sections: ClusterSection[];
 };
 
 export type ClusterDetail = {
@@ -212,9 +298,11 @@ export type ClusterDetail = {
   marketLabel: string;
   title: string;
   tags: string[];
-  summary: { short: string | null; long: string | null; analysis: string[] };
+  summary: ClusterSummary;
   representativeArticle: ClusterArticle & { sourceSummary: string | null };
   articles: ClusterArticle[];
+  /** B-4 (A-5) — cluster-scoped grouping result driving `articles[]`'s `similarGroupId`s. */
+  articleGrouping: ArticleGrouping;
   lastUpdatedAt: string;
   articleCount: number;
 };
@@ -488,6 +576,13 @@ function article(
     originLink: `https://example.com/article/${seed}-${i}`,
     naverLink:
       i % 5 === 4 ? null : `https://n.news.naver.com/article/${seed}${i}`,
+    // B-4 default: every article its own singleton group, mirroring A-5's
+    // "현재 서버 동작" (every live cluster/article-link comes back this way
+    // today). Callers that need a multi-article `READY` group override
+    // these explicitly (see `clusterFixture`'s `articleGroupingReady`).
+    similarGroupId: `sim-${seed}-${i + 1}`,
+    isSimilarGroupRepresentative: true,
+    exactDuplicateCount: 0,
   };
 }
 
@@ -1034,12 +1129,97 @@ const CLUSTER_INDEX: Record<
   CLUSTER_INDEX[c.clusterId] = { marketType: mt, card: c };
 });
 
+/** Server-fixed section titles (A-3 "섹션 순서와 제목") — FE never invents these. */
+const SECTION_TITLES: Readonly<Record<AnalysisSectionKind, string>> = {
+  background: '발생 배경',
+  impact: '시장 영향',
+  related: '관련 업종·종목',
+  outlook: '향후 관전 포인트',
+};
+
+/** Server-fixed issue messages (A-3 "이슈 코드") — safe to render verbatim. */
+const ANALYSIS_ISSUE_MESSAGES: Readonly<Record<AnalysisIssueCode, string>> = {
+  ANALYSIS_GENERATION_FAILED: '분석을 생성하지 못했습니다.',
+  NO_GROUNDED_SENTENCES: '근거를 확인할 수 있는 분석 문장이 없습니다.',
+  INVALID_SOURCE_REFERENCE: '일부 분석 문장의 근거 기사를 확인하지 못했습니다.',
+  CONFLICT_CHECK_FAILED: '일부 분석 문장의 충돌 근거를 확인하지 못했습니다.',
+};
+
+function analysisIssue(code: AnalysisIssueCode): AnalysisIssue {
+  return { code, message: ANALYSIS_ISSUE_MESSAGES[code] };
+}
+
+function sentence(
+  text: string,
+  sourceArticleIds: number[],
+  overrides: Partial<ClusterSentence> = {}
+): ClusterSentence {
+  return {
+    text,
+    sourceArticleIds,
+    conflictStatus: 'NONE',
+    conflictingSourceArticleIds: [],
+    conflictNote: null,
+    ...overrides,
+  };
+}
+
+function section(
+  kind: AnalysisSectionKind,
+  sentences: ClusterSentence[]
+): ClusterSection {
+  return {
+    kind,
+    title: SECTION_TITLES[kind],
+    paragraphs: [{ sentences }],
+  };
+}
+
+/** Default `READY` sections, ported 1:1 from the pre-B-2 `analysis[]` paragraphs, now grounded per sentence. */
+function readySections(
+  sourceId: number,
+  altSourceId: number
+): ClusterSection[] {
+  return [
+    section('background', [
+      sentence(
+        '연방준비제도의 금리 인하 경로가 더 명확해졌다는 해석이 확산되며 고밸류 성장주에 대한 할인율 부담이 완화됐습니다.',
+        [sourceId]
+      ),
+    ]),
+    section('impact', [
+      sentence(
+        '엔비디아와 AMD를 포함한 반도체 업종은 AI 서버 수요와 차세대 칩 공개 기대가 동시에 반영되며 지수 대비 초과수익을 기록했습니다.',
+        [altSourceId]
+      ),
+    ]),
+    section('outlook', [
+      sentence(
+        '다만 장기 금리가 재차 상승할 경우 이번 강세의 근거가 약해질 수 있어, 다음 거래일의 물가 지표가 확인 포인트로 남습니다.',
+        [sourceId, altSourceId]
+      ),
+    ]),
+  ];
+}
+
+const UNAVAILABLE_SUMMARY_BASE = {
+  analysisStatus: 'UNAVAILABLE' as const,
+  analysisGeneratedAt: null,
+  conflictStatus: 'NOT_CHECKED' as const,
+  sections: [],
+};
+
 export function clusterFixture(mode: string, clusterId: string): ClusterDetail {
   const hit = CLUSTER_INDEX[clusterId] ?? {
     marketType: 'US' as MarketType,
     card: US_CLUSTERS[0],
   };
   const { card, marketType } = hit;
+  const seed = marketType === 'US' ? 1 : 5;
+  const articles = rep(card.articleCount, (i) => article(i, seed));
+  const sourceId = articles[0].processedArticleId;
+  const altSourceId = (articles[1] ?? articles[0]).processedArticleId;
+
   const base: ClusterDetail = {
     clusterId: card.clusterId,
     businessDate: '2026-07-26',
@@ -1050,11 +1230,15 @@ export function clusterFixture(mode: string, clusterId: string): ClusterDetail {
     summary: {
       short: card.summary,
       long: `${card.summary} 관련 기사 ${card.articleCount}건을 종합하면 시장은 단기 변동성보다 방향성 자체를 재확인하는 쪽으로 반응했습니다. 대표 기사와 관련 기사 발행 시각이 장 마감 직후에 집중되어 있어 종가 형성 이후의 해석이 반영된 것으로 보입니다.`,
-      analysis: [
-        '연방준비제도의 금리 인하 경로가 더 명확해졌다는 해석이 확산되며 고밸류 성장주에 대한 할인율 부담이 완화됐습니다.',
-        '엔비디아와 AMD를 포함한 반도체 업종은 AI 서버 수요와 차세대 칩 공개 기대가 동시에 반영되며 지수 대비 초과수익을 기록했습니다.',
-        '다만 장기 금리가 재차 상승할 경우 이번 강세의 근거가 약해질 수 있어, 다음 거래일의 물가 지표가 확인 포인트로 남습니다.',
-      ],
+      analysisStatus: 'READY',
+      // Deliberately real UTC `Z` (A-1-5), unlike this file's other naive
+      // KST-literal timestamps — exercises the actual wire format and stays
+      // provably distinct from `lastUpdatedAt` below (A-3/A-7: the analysis
+      // timestamp must never be shown as the cluster's last-updated time).
+      analysisGeneratedAt: '2026-07-27T13:20:00Z',
+      analysisIssues: [],
+      conflictStatus: 'NONE',
+      sections: readySections(sourceId, altSourceId),
     },
     articleCount: card.articleCount,
     lastUpdatedAt: '2026-07-27T06:12:10',
@@ -1066,35 +1250,64 @@ export function clusterFixture(mode: string, clusterId: string): ClusterDetail {
       originLink: card.representativeArticle.originLink ?? '',
       naverLink: card.representativeArticle.naverLink ?? null,
       sourceSummary: '경제·금융 전문 매체',
+      // The representative article carries its own B-4 fields (it isn't
+      // part of `articles[]`'s grouping); a singleton default is correct
+      // since this surface (`ClusterRepresentativeAside`) doesn't render
+      // grouping UI at all.
+      similarGroupId: 'sim-representative-1',
+      isSimilarGroupRepresentative: true,
+      exactDuplicateCount: 0,
     },
-    articles: rep(card.articleCount, (i) =>
-      article(i, marketType === 'US' ? 1 : 5)
-    ),
+    articles,
+    // Default: `article()` already gives every article its own singleton
+    // group, so `READY` here is behaviorally identical to the "no grouping
+    // UI to see" baseline every pre-existing (non-B-4) test relies on. The
+    // real "현재 서버 동작" (always `UNAVAILABLE`) and multi-article `READY`
+    // groups are explicit opt-in modes below.
+    articleGrouping: {
+      status: 'READY',
+      generatedAt: '2026-07-27T13:25:00Z',
+      issue: null,
+    },
   };
 
   if (mode === 'sparse') {
+    // Mirrors A-3's "현재 서버 동작" — every live cluster today comes back
+    // UNAVAILABLE with exactly this issue, so this mode doubles as the
+    // real-server-verifiable case (see `installMockApi`'s doc comment).
     return {
       ...base,
       tags: [],
-      summary: { short: null, long: null, analysis: [] },
+      summary: {
+        short: null,
+        long: null,
+        ...UNAVAILABLE_SUMMARY_BASE,
+        analysisIssues: [analysisIssue('NO_GROUNDED_SENTENCES')],
+      },
       articleCount: 1,
       representativeArticle: {
-        processedArticleId: null,
+        processedArticleId: 9001,
         title: '제목만 확보된 기사',
         publisherName: null,
         publishedAt: null,
         originLink: 'https://example.com/article/sparse',
         naverLink: null,
         sourceSummary: null,
+        similarGroupId: 'sim-representative-sparse',
+        isSimilarGroupRepresentative: true,
+        exactDuplicateCount: 0,
       },
       articles: [
         {
-          processedArticleId: null,
+          processedArticleId: 9002,
           title: '제목만 확보된 기사',
           publisherName: null,
           publishedAt: null,
           originLink: 'https://example.com/article/sparse',
           naverLink: null,
+          similarGroupId: 'sim-sparse-1',
+          isSimilarGroupRepresentative: true,
+          exactDuplicateCount: 0,
         },
       ],
     };
@@ -1137,12 +1350,189 @@ export function clusterFixture(mode: string, clusterId: string): ClusterDetail {
       title: `${card.title} — 내부 추적 코드 ${LONG_TOKEN}`,
       summary: {
         ...base.summary,
-        analysis: [
-          ...base.summary.analysis,
-          `원문 리포트: ${LONG_URL}`,
-          LONG_TOKEN,
+        sections: [
+          ...base.summary.sections,
+          section('related', [
+            sentence(`원문 리포트: ${LONG_URL}`, [sourceId]),
+            sentence(LONG_TOKEN, [sourceId]),
+          ]),
         ],
       },
+    };
+  }
+
+  // READY + a FOUND sentence — supporting and conflicting citations both
+  // resolve to real ids in `articles[]` (A-3 "보장").
+  if (mode === 'analysisFound') {
+    return {
+      ...base,
+      summary: {
+        ...base.summary,
+        conflictStatus: 'FOUND',
+        sections: [
+          section('background', [
+            sentence('외국인은 반도체주를 순매도했습니다.', [sourceId], {
+              conflictStatus: 'FOUND',
+              conflictingSourceArticleIds: [altSourceId],
+              conflictNote: '기사별 외국인 순매매 방향이 다르게 보도됐습니다.',
+            }),
+          ]),
+          ...base.summary.sections.slice(1),
+        ],
+      },
+    };
+  }
+
+  // PARTIAL: some sentences were dropped for a bad source reference —
+  // fewer sections than READY's baseline, plus the matching issue.
+  if (mode === 'analysisPartialInvalidSource') {
+    return {
+      ...base,
+      summary: {
+        ...base.summary,
+        analysisStatus: 'PARTIAL',
+        analysisIssues: [analysisIssue('INVALID_SOURCE_REFERENCE')],
+        sections: base.summary.sections.slice(0, 2),
+      },
+    };
+  }
+
+  // PARTIAL: conflict info was unusable and got normalized to NOT_CHECKED
+  // rather than dropped outright.
+  if (mode === 'analysisPartialConflictFailed') {
+    return {
+      ...base,
+      summary: {
+        ...base.summary,
+        analysisStatus: 'PARTIAL',
+        analysisIssues: [analysisIssue('CONFLICT_CHECK_FAILED')],
+        conflictStatus: 'NOT_CHECKED',
+        sections: base.summary.sections.map((entry) => ({
+          ...entry,
+          paragraphs: entry.paragraphs.map((paragraph) => ({
+            sentences: paragraph.sentences.map((entrySentence) => ({
+              ...entrySentence,
+              conflictStatus: 'NOT_CHECKED' as const,
+            })),
+          })),
+        })),
+      },
+    };
+  }
+
+  if (mode === 'analysisUnavailableGenerationFailed') {
+    return {
+      ...base,
+      summary: {
+        short: card.summary,
+        long: base.summary.long,
+        ...UNAVAILABLE_SUMMARY_BASE,
+        analysisIssues: [analysisIssue('ANALYSIS_GENERATION_FAILED')],
+      },
+    };
+  }
+
+  if (mode === 'analysisUnavailableEmptyResult') {
+    return {
+      ...base,
+      summary: {
+        short: card.summary,
+        long: base.summary.long,
+        ...UNAVAILABLE_SUMMARY_BASE,
+        analysisIssues: [analysisIssue('NO_GROUNDED_SENTENCES')],
+      },
+    };
+  }
+
+  if (mode === 'analysisUnavailableAllRemoved') {
+    return {
+      ...base,
+      summary: {
+        short: card.summary,
+        long: base.summary.long,
+        ...UNAVAILABLE_SUMMARY_BASE,
+        analysisIssues: [
+          analysisIssue('INVALID_SOURCE_REFERENCE'),
+          analysisIssue('NO_GROUNDED_SENTENCES'),
+        ],
+      },
+    };
+  }
+
+  if (mode === 'analysisTwoSections') {
+    return {
+      ...base,
+      summary: {
+        ...base.summary,
+        sections: [base.summary.sections[0], base.summary.sections[2]],
+      },
+    };
+  }
+
+  // B-4 (A-5 "준비할 테스트 케이스"): a multi-article `READY` group plus
+  // singleton groups in the same response. `articles[0]` (server
+  // representative) is the group's head; `articles[1]`/`articles[2]` are
+  // collapsed members — `articles[1]`'s id is `altSourceId`, the same id
+  // `readySections`'s "impact" section cites, so a citation click into this
+  // fixture exercises the collapsed-row focus bridge
+  // (`article-focus-event.ts`) end to end. `articles[3]` keeps its default
+  // singleton group but gets a positive `exactDuplicateCount` to prove the
+  // duplicate badge and the group toggle are independent (a singleton can
+  // show "원문 중복 N건" with no collapse control at all).
+  if (mode === 'articleGroupingReady') {
+    const groupId = `sim-${card.clusterId}-1`;
+    const groupedArticles = articles.map((entry, i) => {
+      if (i === 0) {
+        return {
+          ...entry,
+          similarGroupId: groupId,
+          isSimilarGroupRepresentative: true,
+          exactDuplicateCount: 2,
+        };
+      }
+      if (i === 1) {
+        return {
+          ...entry,
+          similarGroupId: groupId,
+          isSimilarGroupRepresentative: false,
+          exactDuplicateCount: 0,
+        };
+      }
+      if (i === 2) {
+        return {
+          ...entry,
+          similarGroupId: groupId,
+          isSimilarGroupRepresentative: false,
+          exactDuplicateCount: 1,
+        };
+      }
+      if (i === 3) {
+        return { ...entry, exactDuplicateCount: 3 };
+      }
+      return entry;
+    });
+
+    return { ...base, articles: groupedArticles };
+  }
+
+  // B-4 (A-5 "UNAVAILABLE 처리") — mirrors A-5's "현재 서버 동작": every
+  // article comes back as its own singleton (the `article()` default,
+  // untouched here) and `exactDuplicateCount` stays populated ("중복 수는
+  // 유사도 계산과 무관하게 산출되기 때문") even though grouping itself failed.
+  if (mode === 'articleGroupingUnavailable') {
+    return {
+      ...base,
+      articleGrouping: {
+        status: 'UNAVAILABLE',
+        generatedAt: null,
+        issue: {
+          code: 'SIMILARITY_GROUPING_FAILED',
+          message: '유사 기사 묶음을 생성하지 못했습니다.',
+        },
+      },
+      articles: articles.map((entry, i) =>
+        i === 0 ? { ...entry, exactDuplicateCount: 2 } : entry
+      ),
     };
   }
 
@@ -1767,8 +2157,33 @@ export type InstallMockApiOptions = {
   latestBusinessDate?: string;
   /** Archive search result mode, independent so one scenario can cover populated and empty results. */
   archiveSearchMode?: 'results' | 'noResults';
-  /** Cluster detail fixture mode — independent of `scenario` because `long` (unbroken token/URL) and `heavy` (50 articles/20 tags) cover different equivalence classes. Defaults from `scenario` when omitted. */
-  clusterMode?: 'sparse' | 'heavy' | 'long';
+  /**
+   * Cluster detail fixture mode — independent of `scenario` because `long`
+   * (unbroken token/URL) and `heavy` (50 articles/20 tags) cover different
+   * equivalence classes. Defaults from `scenario` when omitted.
+   *
+   * The `analysis*` modes cover B-2's structured-analysis contract
+   * (docs/backend-requests-2026-08-12.md#A-3 "준비할 테스트 케이스") — the
+   * live server currently returns `UNAVAILABLE` for every cluster
+   * (A-3 "현재 서버 동작"), so `READY`/`PARTIAL`/`FOUND` can only be
+   * exercised through these fixtures, not the real backend.
+   */
+  clusterMode?:
+    | 'sparse'
+    | 'heavy'
+    | 'long'
+    | 'analysisFound'
+    | 'analysisPartialInvalidSource'
+    | 'analysisPartialConflictFailed'
+    | 'analysisUnavailableGenerationFailed'
+    | 'analysisUnavailableEmptyResult'
+    | 'analysisUnavailableAllRemoved'
+    | 'analysisTwoSections'
+    // B-4 (A-5 "준비할 테스트 케이스") — the live server always returns
+    // `UNAVAILABLE` today (A-5 "현재 서버 동작"), so `READY` multi-article
+    // grouping can only be exercised through this fixture mode.
+    | 'articleGroupingReady'
+    | 'articleGroupingUnavailable';
   /** Batch detail log mode — `'longLog'` forces the full 4,000-char log (only takes effect for a FAILED job; see `batchDetailFixture`). Defaults from `scenario`. */
   batchDetailMode?: 'longLog';
   /**

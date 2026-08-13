@@ -20,25 +20,12 @@ import { ClusterRepresentativeAside } from './cluster-detail/cluster-representat
 /**
  * Cluster Detail (`/market/cluster/:uuid`).
  *
- * Two confirmed data-layer gaps this page works around (both in
- * `src/lib/mappers.ts`/`view-models.ts`, out of this phase's file
- * ownership — see individual component comments for the per-field detail):
- *
- * 1. `ClusterDetail` never carries `summary.short`/`summary.long` as
- *    first-class fields. `mapClusterDetailToView` drops
- *    `response.summary.long` entirely and only folds `summary.short` into
- *    `representative.sourceSummary` (a different UI slot). This page does
- *    NOT reuse `representative.sourceSummary` a second time as a fake page
- *    lead — that would show duplicate text in two unrelated places and
- *    misrepresent what the data actually contains. `ClusterAnalysis` renders
- *    `analysis[]` only; the header has no separate lead paragraph.
- * 2. `ClusterArticle.mirrorUrl` is typed as a non-nullable `string`, and the
- *    mapper backfills it with `originalUrl` whenever the DTO's `naverLink`
- *    is null — so a genuinely-absent mirror is indistinguishable from
- *    "same as original" at the type level. `copy-fallbacks.ts`'s
- *    `hasDistinctMirror` compares the two URLs as the only available
- *    signal (a real 네이버 미러 URL essentially never coincides with the
- *    article's own origin URL).
+ * `detail.summary` (DTO `summary.short`) and `detail.analysisLead` (DTO
+ * `summary.long`) are separate first-class fields — the header (this
+ * component -> `ClusterHeader`) renders the former, `ClusterAnalysis`
+ * renders the latter as its lead paragraph, and neither is a fallback
+ * for the other. `ClusterAnalysis`'s own structured `sections[]` (B-2,
+ * docs/backend-requests-2026-08-12.md#A-3) render below that lead.
  *
  * `origin` is read directly via `useUrlState()` rather than threaded in as
  * a prop — `src/app/app-page-content.tsx` (out of this phase's file
@@ -84,16 +71,18 @@ export function ClusterDetailPage({ clusterId }: { clusterId: string }) {
       <div className='grid min-w-0 grid-cols-1 gap-[var(--gap)] min-[1181px]:grid-cols-[minmax(0,1fr)_400px] min-[1181px]:items-start'>
         <div className='flex min-w-0 flex-col gap-[var(--gap)]'>
           <ClusterAnalysis
-            analysis={detail.analysis}
+            analysisGeneratedAt={detail.analysisGeneratedAt}
+            analysisIssues={detail.analysisIssues}
             analysisLead={detail.analysisLead}
-            // `updatedAt` is a non-nullable `string` in the view model, but
-            // `mapClusterDetailToView` (src/lib/mappers/cluster.ts) falls
-            // back to the sentinel '-' when the DTO's `lastUpdatedAt` is
-            // missing/invalid — pass that through as null so the card omits
-            // the label instead of showing a meaningless "생성 기준 -".
-            generatedAt={detail.updatedAt === '-' ? null : detail.updatedAt}
+            analysisStatus={detail.analysisStatus}
+            articles={detail.articles}
+            conflictStatus={detail.conflictStatus}
+            sections={detail.sections}
           />
-          <ClusterArticlesList articles={detail.articles} />
+          <ClusterArticlesList
+            articleGrouping={detail.articleGrouping}
+            articles={detail.articles}
+          />
         </div>
         <ClusterRepresentativeAside representative={detail.representative} />
       </div>

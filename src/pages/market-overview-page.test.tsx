@@ -438,6 +438,9 @@ describe('MarketOverviewPage — 근거 원문', () => {
           publishedAt: '2026-03-17 08:00 KST',
           originalUrl: 'https://example.com/evidence',
           mirrorUrl: null,
+          similarGroupId: 'sim-evidence-1',
+          isSimilarGroupRepresentative: true,
+          exactDuplicateCount: 0,
         },
       ],
     };
@@ -474,6 +477,9 @@ describe('MarketOverviewPage — 근거 원문', () => {
         publishedAt: '2026-03-17 08:00 KST',
         originalUrl: `https://example.com/${index}`,
         mirrorUrl: null,
+        similarGroupId: `sim-link-${index}`,
+        isSimilarGroupRepresentative: true,
+        exactDuplicateCount: 0,
       })),
     };
 
@@ -492,6 +498,53 @@ describe('MarketOverviewPage — 근거 원문', () => {
       'true'
     );
     expect(screen.getByText(/기사 제목 5/)).toBeInTheDocument();
+  });
+
+  // B-4 (docs/backend-requests-2026-08-12.md#A-5 "표시 규칙"): the same
+  // "0건은 숨기고 양수만 표시" rule applies to `markets[].articleLinks[]`
+  // as it does to cluster-detail's article list — this surface never gets
+  // group collapse UI (cluster-detail only), just the duplicate badge.
+  it('shows "원문 중복 N건" only for a positive exactDuplicateCount, never a 0건 badge', () => {
+    const snapshot = buildSnapshot();
+    snapshot.markets[0] = {
+      ...snapshot.markets[0],
+      articleLinks: [
+        {
+          id: 'link-dup',
+          clusterId: null,
+          clusterTitle: null,
+          title: '중복 있는 기사',
+          source: '매일경제',
+          publishedAt: '2026-03-17 08:00 KST',
+          originalUrl: 'https://example.com/dup',
+          mirrorUrl: null,
+          similarGroupId: 'sim-dup',
+          isSimilarGroupRepresentative: true,
+          exactDuplicateCount: 3,
+        },
+        {
+          id: 'link-no-dup',
+          clusterId: null,
+          clusterTitle: null,
+          title: '중복 없는 기사',
+          source: '매일경제',
+          publishedAt: '2026-03-17 08:00 KST',
+          originalUrl: 'https://example.com/no-dup',
+          mirrorUrl: null,
+          similarGroupId: 'sim-no-dup',
+          isSimilarGroupRepresentative: true,
+          exactDuplicateCount: 0,
+        },
+      ],
+    };
+
+    render(
+      <MarketOverviewPage mode='latest' now={FIXED_NOW} snapshot={snapshot} />
+    );
+
+    expect(screen.getByText('원문 중복 3건')).toBeInTheDocument();
+    expect(screen.queryByText(/원문 중복 0건/)).not.toBeInTheDocument();
+    expect(screen.getAllByText(/원문 중복/)).toHaveLength(1);
   });
 });
 
