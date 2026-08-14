@@ -2,7 +2,7 @@ import { cleanup, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { getNavigation } from '../lib/api/pages';
+import { getPageNavigation } from '../lib/api/pages';
 import {
   resetRoleOverrideForTesting,
   setRoleOverride,
@@ -14,14 +14,14 @@ import { MarketOverviewPage } from './market-overview-page';
 // response, so its prev/next band reads `snapshot.navigation` directly —
 // it must never call the standalone `GET /pages/navigation` endpoint (that
 // path belongs only to the no-page-loaded routes: `market-overview-route-shell.tsx`,
-// `archive-not-found-state.tsx`). Spying on `getNavigation` here (rather
+// `archive-not-found-state.tsx`). Spying on `getPageNavigation` here (rather
 // than mocking a hook) proves this component genuinely has no code path
 // that reaches the network client for it.
 vi.mock('../lib/api/pages', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../lib/api/pages')>();
   return {
     ...actual,
-    getNavigation: vi.fn(actual.getNavigation),
+    getPageNavigation: vi.fn(actual.getPageNavigation),
   };
 });
 
@@ -118,7 +118,7 @@ function buildSnapshot(
 afterEach(() => {
   resetRoleOverrideForTesting();
   window.history.replaceState(null, '', '/');
-  vi.mocked(getNavigation).mockClear();
+  vi.mocked(getPageNavigation).mockClear();
 });
 
 describe('MarketOverviewPage — 대표 지수 표', () => {
@@ -734,7 +734,7 @@ describe('MarketOverviewPage — B-5 인접 영업일 (snapshot.navigation)', ()
     const nextButton = screen.getByRole('button', { name: '다음 2026-03-18' });
     expect(prevButton).toBeEnabled();
     expect(nextButton).toBeEnabled();
-    expect(getNavigation).not.toHaveBeenCalled();
+    expect(getPageNavigation).not.toHaveBeenCalled();
   });
 
   it('가장 오래된 날짜: prev is null, so only the prev button is disabled', () => {
@@ -792,7 +792,7 @@ describe('MarketOverviewPage — B-5 인접 영업일 (snapshot.navigation)', ()
     expect(
       screen.getByRole('button', { name: '다음 브리프 없음' })
     ).toBeDisabled();
-    expect(getNavigation).not.toHaveBeenCalled();
+    expect(getPageNavigation).not.toHaveBeenCalled();
   });
 });
 

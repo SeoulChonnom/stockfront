@@ -12,7 +12,7 @@ import {
   getDailyPageByBusinessDate,
   getDailyPageByPageId,
   getLatestDailyPage,
-  getNavigation,
+  getPageNavigation,
 } from './api/pages';
 import {
   mapArchiveListToView,
@@ -102,10 +102,10 @@ export function useArchiveList(params: ArchiveListParams, enabled = true) {
  * a loaded page's own `navigation` field must be used instead (A-6 "어느
  * 경로를 쓸 것인가").
  */
-export function useNavigation(businessDate: string, enabled = true) {
+export function usePageNavigation(businessDate: string, enabled = true) {
   return useQuery({
     queryKey: ['navigation', businessDate],
-    queryFn: ({ signal }) => getNavigation(businessDate, signal),
+    queryFn: ({ signal }) => getPageNavigation(businessDate, signal),
     select: mapNavigationToView,
     enabled: enabled && businessDate.length > 0,
   });

@@ -11,21 +11,24 @@ import {
 
 import { MarketOverviewRouteContent } from './market-overview-route-content';
 
-const { mockUseArchiveMarketPage, mockUseLatestMarketPage, mockUseNavigation } =
-  vi.hoisted(() => ({
-    mockUseArchiveMarketPage: vi.fn(),
-    mockUseLatestMarketPage: vi.fn(),
-    mockUseNavigation: vi.fn(),
-  }));
+const {
+  mockUseArchiveMarketPage,
+  mockUseLatestMarketPage,
+  mockUsePageNavigation,
+} = vi.hoisted(() => ({
+  mockUseArchiveMarketPage: vi.fn(),
+  mockUseLatestMarketPage: vi.fn(),
+  mockUsePageNavigation: vi.fn(),
+}));
 
 vi.mock('@/lib/query-hooks', () => ({
   useArchiveMarketPage: mockUseArchiveMarketPage,
   useLatestMarketPage: mockUseLatestMarketPage,
-  useNavigation: mockUseNavigation,
+  usePageNavigation: mockUsePageNavigation,
 }));
 
 // The 404 and error/no-data shells both render `ArchiveModeBand` via
-// `useAdjacentNavigation`, which calls `useNavigation` directly (B-5's
+// `useAdjacentNavigation`, which calls `usePageNavigation` directly (B-5's
 // standalone `GET /pages/navigation` lookup — not through
 // `useArchiveMarketPage`/`useLatestMarketPage`, since neither shell has a
 // loaded daily-page response to read `navigation` off of). None of the
@@ -33,7 +36,7 @@ vi.mock('@/lib/query-hooks', () => ({
 // both-null default is enough to keep the hook from throwing on an
 // unmocked export.
 beforeEach(() => {
-  mockUseNavigation.mockReturnValue({
+  mockUsePageNavigation.mockReturnValue({
     data: {
       businessDate: '',
       pageExists: false,
@@ -77,7 +80,7 @@ afterEach(() => {
   resetRoleOverrideForTesting();
   mockUseArchiveMarketPage.mockReset();
   mockUseLatestMarketPage.mockReset();
-  mockUseNavigation.mockReset();
+  mockUsePageNavigation.mockReset();
   window.history.replaceState(null, '', '/');
 });
 
@@ -195,7 +198,7 @@ describe('MarketOverviewRouteContent — Archive 404 (ArchiveNotFoundState)', ()
 
 describe('MarketOverviewRouteContent — B-5 인접 영업일 (no loaded page -> standalone endpoint)', () => {
   it('페이지 없는 날짜에서 양쪽 이동 가능: both prev/next enabled from GET /pages/navigation', () => {
-    mockUseNavigation.mockReturnValue({
+    mockUsePageNavigation.mockReturnValue({
       data: {
         businessDate: '2026-03-17',
         pageExists: false,
@@ -227,7 +230,10 @@ describe('MarketOverviewRouteContent — B-5 인접 영업일 (no loaded page ->
   });
 
   it('로딩·오류 시 양쪽 비활성: a pending GET /pages/navigation disables both buttons', () => {
-    mockUseNavigation.mockReturnValue({ data: undefined, status: 'pending' });
+    mockUsePageNavigation.mockReturnValue({
+      data: undefined,
+      status: 'pending',
+    });
 
     mockUseLatestMarketPage.mockReturnValue({
       data: undefined,
@@ -247,7 +253,7 @@ describe('MarketOverviewRouteContent — B-5 인접 영업일 (no loaded page ->
   });
 
   it('로딩·오류 시 양쪽 비활성: an errored GET /pages/navigation disables both buttons (never guesses a date)', () => {
-    mockUseNavigation.mockReturnValue({ data: undefined, status: 'error' });
+    mockUsePageNavigation.mockReturnValue({ data: undefined, status: 'error' });
 
     mockUseLatestMarketPage.mockReturnValue({
       data: undefined,

@@ -1,18 +1,18 @@
 import { renderHook } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
-const useNavigationMock = vi.fn();
+const usePageNavigationMock = vi.fn();
 
 vi.mock('@/lib/query-hooks', () => ({
-  useNavigation: (businessDate: string, enabled?: boolean) =>
-    useNavigationMock(businessDate, enabled),
+  usePageNavigation: (businessDate: string, enabled?: boolean) =>
+    usePageNavigationMock(businessDate, enabled),
 }));
 
 import { useAdjacentNavigation } from './use-adjacent-navigation';
 
 describe('useAdjacentNavigation', () => {
   it('returns the resolved prev/next dates once the query succeeds', () => {
-    useNavigationMock.mockReturnValue({
+    usePageNavigationMock.mockReturnValue({
       data: {
         businessDate: '2026-08-13',
         pageExists: true,
@@ -32,7 +32,7 @@ describe('useAdjacentNavigation', () => {
   });
 
   it('preserves a true null neighbour as null, not as loading/error', () => {
-    useNavigationMock.mockReturnValue({
+    usePageNavigationMock.mockReturnValue({
       data: {
         businessDate: '2026-08-13',
         pageExists: true,
@@ -52,7 +52,10 @@ describe('useAdjacentNavigation', () => {
   });
 
   it('returns "loading" (not fabricated dates) while the query is pending', () => {
-    useNavigationMock.mockReturnValue({ data: undefined, status: 'pending' });
+    usePageNavigationMock.mockReturnValue({
+      data: undefined,
+      status: 'pending',
+    });
 
     const { result } = renderHook(() => useAdjacentNavigation('2026-08-13'));
 
@@ -62,7 +65,7 @@ describe('useAdjacentNavigation', () => {
   // Requirement: sending a user to a dead end is worse than a temporarily
   // unavailable control — a failed lookup must not fabricate a guess.
   it('returns "error" (not fabricated dates) when the query fails', () => {
-    useNavigationMock.mockReturnValue({ data: undefined, status: 'error' });
+    usePageNavigationMock.mockReturnValue({ data: undefined, status: 'error' });
 
     const { result } = renderHook(() => useAdjacentNavigation('2026-08-13'));
 
@@ -72,12 +75,15 @@ describe('useAdjacentNavigation', () => {
   // The Latest route (or any screen with a loaded page) must not fire this
   // query. React hooks cannot be called conditionally, so callers gate it
   // via `enabled` instead of an early return — this asserts the flag
-  // reaches the underlying `useNavigation` query.
+  // reaches the underlying `usePageNavigation` query.
   it('forwards `enabled` to the underlying navigation query', () => {
-    useNavigationMock.mockReturnValue({ data: undefined, status: 'pending' });
+    usePageNavigationMock.mockReturnValue({
+      data: undefined,
+      status: 'pending',
+    });
 
     renderHook(() => useAdjacentNavigation('2026-08-13', false));
 
-    expect(useNavigationMock).toHaveBeenCalledWith('2026-08-13', false);
+    expect(usePageNavigationMock).toHaveBeenCalledWith('2026-08-13', false);
   });
 });

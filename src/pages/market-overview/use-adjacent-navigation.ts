@@ -1,4 +1,4 @@
-import { useNavigation } from '@/lib/query-hooks';
+import { usePageNavigation } from '@/lib/query-hooks';
 
 /**
  * Adjacent-business-day state for `ArchiveModeBand` (B-5).
@@ -31,7 +31,7 @@ export function useAdjacentNavigation(
   businessDate: string,
   enabled = true
 ): AdjacentNavigationState {
-  const { data, status } = useNavigation(businessDate, enabled);
+  const { data, status } = usePageNavigation(businessDate, enabled);
 
   if (status === 'success' && data) {
     return {

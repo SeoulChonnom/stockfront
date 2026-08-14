@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { resetAuthBootstrapForTesting } from '../auth-bootstrap';
 import type { ArchiveListParams } from './archive';
-import { getDailyPageByPageId } from './pages';
+import { getDailyPageByPageId, getPageNavigation } from './pages';
 import type {
   ArticleLinkResponse,
   ClusterDetailResponse,
@@ -231,5 +231,36 @@ describe('page API', () => {
     expect(fetchMock.mock.calls[0]?.[0]).toBe(
       'http://localhost:8000/stock/api/pages/42'
     );
+  });
+
+  it('fetches page navigation by business date with the request signal', async () => {
+    vi.stubEnv('VITE_API_HOST', 'http://localhost:8000');
+    const fetchMock = vi
+      .fn<(input: RequestInfo | URL, init?: RequestInit) => Promise<Response>>()
+      .mockResolvedValue(
+        createJsonResponse({
+          success: true,
+          data: {
+            businessDate: '2026-08-13',
+            pageExists: true,
+            previousBusinessDate: '2026-08-12',
+            nextBusinessDate: '2026-08-14',
+          },
+        })
+      );
+    vi.stubGlobal('fetch', fetchMock);
+    const controller = new AbortController();
+
+    await expect(
+      getPageNavigation('2026-08-13', controller.signal)
+    ).resolves.toMatchObject({
+      businessDate: '2026-08-13',
+      pageExists: true,
+    });
+
+    expect(fetchMock.mock.calls[0]?.[0]).toBe(
+      'http://localhost:8000/stock/api/pages/navigation?businessDate=2026-08-13'
+    );
+    expect(fetchMock.mock.calls[0]?.[1]?.signal).toBe(controller.signal);
   });
 });

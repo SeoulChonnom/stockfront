@@ -1,4 +1,4 @@
-import type { NavigationResponse } from '../api/types';
+import type { PageDateNavigationResponse } from '../api/types';
 import { asNullableString, asOptionalBoolean, asString } from './coerce';
 
 export type NavigationView = {
@@ -10,7 +10,7 @@ export type NavigationView = {
 
 /** Maps `GET /pages/navigation` (B-5). Types stay narrow; this stays lenient against a malformed wire response. */
 export function mapNavigationToView(
-  response: NavigationResponse
+  response: PageDateNavigationResponse
 ): NavigationView {
   return {
     businessDate: asString(response.businessDate, ''),

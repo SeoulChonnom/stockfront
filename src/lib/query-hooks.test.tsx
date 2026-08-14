@@ -8,13 +8,13 @@ import type {
   BatchJobDetailResponse,
   BatchJobListResponse,
   DailyPageResponse,
-  NavigationResponse,
+  PageDateNavigationResponse,
 } from './api/types';
 import {
   useArchiveMarketPage,
   useBatchJobDetail,
   useBatchJobs,
-  useNavigation,
+  usePageNavigation,
   useRetryAiMutation,
 } from './query-hooks';
 
@@ -22,7 +22,7 @@ const {
   mockGetDailyPageByBusinessDate,
   mockGetDailyPageByPageId,
   mockGetLatestDailyPage,
-  mockGetNavigation,
+  mockGetPageNavigation,
   mockGetBatchJobs,
   mockGetBatchJobDetail,
   mockRetryAiSummary,
@@ -30,7 +30,7 @@ const {
   mockGetDailyPageByBusinessDate: vi.fn(),
   mockGetDailyPageByPageId: vi.fn(),
   mockGetLatestDailyPage: vi.fn(),
-  mockGetNavigation: vi.fn(),
+  mockGetPageNavigation: vi.fn(),
   mockGetBatchJobs: vi.fn(),
   mockGetBatchJobDetail: vi.fn(),
   mockRetryAiSummary: vi.fn(),
@@ -40,7 +40,7 @@ vi.mock('./api/pages', () => ({
   getDailyPageByBusinessDate: mockGetDailyPageByBusinessDate,
   getDailyPageByPageId: mockGetDailyPageByPageId,
   getLatestDailyPage: mockGetLatestDailyPage,
-  getNavigation: mockGetNavigation,
+  getPageNavigation: mockGetPageNavigation,
 }));
 
 vi.mock('./api/batch', () => ({
@@ -180,31 +180,31 @@ describe('useArchiveMarketPage', () => {
   });
 });
 
-describe('useNavigation (B-5)', () => {
+describe('usePageNavigation (B-5)', () => {
   afterEach(() => {
     vi.clearAllMocks();
   });
 
-  const navigationResponse: NavigationResponse = {
+  const navigationResponse: PageDateNavigationResponse = {
     businessDate: '2026-03-31',
-    pageExists: true,
+    pageExists: false,
     previousBusinessDate: '2026-03-30',
     nextBusinessDate: '2026-04-01',
   };
 
   it('composes the query key from businessDate only, distinct from the archive-list cache', async () => {
-    mockGetNavigation.mockResolvedValue(navigationResponse);
+    mockGetPageNavigation.mockResolvedValue(navigationResponse);
     const queryClient = new QueryClient({
       defaultOptions: { queries: { retry: false } },
     });
 
-    const { result } = renderHook(() => useNavigation('2026-03-31'), {
+    const { result } = renderHook(() => usePageNavigation('2026-03-31'), {
       wrapper: createWrapper(queryClient),
     });
 
     await waitFor(() => expect(result.current.data).toBeDefined());
 
-    expect(mockGetNavigation).toHaveBeenCalledWith(
+    expect(mockGetPageNavigation).toHaveBeenCalledWith(
       '2026-03-31',
       expect.any(AbortSignal)
     );
@@ -222,11 +222,11 @@ describe('useNavigation (B-5)', () => {
       defaultOptions: { queries: { retry: false } },
     });
 
-    renderHook(() => useNavigation('2026-03-31', false), {
+    renderHook(() => usePageNavigation('2026-03-31', false), {
       wrapper: createWrapper(queryClient),
     });
 
-    expect(mockGetNavigation).not.toHaveBeenCalled();
+    expect(mockGetPageNavigation).not.toHaveBeenCalled();
   });
 });
 

@@ -24,7 +24,7 @@ const {
   mockUseBatchJobs,
   mockUseClusterDetail,
   mockUseLatestMarketPage,
-  mockUseNavigation,
+  mockUsePageNavigation,
   mockUseRetryAiMutation,
 } = vi.hoisted(() => ({
   mockUseArchiveList: vi.fn(),
@@ -33,7 +33,7 @@ const {
   mockUseBatchJobs: vi.fn(),
   mockUseClusterDetail: vi.fn(),
   mockUseLatestMarketPage: vi.fn(),
-  mockUseNavigation: vi.fn(),
+  mockUsePageNavigation: vi.fn(),
   mockUseRetryAiMutation: vi.fn(),
 }));
 
@@ -45,7 +45,7 @@ vi.mock('./lib/query-hooks', () => ({
   useBatchJobDetail: mockUseBatchJobDetail,
   useRetryAiMutation: mockUseRetryAiMutation,
   useClusterDetail: mockUseClusterDetail,
-  useNavigation: mockUseNavigation,
+  usePageNavigation: mockUsePageNavigation,
 }));
 
 function createJsonResponse(body: unknown, init?: ResponseInit) {
@@ -198,7 +198,7 @@ describe('App routing', () => {
     // `ArchiveNotFoundState`) call this — a resolved, both-null default
     // keeps them from throwing on an unmocked export. None of the cases
     // below assert on the band's prev/next dates.
-    mockUseNavigation.mockReturnValue({
+    mockUsePageNavigation.mockReturnValue({
       data: {
         businessDate: '',
         pageExists: false,

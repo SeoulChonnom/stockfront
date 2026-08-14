@@ -31,9 +31,6 @@ export type PageDateNavigationResponse = {
   nextBusinessDate: string | null;
 };
 
-/** Backward-compatible name used by the navigation API adapter. */
-export type NavigationResponse = PageDateNavigationResponse;
-
 /** B-1 keyPoint enums. Closed by the backend — do not widen to `string`. */
 export type KeyPointDirectionResponse = 'UP' | 'DOWN' | 'MIXED' | 'FLAT';
 
