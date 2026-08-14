@@ -71,6 +71,84 @@ export type ArticleGroup = {
   articles: ClusterArticle[];
 };
 
+function hasValidGroupingFields(article: unknown): article is ClusterArticle {
+  if (!article || typeof article !== 'object') {
+    return false;
+  }
+
+  const candidate = article as ClusterArticle;
+  return (
+    typeof candidate.id === 'string' &&
+    candidate.id.length > 0 &&
+    typeof candidate.similarGroupId === 'string' &&
+    candidate.similarGroupId.trim().length > 0 &&
+    typeof candidate.isSimilarGroupRepresentative === 'boolean' &&
+    Number.isSafeInteger(candidate.exactDuplicateCount) &&
+    candidate.exactDuplicateCount >= 0
+  );
+}
+
+/**
+ * The API guarantees one representative per group. Keep that invariant at
+ * the view boundary too: an unexpected READY payload must never create a
+ * misleading collapse control or make the renderer throw.
+ */
+function hasConsistentGrouping(
+  serverArticles: ClusterArticle[],
+  visibleArticles: ClusterArticle[]
+): boolean {
+  const serverIds = new Set<string>();
+  const serverArticleById = new Map<string, ClusterArticle>();
+  const representativesByGroup = new Map<string, number>();
+
+  for (const article of serverArticles) {
+    if (!hasValidGroupingFields(article) || serverIds.has(article.id)) {
+      return false;
+    }
+
+    serverIds.add(article.id);
+    serverArticleById.set(article.id, article);
+    const representativeCount =
+      representativesByGroup.get(article.similarGroupId) ?? 0;
+    representativesByGroup.set(
+      article.similarGroupId,
+      representativeCount + (article.isSimilarGroupRepresentative ? 1 : 0)
+    );
+  }
+
+  if (
+    [...representativesByGroup.values()].some(
+      (representativeCount) => representativeCount !== 1
+    )
+  ) {
+    return false;
+  }
+
+  const visibleIds = new Set<string>();
+  for (const article of visibleArticles) {
+    if (!hasValidGroupingFields(article)) {
+      return false;
+    }
+
+    const serverArticle = serverArticleById.get(article.id);
+    if (
+      visibleIds.has(article.id) ||
+      !serverIds.has(article.id) ||
+      !serverArticle ||
+      serverArticle.similarGroupId !== article.similarGroupId ||
+      serverArticle.isSimilarGroupRepresentative !==
+        article.isSimilarGroupRepresentative ||
+      serverArticle.exactDuplicateCount !== article.exactDuplicateCount
+    ) {
+      return false;
+    }
+
+    visibleIds.add(article.id);
+  }
+
+  return true;
+}
+
 /**
  * Builds groups from the already filtered/sorted article list (A-5
  * "필터·정렬 후 그룹 재구성"). Group order and each group's internal article
@@ -91,6 +169,10 @@ export function buildArticleGroups(
   serverArticles: ClusterArticle[],
   visibleArticles: ClusterArticle[]
 ): ArticleGroup[] {
+  if (!hasConsistentGrouping(serverArticles, visibleArticles)) {
+    return buildSingletonGroups(visibleArticles);
+  }
+
   const visibleIds = new Set(visibleArticles.map((article) => article.id));
 
   const groupOrder: string[] = [];
@@ -107,6 +189,7 @@ export function buildArticleGroups(
   }
 
   const serverFirstSurvivor = new Map<string, ClusterArticle>();
+  const serverRepresentative = new Map<string, ClusterArticle>();
   for (const article of serverArticles) {
     if (!visibleIds.has(article.id)) {
       continue;
@@ -114,16 +197,20 @@ export function buildArticleGroups(
     if (!serverFirstSurvivor.has(article.similarGroupId)) {
       serverFirstSurvivor.set(article.similarGroupId, article);
     }
+    if (article.isSimilarGroupRepresentative) {
+      serverRepresentative.set(article.similarGroupId, article);
+    }
   }
 
   return groupOrder.map((groupId) => {
     // biome-ignore lint/style/noNonNullAssertion: groupId only ever came from membersByGroup.set above
     const members = membersByGroup.get(groupId)!;
-    const serverRepresentative = members.find(
-      (article) => article.isSimilarGroupRepresentative
-    );
+    const serverHead =
+      serverRepresentative.get(groupId) ??
+      serverFirstSurvivor.get(groupId) ??
+      members[0];
     const representative =
-      serverRepresentative ?? serverFirstSurvivor.get(groupId) ?? members[0];
+      members.find((article) => article.id === serverHead.id) ?? members[0];
 
     return { id: groupId, representative, articles: members };
   });
@@ -140,11 +227,32 @@ export function buildArticleGroups(
 export function buildSingletonGroups(
   visibleArticles: ClusterArticle[]
 ): ArticleGroup[] {
-  return visibleArticles.map((article) => ({
-    id: article.id,
-    representative: article,
-    articles: [article],
-  }));
+  const usedGroupIds = new Set<string>();
+
+  return visibleArticles.flatMap((article) => {
+    if (!article || typeof article !== 'object') {
+      return [];
+    }
+
+    const candidate = article as ClusterArticle;
+    const articleId = typeof candidate.id === 'string' ? candidate.id : '';
+    const baseId = articleId.length > 0 ? articleId : 'article';
+    let groupId = baseId;
+    let suffix = 2;
+    while (usedGroupIds.has(groupId)) {
+      groupId = `${baseId}--${suffix}`;
+      suffix += 1;
+    }
+    usedGroupIds.add(groupId);
+
+    return [
+      {
+        id: groupId,
+        representative: candidate,
+        articles: [candidate],
+      },
+    ];
+  });
 }
 
 /**

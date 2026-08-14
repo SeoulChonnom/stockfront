@@ -144,6 +144,65 @@ function mapArticleGrouping(value: unknown): ArticleGrouping {
 }
 
 /**
+ * Validate the cross-article B-4 invariants before allowing a READY payload
+ * to reach the grouping UI. DTO types protect compile-time callers, but API
+ * responses are still untrusted at runtime. A malformed response is rendered
+ * as a flat list rather than exposing a partial or misleading group.
+ */
+function hasValidReadyArticleGrouping(value: unknown): boolean {
+  if (!Array.isArray(value)) {
+    return false;
+  }
+
+  const articleIds = new Set<number>();
+  const representativeCounts = new Map<string, number>();
+
+  for (const item of value) {
+    if (!isRecord(item)) {
+      return false;
+    }
+
+    const processedArticleId = item.processedArticleId;
+    const similarGroupId = item.similarGroupId;
+    const isRepresentative = item.isSimilarGroupRepresentative;
+    const exactDuplicateCount = item.exactDuplicateCount;
+
+    if (
+      typeof processedArticleId !== 'number' ||
+      !Number.isSafeInteger(processedArticleId) ||
+      articleIds.has(processedArticleId) ||
+      typeof similarGroupId !== 'string' ||
+      similarGroupId.trim().length === 0 ||
+      typeof isRepresentative !== 'boolean' ||
+      typeof exactDuplicateCount !== 'number' ||
+      !Number.isSafeInteger(exactDuplicateCount) ||
+      exactDuplicateCount < 0
+    ) {
+      return false;
+    }
+
+    articleIds.add(processedArticleId);
+    representativeCounts.set(
+      similarGroupId,
+      (representativeCounts.get(similarGroupId) ?? 0) +
+        (isRepresentative ? 1 : 0)
+    );
+  }
+
+  return [...representativeCounts.values()].every(
+    (representativeCount) => representativeCount === 1
+  );
+}
+
+function hasValidReadyArticleGroupingEnvelope(value: unknown): boolean {
+  if (!isRecord(value) || value.status !== 'READY') {
+    return false;
+  }
+
+  return formatKstDateTime(value.generatedAt) !== null && value.issue === null;
+}
+
+/**
  * A sentence is the minimum grounded unit (A-3). A malformed sentence is a
  * malformed analysis structure, not an optional item that can be filtered
  * while preserving its siblings. Conflict evidence is different: it is a
@@ -578,6 +637,7 @@ export function mapClusterDetailToView(
     : undefined;
   const analysis = mapAnalysis(response.summary, availableArticleIds);
   const clusterId = asString(response.clusterId, 'unknown-cluster');
+  const articleGrouping = mapArticleGrouping(response.articleGrouping);
   const representativeArticle: Record<string, unknown> = isRecord(
     response.representativeArticle
   )
@@ -598,7 +658,16 @@ export function mapClusterDetailToView(
     tags: asStringArray(response.tags),
     ...analysis,
     articles,
-    articleGrouping: mapArticleGrouping(response.articleGrouping),
+    // READY is only safe when all article-level fields and the one-representative
+    // invariant survived the runtime boundary. `mapArticleGrouping(undefined)`
+    // provides the same explicit, non-blocking UNAVAILABLE fallback copy used
+    // for a malformed grouping object.
+    articleGrouping:
+      articleGrouping.status === 'READY' &&
+      (!hasValidReadyArticleGroupingEnvelope(response.articleGrouping) ||
+        !hasValidReadyArticleGrouping(response.articles))
+        ? mapArticleGrouping(undefined)
+        : articleGrouping,
     representative: {
       ...representative,
       sourceSummary:

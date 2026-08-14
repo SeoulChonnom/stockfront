@@ -33,12 +33,76 @@ const DEFAULT_FILTERS: ArticleFilters = {
   query: '',
 };
 
-/** Most callers (tests, and any future surface without B-4 data) don't care about grouping — default to the common case rather than forcing every caller to pass it. */
-const DEFAULT_GROUPING: ArticleGrouping = {
-  status: 'READY',
-  generatedAt: null,
-  issue: null,
-};
+function createArticleDomIdResolver(
+  articles: ClusterArticle[]
+): (article: ClusterArticle) => string {
+  const domIdsByArticle = new Map<ClusterArticle, string[]>();
+  const usedDomIds = new Set<string>();
+
+  function allocateDomId(article: ClusterArticle): string {
+    const rawId = typeof article.id === 'string' ? article.id : '';
+    const baseId = `cluster-article-${rawId.length > 0 ? rawId : 'article'}`;
+    let domId = baseId;
+    let suffix = 2;
+    while (usedDomIds.has(domId)) {
+      domId = `${baseId}--${suffix}`;
+      suffix += 1;
+    }
+    usedDomIds.add(domId);
+    return domId;
+  }
+
+  // Allocate in server order so the first occurrence of a duplicated raw ID
+  // always owns the unsuffixed citation target. This preserves the raw API
+  // article ID while making every rendered occurrence addressable uniquely.
+  for (const article of articles) {
+    if (!article || typeof article !== 'object') {
+      continue;
+    }
+
+    const ids = domIdsByArticle.get(article) ?? [];
+    ids.push(allocateDomId(article));
+    domIdsByArticle.set(article, ids);
+  }
+
+  const renderedOccurrences = new Map<ClusterArticle, number>();
+  return (article) => {
+    const ids = domIdsByArticle.get(article) ?? [];
+    const occurrence = renderedOccurrences.get(article) ?? 0;
+    let domId = ids[occurrence];
+    if (!domId) {
+      // Runtime data should normally be one of `articles`, but keep the
+      // renderer safe if a malformed grouping object introduces another
+      // reference or repeats one more times than the source array.
+      domId = allocateDomId(article);
+      ids.push(domId);
+      domIdsByArticle.set(article, ids);
+    }
+    renderedOccurrences.set(article, occurrence + 1);
+    return domId;
+  };
+}
+
+function findArticleFocusTarget(articleId: number): HTMLElement | null {
+  // Keep the normal, unique-ID path as a single O(1) lookup. Duplicate raw
+  // IDs use suffixed DOM IDs, so only that malformed-data fallback inspects
+  // rendered rows by their safe, constant attribute selector.
+  const directTarget = document.getElementById(`cluster-article-${articleId}`);
+  if (directTarget) {
+    return directTarget;
+  }
+
+  const rawArticleId = String(articleId);
+  const renderedRows =
+    document.querySelectorAll<HTMLElement>('[data-article-id]');
+  for (const row of renderedRows) {
+    if (row.getAttribute('data-article-id') === rawArticleId) {
+      return row;
+    }
+  }
+
+  return null;
+}
 
 function computeGroups(
   articles: ClusterArticle[],
@@ -59,10 +123,12 @@ type GroupToggleProps = {
 
 function ClusterArticleRow({
   article,
+  domId,
   groupToggle,
   isGroupMember = false,
 }: {
   article: ClusterArticle;
+  domId: string;
   groupToggle?: GroupToggleProps;
   isGroupMember?: boolean;
 }) {
@@ -89,7 +155,8 @@ function ClusterArticleRow({
       className={`min-w-0 scroll-mt-24 border-b border-line px-[18px] py-3 ${
         isGroupMember ? 'bg-[color:var(--surface-2)] ps-7' : ''
       }`}
-      id={`cluster-article-${article.id}`}
+      data-article-id={article.id}
+      id={domId}
       tabIndex={-1}
     >
       {originalUrl ? (
@@ -153,10 +220,12 @@ function ClusterArticleRow({
 }
 
 function ArticleGroupRows({
+  getArticleDomId,
   group,
   expanded,
   onToggle,
 }: {
+  getArticleDomId: (article: ClusterArticle) => string;
   group: ArticleGroup;
   expanded: boolean;
   onToggle: () => void;
@@ -165,11 +234,13 @@ function ArticleGroupRows({
     (article) => article.id !== group.representative.id
   );
   const hasOthers = others.length > 0;
+  const representativeDomId = getArticleDomId(group.representative);
 
   return (
     <>
       <ClusterArticleRow
         article={group.representative}
+        domId={representativeDomId}
         groupToggle={
           hasOthers
             ? { expanded, otherCount: others.length, onToggle }
@@ -177,13 +248,17 @@ function ArticleGroupRows({
         }
       />
       {hasOthers && expanded
-        ? others.map((article) => (
-            <ClusterArticleRow
-              article={article}
-              isGroupMember
-              key={article.id}
-            />
-          ))
+        ? others.map((article) => {
+            const domId = getArticleDomId(article);
+            return (
+              <ClusterArticleRow
+                article={article}
+                domId={domId}
+                isGroupMember
+                key={domId}
+              />
+            );
+          })
         : null}
     </>
   );
@@ -191,13 +266,15 @@ function ArticleGroupRows({
 
 export function ClusterArticlesList({
   articles,
-  articleGrouping = DEFAULT_GROUPING,
+  articleGrouping,
 }: {
   articles: ClusterArticle[];
-  articleGrouping?: ArticleGrouping;
+  articleGrouping: ArticleGrouping;
 }) {
   const [filters, setFilters] = useState<ArticleFilters>(DEFAULT_FILTERS);
-  const allGroups = computeGroups(articles, filters, articleGrouping.status);
+  const groupingStatus: ArticleGrouping['status'] =
+    articleGrouping?.status === 'READY' ? 'READY' : 'UNAVAILABLE';
+  const allGroups = computeGroups(articles, filters, groupingStatus);
   const [visibleGroupCount, setVisibleGroupCount] = useState(
     () => revealMoreGroups(allGroups, 0).length
   );
@@ -207,6 +284,7 @@ export function ClusterArticlesList({
   const [pendingFocusArticleId, setPendingFocusArticleId] = useState<
     number | null
   >(null);
+  const getArticleDomId = createArticleDomIdResolver(articles);
 
   // A filter change can only shrink the match set relative to what's on
   // screen, so re-showing whatever visibleGroupCount had reached before
@@ -215,11 +293,7 @@ export function ClusterArticlesList({
   function updateFilters(patch: Partial<ArticleFilters>) {
     const nextFilters = { ...filters, ...patch };
     setFilters(nextFilters);
-    const nextGroups = computeGroups(
-      articles,
-      nextFilters,
-      articleGrouping.status
-    );
+    const nextGroups = computeGroups(articles, nextFilters, groupingStatus);
     setVisibleGroupCount(revealMoreGroups(nextGroups, 0).length);
   }
 
@@ -260,9 +334,7 @@ export function ClusterArticlesList({
       return;
     }
 
-    const target = document.getElementById(
-      `cluster-article-${pendingFocusArticleId}`
-    );
+    const target = findArticleFocusTarget(pendingFocusArticleId);
     if (target) {
       target.focus({ preventScroll: true });
       if (typeof target.scrollIntoView === 'function') {
@@ -341,10 +413,10 @@ export function ClusterArticlesList({
       {/* B-4 (A-5 "UNAVAILABLE 처리"): one non-blocking notice, no collapse
           UI. This never changes the page's own status — grouping failure
           is isolated to this cluster. */}
-      {articles.length > 0 && articleGrouping.status === 'UNAVAILABLE' ? (
+      {articles.length > 0 && groupingStatus === 'UNAVAILABLE' ? (
         <div className='border-b border-line px-[18px] py-3'>
-          <InlineAlert tone='info'>
-            {articleGrouping.issue?.message ??
+          <InlineAlert title='유사 기사 묶음을 사용할 수 없습니다' tone='info'>
+            {articleGrouping?.issue?.message ??
               '유사 기사 묶음을 표시할 수 없어 전체 목록을 보여드립니다.'}
           </InlineAlert>
         </div>
@@ -421,6 +493,7 @@ export function ClusterArticlesList({
           {visibleGroups.map((group) => (
             <ArticleGroupRows
               expanded={expandedGroupIds.has(group.id)}
+              getArticleDomId={getArticleDomId}
               group={group}
               key={group.id}
               onToggle={() => toggleGroup(group.id)}

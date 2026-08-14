@@ -1290,4 +1290,68 @@ describe('mappers - cluster - B-4 article grouping', () => {
     expect(detail.articles[0].isSimilarGroupRepresentative).toBe(true);
     expect(detail.articles[0].exactDuplicateCount).toBe(0);
   });
+
+  it('downgrades an inconsistent READY grouping payload to UNAVAILABLE instead of exposing collapse UI', () => {
+    const detail = mapClusterDetailToView(
+      baseResponse({
+        articleGrouping: READY_GROUPING,
+        articles: [
+          {
+            processedArticleId: 1,
+            publisherName: 'Source 1',
+            publishedAt: '2026-03-31T06:12:00Z',
+            title: 'article 1',
+            originLink: 'https://example.com/1',
+            naverLink: null,
+            similarGroupId: 'sim-shared',
+            isSimilarGroupRepresentative: true,
+            exactDuplicateCount: 4,
+          },
+          {
+            processedArticleId: 2,
+            publisherName: 'Source 2',
+            publishedAt: '2026-03-31T06:13:00Z',
+            title: 'article 2',
+            originLink: 'https://example.com/2',
+            naverLink: null,
+            similarGroupId: 'sim-shared',
+            // Two representatives violate the B-4 invariant.
+            isSimilarGroupRepresentative: true,
+            exactDuplicateCount: 0,
+          },
+        ],
+      })
+    );
+
+    expect(detail.articleGrouping.status).toBe('UNAVAILABLE');
+    expect(detail.articleGrouping.generatedAt).toBeNull();
+    expect(detail.articleGrouping.issue?.code).toBe(
+      'SIMILARITY_GROUPING_FAILED'
+    );
+    // Raw counts remain attached to their source articles even on fallback.
+    expect(
+      detail.articles.map((article) => article.exactDuplicateCount)
+    ).toEqual([4, 0]);
+  });
+
+  it('downgrades a READY envelope with an invalid generatedAt or issue to UNAVAILABLE', () => {
+    const detail = mapClusterDetailToView(
+      baseResponse({
+        articleGrouping: {
+          status: 'READY',
+          generatedAt: null,
+          issue: {
+            code: 'SIMILARITY_GROUPING_FAILED',
+            message: 'unexpected issue',
+          },
+        } as unknown as ClusterDetailResponse['articleGrouping'],
+      })
+    );
+
+    expect(detail.articleGrouping.status).toBe('UNAVAILABLE');
+    expect(detail.articleGrouping.generatedAt).toBeNull();
+    expect(detail.articleGrouping.issue?.code).toBe(
+      'SIMILARITY_GROUPING_FAILED'
+    );
+  });
 });

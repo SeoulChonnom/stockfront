@@ -189,6 +189,66 @@ describe('article grouping', () => {
     expect(group.representative.id).toBe('2');
   });
 
+  it('falls back to singleton groups when READY grouping metadata is inconsistent', () => {
+    const malformed = [
+      makeArticle('1', '한국경제', '첫 기사', '2026-08-10 09:00', {
+        similarGroupId: 'sim-shared',
+        isSimilarGroupRepresentative: true,
+      }),
+      makeArticle('2', '매일경제', '둘째 기사', '2026-08-11 09:00', {
+        similarGroupId: 'sim-shared',
+        isSimilarGroupRepresentative: true,
+      }),
+    ];
+
+    const groups = buildArticleGroups(malformed, malformed);
+
+    expect(
+      groups.map((group) => group.articles.map((article) => article.id))
+    ).toEqual([['1'], ['2']]);
+    expect(groups.every((group) => group.articles.length === 1)).toBe(true);
+  });
+
+  it('keeps singleton fallback group keys unique when malformed articles repeat an ID', () => {
+    const malformed = [
+      makeArticle('same-id', '한국경제', '첫 기사', '2026-08-10 09:00'),
+      makeArticle('same-id', '매일경제', '둘째 기사', '2026-08-11 09:00'),
+    ];
+
+    const groups = buildArticleGroups(malformed, malformed);
+
+    expect(groups).toHaveLength(2);
+    expect(new Set(groups.map((group) => group.id)).size).toBe(2);
+    expect(groups.map((group) => group.articles[0].id)).toEqual([
+      'same-id',
+      'same-id',
+    ]);
+  });
+
+  it('allocates fallback keys against every prior raw ID, including adversarial collision names', () => {
+    const malformed = [
+      makeArticle('singleton-2-a', '한국경제', '첫 기사', '2026-08-10 09:00'),
+      makeArticle('a', '매일경제', '둘째 기사', '2026-08-11 09:00'),
+      makeArticle('a', '서울경제', '셋째 기사', '2026-08-12 09:00'),
+    ];
+
+    const groups = buildSingletonGroups(malformed);
+    const groupIds = groups.map((group) => group.id);
+
+    expect(new Set(groupIds).size).toBe(3);
+    expect(groupIds[0]).toBe('singleton-2-a');
+    expect(groupIds[1]).toBe('a');
+    expect(groupIds[2]).not.toBe(groupIds[0]);
+    expect(groupIds[2]).not.toBe(groupIds[1]);
+  });
+
+  it('does not throw when a runtime article entry is not an object', () => {
+    const malformed = [null] as unknown as ClusterArticle[];
+
+    expect(() => buildArticleGroups(malformed, malformed)).not.toThrow();
+    expect(buildArticleGroups(malformed, malformed)).toEqual([]);
+  });
+
   it('buildSingletonGroups ignores similarGroupId and forces one article per group', () => {
     const grouped = [
       makeArticle('1', '한국경제', '반도체 A', '2026-08-10 09:00', {

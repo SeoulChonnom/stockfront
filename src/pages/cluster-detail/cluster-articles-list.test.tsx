@@ -1,9 +1,10 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import type { ArticleGrouping, ClusterArticle } from '@/lib/view-models';
 
+import { requestArticleFocus } from './article-focus-event';
 import { ClusterArticlesList } from './cluster-articles-list';
 
 function makeArticles(
@@ -35,7 +36,12 @@ const READY_GROUPING: ArticleGrouping = {
 describe('ClusterArticlesList paging and filters', () => {
   it('shows the first page and a more button labelled with the next batch size', async () => {
     const user = userEvent.setup();
-    render(<ClusterArticlesList articles={makeArticles(45)} />);
+    render(
+      <ClusterArticlesList
+        articleGrouping={READY_GROUPING}
+        articles={makeArticles(45)}
+      />
+    );
 
     expect(screen.getAllByRole('listitem')).toHaveLength(20);
     const moreButton = screen.getByRole('button', {
@@ -59,7 +65,12 @@ describe('ClusterArticlesList paging and filters', () => {
 
   it('resets the visible count to one page when a filter changes after loading more', async () => {
     const user = userEvent.setup();
-    render(<ClusterArticlesList articles={makeArticles(45)} />);
+    render(
+      <ClusterArticlesList
+        articleGrouping={READY_GROUPING}
+        articles={makeArticles(45)}
+      />
+    );
 
     await user.click(screen.getByRole('button', { name: '기사 20건 더 보기' }));
     expect(screen.getAllByRole('listitem')).toHaveLength(40);
@@ -73,7 +84,12 @@ describe('ClusterArticlesList paging and filters', () => {
 
   it('shows a dedicated empty state when a filter matches nothing, not an empty list', async () => {
     const user = userEvent.setup();
-    render(<ClusterArticlesList articles={makeArticles(5)} />);
+    render(
+      <ClusterArticlesList
+        articleGrouping={READY_GROUPING}
+        articles={makeArticles(5)}
+      />
+    );
 
     await user.type(screen.getByLabelText('제목 검색'), '존재하지않는단어');
 
@@ -84,7 +100,12 @@ describe('ClusterArticlesList paging and filters', () => {
   });
 
   it('gives the mirror link an accessible name that identifies the article, not a bare repeated label', () => {
-    render(<ClusterArticlesList articles={makeArticles(2)} />);
+    render(
+      <ClusterArticlesList
+        articleGrouping={READY_GROUPING}
+        articles={makeArticles(2)}
+      />
+    );
 
     expect(
       screen.getByRole('link', { name: '기사 제목 0 네이버 미러 (새 창)' })
@@ -98,7 +119,12 @@ describe('ClusterArticlesList paging and filters', () => {
   });
 
   it('every filter control has an associated label reachable by accessible name', () => {
-    render(<ClusterArticlesList articles={makeArticles(1)} />);
+    render(
+      <ClusterArticlesList
+        articleGrouping={READY_GROUPING}
+        articles={makeArticles(1)}
+      />
+    );
 
     expect(screen.getByLabelText('정렬')).toBeInTheDocument();
     expect(screen.getByLabelText('언론사')).toBeInTheDocument();
@@ -288,6 +314,159 @@ describe('ClusterArticlesList similar-article groups', () => {
     expect(
       screen.getByText('유사 기사 묶음을 생성하지 못했습니다.')
     ).toBeInTheDocument();
+  });
+
+  it('renders malformed READY grouping data flat without a collapse toggle', () => {
+    const articles = makeArticles(2, (index) => ({
+      similarGroupId: 'sim-inconsistent',
+      // Two representatives violate the backend grouping invariant. This
+      // test exercises the runtime guard before a mapper has normalized it.
+      isSimilarGroupRepresentative: true,
+      exactDuplicateCount: index === 0 ? 6 : 0,
+    }));
+
+    render(
+      <ClusterArticlesList
+        articleGrouping={READY_GROUPING}
+        articles={articles}
+      />
+    );
+
+    expect(
+      screen.getByText('기사 제목 0', { exact: false })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText('기사 제목 1', { exact: false })
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /유사 기사/ })
+    ).not.toBeInTheDocument();
+    expect(screen.getByText('원문 중복 6건')).toBeInTheDocument();
+  });
+
+  it('treats an unknown grouping status as unavailable and keeps the list flat', () => {
+    const malformedGrouping = {
+      status: 'BROKEN',
+      generatedAt: null,
+      issue: null,
+    } as unknown as ArticleGrouping;
+
+    render(
+      <ClusterArticlesList
+        articleGrouping={malformedGrouping}
+        articles={makeArticles(2, (index) => ({
+          similarGroupId: 'sim-status',
+          isSimilarGroupRepresentative: index === 0,
+        }))}
+      />
+    );
+
+    expect(screen.getAllByRole('listitem')).toHaveLength(2);
+    expect(
+      screen.queryByRole('button', { name: /유사 기사/ })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByText('유사 기사 묶음을 사용할 수 없습니다')
+    ).toBeInTheDocument();
+  });
+
+  it('keeps fallback group keys and citation targets unique for duplicate IDs', async () => {
+    const consoleError = vi
+      .spyOn(console, 'error')
+      .mockImplementation(() => undefined);
+    const articles = makeArticles(3, (index) => ({
+      // The first raw ID intentionally collides with the old index-based
+      // fallback for the third article. The other two IDs exercise both the
+      // fallback group-key allocator and the canonical citation target.
+      id: index === 0 ? 'singleton-2-2' : '2',
+      title: `중복 기사 ${index}`,
+      similarGroupId: 'malformed-grouping',
+      isSimilarGroupRepresentative: true,
+    }));
+
+    try {
+      render(
+        <ClusterArticlesList
+          articleGrouping={READY_GROUPING}
+          articles={articles}
+        />
+      );
+
+      const rows = screen.getAllByRole('listitem');
+      const rowIds = rows.map((row) => row.id);
+      expect(rows).toHaveLength(3);
+      expect(new Set(rowIds).size).toBe(3);
+      expect(rowIds[1]).toBe('cluster-article-2');
+      expect(rowIds[2]).not.toBe(rowIds[1]);
+      expect(
+        consoleError.mock.calls.some(
+          ([message]) =>
+            typeof message === 'string' && /unique.*key|same key/i.test(message)
+        )
+      ).toBe(false);
+
+      requestArticleFocus(2);
+      await waitFor(() => expect(rows[1]).toHaveFocus());
+    } finally {
+      consoleError.mockRestore();
+    }
+  });
+
+  it('focuses the first rendered duplicate when the canonical occurrence is filtered out', async () => {
+    const user = userEvent.setup();
+    const articles = makeArticles(2, (index) => ({
+      id: '2',
+      source: index === 0 ? '한국경제' : '매일경제',
+      title: index === 0 ? '필터된 대표' : '보이는 중복',
+    }));
+
+    render(
+      <ClusterArticlesList
+        articleGrouping={READY_GROUPING}
+        articles={articles}
+      />
+    );
+
+    await user.selectOptions(screen.getByLabelText('언론사'), '매일경제');
+    const visibleRow = screen
+      .getByText('보이는 중복', { exact: false })
+      .closest('li');
+    expect(visibleRow).not.toBeNull();
+    expect(visibleRow).toHaveAttribute('data-article-id', '2');
+
+    requestArticleFocus(2);
+    await waitFor(() => expect(visibleRow).toHaveFocus());
+  });
+
+  it('focuses a visible duplicate when the canonical occurrence is on another page', async () => {
+    const user = userEvent.setup();
+    const articles = makeArticles(21, (index) => ({
+      id: index === 0 || index === 20 ? '2' : `a-${index}`,
+      title: index === 0 ? '두 번째 페이지 대표' : `기사 제목 ${index}`,
+    }));
+
+    render(
+      <ClusterArticlesList
+        articleGrouping={READY_GROUPING}
+        articles={articles}
+      />
+    );
+
+    await user.selectOptions(screen.getByLabelText('정렬'), 'latest');
+    expect(
+      screen.getByText('기사 제목 20', { exact: false })
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText('두 번째 페이지 대표', { exact: false })
+    ).not.toBeInTheDocument();
+    const visibleRow = screen
+      .getByText('기사 제목 20', { exact: false })
+      .closest('li');
+    expect(visibleRow).not.toBeNull();
+    expect(visibleRow).toHaveAttribute('data-article-id', '2');
+
+    requestArticleFocus(2);
+    await waitFor(() => expect(visibleRow).toHaveFocus());
   });
 
   it('load-more breaks on group boundaries: a group is never split across the increment', async () => {
