@@ -64,23 +64,25 @@
 
 ---
 
-## 2. 남은 작업
+## 2. 후속 작업 완료 (2026-08-15 현재)
 
-### B-3. 계층형 테마·아카이브 검색
+본 보고서 작성 이후 아래 네 항목이 모두 해결되었다. 후속 기준 문서는 `docs/fe-be-contract-handoff-2026-08-14.md`를 참조할 것.
 
-백엔드 엔드포인트(`GET /pages/archive/themes`, `theme`/`q`/`marketType` 파라미터)가 아직 미구현이라 이번 범위에서 제외했다.
+### B-3. 계층형 테마·아카이브 검색 — **해결**
 
-### 선행 확인 필요
+커밋 `b7a4ceb` (아카이브 테마 검색 상태), `eedbd00` (계층형 테마 복수 검색 UI)에서 구현됨. 재귀 테마 트리, 반복 `theme` URL 파싱·순서 유지 중복 제거·10개 절단, 필터 변경 시 `page` 리셋, 카탈로그 로딩 후 한 번의 replace-state 정리, 쿼리 키 테마 순서 정규화까지 포함.
 
-`src/lib/api/client.ts`의 `buildQueryString`이 `URLSearchParams.set`을 쓰므로 반복 파라미터(`theme=A&theme=B`)를 만들 수 없다. 부록 A-4-3이 요구한 대로 B-3 착수 전에 이 직렬화부터 고쳐야 한다.
+### 반복 쿼리 파라미터 직렬화 — **해결**
 
-### A-7 잔여 항목
+커밋 `bf4a669`에서 `src/lib/api/client.ts`의 `buildQueryString`이 `string[]`을 받아 `append`로 반복 키를 만듦. 같은 문제가 있던 `src/lib/router.ts`의 `buildUrl`도 함께 고쳐짐 (커밋 `b7a4ceb`).
 
-공개 아카이브의 `status=FAILED` 옵션과 라우트 허용 목록 제거는 아카이브 검색 화면(B-3 영역)에 속해 함께 미뤘다. 서버는 이미 공개 조회에서 `FAILED`를 제외하므로, 현재 이 옵션을 고르면 항상 빈 결과가 나온다.
+### A-7 잔여 항목 — **해결**
 
-### `docs/api-spec.json` 미갱신
+커밋 `b7a4ceb`, `eedbd00`에서 아카이브 검색 화면에서 `status=FAILED` 제거됨. `src/lib/mappers/archive.ts`의 `toUpperStatus` 허용 목록에 남은 `FAILED`는 의도적 방어 코드임 (다른 경로에서는 여전히 올 수 있음).
 
-신규 필드가 하나도 반영돼 있지 않다. 백엔드가 OpenAPI를 갱신하면 A-8 지침대로 그 스펙 기준으로 DTO를 재검증해야 한다.
+### `docs/api-spec.json` — **갱신됨**
+
+커밋 `bf4a669`에서 신규 필드 모두 반영되어 DTO와 스펙이 일치함.
 
 ---
 
