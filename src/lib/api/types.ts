@@ -7,18 +7,18 @@ export type ApiEnvelope<T> = {
   };
 };
 
-export type PaginationResponse = {
+type PaginationResponse = {
   page: number;
   size: number;
   totalCount: number;
 };
 
 export type MarketTypeResponse = 'US' | 'KR';
-export type PageStatusResponse = 'READY' | 'PARTIAL' | 'FAILED';
+type PageStatusResponse = 'READY' | 'PARTIAL' | 'FAILED';
 export type ArchiveStatusResponse = 'READY' | 'PARTIAL';
 
 /** Embedded on `DailyPageResponse`; both keys are always present and nullable. */
-export type PageNavigationResponse = {
+type PageNavigationResponse = {
   previousBusinessDate: string | null;
   nextBusinessDate: string | null;
 };
@@ -32,7 +32,7 @@ export type PageDateNavigationResponse = {
 };
 
 /** B-1 keyPoint enums. Closed by the backend — do not widen to `string`. */
-export type KeyPointDirectionResponse = 'UP' | 'DOWN' | 'MIXED' | 'FLAT';
+type KeyPointDirectionResponse = 'UP' | 'DOWN' | 'MIXED' | 'FLAT';
 
 /** B-1 discriminated union; labels and direction are server-fixed. */
 export type KeyPointResponse =
@@ -46,13 +46,13 @@ export type KeyPointResponse =
   | { kind: 'watch'; label: '관전 포인트'; text: string };
 
 /** Page issues are persisted diagnostics; the backend schema keeps category/code open. */
-export type PageIssueResponse = {
+type PageIssueResponse = {
   category: string;
   code: string;
   message: string;
 };
 
-export type PageVersionSummaryResponse = {
+type PageVersionSummaryResponse = {
   pageId: number;
   versionNo: number;
   status: PageStatusResponse;
@@ -83,13 +83,13 @@ export type DailyPageResponse = {
   versions: PageVersionSummaryResponse[];
 };
 
-export type MarketAnalysisResponse = {
+type MarketAnalysisResponse = {
   background: string[];
   keyThemes: string[];
   outlook: string | null;
 };
 
-export type MarketMetadataResponse = {
+type MarketMetadataResponse = {
   rawNewsCount: number;
   processedNewsCount: number;
   clusterCount: number;
@@ -103,7 +103,7 @@ export type MarketMetadataResponse = {
   coverageComplete?: boolean | null;
 };
 
-export type MarketSectionResponse = {
+type MarketSectionResponse = {
   marketType: MarketTypeResponse;
   marketLabel: string;
   summaryTitle: string | null;
@@ -128,7 +128,7 @@ export type IndexCardResponse = {
   sessionCloseAt?: string | null;
 };
 
-export type RepresentativeArticleResponse = {
+type RepresentativeArticleResponse = {
   title?: string | null;
   publisherName?: string | null;
   publishedAt?: string | null;
@@ -136,7 +136,7 @@ export type RepresentativeArticleResponse = {
   naverLink?: string | null;
 };
 
-export type ClusterCardResponse = {
+type ClusterCardResponse = {
   clusterId: string;
   title: string;
   summary: string | null;
@@ -159,7 +159,7 @@ export type ArticleLinkResponse = {
   exactDuplicateCount: number;
 };
 
-export type ArchiveItemResponse = {
+type ArchiveItemResponse = {
   pageId: number;
   businessDate: string;
   pageTitle: string;
@@ -197,12 +197,12 @@ export type ClusterArticleResponse = {
 
 export type ArticleGroupingStatusResponse = 'READY' | 'UNAVAILABLE';
 
-export type ArticleGroupingIssueResponse = {
+type ArticleGroupingIssueResponse = {
   code: 'SIMILARITY_GROUPING_FAILED';
   message: '유사 기사 묶음을 생성하지 못했습니다.';
 };
 
-export type ArticleGroupingResponse = {
+type ArticleGroupingResponse = {
   status: ArticleGroupingStatusResponse;
   generatedAt: string | null;
   issue: ArticleGroupingIssueResponse | null;
@@ -225,7 +225,7 @@ export type AnalysisIssueResponse = {
   message: string;
 };
 
-export type ClusterSentenceResponse = {
+type ClusterSentenceResponse = {
   text: string;
   sourceArticleIds: number[];
   conflictStatus: ConflictStatusResponse;
@@ -233,7 +233,7 @@ export type ClusterSentenceResponse = {
   conflictNote: string | null;
 };
 
-export type ClusterParagraphResponse = {
+type ClusterParagraphResponse = {
   sentences: ClusterSentenceResponse[];
 };
 
@@ -241,13 +241,13 @@ type AnalysisSectionBase = {
   paragraphs: ClusterParagraphResponse[];
 };
 
-export type ClusterSectionResponse =
+type ClusterSectionResponse =
   | (AnalysisSectionBase & { kind: 'background'; title: '발생 배경' })
   | (AnalysisSectionBase & { kind: 'impact'; title: '시장 영향' })
   | (AnalysisSectionBase & { kind: 'related'; title: '관련 업종·종목' })
   | (AnalysisSectionBase & { kind: 'outlook'; title: '향후 관전 포인트' });
 
-export type ClusterSummaryResponse = {
+type ClusterSummaryResponse = {
   short: string | null;
   long: string | null;
   analysisStatus: AnalysisStatusResponse;
