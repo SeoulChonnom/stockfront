@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import {
+  type ArchiveFilterDraft,
   getDefaultArchiveFilters,
   getStatusOptions,
   validateArchiveFilters,
@@ -20,6 +21,9 @@ describe('getDefaultArchiveFilters', () => {
         from: '2026-07-13',
         to: '2026-07-27',
         status: '',
+        market: '',
+        themes: [],
+        q: '',
       });
     } finally {
       vi.useRealTimers();
@@ -41,6 +45,15 @@ describe('getStatusOptions', () => {
 });
 
 describe('validateArchiveFilters', () => {
+  const validDraft: ArchiveFilterDraft = {
+    from: '2026-02-01',
+    to: '2026-03-01',
+    status: '',
+    market: '',
+    themes: [],
+    q: '',
+  };
+
   it('accepts a valid leap day', () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2024-03-01T00:00:00+09:00'));
@@ -48,9 +61,9 @@ describe('validateArchiveFilters', () => {
     try {
       expect(
         validateArchiveFilters({
+          ...validDraft,
           from: '2024-02-29',
           to: '2024-02-29',
-          status: '',
         })
       ).toEqual({});
     } finally {
@@ -65,12 +78,47 @@ describe('validateArchiveFilters', () => {
     try {
       expect(
         validateArchiveFilters({
+          ...validDraft,
           from: '2024-02-30',
           to: '2024-03-01',
-          status: '',
         })
       ).toEqual({
         from: '날짜 형식이 올바르지 않습니다. YYYY-MM-DD 형식으로 입력해 주세요.',
+      });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('provides the server-aligned keyword hints for short and over-tokenized queries', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-03-01T00:00:00+09:00'));
+
+    try {
+      expect(
+        validateArchiveFilters({
+          from: '2026-02-01',
+          to: '2026-03-01',
+          status: '',
+          market: '',
+          themes: [],
+          q: 'a',
+        })
+      ).toMatchObject({
+        q: '검색어는 2자 이상 입력해 주세요.',
+      });
+
+      expect(
+        validateArchiveFilters({
+          from: '2026-02-01',
+          to: '2026-03-01',
+          status: '',
+          market: '',
+          themes: [],
+          q: Array.from({ length: 11 }, (_, index) => `t${index}`).join(' '),
+        })
+      ).toMatchObject({
+        q: '검색어는 최대 10개 단어까지 입력해 주세요.',
       });
     } finally {
       vi.useRealTimers();

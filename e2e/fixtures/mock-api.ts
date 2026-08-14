@@ -229,6 +229,13 @@ export type ArchiveList = {
   pagination: { page: number; size: number; totalCount: number };
 };
 
+export type ArchiveThemeNode = {
+  code: string;
+  label: string;
+  description: string;
+  children: ArchiveThemeNode[];
+};
+
 export type ClusterArticle = {
   /** Required non-null integer (A-3/A-7) — the pre-B-2 optional/nullable form is gone. */
   processedArticleId: number;
@@ -1112,6 +1119,43 @@ export function archiveFixture(
     items: filtered.slice(start, start + size),
     pagination: { page, size, totalCount: filtered.length },
   };
+}
+
+export function archiveThemesFixture(): ArchiveThemeNode[] {
+  return [
+    {
+      code: 'SECTOR',
+      label: '업종',
+      description: '기업의 주요 사업 영역',
+      children: [
+        {
+          code: 'SECTOR_SEMICONDUCTORS',
+          label: '반도체',
+          description: '반도체 산업',
+          children: [
+            {
+              code: 'SECTOR_SEMICONDUCTORS_MEMORY_HBM',
+              label: '메모리·HBM',
+              description: '메모리와 HBM 공급망',
+              children: [],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      code: 'MARKET_FLOW_INVESTOR',
+      label: '투자자 수급',
+      description: '투자자별 수급',
+      children: [],
+    },
+    {
+      code: 'CORPORATE_EVENT',
+      label: '기업 이벤트',
+      description: '기업 이벤트',
+      children: [],
+    },
+  ];
 }
 
 // ---------------------------------------------------------------------------
@@ -2381,6 +2425,11 @@ export async function installMockApi(
     if (method === 'GET' && pathname === '/stock/api/pages/navigation') {
       const businessDate = url.searchParams.get('businessDate') ?? '';
       await fulfillJson(route, 200, envelope(navigationFixture(businessDate)));
+      return;
+    }
+
+    if (method === 'GET' && pathname === '/stock/api/pages/archive/themes') {
+      await fulfillJson(route, 200, envelope(archiveThemesFixture()));
       return;
     }
 

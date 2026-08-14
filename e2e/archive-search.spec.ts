@@ -29,6 +29,78 @@ test.describe('filter apply / reset', () => {
     await expect(page).toHaveURL(/\/market\/archive\/search$/);
     await expect(page.locator('#from')).not.toHaveValue('2026-07-01');
   });
+
+  test('applies market, keyword, and an independent parent theme without adding child codes', async ({
+    page,
+  }) => {
+    await installMockApi(page, { scenario: 'ready' });
+    await page.goto('market/archive/search');
+
+    await page.getByLabel('시장').selectOption('KR');
+    await page.getByLabel('키워드').fill('rate');
+    await page.getByRole('checkbox', { name: '업종', exact: true }).check();
+    await page.getByRole('button', { name: '필터 적용' }).click();
+
+    await expect(page).toHaveURL(/market=KR/);
+    await expect(page).toHaveURL(/theme=SECTOR/);
+    await expect(page).toHaveURL(/q=rate/);
+    await expect(page).not.toHaveURL(/SECTOR_SEMICONDUCTORS/);
+    await expect(page.getByLabel('시장')).toHaveValue('KR');
+    await expect(page.getByLabel('키워드')).toHaveValue('rate');
+    await expect(
+      page.getByRole('checkbox', { name: '업종', exact: true })
+    ).toBeChecked();
+  });
+
+  test('browser Back and Forward restore the advanced archive filters', async ({
+    page,
+    consoleGuard,
+  }) => {
+    await installMockApi(page, { scenario: 'ready' });
+    consoleGuard.allowFailedRequest(/pages\/archive/);
+    await page.goto('market/archive/search');
+
+    await page.getByLabel('시장').selectOption('US');
+    await page.getByLabel('키워드').fill('macro');
+    await page
+      .getByRole('checkbox', { name: '업종 / 반도체', exact: true })
+      .check();
+    await page.getByRole('button', { name: '필터 적용' }).click();
+    await expect(page).toHaveURL(/market=US/);
+    await expect(page).toHaveURL(/theme=SECTOR_SEMICONDUCTORS/);
+
+    await page.getByRole('button', { name: '다음' }).click();
+    await expect(page).toHaveURL(/page=2/);
+    await page.goBack();
+    await expect(page).toHaveURL(/page=1/);
+    await expect(page.getByLabel('시장')).toHaveValue('US');
+    await expect(page.getByLabel('키워드')).toHaveValue('macro');
+    await expect(
+      page.getByRole('checkbox', { name: '업종 / 반도체', exact: true })
+    ).toBeChecked();
+
+    await page.goForward();
+    await expect(page).toHaveURL(/page=2/);
+    await expect(page.getByLabel('시장')).toHaveValue('US');
+    await expect(page.getByLabel('키워드')).toHaveValue('macro');
+  });
+
+  test('empty results explain the applied market, theme, and keyword filters', async ({
+    page,
+  }) => {
+    await installMockApi(page, {
+      scenario: 'ready',
+      archiveSearchMode: 'noResults',
+    });
+    await page.goto(
+      'market/archive/search?market=KR&theme=SECTOR&q=rate&page=1'
+    );
+
+    await expect(page.getByText('조건에 맞는 스냅샷이 없습니다')).toBeVisible();
+    await expect(
+      page.getByText(/적용 필터\(.*시장 KR.*테마 업종.*검색어 rate/)
+    ).toBeVisible();
+  });
 });
 
 test.describe('validation', () => {

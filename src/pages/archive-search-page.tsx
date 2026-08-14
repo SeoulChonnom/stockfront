@@ -12,7 +12,7 @@ import { Card } from '@/components/ui/card';
 import { Pagination } from '@/components/ui/pagination';
 import type { ArchiveListParams } from '@/lib/api/archive';
 import { ApiError } from '@/lib/api/client';
-import type { ArchiveStatusResponse } from '@/lib/api/types';
+import type { ArchiveStatusResponse, ThemeNodeResponse } from '@/lib/api/types';
 import type { Audience } from '@/lib/audience-copy';
 import {
   errorCodeCopy,
@@ -34,6 +34,7 @@ import { ArchiveSearchFilters } from './archive-search/archive-search-filters';
 import {
   ARCHIVE_SEARCH_STATUSES,
   type ArchiveFilterDraft,
+  getStatusSummaryLabel,
 } from './archive-search/filter-copy';
 import { useLastGoodData } from './archive-search/use-last-good-data';
 
@@ -81,6 +82,15 @@ function getArchiveSearchErrorPresentation(
       };
     }
 
+    if (isInvalidThemeError(error)) {
+      return {
+        code: errorCodeCopy(audience, '422 · INVALID_THEME'),
+        title: '테마 필터를 확인해 주세요',
+        message:
+          '선택한 테마가 없거나 비활성 상태입니다. 테마 목록을 새로고침한 뒤 다시 선택해 주세요.',
+      };
+    }
+
     return {
       code: errorCodeCopy(audience, `${error.status} · REQUEST_FAILED`),
       title: '아카이브 요청을 처리하지 못했습니다',
@@ -120,6 +130,58 @@ function toArchiveStatus(value: string): ArchiveStatusResponse | undefined {
   return value === 'READY' || value === 'PARTIAL' ? value : undefined;
 }
 
+function findThemeLabel(
+  nodes: readonly ThemeNodeResponse[],
+  code: string
+): string | null {
+  for (const node of nodes) {
+    if (node.code === code) {
+      return node.label;
+    }
+
+    const childLabel = findThemeLabel(node.children, code);
+    if (childLabel) {
+      return childLabel;
+    }
+  }
+
+  return null;
+}
+
+function getAppliedFilterSummary(
+  filters: ArchiveSearchUrlState,
+  themeCatalog: readonly ThemeNodeResponse[]
+) {
+  const parts = [
+    `${filters.from} ~ ${filters.to}`,
+    getStatusSummaryLabel(filters.status),
+    filters.market ? `시장 ${filters.market}` : '시장 전체',
+  ];
+
+  if (filters.themes.length > 0) {
+    parts.push(
+      `테마 ${filters.themes
+        .map((code) => findThemeLabel(themeCatalog, code) ?? code)
+        .join(', ')}`
+    );
+  }
+
+  if (filters.q) {
+    parts.push(`검색어 ${filters.q}`);
+  }
+
+  return parts.join(' · ');
+}
+
+function isInvalidThemeError(error: Error) {
+  const body = error instanceof ApiError ? JSON.stringify(error.body) : '';
+  return (
+    error instanceof ApiError &&
+    error.status === 422 &&
+    /invalid[_ -]?theme/i.test(`${error.message} ${body}`)
+  );
+}
+
 export function ArchiveSearchPage({
   searchParams,
 }: {
@@ -140,7 +202,7 @@ export function ArchiveSearchPage({
   const appliedQuery = applied.q;
   const { can } = useCapabilities();
   const audience: Audience = { canViewOps: can('ops.view') };
-  const archiveThemesQuery = useArchiveThemes(applied.themes.length > 0);
+  const archiveThemesQuery = useArchiveThemes(true);
   const themesForQuery =
     archiveThemesQuery.isSuccess && archiveThemesQuery.data
       ? pruneThemeCodesToCatalog(applied.themes, archiveThemesQuery.data)
@@ -260,9 +322,6 @@ export function ArchiveSearchPage({
   function handleApply(next: ArchiveFilterDraft) {
     const target: ArchiveSearchUrlState = {
       ...next,
-      market: applied.market,
-      themes: applied.themes,
-      q: applied.q,
       page: 1,
     };
     pendingApplyAnnounceKeyRef.current = buildFiltersKey(target);
@@ -310,9 +369,13 @@ export function ArchiveSearchPage({
       </section>
 
       <ArchiveSearchFilters
-        applied={{ from: applied.from, to: applied.to, status: applied.status }}
+        applied={applied}
         onApply={handleApply}
         onReset={handleReset}
+        onRetryThemeCatalog={() => void archiveThemesQuery.refetch()}
+        themeCatalog={archiveThemesQuery.data}
+        themeCatalogError={archiveThemesQuery.error}
+        themeCatalogLoading={archiveThemesQuery.isLoading}
       />
 
       {errorPresentation ? (
@@ -354,6 +417,7 @@ export function ArchiveSearchPage({
         onReset={handleReset}
         resultsHeadingRef={resultsHeadingRef}
         searchParams={searchParams}
+        themeCatalog={archiveThemesQuery.data ?? []}
       />
     </div>
   );
@@ -369,6 +433,7 @@ function ArchiveResultsCard({
   onReset,
   resultsHeadingRef,
   searchParams,
+  themeCatalog,
 }: {
   applied: ArchiveSearchUrlState;
   canViewOps: boolean;
@@ -379,6 +444,7 @@ function ArchiveResultsCard({
   onReset: () => void;
   resultsHeadingRef: RefObject<HTMLHeadingElement | null>;
   searchParams: URLSearchParams;
+  themeCatalog: readonly ThemeNodeResponse[];
 }) {
   const announce = useAnnounce();
   const rows = data?.rows ?? [];
@@ -412,6 +478,9 @@ function ArchiveResultsCard({
               {data.totalCount}
             </span>
           ) : null}
+          <span className='wrap-anywhere text-caption text-faint'>
+            {getAppliedFilterSummary(applied, themeCatalog)}
+          </span>
         </div>
         {isFetching && !isInitialLoading ? <RefetchBadge /> : null}
       </div>
@@ -437,7 +506,11 @@ function ArchiveResultsCard({
           </h3>
           <p className='wrap-anywhere m-0 mb-3.5 max-w-[60ch] text-body text-fg-soft'>
             선택한 기간에 생성된 브리프가 없거나, 상태 필터가 결과를 모두
-            제외했습니다. 기간을 넓히거나 상태 필터를 해제해 보세요.
+            제외했습니다.
+            {applied.market || applied.themes.length > 0 || applied.q
+              ? ` 적용 필터(${getAppliedFilterSummary(applied, themeCatalog)})를 확인하고`
+              : ''}{' '}
+            기간을 넓히거나 상태 필터를 해제해 보세요.
           </p>
           <Button
             className='px-4 text-[13px]'

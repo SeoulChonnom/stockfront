@@ -1,12 +1,14 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import type { ReactNode } from 'react';
+import type { ComponentProps, ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
 import { AnnounceProvider } from '@/components/shell/announce-context';
+import type { ThemeNodeResponse } from '@/lib/api/types';
 import { getTodayIso } from '@/lib/kst-date';
 
 import { ArchiveSearchFilters } from './archive-search-filters';
+import type { ArchiveFilterDraft } from './filter-copy';
 
 function renderWithAnnounce(ui: ReactNode) {
   return render(<AnnounceProvider pathname='/test'>{ui}</AnnounceProvider>);
@@ -26,17 +28,48 @@ function setDateValue(input: HTMLElement, value: string) {
   fireEvent.change(input, { target: { value } });
 }
 
-const applied = { from: '2026-07-13', to: '2026-07-27', status: '' };
+const catalog = [
+  {
+    code: 'SECTOR',
+    label: '업종',
+    description: '기업의 주요 사업 영역',
+    children: [
+      {
+        code: 'SECTOR_SEMICONDUCTORS',
+        label: '반도체',
+        description: '반도체 산업',
+        children: [],
+      },
+    ],
+  },
+] satisfies ThemeNodeResponse[];
+
+const applied = {
+  from: '2026-07-13',
+  to: '2026-07-27',
+  status: '',
+  market: '',
+  themes: [],
+  q: '',
+} satisfies ArchiveFilterDraft;
+
+function renderFilters(
+  overrides: Partial<ComponentProps<typeof ArchiveSearchFilters>> = {}
+) {
+  return renderWithAnnounce(
+    <ArchiveSearchFilters
+      applied={applied}
+      onApply={vi.fn()}
+      onReset={vi.fn()}
+      themeCatalog={catalog}
+      {...overrides}
+    />
+  );
+}
 
 describe('ArchiveSearchFilters', () => {
   it('renders the applied filters as a mono summary line', () => {
-    renderWithAnnounce(
-      <ArchiveSearchFilters
-        applied={applied}
-        onApply={vi.fn()}
-        onReset={vi.fn()}
-      />
-    );
+    renderFilters();
 
     expect(
       screen.getByText('적용됨 · 2026-07-13 ~ 2026-07-27 · 전체 상태')
@@ -50,6 +83,7 @@ describe('ArchiveSearchFilters', () => {
         applied={applied}
         onApply={onApply}
         onReset={vi.fn()}
+        themeCatalog={catalog}
       />
     );
 
@@ -67,17 +101,14 @@ describe('ArchiveSearchFilters', () => {
         applied={applied}
         onApply={onApply}
         onReset={vi.fn()}
+        themeCatalog={catalog}
       />
     );
 
     setDateValue(screen.getByLabelText('시작일'), '2026-07-10');
     await user.click(screen.getByRole('button', { name: '필터 적용' }));
 
-    expect(onApply).toHaveBeenCalledWith({
-      from: '2026-07-10',
-      to: '2026-07-27',
-      status: '',
-    });
+    expect(onApply).toHaveBeenCalledWith({ ...applied, from: '2026-07-10' });
   });
 
   it('rejects a future date with the exact product message, blocks apply, and focuses the field', async () => {
@@ -88,6 +119,7 @@ describe('ArchiveSearchFilters', () => {
         applied={applied}
         onApply={onApply}
         onReset={vi.fn()}
+        themeCatalog={catalog}
       />
     );
 
@@ -117,6 +149,7 @@ describe('ArchiveSearchFilters', () => {
         applied={applied}
         onApply={onApply}
         onReset={vi.fn()}
+        themeCatalog={catalog}
       />
     );
 
@@ -141,6 +174,7 @@ describe('ArchiveSearchFilters', () => {
         applied={applied}
         onApply={vi.fn()}
         onReset={onReset}
+        themeCatalog={catalog}
       />
     );
 
@@ -151,13 +185,7 @@ describe('ArchiveSearchFilters', () => {
   });
 
   it('offers only the public READY and PARTIAL status options', () => {
-    renderWithAnnounce(
-      <ArchiveSearchFilters
-        applied={applied}
-        onApply={vi.fn()}
-        onReset={vi.fn()}
-      />
-    );
+    renderFilters();
 
     const select = screen.getByLabelText('생성 상태');
     const labels = Array.from(select.querySelectorAll('option')).map(
@@ -169,5 +197,81 @@ describe('ArchiveSearchFilters', () => {
       'READY · 준비 완료',
       'PARTIAL · 부분 생성',
     ]);
+  });
+
+  it('submits market, q, and independently selected themes in stable selection order', async () => {
+    const user = userEvent.setup();
+    const onApply = vi.fn();
+    renderWithAnnounce(
+      <ArchiveSearchFilters
+        applied={applied}
+        onApply={onApply}
+        onReset={vi.fn()}
+        themeCatalog={catalog}
+      />
+    );
+
+    await user.selectOptions(screen.getByLabelText('시장'), 'KR');
+    await user.type(screen.getByLabelText('키워드'), 'rate');
+    await user.click(screen.getByRole('checkbox', { name: '업종' }));
+    await user.click(screen.getByRole('checkbox', { name: '업종 / 반도체' }));
+    await user.click(screen.getByRole('button', { name: '필터 적용' }));
+
+    expect(onApply).toHaveBeenCalledWith({
+      from: '2026-07-13',
+      to: '2026-07-27',
+      status: '',
+      market: 'KR',
+      themes: ['SECTOR', 'SECTOR_SEMICONDUCTORS'],
+      q: 'rate',
+    });
+  });
+
+  it('shows explicit loading, empty, and error states for the catalog', () => {
+    const { rerender } = renderWithAnnounce(
+      <ArchiveSearchFilters
+        applied={applied}
+        onApply={vi.fn()}
+        onReset={vi.fn()}
+        themeCatalog={undefined}
+        themeCatalogLoading
+      />
+    );
+    expect(screen.getByRole('status')).toHaveTextContent(
+      '테마 목록을 불러오는 중입니다.'
+    );
+
+    rerender(
+      <AnnounceProvider pathname='/test'>
+        <ArchiveSearchFilters
+          applied={applied}
+          onApply={vi.fn()}
+          onReset={vi.fn()}
+          themeCatalog={[]}
+        />
+      </AnnounceProvider>
+    );
+    expect(
+      screen.getByText('선택할 수 있는 테마가 없습니다.')
+    ).toBeInTheDocument();
+
+    const retry = vi.fn();
+    rerender(
+      <AnnounceProvider pathname='/test'>
+        <ArchiveSearchFilters
+          applied={applied}
+          onApply={vi.fn()}
+          onReset={vi.fn()}
+          themeCatalog={undefined}
+          themeCatalogError={new Error('catalog down')}
+          onRetryThemeCatalog={retry}
+        />
+      </AnnounceProvider>
+    );
+    expect(screen.getByRole('status')).toHaveTextContent(
+      '테마 목록을 불러오지 못했습니다.'
+    );
+    screen.getByRole('button', { name: '테마 다시 시도' }).click();
+    expect(retry).toHaveBeenCalledTimes(1);
   });
 });

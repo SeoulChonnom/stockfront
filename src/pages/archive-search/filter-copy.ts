@@ -1,10 +1,14 @@
 import type { FilterErrors } from '@/components/ui/use-filter-draft';
+import type { MarketTypeResponse } from '@/lib/api/types';
 import { getRelativeIso, getTodayIso, isValidIsoDate } from '@/lib/kst-date';
 
 export type ArchiveFilterDraft = {
   from: string;
   to: string;
   status: string;
+  market: MarketTypeResponse | '';
+  themes: string[];
+  q: string;
 };
 
 export const ARCHIVE_SEARCH_STATUSES = ['READY', 'PARTIAL'];
@@ -31,6 +35,9 @@ export function getDefaultArchiveFilters(): ArchiveFilterDraft {
     from: getRelativeIso(14),
     to: getTodayIso(),
     status: '',
+    market: '',
+    themes: [],
+    q: '',
   };
 }
 
@@ -58,6 +65,20 @@ export function validateArchiveFilters(
 
   if (!errors.from && !errors.to && draft.from > draft.to) {
     errors.from = '시작일이 종료일보다 늦습니다. 두 날짜를 바꿔 입력해 주세요.';
+  }
+
+  const normalizedQuery = (draft.q ?? '')
+    .normalize('NFC')
+    .trim()
+    .replace(/\s+/g, ' ');
+  if (normalizedQuery.length > 0) {
+    if (normalizedQuery.length < 2) {
+      errors.q = '검색어는 2자 이상 입력해 주세요.';
+    } else if (normalizedQuery.length > 100) {
+      errors.q = '검색어는 100자 이하로 입력해 주세요.';
+    } else if (normalizedQuery.split(' ').length > 10) {
+      errors.q = '검색어는 최대 10개 단어까지 입력해 주세요.';
+    }
   }
 
   return errors;

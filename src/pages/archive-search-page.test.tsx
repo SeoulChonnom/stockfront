@@ -38,7 +38,9 @@ type ArchiveListQueryResult = {
 
 const { mockUseArchiveList, mockUseArchiveThemes } = vi.hoisted(() => ({
   mockUseArchiveList:
-    vi.fn<(params: ArchiveListParams) => ArchiveListQueryResult>(),
+    vi.fn<
+      (params: ArchiveListParams, enabled?: boolean) => ArchiveListQueryResult
+    >(),
   mockUseArchiveThemes: vi.fn(),
 }));
 
@@ -52,7 +54,14 @@ const defaultThemeCatalog = [
     code: 'SECTOR',
     label: '업종',
     description: '산업',
-    children: [],
+    children: [
+      {
+        code: 'SECTOR_SEMICONDUCTORS',
+        label: '반도체',
+        description: '반도체 산업',
+        children: [],
+      },
+    ],
   },
   {
     code: 'MARKET_FLOW_INVESTOR',
@@ -176,6 +185,83 @@ describe('ArchiveSearchPage', () => {
       },
       true
     );
+  });
+
+  it('applies market, q, and a parent theme without expanding child codes in the URL', async () => {
+    const user = userEvent.setup();
+    mockUseArchiveList.mockReturnValue(ready());
+
+    renderPage();
+
+    await user.selectOptions(screen.getByLabelText('시장'), 'KR');
+    await user.type(screen.getByLabelText('키워드'), 'rate');
+    await user.click(screen.getByRole('checkbox', { name: '업종' }));
+    await user.click(screen.getByRole('button', { name: '필터 적용' }));
+
+    expect(window.location.search).toContain(
+      'market=KR&theme=SECTOR&q=rate&page=1'
+    );
+    expect(window.location.search).not.toContain('SECTOR_SEMICONDUCTORS');
+  });
+
+  it('shows the selected advanced filters in an empty-results explanation', () => {
+    mockUseArchiveList.mockReturnValue(
+      ready({ rows: [], totalCount: 0, totalPages: 1 })
+    );
+
+    renderPage(new URLSearchParams('market=KR&theme=SECTOR&q=rate&page=1'));
+
+    expect(
+      screen.getByText(/적용 필터\(.*시장 KR.*테마 업종.*검색어 rate/)
+    ).toBeInTheDocument();
+  });
+
+  it('renders an INVALID_THEME panel without exposing the raw server message', () => {
+    mockUseArchiveList.mockReturnValue({
+      data: undefined,
+      error: new ApiError(
+        'API request failed with status 422. INVALID_THEME',
+        422,
+        {
+          error: { code: 'INVALID_THEME', message: 'internal theme detail' },
+        }
+      ),
+      isLoading: false,
+      isFetching: false,
+      refetch: vi.fn(),
+    });
+
+    renderPage(new URLSearchParams('theme=SECTOR'));
+
+    const alert = screen.getByRole('alert');
+    expect(alert).toHaveTextContent('테마 필터를 확인해 주세요');
+    expect(alert).toHaveTextContent(
+      '선택한 테마가 없거나 비활성 상태입니다. 테마 목록을 새로고침한 뒤 다시 선택해 주세요.'
+    );
+    expect(alert).not.toHaveTextContent('internal theme detail');
+  });
+
+  it('shows a catalog error state while keeping non-theme archive search usable', () => {
+    mockUseArchiveThemes.mockReturnValue({
+      data: undefined,
+      error: new Error('catalog down'),
+      isLoading: false,
+      isSuccess: false,
+      refetch: vi.fn(),
+    });
+    mockUseArchiveList.mockReturnValue(ready());
+
+    renderPage();
+
+    expect(screen.getByRole('status')).toHaveTextContent(
+      '테마 목록을 불러오지 못했습니다.'
+    );
+    expect(
+      screen.getByRole('button', { name: '테마 다시 시도' })
+    ).toBeInTheDocument();
+    const lastArchiveCall = mockUseArchiveList.mock.calls.at(-1);
+    expect(lastArchiveCall?.[1]).toBe(true);
+    expect(lastArchiveCall?.[0]).not.toHaveProperty('theme');
   });
 
   it('preserves advanced archive route filters when date filters apply and resets page to one', async () => {
