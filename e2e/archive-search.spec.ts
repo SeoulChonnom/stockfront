@@ -39,16 +39,42 @@ test.describe('filter apply / reset', () => {
     await page.getByLabel('시장').selectOption('KR');
     await page.getByLabel('키워드').fill('rate');
     await page.getByRole('checkbox', { name: '업종', exact: true }).check();
-    await page.getByRole('button', { name: '필터 적용' }).click();
+    await page
+      .getByRole('checkbox', { name: '투자자 수급', exact: true })
+      .check();
+
+    const appliedArchiveRequest = page.waitForRequest((request) => {
+      const url = new URL(request.url());
+      return (
+        request.method() === 'GET' &&
+        url.pathname.endsWith('/stock/api/pages/archive') &&
+        url.searchParams.get('marketType') === 'KR' &&
+        url.searchParams.get('q') === 'rate' &&
+        url.searchParams.getAll('theme').length === 2
+      );
+    });
+    const [request] = await Promise.all([
+      appliedArchiveRequest,
+      page.getByRole('button', { name: '필터 적용' }).click(),
+    ]);
+    const appliedUrl = new URL(request.url());
 
     await expect(page).toHaveURL(/market=KR/);
     await expect(page).toHaveURL(/theme=SECTOR/);
+    await expect(page).toHaveURL(/theme=MARKET_FLOW_INVESTOR/);
     await expect(page).toHaveURL(/q=rate/);
     await expect(page).not.toHaveURL(/SECTOR_SEMICONDUCTORS/);
+    expect(appliedUrl.searchParams.getAll('theme')).toEqual([
+      'SECTOR',
+      'MARKET_FLOW_INVESTOR',
+    ]);
     await expect(page.getByLabel('시장')).toHaveValue('KR');
     await expect(page.getByLabel('키워드')).toHaveValue('rate');
     await expect(
       page.getByRole('checkbox', { name: '업종', exact: true })
+    ).toBeChecked();
+    await expect(
+      page.getByRole('checkbox', { name: '투자자 수급', exact: true })
     ).toBeChecked();
   });
 

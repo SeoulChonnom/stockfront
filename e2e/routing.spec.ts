@@ -183,6 +183,35 @@ test.describe('Archive Detail — adjacent snapshot navigation', () => {
     // Confirms this landed on a real snapshot, not another dead end.
     await expect(page.getByText('아카이브 스냅샷')).toBeVisible();
   });
+
+  test('error shell requests standalone navigation with one businessDate key', async ({
+    page,
+    consoleGuard,
+  }) => {
+    // This scenario deliberately returns 500 for every mocked API response;
+    // the request URL remains the assertion under test.
+    consoleGuard.allowConsoleError(/Failed to load resource.*500/);
+    await installMockApi(page, { scenario: 'error5xx' });
+
+    const navigationRequest = page.waitForRequest((request) => {
+      const url = new URL(request.url());
+      return (
+        request.method() === 'GET' &&
+        url.pathname.endsWith('/stock/api/pages/navigation')
+      );
+    });
+    await page.goto('market/archive/2026-07-26');
+    const request = await navigationRequest;
+    const url = new URL(request.url());
+
+    expect(url.searchParams.getAll('businessDate')).toEqual(['2026-07-26']);
+    await expect(
+      page.getByRole('button', { name: '이전 확인 불가' })
+    ).toBeDisabled();
+    await expect(
+      page.getByRole('button', { name: '다음 확인 불가' })
+    ).toBeDisabled();
+  });
 });
 
 test.describe('route focus', () => {
@@ -260,13 +289,20 @@ test.describe('browser Back (market tabs)', () => {
 
     // The 이슈 상세 button was removed (Task 8) — the issue title link is now
     // the sole detail entry point, so click it directly.
-    await page
+    const clusterLink = page
       .getByRole('article')
       .first()
       .locator('a[href*="/market/cluster/"]')
-      .first()
-      .click();
+      .first();
+    // `locator.click()` may scroll a partially visible target into view before
+    // dispatching the click, changing the position this test is meant to save.
+    await clusterLink.dispatchEvent('click');
     await expect(page).toHaveURL(/market\/cluster\//);
+    // Let the detail request settle before Back so the network smoke does not
+    // turn an in-flight fetch cancellation into the assertion under test.
+    await expect(
+      page.getByRole('heading', { name: 'AI 심층 분석' })
+    ).toBeVisible();
 
     await page.goBack();
     await expect(page).toHaveURL(/market=kr/);
