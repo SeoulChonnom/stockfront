@@ -3,6 +3,7 @@ import type {
   ArchiveListResponse,
   ArchiveStatusResponse,
   MarketTypeResponse,
+  ThemeNodeResponse,
 } from './types';
 
 export type ArchiveListParams = {
@@ -23,6 +24,12 @@ export function getArchiveList(
 ) {
   return apiRequest<ArchiveListResponse>('/stock/api/pages/archive', {
     query: params,
+    signal,
+  });
+}
+
+export function getArchiveThemes(signal?: AbortSignal) {
+  return apiRequest<ThemeNodeResponse[]>('/stock/api/pages/archive/themes', {
     signal,
   });
 }

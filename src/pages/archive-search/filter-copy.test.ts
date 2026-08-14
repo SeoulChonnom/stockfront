@@ -28,13 +28,15 @@ describe('getDefaultArchiveFilters', () => {
 });
 
 describe('getStatusOptions', () => {
-  it('exposes the 전체/READY/PARTIAL/FAILED options', () => {
+  it('exposes only the public 전체/READY/PARTIAL options', () => {
     expect(getStatusOptions().map((option) => option.value)).toEqual([
       '',
       'READY',
       'PARTIAL',
-      'FAILED',
     ]);
+    expect(getStatusOptions().map((option) => option.label)).not.toContain(
+      'FAILED · 생성 실패'
+    );
   });
 });
 

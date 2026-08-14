@@ -10,6 +10,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Pagination } from '@/components/ui/pagination';
+import type { ArchiveListParams } from '@/lib/api/archive';
 import { ApiError } from '@/lib/api/client';
 import type { ArchiveStatusResponse } from '@/lib/api/types';
 import type { Audience } from '@/lib/audience-copy';
@@ -19,9 +20,13 @@ import {
   unknownErrorMessageCopy,
 } from '@/lib/audience-copy';
 import { useCapabilities } from '@/lib/capabilities';
-import { parseListFilters } from '../lib/app-state';
+import {
+  type ListFilters,
+  parseListFilters,
+  pruneThemeCodesToCatalog,
+} from '../lib/app-state';
 import { formatInteger } from '../lib/formatters';
-import { useArchiveList } from '../lib/query-hooks';
+import { useArchiveList, useArchiveThemes } from '../lib/query-hooks';
 import { buildUrl, navigate } from '../lib/router';
 import type { ArchiveListView } from '../lib/view-models';
 import { ArchiveResultsTable } from './archive-search/archive-results-table';
@@ -90,12 +95,25 @@ function getArchiveSearchErrorPresentation(
   };
 }
 
-function buildArchiveSearchUrl(filters: ArchiveFilterDraft & { page: number }) {
-  return buildUrl('/market/archive/search', filters);
+type ArchiveSearchUrlState = Pick<
+  ListFilters,
+  'from' | 'to' | 'status' | 'market' | 'themes' | 'q' | 'page'
+>;
+
+function buildArchiveSearchUrl(filters: ArchiveSearchUrlState) {
+  return buildUrl('/market/archive/search', {
+    from: filters.from,
+    to: filters.to,
+    status: filters.status || undefined,
+    market: filters.market || undefined,
+    theme: filters.themes,
+    q: filters.q || undefined,
+    page: filters.page,
+  });
 }
 
-function buildFiltersKey(filters: ArchiveFilterDraft & { page: number }) {
-  return `${filters.from}:${filters.to}:${filters.status}:${filters.page}`;
+function buildFiltersKey(filters: ArchiveSearchUrlState) {
+  return `${filters.from}:${filters.to}:${filters.status}:${filters.market}:${filters.themes.join(',')}:${filters.q}:${filters.page}`;
 }
 
 function toArchiveStatus(value: string): ArchiveStatusResponse | undefined {
@@ -114,17 +132,90 @@ export function ArchiveSearchPage({
   const resultsHeadingRef = useRef<HTMLHeadingElement>(null);
   const pendingApplyAnnounceKeyRef = useRef<string | null>(null);
   const appliedKey = buildFiltersKey(applied);
+  const appliedThemesKey = applied.themes.join('\u0000');
+  const appliedFrom = applied.from;
+  const appliedTo = applied.to;
+  const appliedStatus = applied.status;
+  const appliedMarket = applied.market;
+  const appliedQuery = applied.q;
   const { can } = useCapabilities();
   const audience: Audience = { canViewOps: can('ops.view') };
+  const archiveThemesQuery = useArchiveThemes(applied.themes.length > 0);
+  const themesForQuery =
+    archiveThemesQuery.isSuccess && archiveThemesQuery.data
+      ? pruneThemeCodesToCatalog(applied.themes, archiveThemesQuery.data)
+      : applied.themes;
+  const themesMatchCatalog =
+    themesForQuery.length === applied.themes.length &&
+    themesForQuery.every((theme, index) => theme === applied.themes[index]);
 
-  const archiveQuery = useArchiveList({
+  const archiveQueryParams: ArchiveListParams = {
     fromDate: applied.from,
     toDate: applied.to,
     status: toArchiveStatus(applied.status),
     page: applied.page,
     size: PAGE_SIZE,
-  });
+    ...(applied.market ? { marketType: applied.market } : {}),
+    ...(themesForQuery.length > 0 ? { theme: themesForQuery } : {}),
+    ...(applied.q ? { q: applied.q } : {}),
+  };
+  const archiveQuery = useArchiveList(
+    archiveQueryParams,
+    applied.themes.length === 0 ||
+      (archiveThemesQuery.isSuccess && themesMatchCatalog)
+  );
 
+  useEffect(() => {
+    if (!archiveThemesQuery.isSuccess || !archiveThemesQuery.data) {
+      return;
+    }
+
+    const selectedThemes =
+      appliedThemesKey.length > 0 ? appliedThemesKey.split('\u0000') : [];
+    if (selectedThemes.length === 0) {
+      return;
+    }
+
+    const validThemes = pruneThemeCodesToCatalog(
+      selectedThemes,
+      archiveThemesQuery.data
+    );
+    const themesAreSame =
+      validThemes.length === selectedThemes.length &&
+      validThemes.every((theme, index) => theme === selectedThemes[index]);
+
+    if (themesAreSame) {
+      return;
+    }
+
+    navigate(
+      buildArchiveSearchUrl({
+        from: appliedFrom,
+        to: appliedTo,
+        status: appliedStatus,
+        market: appliedMarket,
+        themes: validThemes,
+        q: appliedQuery,
+        page: 1,
+      }),
+      { replace: true }
+    );
+  }, [
+    appliedFrom,
+    appliedMarket,
+    appliedQuery,
+    appliedStatus,
+    appliedThemesKey,
+    appliedTo,
+    archiveThemesQuery.data,
+    archiveThemesQuery.isSuccess,
+  ]);
+
+  /*
+   * The catalog effect above is deliberately independent from the result
+   * query. URL theme codes remain visible while the catalog is unresolved,
+   * while an invalid selection never reaches the archive endpoint.
+   */
   // Keep the last successful page while a new query key loads or errors.
   const displayData = useLastGoodData(archiveQuery.data);
   const hasData = displayData !== null;
@@ -167,7 +258,13 @@ export function ArchiveSearchPage({
   }
 
   function handleApply(next: ArchiveFilterDraft) {
-    const target = { ...next, page: 1 };
+    const target: ArchiveSearchUrlState = {
+      ...next,
+      market: applied.market,
+      themes: applied.themes,
+      q: applied.q,
+      page: 1,
+    };
     pendingApplyAnnounceKeyRef.current = buildFiltersKey(target);
     focusAndScrollToResults();
     navigate(buildArchiveSearchUrl(target));
@@ -185,6 +282,9 @@ export function ArchiveSearchPage({
         from: applied.from,
         to: applied.to,
         status: applied.status,
+        market: applied.market,
+        themes: applied.themes,
+        q: applied.q,
         page,
       })
     );
@@ -270,7 +370,7 @@ function ArchiveResultsCard({
   resultsHeadingRef,
   searchParams,
 }: {
-  applied: { from: string; to: string; status: string; page: number };
+  applied: ArchiveSearchUrlState;
   canViewOps: boolean;
   data: ArchiveListView | null;
   isFetching: boolean;

@@ -19,6 +19,7 @@ import { navigate, withBasePath } from './lib/router';
 
 const {
   mockUseArchiveList,
+  mockUseArchiveThemes,
   mockUseArchiveMarketPage,
   mockUseBatchJobDetail,
   mockUseBatchJobs,
@@ -28,6 +29,7 @@ const {
   mockUseRetryAiMutation,
 } = vi.hoisted(() => ({
   mockUseArchiveList: vi.fn(),
+  mockUseArchiveThemes: vi.fn(),
   mockUseArchiveMarketPage: vi.fn(),
   mockUseBatchJobDetail: vi.fn(),
   mockUseBatchJobs: vi.fn(),
@@ -41,6 +43,7 @@ vi.mock('./lib/query-hooks', () => ({
   useLatestMarketPage: mockUseLatestMarketPage,
   useArchiveMarketPage: mockUseArchiveMarketPage,
   useArchiveList: mockUseArchiveList,
+  useArchiveThemes: mockUseArchiveThemes,
   useBatchJobs: mockUseBatchJobs,
   useBatchJobDetail: mockUseBatchJobDetail,
   useRetryAiMutation: mockUseRetryAiMutation,
@@ -163,6 +166,10 @@ describe('App routing', () => {
       },
       error: null,
       isLoading: false,
+    });
+    mockUseArchiveThemes.mockReturnValue({
+      data: [],
+      isSuccess: true,
     });
     mockUseBatchJobs.mockReturnValue({
       data: {

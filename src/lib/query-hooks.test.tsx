@@ -2,7 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-
+import type { ArchiveListParams } from './api/archive';
 import type {
   AiRetryRunResponse,
   BatchJobDetailResponse,
@@ -11,7 +11,9 @@ import type {
   PageDateNavigationResponse,
 } from './api/types';
 import {
+  useArchiveList,
   useArchiveMarketPage,
+  useArchiveThemes,
   useBatchJobDetail,
   useBatchJobs,
   usePageNavigation,
@@ -19,6 +21,8 @@ import {
 } from './query-hooks';
 
 const {
+  mockGetArchiveList,
+  mockGetArchiveThemes,
   mockGetDailyPageByBusinessDate,
   mockGetDailyPageByPageId,
   mockGetLatestDailyPage,
@@ -27,6 +31,8 @@ const {
   mockGetBatchJobDetail,
   mockRetryAiSummary,
 } = vi.hoisted(() => ({
+  mockGetArchiveList: vi.fn(),
+  mockGetArchiveThemes: vi.fn(),
   mockGetDailyPageByBusinessDate: vi.fn(),
   mockGetDailyPageByPageId: vi.fn(),
   mockGetLatestDailyPage: vi.fn(),
@@ -34,6 +40,11 @@ const {
   mockGetBatchJobs: vi.fn(),
   mockGetBatchJobDetail: vi.fn(),
   mockRetryAiSummary: vi.fn(),
+}));
+
+vi.mock('./api/archive', () => ({
+  getArchiveList: mockGetArchiveList,
+  getArchiveThemes: mockGetArchiveThemes,
 }));
 
 vi.mock('./api/pages', () => ({
@@ -177,6 +188,87 @@ describe('useArchiveMarketPage', () => {
     expect(
       queryClient.getQueryData(['daily-page', 'archive', '2026-03-31', 42])
     ).toMatchObject({ pageId: 42, businessDate: '2026-03-31' });
+  });
+});
+
+describe('archive theme and list query state', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  const archiveListResponse = {
+    items: [],
+    pagination: { page: 1, size: 30, totalCount: 0 },
+  };
+
+  it('fetches the theme catalog with a stable standalone query key', async () => {
+    mockGetArchiveThemes.mockResolvedValue([]);
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+
+    const { result } = renderHook(() => useArchiveThemes(), {
+      wrapper: createWrapper(queryClient),
+    });
+
+    await waitFor(() => expect(result.current.data).toEqual([]));
+
+    expect(mockGetArchiveThemes).toHaveBeenCalledWith(expect.any(AbortSignal));
+    expect(queryClient.getQueryData(['archive-themes'])).toEqual([]);
+  });
+
+  it('canonicalizes theme order in archive-list query keys while preserving request order', async () => {
+    mockGetArchiveList.mockResolvedValue(archiveListResponse);
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+    const first: ArchiveListParams = {
+      fromDate: '2026-08-01',
+      toDate: '2026-08-31',
+      theme: ['MARKET_FLOW_INVESTOR', 'SECTOR', 'SECTOR'],
+      marketType: 'KR',
+      q: '외국인 매수',
+      page: 1,
+      size: 30,
+    };
+
+    const { result, rerender } = renderHook(
+      ({ params }: { params: ArchiveListParams }) => useArchiveList(params),
+      {
+        initialProps: { params: first },
+        wrapper: createWrapper(queryClient),
+      }
+    );
+
+    await waitFor(() => expect(result.current.data).toBeDefined());
+    expect(mockGetArchiveList).toHaveBeenCalledWith(
+      first,
+      expect.any(AbortSignal)
+    );
+
+    rerender({
+      params: {
+        ...first,
+        theme: ['SECTOR', 'MARKET_FLOW_INVESTOR'],
+      },
+    });
+    await waitFor(() => expect(result.current.data).toBeDefined());
+
+    expect(mockGetArchiveList).toHaveBeenCalledTimes(1);
+    expect(
+      queryClient.getQueryData([
+        'archive-list',
+        {
+          fromDate: '2026-08-01',
+          toDate: '2026-08-31',
+          theme: ['MARKET_FLOW_INVESTOR', 'SECTOR'],
+          marketType: 'KR',
+          q: '외국인 매수',
+          page: 1,
+          size: 30,
+        },
+      ])
+    ).toEqual(archiveListResponse);
   });
 });
 

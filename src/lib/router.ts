@@ -109,12 +109,21 @@ export function useUrlState() {
 }
 
 function buildSearchParams(
-  query: Record<string, string | number | null | undefined>
+  query: Record<string, string | number | readonly string[] | null | undefined>
 ) {
   const params = new URLSearchParams();
 
   Object.entries(query).forEach(([key, value]) => {
     if (value === null || value === undefined || value === '') {
+      return;
+    }
+
+    if (Array.isArray(value)) {
+      value
+        .filter((item) => item !== '')
+        .forEach((item) => {
+          params.append(key, item);
+        });
       return;
     }
 
@@ -126,7 +135,7 @@ function buildSearchParams(
 
 export function buildUrl(
   pathname: string,
-  query: Record<string, string | number | null | undefined>
+  query: Record<string, string | number | readonly string[] | null | undefined>
 ) {
   const params = buildSearchParams(query);
   const queryString = params.toString();

@@ -1,5 +1,6 @@
 import type { MouseEvent } from 'react';
 
+import type { MarketTypeResponse, ThemeNodeResponse } from './api/types';
 import { getRelativeIso, getTodayIso, isValidIsoDate } from './kst-date';
 import { navigate } from './router';
 
@@ -9,8 +10,13 @@ export type ListFilters = {
   from: string;
   to: string;
   status: string;
+  market: MarketTypeResponse | '';
+  themes: string[];
+  q: string;
   page: number;
 };
+
+const MAX_ARCHIVE_THEME_SELECTIONS = 10;
 
 type ParseListFiltersOptions = {
   allowedStatuses?: string[];
@@ -49,6 +55,47 @@ function normalizePageParam(value: string | null, fallback: number) {
   return normalizePositiveIntegerParam(value) ?? fallback;
 }
 
+function normalizeMarketParam(value: string | null): MarketTypeResponse | '' {
+  return value === 'US' || value === 'KR' ? value : '';
+}
+
+function normalizeThemeCodes(values: readonly string[]): string[] {
+  const unique = new Set<string>();
+
+  for (const value of values) {
+    const normalized = value.trim();
+    if (normalized.length > 0) {
+      unique.add(normalized);
+    }
+
+    if (unique.size === MAX_ARCHIVE_THEME_SELECTIONS) {
+      break;
+    }
+  }
+
+  return [...unique];
+}
+
+function parseThemeParams(searchParams: URLSearchParams): string[] {
+  return normalizeThemeCodes(searchParams.getAll('theme'));
+}
+
+export function pruneThemeCodesToCatalog(
+  themes: readonly string[],
+  catalog: readonly ThemeNodeResponse[]
+): string[] {
+  const activeCodes = new Set<string>();
+  const visit = (nodes: readonly ThemeNodeResponse[]) => {
+    for (const node of nodes) {
+      activeCodes.add(node.code);
+      visit(node.children);
+    }
+  };
+
+  visit(catalog);
+  return normalizeThemeCodes(themes).filter((theme) => activeCodes.has(theme));
+}
+
 function normalizeStatusParam(
   value: string | null,
   allowedStatuses?: string[]
@@ -85,6 +132,9 @@ export function parseListFilters(
       searchParams.get('status'),
       options.allowedStatuses
     ),
+    market: normalizeMarketParam(searchParams.get('market')),
+    themes: parseThemeParams(searchParams),
+    q: searchParams.get('q') ?? '',
     page: normalizePageParam(searchParams.get('page'), defaults.page),
   };
 }

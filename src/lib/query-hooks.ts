@@ -1,6 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { type ArchiveListParams, getArchiveList } from './api/archive';
+import {
+  type ArchiveListParams,
+  getArchiveList,
+  getArchiveThemes,
+} from './api/archive';
 import {
   type BatchJobsParams,
   getBatchJobDetail,
@@ -87,9 +91,45 @@ export function useArchiveMarketPage(
 
 export function useArchiveList(params: ArchiveListParams, enabled = true) {
   return useQuery({
-    queryKey: ['archive-list', params],
+    queryKey: buildArchiveListQueryKey(params),
     queryFn: ({ signal }) => getArchiveList(params, signal),
     select: mapArchiveListToView,
+    enabled,
+  });
+}
+
+/**
+ * Theme selections are an unordered set for cache identity. The request
+ * itself still receives the caller's order so URL/API serialization remains
+ * deterministic for the applied route state.
+ */
+function canonicalizeArchiveThemes(
+  themes: readonly string[] | undefined
+): string[] {
+  return [
+    ...new Set(
+      (themes ?? [])
+        .filter((theme): theme is string => typeof theme === 'string')
+        .map((theme) => theme.trim())
+        .filter((theme) => theme.length > 0)
+    ),
+  ].sort();
+}
+
+function buildArchiveListQueryKey(params: ArchiveListParams) {
+  const rest = { ...params };
+  delete rest.theme;
+  const themes = canonicalizeArchiveThemes(params.theme);
+
+  return themes.length > 0
+    ? (['archive-list', { ...rest, theme: themes }] as const)
+    : (['archive-list', rest] as const);
+}
+
+export function useArchiveThemes(enabled = true) {
+  return useQuery({
+    queryKey: ['archive-themes'],
+    queryFn: ({ signal }) => getArchiveThemes(signal),
     enabled,
   });
 }

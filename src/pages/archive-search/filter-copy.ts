@@ -7,13 +7,12 @@ export type ArchiveFilterDraft = {
   status: string;
 };
 
-export const ARCHIVE_SEARCH_STATUSES = ['READY', 'PARTIAL', 'FAILED'];
+export const ARCHIVE_SEARCH_STATUSES = ['READY', 'PARTIAL'];
 
 const STATUS_OPTIONS: ReadonlyArray<{ value: string; label: string }> = [
   { value: '', label: '전체 상태' },
   { value: 'READY', label: 'READY · 준비 완료' },
   { value: 'PARTIAL', label: 'PARTIAL · 부분 생성' },
-  { value: 'FAILED', label: 'FAILED · 생성 실패' },
 ];
 
 export function getStatusOptions() {

@@ -1,6 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
-
-import { parseListFilters, parseRoute } from './app-state';
+import type { ThemeNodeResponse } from './api/types';
+import {
+  parseListFilters,
+  parseRoute,
+  pruneThemeCodesToCatalog,
+} from './app-state';
 
 describe('parseListFilters', () => {
   it('parses valid search params into list filters', () => {
@@ -15,6 +19,9 @@ describe('parseListFilters', () => {
       from: '2026-03-01',
       to: '2026-03-14',
       status: 'FAILED',
+      market: '',
+      themes: [],
+      q: '',
       page: 3,
     });
   });
@@ -31,6 +38,9 @@ describe('parseListFilters', () => {
       from: '2026-03-01',
       to: '2026-03-14',
       status: 'READY',
+      market: '',
+      themes: [],
+      q: '',
       page: 2,
     });
   });
@@ -50,6 +60,9 @@ describe('parseListFilters', () => {
         from: '2026-04-08',
         to: '2026-04-22',
         status: '',
+        market: '',
+        themes: [],
+        q: '',
         page: 1,
       });
     } finally {
@@ -73,6 +86,9 @@ describe('parseListFilters', () => {
         from: '2026-03-01',
         to: '2026-04-08',
         status: '',
+        market: '',
+        themes: [],
+        q: '',
         page: 1,
       });
     } finally {
@@ -93,6 +109,9 @@ describe('parseListFilters', () => {
         from: '2026-07-13',
         to: '2026-07-27',
         status: '',
+        market: '',
+        themes: [],
+        q: '',
         page: 1,
       });
     } finally {
@@ -107,7 +126,7 @@ describe('parseListFilters', () => {
   });
 
   it('removes statuses outside the route allowlist', () => {
-    const allowedStatuses = ['READY', 'PARTIAL', 'FAILED'];
+    const allowedStatuses = ['READY', 'PARTIAL'];
 
     expect(
       parseListFilters(new URLSearchParams({ status: 'READY' }), {
@@ -119,6 +138,62 @@ describe('parseListFilters', () => {
         allowedStatuses,
       }).status
     ).toBe('');
+    expect(
+      parseListFilters(new URLSearchParams({ status: 'FAILED' }), {
+        allowedStatuses,
+      }).status
+    ).toBe('');
+  });
+
+  it('parses archive market, repeated themes, and q while deduplicating themes in URL order', () => {
+    const searchParams = new URLSearchParams(
+      'market=KR&theme=SECTOR&theme=MARKET_FLOW_INVESTOR&theme=SECTOR&q=%EC%99%B8%EA%B5%AD%EC%9D%B8+%EB%A7%A4%EC%88%98&page=4'
+    );
+
+    expect(parseListFilters(searchParams)).toMatchObject({
+      market: 'KR',
+      themes: ['SECTOR', 'MARKET_FLOW_INVESTOR'],
+      q: '외국인 매수',
+      page: 4,
+    });
+  });
+
+  it('caps parsed theme selections at ten and ignores invalid market values', () => {
+    const searchParams = new URLSearchParams();
+    searchParams.set('market', 'JP');
+    for (let index = 0; index < 12; index += 1) {
+      searchParams.append('theme', `THEME_${index}`);
+    }
+
+    expect(parseListFilters(searchParams)).toMatchObject({
+      market: '',
+      themes: Array.from({ length: 10 }, (_, index) => `THEME_${index}`),
+    });
+  });
+
+  it('prunes unknown theme codes only against the loaded recursive catalog and preserves selected order', () => {
+    const catalog = [
+      {
+        code: 'SECTOR',
+        label: '업종',
+        description: '산업',
+        children: [
+          {
+            code: 'SECTOR_SEMICONDUCTORS',
+            label: '반도체',
+            description: '반도체 산업',
+            children: [],
+          },
+        ],
+      },
+    ] satisfies ThemeNodeResponse[];
+
+    expect(
+      pruneThemeCodesToCatalog(
+        ['UNKNOWN', 'SECTOR_SEMICONDUCTORS', 'SECTOR', 'UNKNOWN'],
+        catalog
+      )
+    ).toEqual(['SECTOR_SEMICONDUCTORS', 'SECTOR']);
   });
 });
 

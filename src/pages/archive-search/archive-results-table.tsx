@@ -22,6 +22,9 @@ export type ArchiveRowFilters = {
   from: string;
   to: string;
   status: string;
+  market?: 'US' | 'KR' | '';
+  themes?: readonly string[];
+  q?: string;
   page: number;
 };
 
@@ -35,6 +38,9 @@ function getArchiveDetailHref(
     from: filters.from,
     to: filters.to,
     status: filters.status || undefined,
+    market: filters.market || undefined,
+    theme: filters.themes,
+    q: filters.q || undefined,
     page: filters.page,
   });
 }
@@ -133,10 +139,7 @@ export function ArchiveResultsTable({
             const onOpen = createRowOpenHandler(href, scrollSearch);
 
             return (
-              <TableRow
-                key={record.pageId}
-                tone={record.status === 'FAILED' ? 'danger' : undefined}
-              >
+              <TableRow key={record.pageId}>
                 {/* This dense table uses 12px vertical cell padding. */}
                 <TableCell className='py-3 pr-3 pl-[18px] align-top'>
                   <a

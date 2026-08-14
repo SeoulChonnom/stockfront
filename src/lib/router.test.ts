@@ -13,6 +13,18 @@ describe('buildUrl', () => {
       })
     ).toBe('/market/archive/search?from=2026-03-01&to=2026-03-14&page=2');
   });
+
+  it('serializes archive theme selections as repeated query keys in order', () => {
+    expect(
+      buildUrl('/market/archive/search', {
+        market: 'KR',
+        theme: ['SECTOR', '', 'MARKET_FLOW_INVESTOR'],
+        q: '외국인 매수',
+      })
+    ).toBe(
+      '/market/archive/search?market=KR&theme=SECTOR&theme=MARKET_FLOW_INVESTOR&q=%EC%99%B8%EA%B5%AD%EC%9D%B8+%EB%A7%A4%EC%88%98'
+    );
+  });
 });
 
 describe('navigate', () => {

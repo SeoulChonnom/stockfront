@@ -3,7 +3,10 @@ import { buildUrl } from '@/lib/router';
 
 import { BATCH_TYPES } from './filter-copy';
 
-export type BatchFilters = ListFilters & { type: string };
+export type BatchFilters = Pick<
+  ListFilters,
+  'from' | 'to' | 'status' | 'page'
+> & { type: string };
 
 /** Invalid or missing values fall back to the unfiltered type. */
 export function parseJobTypeParam(searchParams: URLSearchParams): string {

@@ -1,11 +1,12 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { AnnounceProvider } from '@/components/shell/announce-context';
 
 import type { ArchiveListParams } from '../lib/api/archive';
 import { ApiError } from '../lib/api/client';
+import type { ThemeNodeResponse } from '../lib/api/types';
 import {
   resetRoleOverrideForTesting,
   setRoleOverride,
@@ -35,14 +36,37 @@ type ArchiveListQueryResult = {
   refetch: () => void;
 };
 
-const { mockUseArchiveList } = vi.hoisted(() => ({
+const { mockUseArchiveList, mockUseArchiveThemes } = vi.hoisted(() => ({
   mockUseArchiveList:
     vi.fn<(params: ArchiveListParams) => ArchiveListQueryResult>(),
+  mockUseArchiveThemes: vi.fn(),
 }));
 
 vi.mock('../lib/query-hooks', () => ({
   useArchiveList: mockUseArchiveList,
+  useArchiveThemes: mockUseArchiveThemes,
 }));
+
+const defaultThemeCatalog = [
+  {
+    code: 'SECTOR',
+    label: '업종',
+    description: '산업',
+    children: [],
+  },
+  {
+    code: 'MARKET_FLOW_INVESTOR',
+    label: '투자자 수급',
+    description: '투자자별 수급',
+    children: [],
+  },
+  {
+    code: 'CORPORATE_EVENT',
+    label: '기업 이벤트',
+    description: '기업 이벤트',
+    children: [],
+  },
+] satisfies ThemeNodeResponse[];
 
 // Deliberately distinct from the "글로벌 헤드라인" table column header text
 // so `getByText` queries below unambiguously match the row's own content.
@@ -102,6 +126,14 @@ afterEach(() => {
   resetRoleOverrideForTesting();
   window.history.replaceState(null, '', '/');
   mockUseArchiveList.mockReset();
+  mockUseArchiveThemes.mockReset();
+});
+
+beforeEach(() => {
+  mockUseArchiveThemes.mockReturnValue({
+    data: defaultThemeCatalog,
+    isSuccess: true,
+  });
 });
 
 describe('ArchiveSearchPage', () => {
@@ -110,13 +142,83 @@ describe('ArchiveSearchPage', () => {
 
     renderPage(new URLSearchParams('from=2026-03-14&to=2026-03-01'));
 
-    expect(mockUseArchiveList).toHaveBeenLastCalledWith({
-      fromDate: '2026-03-01',
-      toDate: '2026-03-14',
-      status: undefined,
-      page: 1,
-      size: 20,
-    });
+    expect(mockUseArchiveList).toHaveBeenLastCalledWith(
+      {
+        fromDate: '2026-03-01',
+        toDate: '2026-03-14',
+        status: undefined,
+        page: 1,
+        size: 20,
+      },
+      true
+    );
+  });
+
+  it('passes archive market, repeated themes, and q route state to the list query', () => {
+    mockUseArchiveList.mockReturnValue(ready());
+
+    renderPage(
+      new URLSearchParams(
+        'market=KR&theme=SECTOR&theme=MARKET_FLOW_INVESTOR&theme=SECTOR&q=%EC%99%B8%EA%B5%AD%EC%9D%B8+%EB%A7%A4%EC%88%98'
+      )
+    );
+
+    expect(mockUseArchiveList).toHaveBeenLastCalledWith(
+      {
+        fromDate: expect.any(String),
+        toDate: expect.any(String),
+        status: undefined,
+        marketType: 'KR',
+        theme: ['SECTOR', 'MARKET_FLOW_INVESTOR'],
+        q: '외국인 매수',
+        page: 1,
+        size: 20,
+      },
+      true
+    );
+  });
+
+  it('preserves advanced archive route filters when date filters apply and resets page to one', async () => {
+    const user = userEvent.setup();
+    mockUseArchiveList.mockReturnValue(ready());
+
+    renderPage(
+      new URLSearchParams(
+        'from=2026-07-13&to=2026-07-27&page=3&market=US&theme=SECTOR&theme=CORPORATE_EVENT&q=rate'
+      )
+    );
+
+    setDateValue(screen.getByLabelText('시작일'), '2026-07-10');
+    await user.click(screen.getByRole('button', { name: '필터 적용' }));
+
+    expect(window.location.search).toBe(
+      '?from=2026-07-10&to=2026-07-27&market=US&theme=SECTOR&theme=CORPORATE_EVENT&q=rate&page=1'
+    );
+  });
+
+  it('removes inactive URL theme codes once after the catalog has loaded', () => {
+    mockUseArchiveList.mockReturnValue(ready());
+    const search = '?theme=UNKNOWN&theme=SECTOR&theme=UNKNOWN&q=rate&page=3';
+    window.history.replaceState(null, '', `/market/archive/search${search}`);
+    const initialLength = window.history.length;
+
+    renderPage(new URLSearchParams(search));
+
+    expect(window.history.length).toBe(initialLength);
+    expect(window.location.search).toContain('theme=SECTOR');
+    expect(window.location.search).not.toContain('theme=UNKNOWN');
+    expect(window.location.search).toContain('page=1');
+  });
+
+  it('keeps unknown URL themes untouched while the catalog is still loading', () => {
+    mockUseArchiveThemes.mockReturnValue({ data: undefined, isSuccess: false });
+    mockUseArchiveList.mockReturnValue(ready());
+    const search = '?theme=UNKNOWN&page=3';
+    window.history.replaceState(null, '', `/market/archive/search${search}`);
+
+    renderPage(new URLSearchParams(search));
+
+    expect(window.location.search).toBe('?theme=UNKNOWN&page=3');
   });
 
   it('removes statuses unsupported by archive search before querying', () => {

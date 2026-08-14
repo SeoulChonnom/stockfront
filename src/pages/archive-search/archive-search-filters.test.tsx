@@ -150,7 +150,7 @@ describe('ArchiveSearchFilters', () => {
     expect(getLiveRegionText()).toBe('필터를 기본값으로 초기화했습니다.');
   });
 
-  it('offers the four status options exactly as specified', () => {
+  it('offers only the public READY and PARTIAL status options', () => {
     renderWithAnnounce(
       <ArchiveSearchFilters
         applied={applied}
@@ -168,7 +168,6 @@ describe('ArchiveSearchFilters', () => {
       '전체 상태',
       'READY · 준비 완료',
       'PARTIAL · 부분 생성',
-      'FAILED · 생성 실패',
     ]);
   });
 });

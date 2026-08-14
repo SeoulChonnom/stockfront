@@ -64,6 +64,9 @@ describe('ArchiveResultsTable', () => {
     expect(
       screen.getByText('뉴스 수집 단계에서 provider 타임아웃이 발생했습니다.')
     ).toBeInTheDocument();
+    expect(screen.getAllByRole('row').at(-1)).not.toHaveClass(
+      'shadow-[inset_3px_0_0_var(--danger)]'
+    );
   });
 
   // `record.detail` is the raw per-page `partialMessage` from the backend —
