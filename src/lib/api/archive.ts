@@ -1,10 +1,18 @@
 import { apiRequest } from './client';
-import type { ArchiveListResponse } from './types';
+import type {
+  ArchiveListResponse,
+  ArchiveStatusResponse,
+  MarketTypeResponse,
+} from './types';
 
 export type ArchiveListParams = {
   fromDate?: string;
   toDate?: string;
-  status?: string;
+  status?: ArchiveStatusResponse;
+  marketType?: MarketTypeResponse;
+  /** Repeated `theme` query keys; the shared client preserves array order. */
+  theme?: string[];
+  q?: string;
   page?: number;
   size?: number;
 };

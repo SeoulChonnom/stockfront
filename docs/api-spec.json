@@ -20,6 +20,26 @@
                 "schema": {}
               }
             }
+          },
+          "500": {
+            "description": "Unexpected server error. Codes: INTERNAL_SERVER_ERROR.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Database is unavailable. Codes: HEALTH_DATABASE_UNAVAILABLE.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
           }
         }
       }
@@ -73,6 +93,46 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ApiSuccess_NewsCollectionRunResponse_"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error. Codes: INTERNAL_SERVER_ERROR.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid, or expired bearer token. Codes: AUTH_MISSING_BEARER_TOKEN, AUTH_TOKEN_EXPIRED, AUTH_INVALID_TOKEN.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Authenticated user lacks the required role. Codes: AUTH_FORBIDDEN.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The requested news collection slot cannot be run. Codes: NEWS_SLOT_INVALID, NEWS_SLOT_NOT_COMPLETED, NEWS_SLOT_OUT_OF_RANGE.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
                 }
               }
             }
@@ -158,6 +218,56 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ApiSuccess_BatchRunResponse_"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error. Codes: INTERNAL_SERVER_ERROR.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid, or expired bearer token. Codes: AUTH_MISSING_BEARER_TOKEN, AUTH_TOKEN_EXPIRED, AUTH_INVALID_TOKEN.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Authenticated user lacks the required role. Codes: AUTH_FORBIDDEN.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existing page found to rebuild. Codes: PAGE_NOT_FOUND.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "A batch is already running or a page already exists. Codes: BATCH_ALREADY_RUNNING, PAGE_ALREADY_EXISTS, IDEMPOTENCY_KEY_REUSED. BATCH_ALREADY_RUNNING carries error.details.jobId, the id of the run already in flight, so clients can link straight to it; it is omitted only in the rare case where that job left the active set before the conflict was reported. PAGE_ALREADY_EXISTS carries error.details.pageId and error.details.status for the page that blocked the run.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
                 }
               }
             }
@@ -300,6 +410,36 @@
               }
             }
           },
+          "500": {
+            "description": "Unexpected server error. Codes: INTERNAL_SERVER_ERROR.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid, or expired bearer token. Codes: AUTH_MISSING_BEARER_TOKEN, AUTH_TOKEN_EXPIRED, AUTH_INVALID_TOKEN.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Authenticated user lacks the required role. Codes: AUTH_FORBIDDEN.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -355,6 +495,46 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ApiSuccess_BatchJobDetailResponse_"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error. Codes: INTERNAL_SERVER_ERROR.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid, or expired bearer token. Codes: AUTH_MISSING_BEARER_TOKEN, AUTH_TOKEN_EXPIRED, AUTH_INVALID_TOKEN.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Authenticated user lacks the required role. Codes: AUTH_FORBIDDEN.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Batch job not found. Codes: BATCH_JOB_NOT_FOUND.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
                 }
               }
             }
@@ -437,6 +617,135 @@
               }
             }
           },
+          "500": {
+            "description": "Unexpected server error. Codes: INTERNAL_SERVER_ERROR.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid, or expired bearer token. Codes: AUTH_MISSING_BEARER_TOKEN, AUTH_TOKEN_EXPIRED, AUTH_INVALID_TOKEN.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Authenticated user lacks the required role. Codes: AUTH_FORBIDDEN.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Batch job or its source page not found. Codes: BATCH_JOB_NOT_FOUND, AI_RETRY_SOURCE_PAGE_NOT_FOUND.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "AI retry cannot be started for this job. Codes: BATCH_JOB_NOT_TERMINAL, IDEMPOTENCY_KEY_REUSED, AI_RETRY_ALREADY_RUNNING.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/stock/api/pages/archive/themes": {
+      "get": {
+        "tags": [
+          "archive"
+        ],
+        "summary": "List Archive Themes",
+        "operationId": "list_archive_themes_stock_api_pages_archive_themes_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiSuccess_list_ThemeNodeResponse__"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error. Codes: INTERNAL_SERVER_ERROR.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid, or expired bearer token. Codes: AUTH_MISSING_BEARER_TOKEN, AUTH_TOKEN_EXPIRED, AUTH_INVALID_TOKEN.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Authenticated user lacks the required role. Codes: AUTH_FORBIDDEN.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -509,6 +818,67 @@
             }
           },
           {
+            "name": "theme",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "maxItems": 100
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Repeated theme codes; values are trimmed and deduplicated, with at most 10 distinct codes.",
+              "title": "Theme"
+            },
+            "description": "Repeated theme codes; values are trimmed and deduplicated, with at most 10 distinct codes."
+          },
+          {
+            "name": "marketType",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "US",
+                    "KR"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Markettype"
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 1000
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Search text normalized to NFC/casefold/collapsed whitespace; the normalized value must be 2–100 characters and at most 10 tokens.",
+              "title": "Q"
+            },
+            "description": "Search text normalized to NFC/casefold/collapsed whitespace; the normalized value must be 2–100 characters and at most 10 tokens."
+          },
+          {
             "name": "page",
             "in": "query",
             "required": false,
@@ -559,12 +929,42 @@
               }
             }
           },
-          "422": {
-            "description": "Validation Error",
+          "500": {
+            "description": "Unexpected server error. Codes: INTERNAL_SERVER_ERROR.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid, or expired bearer token. Codes: AUTH_MISSING_BEARER_TOKEN, AUTH_TOKEN_EXPIRED, AUTH_INVALID_TOKEN.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Authenticated user lacks the required role. Codes: AUTH_FORBIDDEN.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid archive filters. Codes: REQUEST_VALIDATION_ERROR, INVALID_THEME.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
                 }
               }
             }
@@ -604,6 +1004,46 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ApiSuccess_DailyPageResponse_"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error. Codes: INTERNAL_SERVER_ERROR.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid, or expired bearer token. Codes: AUTH_MISSING_BEARER_TOKEN, AUTH_TOKEN_EXPIRED, AUTH_INVALID_TOKEN.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Authenticated user lacks the required role. Codes: AUTH_FORBIDDEN.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No page has ever been generated. Codes: LATEST_PAGE_NOT_FOUND.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
                 }
               }
             }
@@ -684,12 +1124,141 @@
               }
             }
           },
+          "500": {
+            "description": "Unexpected server error. Codes: INTERNAL_SERVER_ERROR.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid, or expired bearer token. Codes: AUTH_MISSING_BEARER_TOKEN, AUTH_TOKEN_EXPIRED, AUTH_INVALID_TOKEN.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Authenticated user lacks the required role. Codes: AUTH_FORBIDDEN.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Page or page version not found. Codes: PAGE_NOT_FOUND, PAGE_VERSION_NOT_FOUND.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
           "422": {
             "description": "Validation Error",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/stock/api/pages/navigation": {
+      "get": {
+        "tags": [
+          "pages"
+        ],
+        "summary": "Get Page Date Navigation",
+        "operationId": "get_page_date_navigation_stock_api_pages_navigation_get",
+        "parameters": [
+          {
+            "name": "businessDate",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "title": "Businessdate"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiSuccess_PageDateNavigationResponse_"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error. Codes: INTERNAL_SERVER_ERROR.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid, or expired bearer token. Codes: AUTH_MISSING_BEARER_TOKEN, AUTH_TOKEN_EXPIRED, AUTH_INVALID_TOKEN.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Authenticated user lacks the required role. Codes: AUTH_FORBIDDEN.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid page navigation query. Codes: REQUEST_VALIDATION_ERROR.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
                 }
               }
             }
@@ -739,6 +1308,46 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ApiSuccess_DailyPageResponse_"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error. Codes: INTERNAL_SERVER_ERROR.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid, or expired bearer token. Codes: AUTH_MISSING_BEARER_TOKEN, AUTH_TOKEN_EXPIRED, AUTH_INVALID_TOKEN.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Authenticated user lacks the required role. Codes: AUTH_FORBIDDEN.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Page not found. Codes: PAGE_NOT_FOUND.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
                 }
               }
             }
@@ -798,6 +1407,46 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ApiSuccess_ClusterDetailResponse_"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error. Codes: INTERNAL_SERVER_ERROR.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid, or expired bearer token. Codes: AUTH_MISSING_BEARER_TOKEN, AUTH_TOKEN_EXPIRED, AUTH_INVALID_TOKEN.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Authenticated user lacks the required role. Codes: AUTH_FORBIDDEN.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Cluster or its representative article not found. Codes: CLUSTER_NOT_FOUND, CLUSTER_REPRESENTATIVE_ARTICLE_NOT_FOUND.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
                 }
               }
             }
@@ -891,6 +1540,153 @@
           "startedAt"
         ],
         "title": "AiRetryRunResponse"
+      },
+      "AnalysisIssueResponse": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "ANALYSIS_GENERATION_FAILED",
+              "NO_GROUNDED_SENTENCES",
+              "INVALID_SOURCE_REFERENCE",
+              "CONFLICT_CHECK_FAILED"
+            ],
+            "title": "Code"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "message"
+        ],
+        "title": "AnalysisIssueResponse"
+      },
+      "AnalysisParagraphResponse": {
+        "properties": {
+          "sentences": {
+            "items": {
+              "$ref": "#/components/schemas/AnalysisSentenceResponse"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Sentences"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "sentences"
+        ],
+        "title": "AnalysisParagraphResponse"
+      },
+      "AnalysisSentenceResponse": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Text"
+          },
+          "sourceArticleIds": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Sourcearticleids"
+          },
+          "conflictStatus": {
+            "type": "string",
+            "enum": [
+              "NOT_CHECKED",
+              "NONE",
+              "FOUND"
+            ],
+            "title": "Conflictstatus"
+          },
+          "conflictingSourceArticleIds": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Conflictingsourcearticleids"
+          },
+          "conflictNote": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conflictnote"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "text",
+          "sourceArticleIds",
+          "conflictStatus",
+          "conflictingSourceArticleIds",
+          "conflictNote"
+        ],
+        "title": "AnalysisSentenceResponse"
+      },
+      "ApiError": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": false
+          },
+          "error": {
+            "$ref": "#/components/schemas/ApiErrorDetail"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/MetaPayload"
+          }
+        },
+        "type": "object",
+        "required": [
+          "error"
+        ],
+        "title": "ApiError"
+      },
+      "ApiErrorDetail": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "details": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Details"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "message"
+        ],
+        "title": "ApiErrorDetail"
       },
       "ApiSuccess_AiRetryRunResponse_": {
         "properties": {
@@ -1052,6 +1848,50 @@
         ],
         "title": "ApiSuccess[NewsCollectionRunResponse]"
       },
+      "ApiSuccess_PageDateNavigationResponse_": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/PageDateNavigationResponse"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/MetaPayload"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "title": "ApiSuccess[PageDateNavigationResponse]"
+      },
+      "ApiSuccess_list_ThemeNodeResponse__": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true
+          },
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/ThemeNodeResponse"
+            },
+            "type": "array",
+            "title": "Data"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/MetaPayload"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "title": "ApiSuccess[list[ThemeNodeResponse]]"
+      },
       "ArchiveItemResponse": {
         "properties": {
           "pageId": {
@@ -1140,21 +1980,76 @@
         "type": "string",
         "enum": [
           "READY",
-          "PARTIAL",
-          "FAILED"
+          "PARTIAL"
         ]
       },
-      "ArticleLinkResponse": {
+      "ArticleGroupingIssueResponse": {
         "properties": {
-          "processedArticleId": {
+          "code": {
+            "type": "string",
+            "const": "SIMILARITY_GROUPING_FAILED",
+            "title": "Code"
+          },
+          "message": {
+            "type": "string",
+            "const": "유사 기사 묶음을 생성하지 못했습니다.",
+            "title": "Message"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "message"
+        ],
+        "title": "ArticleGroupingIssueResponse"
+      },
+      "ArticleGroupingResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "READY",
+              "UNAVAILABLE"
+            ],
+            "title": "Status"
+          },
+          "generatedAt": {
             "anyOf": [
               {
-                "type": "integer"
+                "type": "string",
+                "format": "date-time"
               },
               {
                 "type": "null"
               }
             ],
+            "title": "Generatedat"
+          },
+          "issue": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ArticleGroupingIssueResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "status",
+          "generatedAt",
+          "issue"
+        ],
+        "title": "ArticleGroupingResponse"
+      },
+      "ArticleLinkResponse": {
+        "properties": {
+          "processedArticleId": {
+            "type": "integer",
             "title": "Processedarticleid"
           },
           "clusterId": {
@@ -1223,14 +2118,61 @@
               }
             ],
             "title": "Naverlink"
+          },
+          "similarGroupId": {
+            "type": "string",
+            "title": "Similargroupid"
+          },
+          "isSimilarGroupRepresentative": {
+            "type": "boolean",
+            "title": "Issimilargrouprepresentative"
+          },
+          "exactDuplicateCount": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Exactduplicatecount"
           }
         },
         "type": "object",
         "required": [
+          "processedArticleId",
           "title",
-          "originLink"
+          "originLink",
+          "similarGroupId",
+          "isSimilarGroupRepresentative",
+          "exactDuplicateCount"
         ],
         "title": "ArticleLinkResponse"
+      },
+      "BackgroundAnalysisSectionResponse": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "const": "background",
+            "title": "Kind"
+          },
+          "title": {
+            "type": "string",
+            "const": "발생 배경",
+            "title": "Title"
+          },
+          "paragraphs": {
+            "items": {
+              "$ref": "#/components/schemas/AnalysisParagraphResponse"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Paragraphs"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "kind",
+          "title",
+          "paragraphs"
+        ],
+        "title": "BackgroundAnalysisSectionResponse"
       },
       "BatchJobDetailResponse": {
         "properties": {
@@ -2117,14 +3059,7 @@
       "ClusterArticleResponse": {
         "properties": {
           "processedArticleId": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "integer",
             "title": "Processedarticleid"
           },
           "title": {
@@ -2182,12 +3117,30 @@
               }
             ],
             "title": "Sourcesummary"
+          },
+          "similarGroupId": {
+            "type": "string",
+            "title": "Similargroupid"
+          },
+          "isSimilarGroupRepresentative": {
+            "type": "boolean",
+            "title": "Issimilargrouprepresentative"
+          },
+          "exactDuplicateCount": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Exactduplicatecount"
           }
         },
+        "additionalProperties": false,
         "type": "object",
         "required": [
+          "processedArticleId",
           "title",
-          "originLink"
+          "originLink",
+          "similarGroupId",
+          "isSimilarGroupRepresentative",
+          "exactDuplicateCount"
         ],
         "title": "ClusterArticleResponse"
       },
@@ -2280,6 +3233,9 @@
             "type": "array",
             "title": "Articles"
           },
+          "articleGrouping": {
+            "$ref": "#/components/schemas/ArticleGroupingResponse"
+          },
           "lastUpdatedAt": {
             "anyOf": [
               {
@@ -2297,6 +3253,7 @@
             "title": "Articlecount"
           }
         },
+        "additionalProperties": false,
         "type": "object",
         "required": [
           "clusterId",
@@ -2308,6 +3265,7 @@
           "summary",
           "representativeArticle",
           "articles",
+          "articleGrouping",
           "lastUpdatedAt",
           "articleCount"
         ],
@@ -2337,17 +3295,84 @@
             ],
             "title": "Long"
           },
-          "analysis": {
+          "analysisStatus": {
+            "type": "string",
+            "enum": [
+              "READY",
+              "PARTIAL",
+              "UNAVAILABLE"
+            ],
+            "title": "Analysisstatus"
+          },
+          "analysisGeneratedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Analysisgeneratedat"
+          },
+          "analysisIssues": {
             "items": {
-              "type": "string"
+              "$ref": "#/components/schemas/AnalysisIssueResponse"
             },
             "type": "array",
-            "title": "Analysis"
+            "title": "Analysisissues"
+          },
+          "conflictStatus": {
+            "type": "string",
+            "enum": [
+              "NOT_CHECKED",
+              "NONE",
+              "FOUND"
+            ],
+            "title": "Conflictstatus"
+          },
+          "sections": {
+            "items": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/BackgroundAnalysisSectionResponse"
+                },
+                {
+                  "$ref": "#/components/schemas/ImpactAnalysisSectionResponse"
+                },
+                {
+                  "$ref": "#/components/schemas/RelatedAnalysisSectionResponse"
+                },
+                {
+                  "$ref": "#/components/schemas/OutlookAnalysisSectionResponse"
+                }
+              ],
+              "discriminator": {
+                "propertyName": "kind",
+                "mapping": {
+                  "background": "#/components/schemas/BackgroundAnalysisSectionResponse",
+                  "impact": "#/components/schemas/ImpactAnalysisSectionResponse",
+                  "outlook": "#/components/schemas/OutlookAnalysisSectionResponse",
+                  "related": "#/components/schemas/RelatedAnalysisSectionResponse"
+                }
+              }
+            },
+            "type": "array",
+            "title": "Sections"
           }
         },
+        "additionalProperties": false,
         "type": "object",
         "required": [
-          "analysis"
+          "analysisStatus",
+          "analysisGeneratedAt",
+          "analysisIssues",
+          "conflictStatus",
+          "sections"
         ],
         "title": "ClusterSummaryResponse"
       },
@@ -2408,6 +3433,38 @@
             ],
             "title": "Partialmessage"
           },
+          "issues": {
+            "items": {
+              "$ref": "#/components/schemas/PageIssueResponse"
+            },
+            "type": "array",
+            "title": "Issues"
+          },
+          "keyPoints": {
+            "items": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/DirectionKeyPointResponse"
+                },
+                {
+                  "$ref": "#/components/schemas/DriverKeyPointResponse"
+                },
+                {
+                  "$ref": "#/components/schemas/WatchKeyPointResponse"
+                }
+              ],
+              "discriminator": {
+                "propertyName": "kind",
+                "mapping": {
+                  "direction": "#/components/schemas/DirectionKeyPointResponse",
+                  "driver": "#/components/schemas/DriverKeyPointResponse",
+                  "watch": "#/components/schemas/WatchKeyPointResponse"
+                }
+              }
+            },
+            "type": "array",
+            "title": "Keypoints"
+          },
           "markets": {
             "items": {
               "$ref": "#/components/schemas/MarketSectionResponse"
@@ -2417,6 +3474,16 @@
           },
           "metadata": {
             "$ref": "#/components/schemas/PageMetadataResponse"
+          },
+          "navigation": {
+            "$ref": "#/components/schemas/PageNavigationResponse"
+          },
+          "versions": {
+            "items": {
+              "$ref": "#/components/schemas/PageVersionSummaryResponse"
+            },
+            "type": "array",
+            "title": "Versions"
           }
         },
         "type": "object",
@@ -2427,10 +3494,77 @@
           "pageTitle",
           "status",
           "generatedAt",
+          "issues",
+          "keyPoints",
           "markets",
-          "metadata"
+          "metadata",
+          "navigation",
+          "versions"
         ],
         "title": "DailyPageResponse"
+      },
+      "DirectionKeyPointResponse": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "const": "direction",
+            "title": "Kind"
+          },
+          "label": {
+            "type": "string",
+            "const": "시장 방향",
+            "title": "Label"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "direction": {
+            "type": "string",
+            "enum": [
+              "UP",
+              "DOWN",
+              "MIXED",
+              "FLAT"
+            ],
+            "title": "Direction"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "kind",
+          "label",
+          "text",
+          "direction"
+        ],
+        "title": "DirectionKeyPointResponse"
+      },
+      "DriverKeyPointResponse": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "const": "driver",
+            "title": "Kind"
+          },
+          "label": {
+            "type": "string",
+            "const": "주요 원인",
+            "title": "Label"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "kind",
+          "label",
+          "text"
+        ],
+        "title": "DriverKeyPointResponse"
       },
       "HTTPValidationError": {
         "properties": {
@@ -2444,6 +3578,36 @@
         },
         "type": "object",
         "title": "HTTPValidationError"
+      },
+      "ImpactAnalysisSectionResponse": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "const": "impact",
+            "title": "Kind"
+          },
+          "title": {
+            "type": "string",
+            "const": "시장 영향",
+            "title": "Title"
+          },
+          "paragraphs": {
+            "items": {
+              "$ref": "#/components/schemas/AnalysisParagraphResponse"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Paragraphs"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "kind",
+          "title",
+          "paragraphs"
+        ],
+        "title": "ImpactAnalysisSectionResponse"
       },
       "IndexCardResponse": {
         "properties": {
@@ -2913,6 +4077,106 @@
         ],
         "title": "NewsCollectionRunResponse"
       },
+      "OutlookAnalysisSectionResponse": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "const": "outlook",
+            "title": "Kind"
+          },
+          "title": {
+            "type": "string",
+            "const": "향후 관전 포인트",
+            "title": "Title"
+          },
+          "paragraphs": {
+            "items": {
+              "$ref": "#/components/schemas/AnalysisParagraphResponse"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Paragraphs"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "kind",
+          "title",
+          "paragraphs"
+        ],
+        "title": "OutlookAnalysisSectionResponse"
+      },
+      "PageDateNavigationResponse": {
+        "properties": {
+          "businessDate": {
+            "type": "string",
+            "format": "date",
+            "title": "Businessdate"
+          },
+          "pageExists": {
+            "type": "boolean",
+            "title": "Pageexists"
+          },
+          "previousBusinessDate": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Previousbusinessdate"
+          },
+          "nextBusinessDate": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nextbusinessdate"
+          }
+        },
+        "type": "object",
+        "required": [
+          "businessDate",
+          "pageExists",
+          "previousBusinessDate",
+          "nextBusinessDate"
+        ],
+        "title": "PageDateNavigationResponse",
+        "description": "Availability and nearest public page dates for a requested date."
+      },
+      "PageIssueResponse": {
+        "properties": {
+          "category": {
+            "type": "string",
+            "title": "Category"
+          },
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "category",
+          "code",
+          "message"
+        ],
+        "title": "PageIssueResponse",
+        "description": "A single structured diagnostic behind ``partialMessage``.\n\nSourced from the page's persisted ``metadata_json.issues``. Every\n``message`` has already passed through ``sanitize_public_diagnostic``,\nso it is safe to render directly."
+      },
       "PageMetadataResponse": {
         "properties": {
           "rawNewsCount": {
@@ -2941,8 +4205,7 @@
           },
           "isLatest": {
             "type": "boolean",
-            "title": "Islatest",
-            "default": false
+            "title": "Islatest"
           }
         },
         "type": "object",
@@ -2950,9 +4213,86 @@
           "rawNewsCount",
           "processedNewsCount",
           "clusterCount",
-          "lastUpdatedAt"
+          "lastUpdatedAt",
+          "isLatest"
         ],
         "title": "PageMetadataResponse"
+      },
+      "PageNavigationResponse": {
+        "properties": {
+          "previousBusinessDate": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Previousbusinessdate"
+          },
+          "nextBusinessDate": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nextbusinessdate"
+          }
+        },
+        "type": "object",
+        "required": [
+          "previousBusinessDate",
+          "nextBusinessDate"
+        ],
+        "title": "PageNavigationResponse",
+        "description": "Nearest business dates that actually have a page.\n\nBoth fields are required but nullable: the client always receives the\nkeys, and ``null`` means \"no such neighbor exists\", never \"not computed\".\nCalendar arithmetic on ``businessDate`` is not a valid substitute — the\npage table only holds dates a batch produced."
+      },
+      "PageVersionSummaryResponse": {
+        "properties": {
+          "pageId": {
+            "type": "integer",
+            "title": "Pageid"
+          },
+          "versionNo": {
+            "type": "integer",
+            "title": "Versionno"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "generatedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Generatedat"
+          },
+          "isLatest": {
+            "type": "boolean",
+            "title": "Islatest"
+          }
+        },
+        "type": "object",
+        "required": [
+          "pageId",
+          "versionNo",
+          "status",
+          "generatedAt",
+          "isLatest"
+        ],
+        "title": "PageVersionSummaryResponse"
       },
       "PaginationResponse": {
         "properties": {
@@ -2976,6 +4316,36 @@
           "totalCount"
         ],
         "title": "PaginationResponse"
+      },
+      "RelatedAnalysisSectionResponse": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "const": "related",
+            "title": "Kind"
+          },
+          "title": {
+            "type": "string",
+            "const": "관련 업종·종목",
+            "title": "Title"
+          },
+          "paragraphs": {
+            "items": {
+              "$ref": "#/components/schemas/AnalysisParagraphResponse"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Paragraphs"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "kind",
+          "title",
+          "paragraphs"
+        ],
+        "title": "RelatedAnalysisSectionResponse"
       },
       "RepresentativeArticleResponse": {
         "properties": {
@@ -3042,6 +4412,39 @@
         "type": "object",
         "title": "RepresentativeArticleResponse"
       },
+      "ThemeNodeResponse": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "children": {
+            "items": {
+              "$ref": "#/components/schemas/ThemeNodeResponse"
+            },
+            "type": "array",
+            "title": "Children"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "label",
+          "description",
+          "children"
+        ],
+        "title": "ThemeNodeResponse",
+        "description": "One active node in the recursively nested archive theme catalog."
+      },
       "ValidationError": {
         "properties": {
           "loc": {
@@ -3081,6 +4484,32 @@
           "type"
         ],
         "title": "ValidationError"
+      },
+      "WatchKeyPointResponse": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "const": "watch",
+            "title": "Kind"
+          },
+          "label": {
+            "type": "string",
+            "const": "관전 포인트",
+            "title": "Label"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "kind",
+          "label",
+          "text"
+        ],
+        "title": "WatchKeyPointResponse"
       }
     }
   }

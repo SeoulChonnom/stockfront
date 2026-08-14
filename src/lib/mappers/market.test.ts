@@ -44,7 +44,9 @@ describe('mappers - market', () => {
         processedNewsCount: 1,
         clusterCount: 1,
         lastUpdatedAt: '2026-03-31T06:12:00Z',
+        isLatest: true,
       },
+      versions: [],
       markets: [
         {
           marketType: 'US',
@@ -145,7 +147,9 @@ describe('mappers - market', () => {
         processedNewsCount: 1,
         clusterCount: 1,
         lastUpdatedAt: '2026-03-31T06:12:00Z',
+        isLatest: true,
       },
+      versions: [],
       markets: [],
     });
 
@@ -250,7 +254,9 @@ describe('mappers - market', () => {
         processedNewsCount: 1,
         clusterCount: 1,
         lastUpdatedAt: '2026-03-31T06:12:00Z',
+        isLatest: true,
       },
+      versions: [],
       markets: [
         {
           marketType: 'US',
@@ -448,6 +454,7 @@ describe('mappers - market', () => {
         processedNewsCount: 1,
         clusterCount: 1,
         lastUpdatedAt: '2026-03-31T06:12:00Z',
+        isLatest: true,
       },
       markets: [
         {
@@ -662,7 +669,9 @@ describe('mappers - market', () => {
         processedNewsCount: 1,
         clusterCount: 1,
         lastUpdatedAt: '2026-03-31T06:12:00Z',
+        isLatest: true,
       },
+      versions: [],
       markets: [
         {
           marketType: 'US',
@@ -1132,8 +1141,10 @@ describe('mappers - market - B-1 keyPoints/issues', () => {
         processedNewsCount: 1,
         clusterCount: 1,
         lastUpdatedAt: '2026-08-13T06:12:00Z',
+        isLatest: true,
       },
       markets: [],
+      versions: [],
       ...overrides,
     };
   }

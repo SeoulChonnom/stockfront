@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Pagination } from '@/components/ui/pagination';
 import { ApiError } from '@/lib/api/client';
+import type { ArchiveStatusResponse } from '@/lib/api/types';
 import type { Audience } from '@/lib/audience-copy';
 import {
   errorCodeCopy,
@@ -97,6 +98,10 @@ function buildFiltersKey(filters: ArchiveFilterDraft & { page: number }) {
   return `${filters.from}:${filters.to}:${filters.status}:${filters.page}`;
 }
 
+function toArchiveStatus(value: string): ArchiveStatusResponse | undefined {
+  return value === 'READY' || value === 'PARTIAL' ? value : undefined;
+}
+
 export function ArchiveSearchPage({
   searchParams,
 }: {
@@ -115,7 +120,7 @@ export function ArchiveSearchPage({
   const archiveQuery = useArchiveList({
     fromDate: applied.from,
     toDate: applied.to,
-    status: applied.status || undefined,
+    status: toArchiveStatus(applied.status),
     page: applied.page,
     size: PAGE_SIZE,
   });

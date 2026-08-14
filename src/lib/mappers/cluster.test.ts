@@ -4,7 +4,7 @@ import { mapClusterDetailToView } from './cluster';
 
 function readySummary(
   overrides: Partial<ClusterDetailResponse['summary']> = {}
-) {
+): ClusterDetailResponse['summary'] {
   return {
     short: 'short summary',
     long: 'long summary',
@@ -125,7 +125,7 @@ describe('mappers - cluster', () => {
     expect(detail.articleCount).toBe(2);
   });
 
-  it.each([-1, 1.5, Number.MAX_SAFE_INTEGER + 1, null])(
+  it.each([-1, 1.5, Number.MAX_SAFE_INTEGER + 1, null as unknown as number])(
     'falls back to articles length when cluster articleCount is not a nonnegative safe integer (%p)',
     (articleCount) => {
       const detail = mapClusterDetailToView(

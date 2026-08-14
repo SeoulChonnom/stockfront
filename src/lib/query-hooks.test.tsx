@@ -61,12 +61,14 @@ const dailyPageResponse: DailyPageResponse = {
   keyPoints: [],
   issues: [],
   navigation: { previousBusinessDate: '2026-03-30', nextBusinessDate: null },
+  versions: [],
   markets: [],
   metadata: {
     rawNewsCount: 0,
     processedNewsCount: 0,
     clusterCount: 0,
     lastUpdatedAt: '2026-03-31T06:12:00Z',
+    isLatest: true,
   },
 };
 

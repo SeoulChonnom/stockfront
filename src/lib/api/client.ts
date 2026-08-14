@@ -3,7 +3,7 @@ import { getApiOrigin } from '../auth-config';
 import { isRecord } from '../utils';
 import type { ApiEnvelope } from './types';
 
-type QueryValue = string | number | boolean | null | undefined;
+type QueryValue = string | number | boolean | string[] | null | undefined;
 
 export class ApiError extends Error {
   status: number;
@@ -92,6 +92,15 @@ function buildQueryString(query?: Record<string, QueryValue>) {
 
   Object.entries(query).forEach(([key, value]) => {
     if (value === null || value === undefined || value === '') {
+      return;
+    }
+
+    if (Array.isArray(value)) {
+      value
+        .filter((item) => item !== '')
+        .forEach((item) => {
+          params.append(key, item);
+        });
       return;
     }
 

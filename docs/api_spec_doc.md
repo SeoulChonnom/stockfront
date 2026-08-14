@@ -95,7 +95,9 @@ Authorization: Bearer {TOKEN}
 | Batch  | POST   | `/batch/jobs/{jobId}/retry-ai`   | 실패/Fallback AI 요약 재처리  |
 | Page   | GET    | `/pages/daily/latest`            | 최신 통합 일간 페이지 조회    |
 | Page   | GET    | `/pages/daily`                   | 날짜별 통합 일간 페이지 조회  |
+| Page   | GET    | `/pages/navigation`              | 실제 페이지 기준 인접 영업일 조회 |
 | Page   | GET    | `/pages/archive`                 | 아카이브 목록 조회            |
+| Page   | GET    | `/pages/archive/themes`          | 계층형 아카이브 테마 카탈로그 조회 |
 | Page   | GET    | `/pages/{pageId}`                | 통합 페이지 상세 조회         |
 | News   | GET    | `/news/clusters/{clusterId}`     | 뉴스 클러스터 상세 조회       |
 | System | GET    | `/health`                        | 서비스 상태 점검              |
@@ -118,6 +120,25 @@ Authorization: Bearer {TOKEN}
   "globalHeadline": "기술주 강세와 외국인 매수세 회복으로 미·한 증시 모두 강세",
   "generatedAt": "2026-03-18T06:12:10",
   "partialMessage": null,
+  "issues": [],
+  "keyPoints": [
+    {
+      "kind": "direction",
+      "label": "시장 방향",
+      "direction": "MIXED",
+      "text": "미국 증시는 상승했지만 한국 증시는 하락해 시장별 흐름이 엇갈렸습니다."
+    },
+    {
+      "kind": "driver",
+      "label": "주요 원인",
+      "text": "금리 인하 기대와 국내 반도체주 약세가 주요 변동 요인이었습니다."
+    },
+    {
+      "kind": "watch",
+      "label": "관전 포인트",
+      "text": "미국 물가 지표와 외국인의 반도체주 수급을 확인할 필요가 있습니다."
+    }
+  ],
   "markets": [
     {
       "marketType": "US",
@@ -168,7 +189,10 @@ Authorization: Bearer {TOKEN}
           "publisherName": "매일경제",
           "publishedAt": "2026-03-17T23:15:00",
           "originLink": "https://example.com/article1",
-          "naverLink": "https://search.naver.com/article1"
+          "naverLink": "https://search.naver.com/article1",
+          "similarGroupId": "sim-51f0d9a0-1",
+          "isSimilarGroupRepresentative": true,
+          "exactDuplicateCount": 0
         }
       ],
       "metadata": {
@@ -192,6 +216,19 @@ Authorization: Bearer {TOKEN}
     "clusterCount": 21,
     "lastUpdatedAt": "2026-03-18T06:12:10",
     "isLatest": true
+  },
+  "navigation": {
+    "previousBusinessDate": "2026-03-16",
+    "nextBusinessDate": "2026-03-18"
+  },
+  "versions": [
+    {
+      "pageId": 501,
+      "versionNo": 3,
+      "status": "READY",
+      "generatedAt": "2026-03-18T06:12:10Z",
+      "isLatest": true
+    }
   }
 }
 ```
@@ -828,6 +865,42 @@ API 하나로 뉴스/지수 재수집 없이 저장된 정제 결과만 재사�
 
 ---
 
+## 5-7-1. 인접 영업일 탐색
+
+### `GET /pages/navigation`
+
+일간 페이지가 없는 날짜에서도 실제로 공개 가능한 페이지가 있는 가장 가까운
+영업일을 찾는다. 달력 기준 날짜 계산이나 아카이브 조회 범위를 사용하지 않는다.
+
+### Query Params
+
+| 파라미터 | 타입         | 필수 | 설명 |
+| -------- | ------------ | ---- | ---- |
+| businessDate | string(date) | Y | 기준 날짜 |
+
+### Response 200
+
+```json
+{
+  "success": true,
+  "data": {
+    "businessDate": "2026-03-17",
+    "pageExists": false,
+    "previousBusinessDate": "2026-03-16",
+    "nextBusinessDate": "2026-03-18"
+  },
+  "meta": {
+    "requestId": "req-navigation-001",
+    "timestamp": "2026-03-17T06:22:00Z"
+  }
+}
+```
+
+네 필드는 항상 존재한다. `pageExists=false`여도 이웃 페이지가 있으면 해당 날짜로
+이동할 수 있으며, 이웃이 없을 때만 각 값이 `null`이다.
+
+---
+
 ## 5-8. 아카이브 목록 조회
 
 ### `GET /pages/archive`
@@ -842,9 +915,21 @@ API 하나로 뉴스/지수 재수집 없이 저장된 정제 결과만 재사�
 | -------- | ------------ | ---- | ---------------------------- |
 | fromDate | string(date) | N    | 시작일                       |
 | toDate   | string(date) | N    | 종료일                       |
-| status   | string       | N    | `READY`, `PARTIAL`, `FAILED` |
+| status   | string       | N    | `READY`, `PARTIAL` (`FAILED`는 공개 검색에서 제외) |
+| marketType | string     | N    | `US` 또는 `KR` |
+| theme    | string (반복) | N    | 테마 코드 최대 10개. `theme=A&theme=B` 형식 |
+| q        | string       | N    | NFC/casefold/공백 축약 후 2~100자, 최대 10토큰 |
 | page     | int          | N    | 기본 1                       |
 | size     | int          | N    | 기본 30, 최대 100            |
+
+예시:
+
+```http
+GET /stock/api/pages/archive?fromDate=2026-03-01&toDate=2026-03-31&status=READY&marketType=KR&theme=SECTOR_SEMICONDUCTORS&theme=CORPORATE_EVENT_PERFORMANCE&q=%EC%99%B8%EA%B5%AD%EC%9D%B8%20%EB%A7%A4%EC%88%98&page=1&size=30
+```
+
+`theme`은 콤마로 join하지 않는다. 여러 테마는 OR, 시장·날짜·상태·검색어는 서로 AND로
+결합한다. 부모 테마 코드를 보내면 서버가 활성 하위 테마까지 확장한다.
 
 ### Response 200
 
@@ -885,7 +970,44 @@ API 하나로 뉴스/지수 재수집 없이 저장된 정제 결과만 재사�
 
 | 코드                     | 설명                                   |
 | ------------------------ | --------------------------------------- |
-| UNSUPPORTED_ARCHIVE_STATUS | `status`가 `READY`/`PARTIAL`/`FAILED`가 아님 (400) |
+| INVALID_THEME | 알 수 없거나 비활성인 테마 코드 (422) |
+| REQUEST_VALIDATION_ERROR | 날짜, 시장, 상태, 검색어 등 요청 검증 실패 (422) |
+
+---
+
+## 5-8-1. 아카이브 테마 카탈로그
+
+### `GET /pages/archive/themes`
+
+아카이브 검색 필터에 사용할 활성 테마를 계층형으로 반환한다. `children`은 리프에서도
+항상 빈 배열이며 `null`이 아니다. FE는 라벨이나 계층을 하드코딩하지 않는다.
+
+### Response 200
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "code": "SECTOR",
+      "label": "산업",
+      "description": "산업별 시장 테마",
+      "children": [
+        {
+          "code": "SECTOR_SEMICONDUCTORS",
+          "label": "반도체",
+          "description": "반도체 산업",
+          "children": []
+        }
+      ]
+    }
+  ],
+  "meta": {
+    "requestId": "req-theme-001",
+    "timestamp": "2026-03-17T06:22:00Z"
+  }
+}
+```
 
 ---
 
@@ -942,9 +1064,45 @@ API 하나로 뉴스/지수 재수집 없이 저장된 정제 결과만 재사�
     "summary": {
       "short": "반도체 업종 강세가 나스닥 상승을 견인했다.",
       "long": "엔비디아를 포함한 반도체 관련 종목이 강세를 보이며 기술주 중심 매수세가 확대되었다.",
-      "analysis": [
-        "연방준비제도의 금리 인하 경로가 더 명확해졌다는 해석이 확산되며 고밸류 성장주에 대한 할인율 부담이 완화됐다.",
-        "엔비디아와 AMD를 포함한 반도체 업종은 AI 서버 수요와 차세대 칩 공개 기대가 동시에 반영되며 지수 대비 초과수익을 기록했다."
+      "analysisStatus": "READY",
+      "analysisGeneratedAt": "2026-03-18T06:10:00Z",
+      "analysisIssues": [],
+      "conflictStatus": "FOUND",
+      "sections": [
+        {
+          "kind": "background",
+          "title": "발생 배경",
+          "paragraphs": [
+            {
+              "sentences": [
+                {
+                  "text": "연방준비제도의 금리 인하 경로가 더 명확해졌다는 해석이 확산됐습니다.",
+                  "sourceArticleIds": [2001],
+                  "conflictStatus": "NONE",
+                  "conflictingSourceArticleIds": [],
+                  "conflictNote": null
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "impact",
+          "title": "시장 영향",
+          "paragraphs": [
+            {
+              "sentences": [
+                {
+                  "text": "반도체 업종은 지수 대비 초과수익을 기록했습니다.",
+                  "sourceArticleIds": [2001],
+                  "conflictStatus": "FOUND",
+                  "conflictingSourceArticleIds": [2002],
+                  "conflictNote": "관련 종목의 실적 전망이 기사별로 다르게 보도됐습니다."
+                }
+              ]
+            }
+          ]
+        }
       ]
     },
     "articleCount": 6,
@@ -956,7 +1114,10 @@ API 하나로 뉴스/지수 재수집 없이 저장된 정제 결과만 재사�
       "publishedAt": "2026-03-17T23:15:00",
       "originLink": "https://example.com/article1",
       "naverLink": "https://search.naver.com/article1",
-      "sourceSummary": "경제·금융 전문 매체"
+      "sourceSummary": "경제·금융 전문 매체",
+      "similarGroupId": "sim-51f0d9a0-1",
+      "isSimilarGroupRepresentative": true,
+      "exactDuplicateCount": 1
     },
     "articles": [
       {
@@ -966,9 +1127,29 @@ API 하나로 뉴스/지수 재수집 없이 저장된 정제 결과만 재사�
         "publishedAt": "2026-03-17T23:15:00",
         "originLink": "https://example.com/article1",
         "naverLink": "https://search.naver.com/article1",
-        "sourceSummary": "경제·금융 전문 매체"
+        "sourceSummary": "경제·금융 전문 매체",
+        "similarGroupId": "sim-51f0d9a0-1",
+        "isSimilarGroupRepresentative": true,
+        "exactDuplicateCount": 1
+      },
+      {
+        "processedArticleId": 2002,
+        "title": "반도체 업종 전망 엇갈려",
+        "publisherName": "한국경제",
+        "publishedAt": "2026-03-17T22:40:00Z",
+        "originLink": "https://example.com/article2",
+        "naverLink": null,
+        "sourceSummary": "업종 전망을 다룬 관련 기사",
+        "similarGroupId": "sim-51f0d9a0-2",
+        "isSimilarGroupRepresentative": true,
+        "exactDuplicateCount": 0
       }
-    ]
+    ],
+    "articleGrouping": {
+      "status": "READY",
+      "generatedAt": "2026-03-18T06:10:00Z",
+      "issue": null
+    }
   },
   "meta": {
     "requestId": "req-007",
@@ -981,7 +1162,12 @@ API 하나로 뉴스/지수 재수집 없이 저장된 정제 결과만 재사�
 
 - 대표 기사와 관련 기사 목록을 분리 제공한다.
 - 대표 기사도 `articles` 내 동일 항목을 포함할 수 있다.
-- `summary.analysis`는 클러스터 심층 분석 문단 목록이며, `summary.short`/`summary.long`과 함께 `summary` 객체 하위에 포함된다.
+- 구조화 분석은 `summary.sections[] → paragraphs[] → sentences[]` 순서의 계층으로 제공한다.
+- 문장 단위 `sourceArticleIds`와 `conflictingSourceArticleIds`는 같은 응답의
+  `articles[].processedArticleId`만 참조한다.
+- `articleGrouping`은 `READY`/`UNAVAILABLE` 상태와 생성 시각·이슈를 가지며,
+  기사 배열은 평면으로 유지한다. 유사 그룹은 `similarGroupId`로 묶고
+  `exactDuplicateCount`는 유사 그룹의 기사 수와 별개인 원문 중복 수다.
 
 ### Error Code
 

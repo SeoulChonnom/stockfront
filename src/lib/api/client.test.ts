@@ -120,6 +120,30 @@ describe('apiRequest', () => {
     ]);
   });
 
+  it('serializes repeated query values without joining them with commas', async () => {
+    vi.stubEnv('VITE_API_HOST', 'http://localhost:8000');
+    const fetchMock = vi
+      .fn<(input: RequestInfo | URL, init?: RequestInit) => Promise<Response>>()
+      .mockResolvedValue(
+        createJsonResponse({
+          success: true,
+          data: { items: [] },
+        })
+      );
+    vi.stubGlobal('fetch', fetchMock);
+
+    await apiRequest('/stock/api/pages/archive', {
+      query: {
+        theme: ['SECTOR', 'MARKET_FLOW_INVESTOR'],
+        q: '외국인 매수',
+      },
+    });
+
+    expect(fetchMock.mock.calls[0]?.[0]).toBe(
+      'http://localhost:8000/stock/api/pages/archive?theme=SECTOR&theme=MARKET_FLOW_INVESTOR&q=%EC%99%B8%EA%B5%AD%EC%9D%B8+%EB%A7%A4%EC%88%98'
+    );
+  });
+
   it('rejects an invalid API origin before making a development bypass request', async () => {
     vi.stubEnv('VITE_APP_ENV', 'development');
     vi.stubEnv('VITE_API_HOST', 'ftp://localhost:8000');
