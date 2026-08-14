@@ -1230,6 +1230,100 @@ describe('mappers - market - B-1 keyPoints/issues', () => {
     expect(mapDailyPageToSnapshot(response).keyPoints).toEqual([]);
   });
 
+  it('drops a triplet when a fixed label or text is empty instead of exposing an empty block', () => {
+    const response = {
+      ...baseResponse(),
+      keyPoints: [
+        {
+          kind: 'direction',
+          label: '시장 방향',
+          text: '  ',
+          direction: 'UP',
+        },
+        { kind: 'driver', label: '주요 원인', text: '원인 문장' },
+        { kind: 'watch', label: '관전 포인트', text: '관전 문장' },
+      ],
+    } as unknown as DailyPageResponse;
+
+    expect(mapDailyPageToSnapshot(response).keyPoints).toEqual([]);
+  });
+
+  it('drops a triplet when the server label does not match its discriminated kind', () => {
+    const response = {
+      ...baseResponse(),
+      keyPoints: [
+        {
+          kind: 'direction',
+          label: '주요 원인',
+          text: '방향 문장',
+          direction: 'UP',
+        },
+        { kind: 'driver', label: '주요 원인', text: '원인 문장' },
+        { kind: 'watch', label: '관전 포인트', text: '관전 문장' },
+      ],
+    } as unknown as DailyPageResponse;
+
+    expect(mapDailyPageToSnapshot(response).keyPoints).toEqual([]);
+  });
+
+  it.each(['driver', 'watch'] as const)(
+    'drops the entire triplet when a %s item owns the forbidden direction field',
+    (kind) => {
+      const response = {
+        ...baseResponse(),
+        keyPoints: [
+          {
+            kind: 'direction',
+            label: '시장 방향',
+            text: '방향 문장',
+            direction: 'UP',
+          },
+          kind === 'driver'
+            ? {
+                kind: 'driver',
+                label: '주요 원인',
+                text: '원인 문장',
+                direction: undefined,
+              }
+            : { kind: 'driver', label: '주요 원인', text: '원인 문장' },
+          kind === 'watch'
+            ? {
+                kind: 'watch',
+                label: '관전 포인트',
+                text: '관전 문장',
+                direction: undefined,
+              }
+            : { kind: 'watch', label: '관전 포인트', text: '관전 문장' },
+        ],
+      } as unknown as DailyPageResponse;
+
+      expect(mapDailyPageToSnapshot(response).keyPoints).toEqual([]);
+    }
+  );
+
+  it('preserves the backend text value exactly after validating that it has content', () => {
+    const sourceText = '  서버가 내려준 문장 그대로  ';
+    const response = baseResponse({
+      keyPoints: [
+        {
+          kind: 'direction',
+          label: '시장 방향',
+          text: sourceText,
+          direction: 'FLAT',
+        },
+        { kind: 'driver', label: '주요 원인', text: '원인 문장' },
+        { kind: 'watch', label: '관전 포인트', text: '관전 문장' },
+      ],
+    });
+
+    expect(mapDailyPageToSnapshot(response).keyPoints[0]).toEqual({
+      kind: 'direction',
+      label: '시장 방향',
+      text: sourceText,
+      direction: 'FLAT',
+    });
+  });
+
   it('maps the KEY_POINTS_GENERATION_FAILED issue so it stays distinguishable from AI_SUMMARY_FALLBACK', () => {
     const response = baseResponse({
       status: 'PARTIAL',

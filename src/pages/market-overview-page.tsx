@@ -5,7 +5,6 @@ import type { MarketSnapshot } from '@/lib/view-models';
 import { ArchiveModeBand } from './market-overview/archive-mode-band';
 import { DecisionHeaderCard } from './market-overview/decision-header-card';
 import { EmptyMarketsPanel } from './market-overview/empty-markets-panel';
-import { KeyPointsBlock } from './market-overview/key-points-block';
 import { MarketSection } from './market-overview/market-section';
 import { MarketTabs } from './market-overview/market-tabs';
 import {
@@ -134,8 +133,6 @@ export function MarketOverviewPage({
         now={now}
         snapshot={snapshot}
       />
-
-      <KeyPointsBlock keyPoints={snapshot.keyPoints} />
 
       <PartialBanner canViewOps={canViewOps} snapshot={snapshot} />
 

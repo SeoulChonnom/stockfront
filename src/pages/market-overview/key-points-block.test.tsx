@@ -66,7 +66,7 @@ describe('KeyPointsBlock', () => {
       const points: KeyPoint[] = [
         {
           kind: 'direction',
-          label: KEY_POINTS[0].label,
+          label: '시장 방향',
           text: KEY_POINTS[0].text,
           direction,
         },
@@ -92,5 +92,42 @@ describe('KeyPointsBlock', () => {
     expect(screen.queryByText('상승')).not.toBeInTheDocument();
     expect(screen.queryByText('하락')).not.toBeInTheDocument();
     expect(screen.queryByText('보합')).not.toBeInTheDocument();
+  });
+
+  it('ignores malformed runtime entries without throwing and keeps valid entries', () => {
+    const malformedKeyPoints = [
+      null,
+      { kind: 'driver', label: 42, text: '원인 문장' },
+      { kind: 'watch', label: '관전 포인트', text: 42 },
+      {
+        kind: 'direction',
+        label: '시장 방향',
+        text: '잘못된 방향 문장',
+        direction: 'SIDEWAYS',
+      },
+      { kind: 'other', label: '기타', text: '알 수 없는 항목' },
+      KEY_POINTS[0],
+    ] as unknown as KeyPoint[];
+
+    expect(() =>
+      render(<KeyPointsBlock keyPoints={malformedKeyPoints} />)
+    ).not.toThrow();
+    expect(
+      screen.getByRole('heading', { name: '오늘의 핵심' })
+    ).toBeInTheDocument();
+    expect(screen.getByText(KEY_POINTS[0].text)).toBeInTheDocument();
+    expect(screen.queryByText('잘못된 방향 문장')).not.toBeInTheDocument();
+    expect(screen.queryByText('알 수 없는 항목')).not.toBeInTheDocument();
+  });
+
+  it('omits the whole section when the runtime keyPoints value is not an array', () => {
+    const { container } = render(
+      <KeyPointsBlock keyPoints={null as unknown as KeyPoint[]} />
+    );
+
+    expect(container).toBeEmptyDOMElement();
+    expect(
+      screen.queryByRole('heading', { name: '오늘의 핵심' })
+    ).not.toBeInTheDocument();
   });
 });

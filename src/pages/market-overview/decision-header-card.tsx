@@ -5,6 +5,8 @@ import { formatKstDateTime, formatRelativeFreshness } from '@/lib/formatters';
 import { cn } from '@/lib/utils';
 import type { MarketSnapshot } from '@/lib/view-models';
 
+import { KeyPointsBlock } from './key-points-block';
+
 /**
  * 결정 헤더 카드. Latest와 Archive Detail이 공유하는 첫 블록. h1은 mode에
  * 따라 다르지만 나머지 구조는 동일하다.
@@ -78,6 +80,8 @@ export function DecisionHeaderCard({
           {hasHeadline ? snapshot.globalHeadline : noHeadlineCopy(audience)}
         </h1>
       </div>
+
+      <KeyPointsBlock keyPoints={snapshot.keyPoints} />
     </section>
   );
 }

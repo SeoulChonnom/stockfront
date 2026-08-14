@@ -90,12 +90,12 @@ export type KeyPointDirection = 'UP' | 'DOWN' | 'MIXED' | 'FLAT';
 export type KeyPoint =
   | {
       kind: 'direction';
-      label: string;
+      label: '시장 방향';
       text: string;
       direction: KeyPointDirection;
     }
-  | { kind: 'driver'; label: string; text: string }
-  | { kind: 'watch'; label: string; text: string };
+  | { kind: 'driver'; label: '주요 원인'; text: string }
+  | { kind: 'watch'; label: '관전 포인트'; text: string };
 
 /** Page-level generation issue (B-1's `KEY_POINTS_GENERATION_FAILED`, etc.). Server `message` is safe to render as-is (A-1-4). */
 export type PageIssue = {

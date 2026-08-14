@@ -38,6 +38,11 @@ import {
 
 const KEY_POINT_KINDS = ['direction', 'driver', 'watch'] as const;
 const KEY_POINT_DIRECTIONS = ['UP', 'DOWN', 'MIXED', 'FLAT'] as const;
+const KEY_POINT_LABELS = {
+  direction: '시장 방향',
+  driver: '주요 원인',
+  watch: '관전 포인트',
+} as const;
 const PAGE_ISSUE_CATEGORIES = ['AI_SUMMARY'] as const;
 const PAGE_ISSUE_CODES = [
   'KEY_POINTS_GENERATION_FAILED',
@@ -152,7 +157,7 @@ function mapNavigation(value: unknown): MarketSnapshotNavigation {
   };
 }
 
-/** One `keyPoints[]` item, or `null` if `kind`/`direction` doesn't match the closed enum (A-1-7 leniency). */
+/** One `keyPoints[]` item, or `null` if its closed contract is malformed. */
 function mapKeyPoint(value: unknown): KeyPoint | null {
   const record: Record<string, unknown> = isRecord(value) ? value : {};
   const kind = asEnumOrNull(record.kind, KEY_POINT_KINDS);
@@ -161,15 +166,33 @@ function mapKeyPoint(value: unknown): KeyPoint | null {
     return null;
   }
 
-  const label = asString(record.label, '');
-  const text = asString(record.text, '');
+  if (record.label !== KEY_POINT_LABELS[kind]) {
+    return null;
+  }
+
+  const text =
+    typeof record.text === 'string' && record.text.trim().length > 0
+      ? record.text
+      : null;
+
+  if (text === null) {
+    return null;
+  }
+
+  if (kind !== 'direction' && Object.hasOwn(record, 'direction')) {
+    return null;
+  }
 
   if (kind === 'direction') {
     const direction = asEnumOrNull(record.direction, KEY_POINT_DIRECTIONS);
-    return direction ? { kind, label, text, direction } : null;
+    return direction
+      ? { kind, label: KEY_POINT_LABELS.direction, text, direction }
+      : null;
   }
 
-  return { kind, label, text };
+  return kind === 'driver'
+    ? { kind, label: KEY_POINT_LABELS.driver, text }
+    : { kind, label: KEY_POINT_LABELS.watch, text };
 }
 
 /**
@@ -180,15 +203,18 @@ function mapKeyPoint(value: unknown): KeyPoint | null {
  */
 function mapKeyPoints(value: unknown): KeyPoint[] {
   const items = Array.isArray(value) ? value : [];
-  const mapped = items.map(mapKeyPoint);
+  if (items.length !== 3) {
+    return [];
+  }
+
+  const [direction, driver, watch] = items.map(mapKeyPoint);
 
   const isValidTriplet =
-    mapped.length === 3 &&
-    mapped[0]?.kind === 'direction' &&
-    mapped[1]?.kind === 'driver' &&
-    mapped[2]?.kind === 'watch';
+    direction?.kind === 'direction' &&
+    driver?.kind === 'driver' &&
+    watch?.kind === 'watch';
 
-  return isValidTriplet ? (mapped as KeyPoint[]) : [];
+  return isValidTriplet ? [direction, driver, watch] : [];
 }
 
 /** One `issues[]` item, or `null` if `category`/`code` fall outside the B-1-scoped closed set (A-1-7 leniency). */

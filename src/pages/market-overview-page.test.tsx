@@ -830,6 +830,17 @@ describe('MarketOverviewPage — B-1 오늘의 핵심 (keyPoints)', () => {
         '미국 물가 지표와 외국인의 반도체주 수급을 확인할 필요가 있습니다.'
       )
     ).toBeInTheDocument();
+
+    const keyPointsSection = screen
+      .getByRole('heading', { level: 2, name: '오늘의 핵심' })
+      .closest('section');
+    expect(keyPointsSection).toHaveAttribute(
+      'aria-labelledby',
+      'key-points-heading'
+    );
+    expect(
+      keyPointsSection?.closest('section[aria-labelledby="page-title"]')
+    ).not.toBeNull();
   });
 
   it.each([
@@ -848,7 +859,7 @@ describe('MarketOverviewPage — B-1 오늘의 핵심 (keyPoints)', () => {
             keyPoints: [
               {
                 kind: 'direction',
-                label: SAMPLE_KEY_POINTS[0].label,
+                label: '시장 방향',
                 text: SAMPLE_KEY_POINTS[0].text,
                 direction,
               },
@@ -885,6 +896,44 @@ describe('MarketOverviewPage — B-1 오늘의 핵심 (keyPoints)', () => {
     expect(
       screen.queryByRole('heading', { name: '오늘의 핵심' })
     ).not.toBeInTheDocument();
+  });
+
+  it('omits an individual key-point block with no text while keeping the populated blocks in server order', () => {
+    render(
+      <MarketOverviewPage
+        mode='latest'
+        now={FIXED_NOW}
+        snapshot={buildSnapshot({
+          keyPoints: [
+            {
+              kind: 'direction',
+              label: '시장 방향',
+              text: '',
+              direction: 'UP',
+            },
+            {
+              kind: 'driver',
+              label: '주요 원인',
+              text: '원인 문장',
+            },
+            {
+              kind: 'watch',
+              label: '관전 포인트',
+              text: '관전 문장',
+            },
+          ],
+        })}
+      />
+    );
+
+    expect(screen.queryByText('시장 방향')).not.toBeInTheDocument();
+    expect(screen.getByText('주요 원인')).toBeInTheDocument();
+    expect(screen.getByText('관전 포인트')).toBeInTheDocument();
+    const labels = screen
+      .getByRole('heading', { level: 2, name: '오늘의 핵심' })
+      .closest('section')
+      ?.querySelectorAll('li');
+    expect(labels).toHaveLength(2);
   });
 
   it('헤드라인 실패 + keyPoints 성공: globalHeadline이 null이어도 블록은 그대로 렌더된다', () => {
