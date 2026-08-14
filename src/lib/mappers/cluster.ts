@@ -38,6 +38,13 @@ const SECTION_KINDS: readonly ClusterSectionKindResponse[] = [
   'outlook',
 ];
 
+const SECTION_TITLES: Readonly<Record<ClusterSectionKindResponse, string>> = {
+  background: '발생 배경',
+  impact: '시장 영향',
+  related: '관련 업종·종목',
+  outlook: '향후 관전 포인트',
+};
+
 const ANALYSIS_STATUSES: readonly AnalysisStatusResponse[] = [
   'READY',
   'PARTIAL',
@@ -56,6 +63,15 @@ const ANALYSIS_ISSUE_CODES: readonly AnalysisIssueResponse['code'][] = [
   'INVALID_SOURCE_REFERENCE',
   'CONFLICT_CHECK_FAILED',
 ];
+
+const ANALYSIS_ISSUE_MESSAGES: Readonly<
+  Record<AnalysisIssueResponse['code'], string>
+> = {
+  ANALYSIS_GENERATION_FAILED: '분석을 생성하지 못했습니다.',
+  NO_GROUNDED_SENTENCES: '근거를 확인할 수 있는 분석 문장이 없습니다.',
+  INVALID_SOURCE_REFERENCE: '일부 분석 문장의 근거 기사를 확인하지 못했습니다.',
+  CONFLICT_CHECK_FAILED: '일부 분석 문장의 충돌 근거를 확인하지 못했습니다.',
+};
 
 const ARTICLE_GROUPING_STATUSES: readonly ArticleGroupingStatusResponse[] = [
   'READY',
@@ -128,46 +144,162 @@ function mapArticleGrouping(value: unknown): ArticleGrouping {
 }
 
 /**
- * A sentence is the minimum grounded unit (A-3). Drop it wholesale when
- * `text` is missing rather than rendering an empty citation — a sentence
- * with no text carries nothing useful. `conflictingSourceArticleIds` /
- * `conflictNote` are force-normalized to empty/null whenever
- * `conflictStatus` isn't `FOUND`, enforcing the server invariant (A-3
- * "충돌 표시" table) even if a malformed response sends something else.
+ * A sentence is the minimum grounded unit (A-3). A malformed sentence is a
+ * malformed analysis structure, not an optional item that can be filtered
+ * while preserving its siblings. Conflict evidence is different: it is a
+ * sentence-level best-effort payload and is normalized to `NOT_CHECKED`.
  */
-function mapSentence(raw: unknown): ClusterSentence | null {
-  if (!isRecord(raw)) {
-    return null;
+function mapReferencedArticleIds(
+  value: unknown,
+  availableArticleIds: ReadonlySet<number>
+): number[] {
+  const ids = asNumberArray(value).filter((id) => availableArticleIds.has(id));
+  return [...new Set(ids)];
+}
+
+type AnalysisDiagnostics = {
+  conflictCheckFailed: boolean;
+  structureInvalid: boolean;
+};
+
+function readRawArticleIds(value: unknown): {
+  ids: number[];
+  isValidArray: boolean;
+  hasDuplicates: boolean;
+} {
+  if (!Array.isArray(value)) {
+    return { ids: [], isValidArray: false, hasDuplicates: false };
   }
 
-  const text = asOptionalString(raw.text);
-  if (!text) {
-    return null;
-  }
-
-  const conflictStatus =
-    asEnumOrNull(raw.conflictStatus, CONFLICT_STATUSES) ?? 'NOT_CHECKED';
-  const isFound = conflictStatus === 'FOUND';
+  const ids = value.filter((id): id is number => Number.isSafeInteger(id));
 
   return {
-    text,
-    sourceArticleIds: asNumberArray(raw.sourceArticleIds),
-    conflictStatus,
-    conflictingSourceArticleIds: isFound
-      ? asNumberArray(raw.conflictingSourceArticleIds)
-      : [],
-    conflictNote: isFound ? asNullableString(raw.conflictNote) : null,
+    ids,
+    isValidArray: ids.length === value.length,
+    hasDuplicates: new Set(ids).size !== ids.length,
   };
 }
 
-function mapParagraph(raw: unknown): ClusterParagraph | null {
+function mapConflictPayload(
+  raw: Record<string, unknown>,
+  sourceArticleIds: number[],
+  availableArticleIds: ReadonlySet<number>,
+  diagnostics: AnalysisDiagnostics
+): Pick<
+  ClusterSentence,
+  'conflictStatus' | 'conflictingSourceArticleIds' | 'conflictNote'
+> {
+  const parsedConflictStatus = asEnumOrNull(
+    raw.conflictStatus,
+    CONFLICT_STATUSES
+  );
+  const conflictStatus = parsedConflictStatus ?? 'NOT_CHECKED';
+  const rawConflictingIds = readRawArticleIds(raw.conflictingSourceArticleIds);
+  const hasUnknownId = rawConflictingIds.ids.some(
+    (id) => !availableArticleIds.has(id)
+  );
+  const hasOverlappingId = rawConflictingIds.ids.some((id) =>
+    sourceArticleIds.includes(id)
+  );
+  const rawConflictNote = raw.conflictNote;
+  const hasRequiredNote =
+    typeof rawConflictNote === 'string' && rawConflictNote.trim().length > 0;
+
+  const invalidPayload =
+    parsedConflictStatus === null ||
+    !rawConflictingIds.isValidArray ||
+    rawConflictingIds.hasDuplicates ||
+    hasUnknownId ||
+    hasOverlappingId ||
+    (conflictStatus === 'FOUND'
+      ? rawConflictingIds.ids.length === 0 || !hasRequiredNote
+      : rawConflictingIds.ids.length !== 0 || rawConflictNote !== null);
+
+  if (invalidPayload) {
+    diagnostics.conflictCheckFailed = true;
+    return {
+      conflictStatus: 'NOT_CHECKED',
+      conflictingSourceArticleIds: [],
+      conflictNote: null,
+    };
+  }
+
+  if (conflictStatus === 'NOT_CHECKED') {
+    diagnostics.conflictCheckFailed = true;
+  }
+
+  return {
+    conflictStatus,
+    conflictingSourceArticleIds: rawConflictingIds.ids,
+    conflictNote:
+      conflictStatus === 'FOUND' ? (rawConflictNote as string) : null,
+  };
+}
+
+function mapSentence(
+  raw: unknown,
+  availableArticleIds: ReadonlySet<number>,
+  diagnostics: AnalysisDiagnostics
+): ClusterSentence | null {
   if (!isRecord(raw)) {
+    diagnostics.structureInvalid = true;
     return null;
   }
 
-  const sentencesRaw = Array.isArray(raw.sentences) ? raw.sentences : [];
+  if (typeof raw.text !== 'string' || raw.text.trim().length === 0) {
+    diagnostics.structureInvalid = true;
+    return null;
+  }
+
+  if (
+    !Array.isArray(raw.sourceArticleIds) ||
+    !raw.sourceArticleIds.every((id) => Number.isSafeInteger(id))
+  ) {
+    diagnostics.structureInvalid = true;
+    return null;
+  }
+
+  const text = raw.text;
+  const sourceArticleIds = mapReferencedArticleIds(
+    raw.sourceArticleIds,
+    availableArticleIds
+  );
+  if (sourceArticleIds.length === 0) {
+    return null;
+  }
+
+  const conflict = mapConflictPayload(
+    raw,
+    sourceArticleIds,
+    availableArticleIds,
+    diagnostics
+  );
+
+  return {
+    text,
+    sourceArticleIds,
+    ...conflict,
+  };
+}
+
+function mapParagraph(
+  raw: unknown,
+  availableArticleIds: ReadonlySet<number>,
+  diagnostics: AnalysisDiagnostics
+): ClusterParagraph | null {
+  if (!isRecord(raw)) {
+    diagnostics.structureInvalid = true;
+    return null;
+  }
+
+  if (!Array.isArray(raw.sentences)) {
+    diagnostics.structureInvalid = true;
+    return null;
+  }
+
+  const sentencesRaw = raw.sentences;
   const sentences = sentencesRaw
-    .map(mapSentence)
+    .map((sentence) => mapSentence(sentence, availableArticleIds, diagnostics))
     .filter((sentence): sentence is ClusterSentence => sentence !== null);
 
   // A paragraph with no valid sentences carries nothing to render.
@@ -176,43 +308,85 @@ function mapParagraph(raw: unknown): ClusterParagraph | null {
 
 /**
  * FE never invents a `title` or infers `kind` from body text (A-3 "FE는
- * 제목을 만들지 않는다") — a section missing either is dropped rather than
- * patched with a guessed label.
+ * 제목을 만들지 않는다"). A fixed-kind/title or nested collection violation
+ * makes the complete structured analysis uninterpretable.
  */
-function mapSection(raw: unknown): ClusterSection | null {
+function mapSection(
+  raw: unknown,
+  availableArticleIds: ReadonlySet<number>,
+  diagnostics: AnalysisDiagnostics
+): ClusterSection | null {
   if (!isRecord(raw)) {
+    diagnostics.structureInvalid = true;
     return null;
   }
 
   const kind = asEnumOrNull(raw.kind, SECTION_KINDS);
-  const title = asOptionalString(raw.title);
-  if (kind === null || !title) {
+  const title = raw.title;
+  if (
+    kind === null ||
+    typeof title !== 'string' ||
+    title !== SECTION_TITLES[kind]
+  ) {
+    diagnostics.structureInvalid = true;
     return null;
   }
 
-  const paragraphsRaw = Array.isArray(raw.paragraphs) ? raw.paragraphs : [];
+  if (!Array.isArray(raw.paragraphs)) {
+    diagnostics.structureInvalid = true;
+    return null;
+  }
+
+  const paragraphsRaw = raw.paragraphs;
   const paragraphs = paragraphsRaw
-    .map(mapParagraph)
+    .map((paragraph) =>
+      mapParagraph(paragraph, availableArticleIds, diagnostics)
+    )
     .filter((paragraph): paragraph is ClusterParagraph => paragraph !== null);
 
   return paragraphs.length > 0 ? { kind, title, paragraphs } : null;
 }
 
-function mapAnalysisIssue(raw: unknown): AnalysisIssue | null {
-  if (!isRecord(raw)) {
-    return null;
+function mapAnalysisIssues(value: unknown): {
+  issues: AnalysisIssue[];
+  isValid: boolean;
+} {
+  if (!Array.isArray(value)) {
+    return { issues: [], isValid: false };
   }
 
-  const code = asEnumOrNull(raw.code, ANALYSIS_ISSUE_CODES);
-  return code === null ? null : { code, message: asString(raw.message, '') };
+  const issues: AnalysisIssue[] = [];
+  let isValid = true;
+
+  for (const raw of value) {
+    if (!isRecord(raw)) {
+      isValid = false;
+      continue;
+    }
+
+    const code = asEnumOrNull(raw.code, ANALYSIS_ISSUE_CODES);
+    if (code === null || typeof raw.message !== 'string') {
+      isValid = false;
+      continue;
+    }
+
+    if (!issues.some((issue) => issue.code === code)) {
+      issues.push({ code, message: raw.message });
+    }
+  }
+
+  return { issues, isValid };
 }
 
-function mapAnalysisIssues(value: unknown): AnalysisIssue[] {
-  return Array.isArray(value)
-    ? value
-        .map(mapAnalysisIssue)
-        .filter((issue): issue is AnalysisIssue => issue !== null)
-    : [];
+function ensureAnalysisIssue(
+  issues: AnalysisIssue[],
+  code: AnalysisIssueResponse['code']
+): AnalysisIssue[] {
+  if (issues.some((issue) => issue.code === code)) {
+    return issues;
+  }
+
+  return [...issues, { code, message: ANALYSIS_ISSUE_MESSAGES[code] }];
 }
 
 type AnalysisView = Pick<
@@ -224,55 +398,185 @@ type AnalysisView = Pick<
   | 'conflictStatus'
 >;
 
-/**
- * Enforces the server's `UNAVAILABLE` invariant at the mapper boundary
- * (A-3 "상태별 처리"): `sections: []`, `analysisGeneratedAt: null`, and
- * aggregate `conflictStatus: 'NOT_CHECKED'`, regardless of what a malformed
- * response sends for those fields alongside an `UNAVAILABLE` status. This
- * keeps the UI's condition simple — it only ever has to branch on
- * `analysisStatus`.
- */
-function mapAnalysis(summaryRaw: unknown): AnalysisView {
-  const summary = isRecord(summaryRaw) ? summaryRaw : {};
-  const analysisStatus =
-    asEnumOrNull(summary.analysisStatus, ANALYSIS_STATUSES) ?? 'UNAVAILABLE';
-  const analysisIssues = mapAnalysisIssues(summary.analysisIssues);
-
-  if (analysisStatus === 'UNAVAILABLE') {
-    return {
-      analysisStatus,
-      analysisGeneratedAt: null,
-      sections: [],
-      analysisIssues,
-      conflictStatus: 'NOT_CHECKED',
-    };
+function aggregateConflictStatus(
+  sections: ClusterSection[],
+  fallback: ConflictStatusResponse,
+  hasValidAggregate: boolean
+): ConflictStatusResponse {
+  if (!hasValidAggregate) {
+    return 'NOT_CHECKED';
   }
 
-  const sectionsRaw = Array.isArray(summary.sections) ? summary.sections : [];
+  const statuses = sections.flatMap((section) =>
+    section.paragraphs.flatMap((paragraph) =>
+      paragraph.sentences.map((sentence) => sentence.conflictStatus)
+    )
+  );
+
+  if (statuses.includes('FOUND')) {
+    return 'FOUND';
+  }
+
+  if (statuses.includes('NOT_CHECKED')) {
+    return 'NOT_CHECKED';
+  }
+
+  return statuses.length > 0 ? 'NONE' : fallback;
+}
+
+function buildUnavailableAnalysis(
+  analysisIssues: AnalysisIssue[]
+): AnalysisView {
+  return {
+    analysisStatus: 'UNAVAILABLE',
+    analysisGeneratedAt: null,
+    sections: [],
+    analysisIssues,
+    conflictStatus: 'NOT_CHECKED',
+  };
+}
+
+function buildGenerationFailureAnalysis(): AnalysisView {
+  return buildUnavailableAnalysis([
+    {
+      code: 'ANALYSIS_GENERATION_FAILED',
+      message: ANALYSIS_ISSUE_MESSAGES.ANALYSIS_GENERATION_FAILED,
+    },
+  ]);
+}
+
+/**
+ * Normalizes the strict B-2 hierarchy without partially rendering an
+ * uninterpretable structure. Empty containers are omitted as normal output;
+ * non-array collections, non-object members, invalid sentence text, and
+ * unsupported section metadata fail the entire analysis. Conflict evidence
+ * remains sentence-local and is handled by `mapConflictPayload`.
+ */
+function mapAnalysis(
+  summaryRaw: unknown,
+  availableArticleIds: ReadonlySet<number>
+): AnalysisView {
+  if (!isRecord(summaryRaw)) {
+    return buildGenerationFailureAnalysis();
+  }
+
+  const summary = summaryRaw;
+  const analysisStatus = asEnumOrNull(
+    summary.analysisStatus,
+    ANALYSIS_STATUSES
+  );
+  const parsedIssues = mapAnalysisIssues(summary.analysisIssues);
+  const rawConflictStatus = asEnumOrNull(
+    summary.conflictStatus,
+    CONFLICT_STATUSES
+  );
+  const sectionsRaw = summary.sections;
+  const analysisGeneratedAt = summary.analysisGeneratedAt;
+  if (
+    analysisStatus === null ||
+    !parsedIssues.isValid ||
+    rawConflictStatus === null ||
+    !Array.isArray(sectionsRaw) ||
+    (analysisGeneratedAt !== null && typeof analysisGeneratedAt !== 'string')
+  ) {
+    return buildGenerationFailureAnalysis();
+  }
+
+  const diagnostics: AnalysisDiagnostics = {
+    conflictCheckFailed: false,
+    structureInvalid: false,
+  };
+  const sections: ClusterSection[] = [];
+  let previousSectionIndex = -1;
+  for (const sectionRaw of sectionsRaw) {
+    const section = mapSection(sectionRaw, availableArticleIds, diagnostics);
+    if (section === null) {
+      continue;
+    }
+
+    const sectionIndex = SECTION_KINDS.indexOf(section.kind);
+    if (
+      sectionIndex <= previousSectionIndex ||
+      sections.some((item) => item.kind === section.kind)
+    ) {
+      diagnostics.structureInvalid = true;
+    }
+    previousSectionIndex = sectionIndex;
+    sections.push(section);
+  }
+
+  if (diagnostics.structureInvalid) {
+    return buildGenerationFailureAnalysis();
+  }
+
+  const normalizedIssues = parsedIssues.issues;
+
+  if (
+    analysisStatus === 'UNAVAILABLE' &&
+    (sections.length > 0 ||
+      analysisGeneratedAt !== null ||
+      rawConflictStatus !== 'NOT_CHECKED')
+  ) {
+    return buildGenerationFailureAnalysis();
+  }
+
+  if (analysisStatus === 'UNAVAILABLE') {
+    return buildUnavailableAnalysis(
+      normalizedIssues.length > 0
+        ? normalizedIssues
+        : ensureAnalysisIssue([], 'NO_GROUNDED_SENTENCES')
+    );
+  }
+
+  let finalIssues = normalizedIssues;
+
+  if (diagnostics.conflictCheckFailed) {
+    finalIssues = ensureAnalysisIssue(finalIssues, 'CONFLICT_CHECK_FAILED');
+  }
+
+  if (sections.length === 0) {
+    finalIssues = ensureAnalysisIssue(finalIssues, 'NO_GROUNDED_SENTENCES');
+
+    return buildUnavailableAnalysis(finalIssues);
+  }
+
+  const normalizedStatus =
+    analysisStatus === 'READY' && finalIssues.length > 0
+      ? 'PARTIAL'
+      : analysisStatus;
 
   return {
-    analysisStatus,
-    analysisGeneratedAt: formatKstDateTime(summary.analysisGeneratedAt),
-    sections: sectionsRaw
-      .map(mapSection)
-      .filter((section): section is ClusterSection => section !== null),
-    analysisIssues,
-    conflictStatus:
-      asEnumOrNull(summary.conflictStatus, CONFLICT_STATUSES) ?? 'NOT_CHECKED',
+    analysisStatus: normalizedStatus,
+    analysisGeneratedAt: formatKstDateTime(analysisGeneratedAt),
+    sections,
+    analysisIssues: finalIssues,
+    conflictStatus: aggregateConflictStatus(sections, rawConflictStatus, true),
   };
 }
 
 export function mapClusterDetailToView(
   response: ClusterDetailResponse
 ): ClusterDetail {
-  const articles = asArticleArray(response.articles);
+  const articleResponses = asArticleArray(response.articles);
+  const articles = articleResponses.map((article, index) =>
+    mapClusterArticle(
+      article,
+      `${asString(response.clusterId, 'unknown-cluster')}-${index}`
+    )
+  );
+  const availableArticleIds = new Set(
+    articles.flatMap((article) => {
+      const id = Number(article.id);
+      return Number.isSafeInteger(id) ? [id] : [];
+    })
+  );
   const summaryShort = isRecord(response.summary)
     ? response.summary.short
     : undefined;
   const summaryLong = isRecord(response.summary)
     ? response.summary.long
     : undefined;
-  const analysis = mapAnalysis(response.summary);
+  const analysis = mapAnalysis(response.summary, availableArticleIds);
   const clusterId = asString(response.clusterId, 'unknown-cluster');
   const representativeArticle: Record<string, unknown> = isRecord(
     response.representativeArticle
@@ -293,9 +597,7 @@ export function mapClusterDetailToView(
     analysisLead: typeof summaryLong === 'string' ? summaryLong : null,
     tags: asStringArray(response.tags),
     ...analysis,
-    articles: articles.map((article, index) =>
-      mapClusterArticle(article, `${clusterId}-${index}`)
-    ),
+    articles,
     articleGrouping: mapArticleGrouping(response.articleGrouping),
     representative: {
       ...representative,

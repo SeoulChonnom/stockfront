@@ -196,6 +196,28 @@ describe('ClusterAnalysis', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('shows the server issue inside the single UNAVAILABLE state', () => {
+    render(
+      <ClusterAnalysis
+        analysisGeneratedAt={null}
+        analysisIssues={[
+          {
+            code: 'ANALYSIS_GENERATION_FAILED',
+            message: '분석을 생성하지 못했습니다.',
+          },
+        ]}
+        analysisLead={null}
+        analysisStatus='UNAVAILABLE'
+        articles={[]}
+        conflictStatus='NOT_CHECKED'
+        sections={[]}
+      />
+    );
+
+    expect(screen.getByText('분석을 생성하지 못했습니다.')).toBeInTheDocument();
+    expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(1);
+  });
+
   it('PARTIAL renders sections plus a non-blocking notice built from analysisIssues', () => {
     const issues: AnalysisIssue[] = [
       {
@@ -356,5 +378,41 @@ describe('ClusterAnalysis', () => {
     expect(
       screen.getByText('이 분석은 근거 충돌 여부를 확인하지 못했습니다.')
     ).toBeInTheDocument();
+  });
+
+  it('does not expose a citation control for an unknown source row', () => {
+    render(
+      <ClusterAnalysis
+        analysisGeneratedAt={null}
+        analysisIssues={[]}
+        analysisLead={null}
+        analysisStatus='READY'
+        articles={ARTICLES}
+        conflictStatus='NONE'
+        sections={[
+          {
+            kind: 'background',
+            title: '발생 배경',
+            paragraphs: [
+              {
+                sentences: [
+                  {
+                    text: '확인할 수 없는 근거를 포함한 문장입니다.',
+                    sourceArticleIds: [9999],
+                    conflictStatus: 'NONE',
+                    conflictingSourceArticleIds: [],
+                    conflictNote: null,
+                  },
+                ],
+              },
+            ],
+          },
+        ]}
+      />
+    );
+
+    expect(
+      screen.queryByRole('button', { name: /9999|기사 9999/ })
+    ).not.toBeInTheDocument();
   });
 });

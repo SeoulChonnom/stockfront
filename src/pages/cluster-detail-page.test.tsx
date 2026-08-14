@@ -261,6 +261,22 @@ describe('ClusterDetailPage', () => {
     ).toBeInTheDocument();
   });
 
+  it('shows analysisGeneratedAt beside the analysis heading, not cluster updatedAt', () => {
+    setLocation('?origin=latest');
+    mockReady(
+      baseDetail({
+        analysisGeneratedAt: '2026-07-27 09:00 KST',
+        updatedAt: '2026-07-27 10:00 KST',
+      })
+    );
+
+    render(<ClusterDetailPage clusterId='cluster-1' />);
+
+    const analysis = screen.getByRole('region', { name: 'AI 심층 분석' });
+    expect(analysis).toHaveTextContent('생성 기준 2026-07-27 09:00 KST');
+    expect(analysis).not.toHaveTextContent('2026-07-27 10:00 KST');
+  });
+
   it('renders a loading skeleton while the query is in flight', () => {
     setLocation('?origin=latest');
     mockUseClusterDetail.mockReturnValue({

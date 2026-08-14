@@ -97,7 +97,16 @@ export function ClusterAnalysis({
 
       {analysisStatus === 'UNAVAILABLE' ? (
         <InlineAlert title='심층 분석을 표시할 수 없습니다' tone='info'>
-          이 이슈는 근거를 확인할 수 있는 분석 문장이 없습니다.
+          <p className='m-0'>
+            이 이슈는 근거를 확인할 수 있는 분석 문장이 없습니다.
+          </p>
+          {analysisIssues.length > 0 ? (
+            <ul className='m-0 mt-2 list-none space-y-1 p-0'>
+              {analysisIssues.map((issue) => (
+                <li key={issue.code}>{issue.message}</li>
+              ))}
+            </ul>
+          ) : null}
         </InlineAlert>
       ) : (
         <div className='flex flex-col gap-4'>
@@ -312,8 +321,12 @@ function CitationButton({
   tone: 'support' | 'conflict';
 }) {
   const article = articleLookup.get(String(articleId));
-  const label = article ? displaySource(article.source) : `기사 ${articleId}`;
-  const articleTitle = article?.title ?? label;
+  if (!article) {
+    return null;
+  }
+
+  const label = displaySource(article.source);
+  const articleTitle = article.title ?? label;
 
   return (
     <button

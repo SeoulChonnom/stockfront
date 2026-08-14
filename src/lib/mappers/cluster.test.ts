@@ -182,7 +182,7 @@ describe('mappers - cluster', () => {
     expect(detail.analysisGeneratedAt).toBe('2026-08-01 09:00 KST');
   });
 
-  it('enforces the UNAVAILABLE invariant even if the response sends conflicting fields', () => {
+  it('fails closed when UNAVAILABLE carries conflicting structured analysis fields', () => {
     const detail = mapClusterDetailToView(
       baseResponse({
         summary: {
@@ -210,8 +210,8 @@ describe('mappers - cluster', () => {
     expect(detail.conflictStatus).toBe('NOT_CHECKED');
     expect(detail.analysisIssues).toEqual([
       {
-        code: 'NO_GROUNDED_SENTENCES',
-        message: '근거를 확인할 수 있는 분석 문장이 없습니다.',
+        code: 'ANALYSIS_GENERATION_FAILED',
+        message: '분석을 생성하지 못했습니다.',
       },
     ]);
   });
@@ -247,6 +247,92 @@ describe('mappers - cluster', () => {
     const [sentence] = detail.sections[0].paragraphs[0].sentences;
     expect(sentence.conflictingSourceArticleIds).toEqual([]);
     expect(sentence.conflictNote).toBeNull();
+    expect(detail.analysisStatus).toBe('PARTIAL');
+    expect(detail.analysisIssues).toContainEqual({
+      code: 'CONFLICT_CHECK_FAILED',
+      message: '일부 분석 문장의 충돌 근거를 확인하지 못했습니다.',
+    });
+  });
+
+  it('downgrades an issue-free READY analysis when a retained sentence is NOT_CHECKED', () => {
+    const detail = mapClusterDetailToView(
+      baseResponse({
+        summary: readySummary({
+          sections: [
+            {
+              kind: 'background',
+              title: '발생 배경',
+              paragraphs: [
+                {
+                  sentences: [
+                    {
+                      text: '충돌 검사를 확인할 수 없습니다.',
+                      sourceArticleIds: [1024],
+                      conflictStatus: 'NOT_CHECKED',
+                      conflictingSourceArticleIds: [],
+                      conflictNote: null,
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        }),
+      })
+    );
+
+    expect(detail.analysisStatus).toBe('PARTIAL');
+    expect(detail.analysisIssues).toEqual([
+      {
+        code: 'CONFLICT_CHECK_FAILED',
+        message: '일부 분석 문장의 충돌 근거를 확인하지 못했습니다.',
+      },
+    ]);
+    expect(detail.conflictStatus).toBe('NOT_CHECKED');
+    expect(detail.sections[0].paragraphs[0].sentences[0]).toMatchObject({
+      conflictStatus: 'NOT_CHECKED',
+      conflictingSourceArticleIds: [],
+      conflictNote: null,
+    });
+  });
+
+  it('adds the missing conflict-check issue when PARTIAL omits it for NOT_CHECKED', () => {
+    const detail = mapClusterDetailToView(
+      baseResponse({
+        summary: readySummary({
+          analysisStatus: 'PARTIAL',
+          analysisIssues: [],
+          sections: [
+            {
+              kind: 'impact',
+              title: '시장 영향',
+              paragraphs: [
+                {
+                  sentences: [
+                    {
+                      text: '충돌 검사가 완료되지 않았습니다.',
+                      sourceArticleIds: [1024],
+                      conflictStatus: 'NOT_CHECKED',
+                      conflictingSourceArticleIds: [],
+                      conflictNote: null,
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        }),
+      })
+    );
+
+    expect(detail.analysisStatus).toBe('PARTIAL');
+    expect(detail.analysisIssues).toEqual([
+      {
+        code: 'CONFLICT_CHECK_FAILED',
+        message: '일부 분석 문장의 충돌 근거를 확인하지 못했습니다.',
+      },
+    ]);
+    expect(detail.conflictStatus).toBe('NOT_CHECKED');
   });
 
   it('keeps a FOUND sentence intact, including conflicting ids and the note', () => {
@@ -274,6 +360,18 @@ describe('mappers - cluster', () => {
             },
           ],
         }),
+        articles: [
+          ...baseResponse().articles,
+          {
+            processedArticleId: 2048,
+            publisherName: 'Source 2',
+            publishedAt: '2026-03-31T06:13:00Z',
+            title: 'article 2',
+            originLink: 'https://example.com/2',
+            naverLink: null,
+            ...GROUPING_DEFAULTS,
+          },
+        ],
       })
     );
 
@@ -282,6 +380,491 @@ describe('mappers - cluster', () => {
     expect(sentence.conflictStatus).toBe('FOUND');
     expect(sentence.conflictingSourceArticleIds).toEqual([2048]);
     expect(sentence.conflictNote).toBe('기사별 방향이 다르게 보도됐습니다.');
+  });
+
+  it('drops invalid source references without creating controls for unknown article rows', () => {
+    const detail = mapClusterDetailToView(
+      baseResponse({
+        summary: readySummary({
+          sections: [
+            {
+              kind: 'background',
+              title: '발생 배경',
+              paragraphs: [
+                {
+                  sentences: [
+                    {
+                      text: '근거 기사 하나만 유효합니다.',
+                      sourceArticleIds: [9999, 1024, 1024],
+                      conflictStatus: 'NONE',
+                      conflictingSourceArticleIds: [],
+                      conflictNote: null,
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        }),
+      })
+    );
+
+    expect(detail.sections[0].paragraphs[0].sentences[0]).toMatchObject({
+      sourceArticleIds: [1024],
+      conflictStatus: 'NONE',
+      conflictingSourceArticleIds: [],
+      conflictNote: null,
+    });
+  });
+
+  it('downgrades a FOUND sentence when its conflicting references are invalid', () => {
+    const detail = mapClusterDetailToView(
+      baseResponse({
+        summary: readySummary({
+          conflictStatus: 'FOUND',
+          sections: [
+            {
+              kind: 'background',
+              title: '발생 배경',
+              paragraphs: [
+                {
+                  sentences: [
+                    {
+                      text: '충돌 근거가 유효하지 않습니다.',
+                      sourceArticleIds: [1024],
+                      conflictStatus: 'FOUND',
+                      conflictingSourceArticleIds: [9999],
+                      conflictNote: '확인할 수 없는 기사입니다.',
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        }),
+      })
+    );
+
+    expect(detail.sections[0].paragraphs[0].sentences[0]).toMatchObject({
+      sourceArticleIds: [1024],
+      conflictStatus: 'NOT_CHECKED',
+      conflictingSourceArticleIds: [],
+      conflictNote: null,
+    });
+    expect(detail.conflictStatus).toBe('NOT_CHECKED');
+  });
+
+  it.each([
+    {
+      label: 'unknown article id',
+      conflictingSourceArticleIds: [9999],
+      conflictNote: '유효한 충돌 설명',
+    },
+    {
+      label: 'duplicate article id',
+      conflictingSourceArticleIds: [2048, 2048],
+      conflictNote: '유효한 충돌 설명',
+    },
+    {
+      label: 'overlapping supporting article id',
+      conflictingSourceArticleIds: [1024],
+      conflictNote: '유효한 충돌 설명',
+    },
+    {
+      label: 'non-numeric article id',
+      conflictingSourceArticleIds: [2048, 'not-an-id'],
+      conflictNote: '유효한 충돌 설명',
+    },
+    {
+      label: 'whitespace-only note',
+      conflictingSourceArticleIds: [2048],
+      conflictNote: ' \t\n',
+    },
+    {
+      label: 'missing note',
+      conflictingSourceArticleIds: [2048],
+      conflictNote: undefined,
+    },
+  ] as const)('marks $label as PARTIAL conflict-check failure', (invalid) => {
+    const detail = mapClusterDetailToView(
+      baseResponse({
+        articles: [
+          ...baseResponse().articles,
+          {
+            processedArticleId: 2048,
+            publisherName: 'Source 2',
+            publishedAt: '2026-03-31T06:13:00Z',
+            title: 'article 2',
+            originLink: 'https://example.com/2',
+            naverLink: null,
+            ...GROUPING_DEFAULTS,
+          },
+        ],
+        summary: readySummary({
+          sections: [
+            {
+              kind: 'background',
+              title: '발생 배경',
+              paragraphs: [
+                {
+                  sentences: [
+                    {
+                      text: '충돌 payload가 유효하지 않습니다.',
+                      sourceArticleIds: [1024],
+                      conflictStatus: 'FOUND',
+                      conflictingSourceArticleIds:
+                        invalid.conflictingSourceArticleIds as unknown as number[],
+                      conflictNote: invalid.conflictNote as string | null,
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        }),
+      })
+    );
+
+    expect(detail.analysisStatus).toBe('PARTIAL');
+    expect(detail.analysisIssues).toContainEqual({
+      code: 'CONFLICT_CHECK_FAILED',
+      message: '일부 분석 문장의 충돌 근거를 확인하지 못했습니다.',
+    });
+    expect(detail.conflictStatus).toBe('NOT_CHECKED');
+    expect(detail.sections[0].paragraphs[0].sentences[0]).toMatchObject({
+      conflictStatus: 'NOT_CHECKED',
+      conflictingSourceArticleIds: [],
+      conflictNote: null,
+    });
+  });
+
+  it('fails closed when a sentence contains only whitespace', () => {
+    const detail = mapClusterDetailToView(
+      baseResponse({
+        summary: readySummary({
+          sections: [
+            {
+              kind: 'background',
+              title: '발생 배경',
+              paragraphs: [
+                {
+                  sentences: [
+                    {
+                      text: ' \t\n',
+                      sourceArticleIds: [1024],
+                      conflictStatus: 'NONE',
+                      conflictingSourceArticleIds: [],
+                      conflictNote: null,
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        }),
+      })
+    );
+
+    expect(detail.analysisStatus).toBe('UNAVAILABLE');
+    expect(detail.analysisGeneratedAt).toBeNull();
+    expect(detail.sections).toEqual([]);
+    expect(detail.conflictStatus).toBe('NOT_CHECKED');
+    expect(detail.analysisIssues).toEqual([
+      {
+        code: 'ANALYSIS_GENERATION_FAILED',
+        message: '분석을 생성하지 못했습니다.',
+      },
+    ]);
+  });
+
+  it.each([
+    ['blank sentence text', '   '],
+    ['non-string sentence text', 42],
+  ] as const)('fails closed for %s', (_label, text) => {
+    const detail = mapClusterDetailToView(
+      baseResponse({
+        summary: {
+          ...readySummary(),
+          sections: [
+            {
+              kind: 'background',
+              title: '발생 배경',
+              paragraphs: [
+                {
+                  sentences: [
+                    {
+                      text,
+                      sourceArticleIds: [1024],
+                      conflictStatus: 'NONE',
+                      conflictingSourceArticleIds: [],
+                      conflictNote: null,
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        } as unknown as ClusterDetailResponse['summary'],
+      })
+    );
+
+    expect(detail.analysisStatus).toBe('UNAVAILABLE');
+    expect(detail.analysisGeneratedAt).toBeNull();
+    expect(detail.sections).toEqual([]);
+    expect(detail.analysisIssues).toEqual([
+      {
+        code: 'ANALYSIS_GENERATION_FAILED',
+        message: '분석을 생성하지 못했습니다.',
+      },
+    ]);
+    expect(detail.conflictStatus).toBe('NOT_CHECKED');
+  });
+
+  it('does not salvage a valid sentence sibling beside a malformed sentence', () => {
+    const detail = mapClusterDetailToView(
+      baseResponse({
+        summary: {
+          ...readySummary(),
+          sections: [
+            {
+              kind: 'background',
+              title: '발생 배경',
+              paragraphs: [
+                {
+                  sentences: [
+                    {
+                      text: 'valid sibling',
+                      sourceArticleIds: [1024],
+                      conflictStatus: 'NONE',
+                      conflictingSourceArticleIds: [],
+                      conflictNote: null,
+                    },
+                    {
+                      text: '  \n',
+                      sourceArticleIds: [1024],
+                      conflictStatus: 'NONE',
+                      conflictingSourceArticleIds: [],
+                      conflictNote: null,
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      })
+    );
+
+    expect(detail.analysisStatus).toBe('UNAVAILABLE');
+    expect(detail.analysisGeneratedAt).toBeNull();
+    expect(detail.sections).toEqual([]);
+    expect(detail.analysisIssues).toEqual([
+      {
+        code: 'ANALYSIS_GENERATION_FAILED',
+        message: '분석을 생성하지 못했습니다.',
+      },
+    ]);
+    expect(detail.conflictStatus).toBe('NOT_CHECKED');
+  });
+
+  it.each([
+    {
+      label: 'non-array sections',
+      sections: 'not-an-array',
+    },
+    {
+      label: 'non-array paragraphs',
+      sections: [
+        {
+          kind: 'background',
+          title: '발생 배경',
+          paragraphs: 'not-an-array',
+        },
+      ],
+    },
+    {
+      label: 'non-array sentences',
+      sections: [
+        {
+          kind: 'background',
+          title: '발생 배경',
+          paragraphs: [{ sentences: 'not-an-array' }],
+        },
+      ],
+    },
+  ] as const)('fails closed for $label', ({ sections }) => {
+    const detail = mapClusterDetailToView(
+      baseResponse({
+        summary: {
+          ...readySummary(),
+          sections,
+        } as unknown as ClusterDetailResponse['summary'],
+      })
+    );
+
+    expect(detail.analysisStatus).toBe('UNAVAILABLE');
+    expect(detail.analysisGeneratedAt).toBeNull();
+    expect(detail.sections).toEqual([]);
+    expect(detail.analysisIssues).toEqual([
+      {
+        code: 'ANALYSIS_GENERATION_FAILED',
+        message: '분석을 생성하지 못했습니다.',
+      },
+    ]);
+    expect(detail.conflictStatus).toBe('NOT_CHECKED');
+  });
+
+  it.each([
+    {
+      label: 'non-record section member',
+      sections: [null, readySummary().sections[0]],
+    },
+    {
+      label: 'non-record paragraph member',
+      sections: [
+        {
+          ...readySummary().sections[0],
+          paragraphs: [null, readySummary().sections[0].paragraphs[0]],
+        },
+      ],
+    },
+    {
+      label: 'non-record sentence member',
+      sections: [
+        {
+          ...readySummary().sections[0],
+          paragraphs: [
+            {
+              sentences: [
+                null,
+                readySummary().sections[0].paragraphs[0].sentences[0],
+              ],
+            },
+          ],
+        },
+      ],
+    },
+  ] as const)('fails closed for $label', ({ sections }) => {
+    const detail = mapClusterDetailToView(
+      baseResponse({
+        summary: {
+          ...readySummary(),
+          sections,
+        } as unknown as ClusterDetailResponse['summary'],
+      })
+    );
+
+    expect(detail.analysisStatus).toBe('UNAVAILABLE');
+    expect(detail.analysisGeneratedAt).toBeNull();
+    expect(detail.sections).toEqual([]);
+    expect(detail.analysisIssues).toEqual([
+      {
+        code: 'ANALYSIS_GENERATION_FAILED',
+        message: '분석을 생성하지 못했습니다.',
+      },
+    ]);
+    expect(detail.conflictStatus).toBe('NOT_CHECKED');
+  });
+
+  it('keeps PARTIAL conflict-check failures and their restrained sentence state', () => {
+    const detail = mapClusterDetailToView(
+      baseResponse({
+        summary: readySummary({
+          analysisStatus: 'PARTIAL',
+          analysisIssues: [
+            {
+              code: 'CONFLICT_CHECK_FAILED',
+              message: '일부 분석 문장의 충돌 근거를 확인하지 못했습니다.',
+            },
+          ],
+          conflictStatus: 'NOT_CHECKED',
+          sections: [
+            {
+              kind: 'impact',
+              title: '시장 영향',
+              paragraphs: [
+                {
+                  sentences: [
+                    {
+                      text: '충돌 검사를 완료하지 못했습니다.',
+                      sourceArticleIds: [1024],
+                      conflictStatus: 'NOT_CHECKED',
+                      conflictingSourceArticleIds: [],
+                      conflictNote: null,
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        }),
+      })
+    );
+
+    expect(detail.analysisStatus).toBe('PARTIAL');
+    expect(detail.analysisIssues).toEqual([
+      {
+        code: 'CONFLICT_CHECK_FAILED',
+        message: '일부 분석 문장의 충돌 근거를 확인하지 못했습니다.',
+      },
+    ]);
+    expect(detail.conflictStatus).toBe('NOT_CHECKED');
+    expect(detail.sections[0].paragraphs[0].sentences[0].conflictStatus).toBe(
+      'NOT_CHECKED'
+    );
+  });
+
+  it('omits sections that have no paragraphs or sentences', () => {
+    const detail = mapClusterDetailToView(
+      baseResponse({
+        summary: readySummary({
+          sections: [
+            {
+              kind: 'background',
+              title: '발생 배경',
+              paragraphs: [],
+            },
+            {
+              kind: 'impact',
+              title: '시장 영향',
+              paragraphs: [
+                {
+                  sentences: [],
+                },
+              ],
+            },
+          ],
+        }),
+      })
+    );
+
+    expect(detail.sections).toEqual([]);
+    expect(detail.analysisStatus).toBe('UNAVAILABLE');
+    expect(detail.analysisIssues).toEqual([
+      {
+        code: 'NO_GROUNDED_SENTENCES',
+        message: '근거를 확인할 수 있는 분석 문장이 없습니다.',
+      },
+    ]);
+  });
+
+  it('keeps a structurally valid empty root section list as NO_GROUNDED_SENTENCES', () => {
+    const detail = mapClusterDetailToView(
+      baseResponse({
+        summary: readySummary({ sections: [] }),
+      })
+    );
+
+    expect(detail.analysisStatus).toBe('UNAVAILABLE');
+    expect(detail.analysisGeneratedAt).toBeNull();
+    expect(detail.sections).toEqual([]);
+    expect(detail.analysisIssues).toEqual([
+      {
+        code: 'NO_GROUNDED_SENTENCES',
+        message: '근거를 확인할 수 있는 분석 문장이 없습니다.',
+      },
+    ]);
+    expect(detail.conflictStatus).toBe('NOT_CHECKED');
   });
 
   it('renders only 2 arriving sections, in arrival order, without a 4-slot layout', () => {
@@ -334,7 +917,7 @@ describe('mappers - cluster', () => {
     ]);
   });
 
-  it('drops a section with an unknown kind and a malformed paragraph/sentence without crashing', () => {
+  it('fails closed without salvaging valid siblings from malformed analysis structure', () => {
     const malformedResponse = {
       ...baseResponse(),
       summary: {
@@ -376,28 +959,15 @@ describe('mappers - cluster', () => {
     expect(() => mapClusterDetailToView(malformedResponse)).not.toThrow();
 
     const detail = mapClusterDetailToView(malformedResponse);
-    expect(detail.sections).toEqual([
+    expect(detail.analysisStatus).toBe('UNAVAILABLE');
+    expect(detail.analysisGeneratedAt).toBeNull();
+    expect(detail.sections).toEqual([]);
+    expect(detail.analysisIssues).toEqual([
       {
-        kind: 'impact',
-        title: '시장 영향',
-        paragraphs: [
-          {
-            sentences: [
-              {
-                text: 'valid sentence',
-                sourceArticleIds: [1024],
-                conflictStatus: 'NONE',
-                conflictingSourceArticleIds: [],
-                conflictNote: null,
-              },
-            ],
-          },
-        ],
+        code: 'ANALYSIS_GENERATION_FAILED',
+        message: '분석을 생성하지 못했습니다.',
       },
     ]);
-    // Unknown analysisIssues code dropped; unknown conflictStatus falls back
-    // to the restrained 'NOT_CHECKED', never a guessed member (A-1-7).
-    expect(detail.analysisIssues).toEqual([]);
     expect(detail.conflictStatus).toBe('NOT_CHECKED');
   });
 
@@ -431,6 +1001,12 @@ describe('mappers - cluster', () => {
     expect(detail.analysisStatus).toBe('UNAVAILABLE');
     expect(detail.sections).toEqual([]);
     expect(detail.analysisGeneratedAt).toBeNull();
+    expect(detail.analysisIssues).toEqual([
+      {
+        code: 'ANALYSIS_GENERATION_FAILED',
+        message: '분석을 생성하지 못했습니다.',
+      },
+    ]);
     expect(detail.conflictStatus).toBe('NOT_CHECKED');
     expect(detail.articles).toEqual([]);
     expect(detail.articleCount).toBe(0);
@@ -500,7 +1076,14 @@ describe('mappers - cluster', () => {
     expect(detail.businessDate).toBe('-');
     expect(detail.marketLabel).toBe('시장');
     expect(detail.title).toBe('클러스터 제목이 없습니다.');
-    expect(detail.sections[0].paragraphs[0].sentences).toHaveLength(1);
+    expect(detail.sections).toEqual([]);
+    expect(detail.analysisStatus).toBe('UNAVAILABLE');
+    expect(detail.analysisIssues).toEqual([
+      {
+        code: 'ANALYSIS_GENERATION_FAILED',
+        message: '분석을 생성하지 못했습니다.',
+      },
+    ]);
     expect(detail.updatedAt).toBe('-');
     expect(detail.representative).toMatchObject({
       id: 'representative-unknown-cluster',
