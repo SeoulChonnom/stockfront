@@ -134,21 +134,36 @@ test.describe('deep link', () => {
     await expect(page.getByText(/진입 경로 정보가 없어/)).toBeVisible();
   });
 
-  test('?market=kr on Latest selects the Korean market tab directly', async ({
+  // `?market=`의 의미가 "그 시장만 보이기"에서 "그 시장으로 이동"으로
+  // 바뀌었다. 딥링크 계약(값 형식, 왕복)은 그대로 살아 있고, 달라진 것은
+  // 반대편 시장이 더 이상 사라지지 않는다는 점이다.
+  test('?market=kr on Latest scrolls to the Korean section, keeping both markets', async ({
     page,
   }) => {
     await installMockApi(page, { scenario: 'ready' });
     await page.goto('market/latest?market=kr');
 
-    const krTab = page.getByRole('tab', { name: /한국 증시/ });
-    await expect(krTab).toHaveAttribute('aria-selected', 'true');
-    await expect(page.getByRole('tab', { name: /미국 증시/ })).toHaveAttribute(
-      'aria-selected',
-      'false'
-    );
-    await expect(
-      page.getByRole('heading', { level: 2, name: '한국 증시' })
-    ).toBeVisible();
+    const korea = page.getByRole('heading', { level: 2, name: '한국 증시' });
+    const usa = page.getByRole('heading', { level: 2, name: '미국 증시' });
+    await expect(korea).toBeVisible();
+    // 예전 탭 구조에서는 이 단언이 불가능했다 — 선택 안 된 시장은 마운트조차
+    // 되지 않았다.
+    await expect(usa).toBeAttached();
+
+    // 이동 대상 섹션의 제목이 포커스를 받는다(탭이 하던 포커스 역할 승계).
+    await expect(korea).toBeFocused();
+  });
+
+  test('markets render Korea first even though the API returns [US, KR]', async ({
+    page,
+  }) => {
+    await installMockApi(page, { scenario: 'ready' });
+    await page.goto('market/latest');
+
+    const sectionHeadings = page.getByRole('heading', { level: 2 });
+    await expect(sectionHeadings.nth(1)).toHaveText('두 시장 한눈에');
+    await expect(sectionHeadings.nth(2)).toHaveText('한국 증시');
+    await expect(sectionHeadings.nth(3)).toHaveText('미국 증시');
   });
 });
 
@@ -250,27 +265,28 @@ test.describe('route focus', () => {
     expect(new URL(page.url()).pathname).toBe('/stock/market/archive/search');
   });
 
-  test('switching market tabs (adding ?market=) does NOT refocus #page-title', async ({
+  test('selecting a market (adding ?market=) does NOT refocus #page-title', async ({
     page,
   }) => {
     await installMockApi(page, { scenario: 'ready' });
     await page.goto('market/latest');
     await expect(page.locator('#page-title')).toBeFocused();
 
-    // Move focus away — App.tsx's route-focus effect is keyed on `pathname`
-    // only (see its own comment), so a `?market=` query-only change from a
-    // tab click must not pull focus back to #page-title.
-    await page.getByRole('tab', { name: /한국 증시/ }).focus();
-    await expect(page.locator('#page-title')).not.toBeFocused();
-
-    await page.getByRole('tab', { name: /한국 증시/ }).click();
+    // App.tsx's route-focus effect is keyed on `pathname` only (see its own
+    // comment), so a `?market=` query-only change must not pull focus back to
+    // #page-title. 포커스는 대신 이동 대상 섹션 제목으로 간다.
+    const band = page.getByRole('region', { name: '두 시장 한눈에' });
+    await band.getByRole('button').first().click();
     await expect(page).toHaveURL(/market=kr/);
     await expect(page.locator('#page-title')).not.toBeFocused();
+    await expect(
+      page.getByRole('heading', { level: 2, name: '한국 증시' })
+    ).toBeFocused();
   });
 });
 
-test.describe('browser Back (market tabs)', () => {
-  test('Back from a cluster detail page restores the selected tab and scroll position', async ({
+test.describe('browser Back (market selection)', () => {
+  test('Back from a cluster detail page restores the selected market and scroll position', async ({
     page,
   }) => {
     await installMockApi(page, { scenario: 'ready' });
@@ -279,7 +295,11 @@ test.describe('browser Back (market tabs)', () => {
 
     // Scroll-restoration keys on pathname + search (`buildScrollKey`), so
     // `?market=kr` must be part of the key the whole way through this flow.
-    await page.getByRole('tab', { name: /한국 증시/ }).click();
+    await page
+      .getByRole('region', { name: '두 시장 한눈에' })
+      .getByRole('button')
+      .first()
+      .click();
     await expect(page).toHaveURL(/market=kr/);
 
     await page.evaluate(() => window.scrollTo(0, 400));
@@ -306,10 +326,8 @@ test.describe('browser Back (market tabs)', () => {
 
     await page.goBack();
     await expect(page).toHaveURL(/market=kr/);
-    await expect(page.getByRole('tab', { name: /한국 증시/ })).toHaveAttribute(
-      'aria-selected',
-      'true'
-    );
+    // 저장된 스크롤 위치가 있으면 앵커 이동이 아니라 복원이 이긴다 —
+    // 두 스크롤이 부딪히면 이 단언이 먼저 깨진다.
     await expect
       .poll(() => page.evaluate(() => window.scrollY))
       .toBe(scrollYBeforeNavigation);

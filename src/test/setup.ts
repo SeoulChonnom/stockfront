@@ -5,6 +5,14 @@ import '@testing-library/jest-dom/vitest';
 // baseline; individual tests can still replace it with `vi.spyOn` as needed.
 window.scrollTo = () => undefined;
 
+// jsdom implements no scrolling, so `Element.scrollIntoView` is absent. The
+// market page calls it to move to a `?market=` section. Anchor scrolling is
+// verified in Playwright, where layout is real; here a no-op just keeps the
+// effect from throwing.
+if (!Element.prototype.scrollIntoView) {
+  Element.prototype.scrollIntoView = () => undefined;
+}
+
 // jsdom ships no `ResizeObserver`. `TableScrollWrapper` uses one to decide
 // whether its table actually scrolls (and therefore whether it needs a tab
 // stop and edge fades). jsdom also reports every box as 0x0, so a real

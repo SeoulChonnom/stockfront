@@ -203,20 +203,13 @@ test('keeps every representative index visible at 390px', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('market/latest');
 
-  const mobileIndexContainer = page.locator('div[class="sm:hidden"]');
+  // 두 시장이 한 문서에 함께 있으므로 `sm:hidden` 인덱스 카드 컨테이너도
+  // 시장마다 하나씩, 총 두 개다. 탭 전환 없이 양쪽을 다 확인한다.
+  const mobileIndexContainers = page.locator('div[class="sm:hidden"]');
 
-  for (const name of ['DOW JONES', 'S&P 500', 'NASDAQ']) {
+  for (const name of ['KOSPI', 'KOSDAQ', 'DOW JONES', 'S&P 500', 'NASDAQ']) {
     await expect(
-      mobileIndexContainer.getByText(name, { exact: false })
-    ).toBeVisible();
-  }
-
-  await page.getByRole('tab', { name: /한국 증시/ }).click();
-  await expect(page).toHaveURL(/market=kr/);
-
-  for (const name of ['KOSPI', 'KOSDAQ']) {
-    await expect(
-      mobileIndexContainer.getByText(name, { exact: false })
+      mobileIndexContainers.getByText(name, { exact: false }).first()
     ).toBeVisible();
   }
 });

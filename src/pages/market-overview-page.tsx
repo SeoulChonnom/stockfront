@@ -1,3 +1,8 @@
+import { useEffect } from 'react';
+import {
+  buildScrollKey,
+  getScrollPosition,
+} from '@/components/shell/scroll-restoration';
 import { useCapabilities } from '@/lib/capabilities';
 import { buildUrl, navigate, useUrlState } from '@/lib/router';
 import type { MarketSnapshot } from '@/lib/view-models';
@@ -5,8 +10,13 @@ import type { MarketSnapshot } from '@/lib/view-models';
 import { ArchiveModeBand } from './market-overview/archive-mode-band';
 import { DecisionHeaderCard } from './market-overview/decision-header-card';
 import { EmptyMarketsPanel } from './market-overview/empty-markets-panel';
+import { MarketCompareBand } from './market-overview/market-compare-band';
+import { orderMarketsForDisplay } from './market-overview/market-display-order';
 import { MarketSection } from './market-overview/market-section';
-import { MarketTabs } from './market-overview/market-tabs';
+import {
+  marketHeadingId,
+  marketSectionId,
+} from './market-overview/market-section-ids';
 import {
   type ClusterOriginQuery,
   extractFilterQuery,
@@ -105,6 +115,9 @@ export function MarketOverviewPage({
     snapshot.markets,
     url.searchParams
   );
+  const displayMarkets = orderMarketsForDisplay(snapshot.markets);
+  const hasMarketParam = url.searchParams.has('market');
+  const routeKey = buildScrollKey(url.pathname, currentSearch);
 
   function handleSelectMarket(index: number) {
     navigate(
@@ -114,6 +127,36 @@ export function MarketOverviewPage({
       })
     );
   }
+
+  /**
+   * `?market=`은 "그 시장만 보이기"가 아니라 "그 시장으로 이동"이다. 탭이
+   * 하던 일을 앵커가 이어받았다.
+   *
+   * 두 가지를 피해야 한다.
+   *
+   * 1. `App.tsx`도 같은 `routeKey`(pathname+search) 변경에 반응해
+   *    저장된 스크롤 위치(없으면 0)로 이동시킨다. 자식 이펙트가 부모보다
+   *    먼저 실행되므로 여기서 동기적으로 스크롤하면 그 직후 덮어써진다.
+   *    한 프레임 미뤄 마지막에 착지시킨다.
+   * 2. 저장된 위치가 있다는 건 방문자가 이미 있던 자리로 돌아온다는 뜻이다
+   *    (클러스터 상세에서 뒤로가기). 그럴 땐 앵커가 아니라 복원이 이긴다.
+   */
+  useEffect(() => {
+    if (!hasMarketParam || getScrollPosition(routeKey) !== undefined) {
+      return;
+    }
+
+    const frame = requestAnimationFrame(() => {
+      const section = document.getElementById(marketSectionId(selectedIndex));
+      const heading = document.getElementById(marketHeadingId(selectedIndex));
+
+      section?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      // 스크롤은 위에서 이미 했으므로 포커스가 다시 스크롤하지 않게 막는다.
+      heading?.focus({ preventScroll: true });
+    });
+
+    return () => cancelAnimationFrame(frame);
+  }, [hasMarketParam, routeKey, selectedIndex]);
 
   return (
     <div className='flex flex-col gap-[var(--gap)]'>
@@ -140,19 +183,21 @@ export function MarketOverviewPage({
         <EmptyMarketsPanel canViewOps={canViewOps} status={snapshot.status} />
       ) : (
         <>
-          <MarketTabs
-            markets={snapshot.markets}
-            onSelect={handleSelectMarket}
-            selectedIndex={selectedIndex}
+          <MarketCompareBand
+            markets={displayMarkets}
+            onSelectMarket={handleSelectMarket}
           />
-          <MarketSection
-            canViewOps={canViewOps}
-            currentPathname={url.pathname}
-            currentSearch={currentSearch}
-            index={selectedIndex}
-            market={snapshot.markets[selectedIndex]}
-            originQuery={originQuery}
-          />
+          {displayMarkets.map(({ market, index }) => (
+            <MarketSection
+              canViewOps={canViewOps}
+              currentPathname={url.pathname}
+              currentSearch={currentSearch}
+              index={index}
+              key={index}
+              market={market}
+              originQuery={originQuery}
+            />
+          ))}
         </>
       )}
 

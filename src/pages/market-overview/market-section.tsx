@@ -6,12 +6,18 @@ import { MarketArticleLinks } from './market-article-links';
 import { MarketIndexCards } from './market-index-cards';
 import { MarketIndexTable } from './market-index-table';
 import { MarketIssueList } from './market-issue-list';
-import { marketPanelId, marketTabId } from './market-tab-ids';
+import { marketHeadingId, marketSectionId } from './market-section-ids';
 import type { ClusterOriginQuery } from './navigation';
 
 /**
- * 시장 섹션. `markets[]`의 DTO 순서(미국 → 한국)를
- * 그대로 유지해 map으로 순회한다.
+ * 시장 섹션. 화면 표시 순서는 `market-display-order.ts`가 정하고
+ * (한국 먼저), 이 컴포넌트는 받은 시장 하나를 그린다. `index`는 표시
+ * 위치가 아니라 `markets[]`의 원래 배열 인덱스다 — id와 `?market=`가
+ * 그 값을 쓴다.
+ *
+ * 예전에는 탭 위젯의 패널이어서 `role='tabpanel'`을 달고 있었다. 이제는
+ * 두 시장이 한 문서에 나란히 쌓이므로 평범한 `<section>`이다 — 브라우저
+ * 검색·인쇄·스크린리더 훑기가 브리프 전체에 닿아야 하기 때문이다.
  *
  * The market-type code is already mapped by the view model and rendered in
  * this section header.
@@ -41,10 +47,10 @@ export function MarketSection({
 
   return (
     <section
-      aria-labelledby={marketTabId(index)}
-      className='flex min-w-0 flex-col overflow-hidden rounded-[var(--r-lg)] border border-line bg-[color:var(--surface)]'
-      id={marketPanelId(index)}
-      role='tabpanel'
+      aria-labelledby={marketHeadingId(index)}
+      // 모바일 상단 헤더가 앵커 이동 시 제목을 가리지 않도록 오프셋을 준다.
+      className='flex min-w-0 scroll-mt-[calc(var(--topbar-height)+8px)] flex-col overflow-hidden rounded-[var(--r-lg)] border border-line bg-[color:var(--surface)]'
+      id={marketSectionId(index)}
     >
       <div className='flex flex-wrap items-baseline gap-x-3 gap-y-2 border-b border-line px-[18px] py-4'>
         {/* Show the market scope before its name. */}
@@ -55,6 +61,7 @@ export function MarketSection({
         ) : null}
         <h2
           className='m-0 text-[length:var(--fs-h2)] font-semibold outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--focus)]'
+          id={marketHeadingId(index)}
           tabIndex={-1}
         >
           {market.label}

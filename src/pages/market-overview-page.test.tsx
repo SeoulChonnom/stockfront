@@ -1,4 +1,4 @@
-import { cleanup, render, screen, within } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -149,7 +149,7 @@ describe('MarketOverviewPage — 대표 지수 표', () => {
   });
 });
 
-describe('MarketOverviewPage — 시장 탭', () => {
+describe('MarketOverviewPage — 시장 순서와 비교 밴드', () => {
   function twoMarketSnapshot(overrides: Partial<MarketSnapshot> = {}) {
     const base = buildSnapshot();
 
@@ -166,7 +166,37 @@ describe('MarketOverviewPage — 시장 탭', () => {
     });
   }
 
-  it('renders only the selected market panel, and switching tabs updates the panel and ?market=', async () => {
+  // 두 시장이 한 문서에 함께 있어야 한다는 것이 이 화면의 존재 이유다
+  // (PRODUCT.md "10~20초 안에 두 시장의 핵심 파악"). 예전 탭 구조에서는
+  // 선택된 패널만 마운트되어 어느 뷰포트에서도 둘을 동시에 볼 수 없었다.
+  it('renders BOTH market sections, Korea first, regardless of ?market=', () => {
+    window.history.replaceState(null, '', '/market/latest');
+
+    render(
+      <MarketOverviewPage
+        mode='latest'
+        now={FIXED_NOW}
+        snapshot={twoMarketSnapshot()}
+      />
+    );
+
+    const headings = screen
+      .getAllByRole('heading', { level: 2 })
+      .map((node) => node.textContent);
+
+    // 판단층(오늘의 핵심 → 비교 밴드)이 먼저, 검증층(시장 섹션)이 뒤.
+    // DTO 순서는 [US, KR]인데 화면 순서는 KR이 먼저다.
+    expect(headings).toEqual([
+      '오늘의 핵심',
+      '두 시장 한눈에',
+      '한국 증시',
+      '미국 증시',
+    ]);
+    expect(screen.queryAllByRole('tabpanel')).toHaveLength(0);
+    expect(screen.queryAllByRole('tab')).toHaveLength(0);
+  });
+
+  it('band row lists that market’s indices and navigates to it via ?market=', async () => {
     const user = userEvent.setup();
     window.history.replaceState(null, '', '/market/latest');
 
@@ -178,27 +208,43 @@ describe('MarketOverviewPage — 시장 탭', () => {
       />
     );
 
-    expect(screen.getAllByRole('tabpanel')).toHaveLength(1);
+    const band = screen.getByRole('region', { name: '두 시장 한눈에' });
+    const rows = within(band).getAllByRole('button');
+
+    // 밴드 행 순서도 섹션 순서와 같아야 한다 — 다르면 내비게이션으로 못 쓴다.
+    expect(rows.map((row) => row.textContent)).toEqual([
+      expect.stringContaining('한국 증시'),
+      expect.stringContaining('미국 증시'),
+    ]);
+    expect(rows[0]).toHaveTextContent('S&P 500');
+
+    await user.click(rows[0]);
+
+    expect(window.location.search).toBe('?market=kr');
+    // 이동 수단일 뿐이므로 반대편 시장이 사라지지 않는다.
     expect(
       screen.getByRole('heading', { level: 2, name: '미국 증시' })
     ).toBeInTheDocument();
-    expect(
-      screen.queryByRole('heading', { level: 2, name: '한국 증시' })
-    ).not.toBeInTheDocument();
-
-    await user.click(screen.getByRole('tab', { name: /한국 증시/ }));
-
-    expect(window.location.search).toBe('?market=kr');
-    expect(screen.getAllByRole('tabpanel')).toHaveLength(1);
-    expect(
-      screen.getByRole('heading', { level: 2, name: '한국 증시' })
-    ).toBeInTheDocument();
-    expect(
-      screen.queryByRole('heading', { level: 2, name: '미국 증시' })
-    ).not.toBeInTheDocument();
   });
 
-  it('reads ?market=kr from the URL on mount and selects the matching tab', () => {
+  it('keeps a market row visible with 지수 없음 when that market has no indices', () => {
+    const snapshot = twoMarketSnapshot();
+    snapshot.markets[1].indices = [];
+
+    render(
+      <MarketOverviewPage mode='latest' now={FIXED_NOW} snapshot={snapshot} />
+    );
+
+    const band = screen.getByRole('region', { name: '두 시장 한눈에' });
+    const rows = within(band).getAllByRole('button');
+
+    // 결손을 숨기지 않는다 — 행이 사라지면 시장이 통째로 빠진 것과 구분되지 않는다.
+    expect(rows).toHaveLength(2);
+    expect(rows[0]).toHaveTextContent('한국 증시');
+    expect(rows[0]).toHaveTextContent('지수 없음');
+  });
+
+  it('reads ?market=kr from the URL on mount without hiding the other market', () => {
     window.history.replaceState(null, '', '/market/latest?market=kr');
 
     render(
@@ -209,15 +255,16 @@ describe('MarketOverviewPage — 시장 탭', () => {
       />
     );
 
-    expect(screen.getByRole('tab', { selected: true })).toHaveTextContent(
-      '한국 증시'
-    );
     expect(
       screen.getByRole('heading', { level: 2, name: '한국 증시' })
     ).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { level: 2, name: '미국 증시' })
+    ).toBeInTheDocument();
   });
 
-  it('falls back to the first market when ?market= does not match any marketType', () => {
+  it('falls back to the first market when ?market= does not match any marketType', async () => {
+    const user = userEvent.setup();
     window.history.replaceState(null, '', '/market/latest?market=jp');
 
     render(
@@ -228,16 +275,19 @@ describe('MarketOverviewPage — 시장 탭', () => {
       />
     );
 
-    expect(screen.getByRole('tab', { selected: true })).toHaveTextContent(
-      '미국 증시'
-    );
+    // 매칭 실패는 배열 첫 시장(DTO 기준 US)으로 떨어진다. 화면 순서와는
+    // 무관하다 — 폴백은 표시 위치가 아니라 배열 인덱스를 따른다.
+    const band = screen.getByRole('region', { name: '두 시장 한눈에' });
+    await user.click(within(band).getAllByRole('button')[1]);
+
+    expect(window.location.search).toBe('?market=us');
   });
 
   // `marketType` is nullable in the mapper, so a market can have no code to
   // put in the URL. The writer falls back to the array position; the reader
-  // has to accept that same value or such a market silently reverts to the
-  // first tab on reload.
-  it('round-trips a market that has no marketType through the URL', async () => {
+  // has to accept that same value. 화면 순서를 뒤집었다고 이 값을 표시
+  // 위치로 바꾸면, 그런 시장은 새로고침 때 다른 시장이 열린다.
+  it('round-trips a market that has no marketType through the URL by ARRAY index', async () => {
     const user = userEvent.setup();
     const snapshot = twoMarketSnapshot();
     snapshot.markets[1].marketType = null;
@@ -246,26 +296,24 @@ describe('MarketOverviewPage — 시장 탭', () => {
       <MarketOverviewPage mode='latest' now={FIXED_NOW} snapshot={snapshot} />
     );
 
-    await user.click(screen.getByRole('tab', { name: /한국 증시/ }));
+    const band = screen.getByRole('region', { name: '두 시장 한눈에' });
+    const koreaRow = within(band)
+      .getAllByRole('button')
+      .find((row) => row.textContent?.includes('한국 증시'));
 
+    await user.click(koreaRow as HTMLElement);
+
+    // 배열에서 1번이므로 `?market=1`. 화면에서는 첫 번째로 보이지만
+    // 그 위치(0)를 쓰면 안 된다.
     expect(window.location.search).toBe('?market=1');
-
-    cleanup();
-    render(
-      <MarketOverviewPage mode='latest' now={FIXED_NOW} snapshot={snapshot} />
-    );
-
-    expect(screen.getByRole('tab', { selected: true })).toHaveTextContent(
-      '한국 증시'
-    );
   });
 
   // Regression for the Archive Detail return-state contract: `extractFilterQuery`
   // (navigation.ts) reads `from`/`to`/`status`/`page` off the URL, and
   // Archive Detail only renders "검색 결과로 돌아가기" when that returns
-  // non-null. Adding `?market=` on a tab switch must not drop those four
-  // params, or the return link would silently disappear.
-  it('preserves from/to/status/page (the archive return-state contract) when switching tabs', async () => {
+  // non-null. Adding `?market=` must not drop those four params, or the
+  // return link would silently disappear.
+  it('preserves from/to/status/page (the archive return-state contract) when selecting a market', async () => {
     const user = userEvent.setup();
     window.history.replaceState(
       null,
@@ -285,7 +333,8 @@ describe('MarketOverviewPage — 시장 탭', () => {
       screen.getByRole('button', { name: '검색 결과로 돌아가기' })
     ).toBeInTheDocument();
 
-    await user.click(screen.getByRole('tab', { name: /한국 증시/ }));
+    const band = screen.getByRole('region', { name: '두 시장 한눈에' });
+    await user.click(within(band).getAllByRole('button')[0]);
 
     expect(window.location.search).toBe(
       '?from=2026-01-01&to=2026-01-05&status=FAILED&page=2&market=kr'

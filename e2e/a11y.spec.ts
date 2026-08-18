@@ -15,8 +15,8 @@ test.describe('skip link', () => {
   // ?.blur()` does NOT reliably move Chromium's sequential-focus-navigation
   // cursor back to the true top of the document (verified empirically: a
   // blur + Tab from a focus deep inside `<main>` lands on the next
-  // focusable element AFTER that point in DOM order, e.g. a market tab
-  // inside the US/KR tablist — not the skip link, which sits BEFORE the
+  // focusable element AFTER that point in DOM order, e.g. a row inside the
+  // 두 시장 한눈에 band — not the skip link, which sits BEFORE the
   // nav rail near the very top of `<body>`). So this
   // exercises the skip link's own contract directly (it receives focus,
   // becomes visible, and activating it moves focus to `#main-content`)
@@ -117,33 +117,34 @@ test.describe('mobile nav Drawer — focus trap / Escape / return', () => {
   });
 });
 
-test.describe('market tabs — keyboard-only switching', () => {
-  test('switches markets with the keyboard alone', async ({ page }) => {
+test.describe('market compare band — keyboard-only navigation', () => {
+  test('reaches a market section from the band using the keyboard alone', async ({
+    page,
+  }) => {
     await installMockApi(page, { scenario: 'ready' });
     await page.goto('market/latest');
 
-    // `MarketTabs` (`src/pages/market-overview/market-tabs.tsx`) is a roving
-    // -tabindex ARIA tablist. The WAI-ARIA tabs pattern requires the newly
-    // selected tab to receive real DOM focus, not just visual/`aria-selected`
-    // state, so ArrowRight must move focus onto the KR tab, not merely fire
-    // its handler while focus stays on the US tab.
-    const usTab = page.getByRole('tab', { name: /미국 증시/ });
-    await expect(usTab).toHaveAttribute('aria-selected', 'true');
-    await usTab.focus();
-    await page.keyboard.press('ArrowRight');
+    // 탭 위젯이 사라지면서 roving tabindex도 함께 사라졌다. 이제 밴드의 각
+    // 행은 평범한 버튼이고, 접근성 계약은 "키보드만으로 도달해 활성화하면
+    // 해당 시장 섹션의 제목이 실제 DOM 포커스를 받는다"로 옮겨졌다.
+    // 포커스가 옮겨가지 않으면 스크린리더 사용자는 이동했다는 사실 자체를
+    // 알 수 없다.
+    const band = page.getByRole('region', { name: '두 시장 한눈에' });
+    const koreaRow = band.getByRole('button').first();
 
-    // Selection actually moved to the other market, not just "some tab" —
-    // both the old and new tab's `aria-selected` are checked, plus the
-    // `?market=` URL and the tabpanel's own heading (only the selected
-    // market's `MarketSection` is mounted, so this also confirms the panel
-    // content itself changed, not merely the tab's visual state).
-    const krTab = page.getByRole('tab', { name: /한국 증시/ });
-    await expect(krTab).toHaveAttribute('aria-selected', 'true');
-    await expect(usTab).toHaveAttribute('aria-selected', 'false');
-    await expect(krTab).toBeFocused();
+    await koreaRow.focus();
+    await expect(koreaRow).toBeFocused();
+    await page.keyboard.press('Enter');
+
     await expect(page).toHaveURL(/market=kr/);
     await expect(
       page.getByRole('heading', { level: 2, name: '한국 증시' })
-    ).toBeVisible();
+    ).toBeFocused();
+
+    // 이동일 뿐이므로 반대편 시장은 문서에 그대로 남아 있어야 한다 —
+    // 스크린리더 브라우즈 모드가 브리프 전체를 훑을 수 있다는 뜻이다.
+    await expect(
+      page.getByRole('heading', { level: 2, name: '미국 증시' })
+    ).toBeAttached();
   });
 });
