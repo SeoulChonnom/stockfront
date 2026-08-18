@@ -15,6 +15,47 @@
       media="(prefers-color-scheme: dark)"
     />
     <title>stockfront</title>
+    <!--
+      테마를 첫 페인트 전에 확정한다.
+
+      React가 마운트된 뒤 `applyTheme`을 부르면 늦다 — 측정값으로 1x CPU에서
+      60ms, 6x CPU(중급 폰)에서 244ms 동안 라이트 팔레트가 그려진 뒤 다크로
+      뒤집혔다. 어두운 환경에서 페이지를 열 때마다 0.25초짜리 섬광이다.
+
+      CSS의 `@media (prefers-color-scheme: dark)`로는 절반만 해결된다. OS가
+      라이트인데 앱에서 다크를 고른 사용자(localStorage)는 그대로 깜빡인다.
+      저장값이 우선이라는 규칙까지 지키려면 첫 페인트 전에 실행되는 스크립트가
+      필요하다.
+
+      `src/lib/theme.ts`의 `resolveInitialTheme()`과 같은 규칙을 구현한다
+      (저장값 → OS 선호 → 라이트). 두 곳이 갈라지면 부트스트랩이 칠한 테마와
+      React가 확정한 테마가 어긋나 첫 프레임에서 한 번 깜빡이므로, 그 파일을
+      고칠 때 여기도 함께 고쳐야 한다.
+    -->
+    <script>
+      (function () {
+        try {
+          var stored = null;
+          try {
+            stored = window.localStorage.getItem('stockfront.theme');
+          } catch (e) {
+            // 시크릿 모드 등에서 localStorage 접근이 throw할 수 있다.
+          }
+          var theme =
+            stored === 'light' || stored === 'dark'
+              ? stored
+              : window.matchMedia &&
+                  window.matchMedia('(prefers-color-scheme: dark)').matches
+                ? 'dark'
+                : 'light';
+          document.documentElement.dataset.theme = theme;
+          document.documentElement.style.colorScheme = theme;
+        } catch (e) {
+          // 무슨 일이 있어도 부팅을 막지 않는다 — 최악의 경우 예전처럼
+          // React가 테마를 적용한다.
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

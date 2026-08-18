@@ -569,8 +569,10 @@ describe('App routing', () => {
       expect(mockUseBatchJobs).toHaveBeenCalledTimes(1);
     });
     expect(screen.getByText('Market Brief')).toBeInTheDocument();
+    // 배치 운영은 라우트 단위로 코드 분할되어 있어(`app-page-content.tsx`)
+    // 청크가 도착한 뒤에야 렌더된다 — 부트스트랩 해소와 같은 틱이 아니다.
     expect(
-      screen.getByRole('heading', { name: '배치 운영' })
+      await screen.findByRole('heading', { name: '배치 운영' })
     ).toBeInTheDocument();
     // master-detail 목록 헤딩. 상세는 jobId 선택 시에만 렌더된다.
     expect(screen.getByText('실행 이력')).toBeInTheDocument();
