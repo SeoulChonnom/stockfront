@@ -112,7 +112,7 @@ export function ArchiveResultsTable({
   canViewOps: boolean;
 }) {
   return (
-    <TableScrollWrapper>
+    <TableScrollWrapper label='아카이브 검색 결과 표'>
       {/* The panel has no padding, so cells own their horizontal insets:
           18px at row edges and 12px between columns. */}
       <Table aria-labelledby='archive-results-heading' minWidth={520}>
@@ -143,7 +143,7 @@ export function ArchiveResultsTable({
                 {/* This dense table uses 12px vertical cell padding. */}
                 <TableCell className='py-3 pr-3 pl-[18px] align-top'>
                   <a
-                    className='mono text-body font-semibold text-fg underline-offset-2 hover:text-[color:var(--primary)] hover:underline'
+                    className='tap-target mono justify-start text-body font-semibold text-fg underline-offset-2 hover:text-[color:var(--primary)] hover:underline'
                     href={withBasePath(href)}
                     onClick={onOpen}
                   >
@@ -156,7 +156,7 @@ export function ArchiveResultsTable({
                 </TableCell>
                 <TableCell className='py-3 px-3 align-top'>
                   <a
-                    className='wrap-anywhere text-pretty font-normal text-fg underline-offset-2 hover:text-[color:var(--primary)] hover:underline'
+                    className='tap-target-text wrap-anywhere text-pretty font-normal text-fg underline-offset-2 hover:text-[color:var(--primary)] hover:underline'
                     href={withBasePath(href)}
                     onClick={onOpen}
                   >

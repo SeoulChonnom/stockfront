@@ -52,7 +52,7 @@ function ArticleLinkRow({ link }: { link: ArticleLink }) {
   const meta = `${link.source ?? '언론사 미확인'} · ${link.publishedAt ?? '-'}`;
 
   return (
-    <li className='flex min-w-0 flex-wrap items-baseline gap-x-2.5 gap-y-1.5 border-b border-line pb-2'>
+    <li className='flex min-w-0 flex-wrap items-center gap-x-2.5 gap-y-1.5 border-b border-line pb-2'>
       {originalUrl ? (
         <a
           className='wrap-anywhere text-body font-medium text-fg no-underline hover:text-[color:var(--primary)] hover:underline'
@@ -81,7 +81,7 @@ function ArticleLinkRow({ link }: { link: ArticleLink }) {
       ) : null}
       {mirrorUrl ? (
         <a
-          className='text-caption text-faint underline'
+          className='tap-target text-caption text-faint underline'
           href={mirrorUrl}
           rel='noopener noreferrer'
           target='_blank'

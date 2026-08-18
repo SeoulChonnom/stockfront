@@ -149,7 +149,7 @@ function IssueRow({
           {originalUrl ? (
             <a
               aria-label={`${representativeTitle} 원문 (새 창)`}
-              className='inline-flex min-h-tap items-center underline underline-offset-2 hover:text-[color:var(--primary)]'
+              className='tap-target underline underline-offset-2 hover:text-[color:var(--primary)]'
               href={originalUrl}
               rel='noopener noreferrer'
               target='_blank'
@@ -160,7 +160,7 @@ function IssueRow({
           {mirrorUrl ? (
             <a
               aria-label={`${representativeTitle} 네이버 미러 (새 창)`}
-              className='inline-flex min-h-tap items-center underline underline-offset-2 hover:text-[color:var(--primary)]'
+              className='tap-target underline underline-offset-2 hover:text-[color:var(--primary)]'
               href={mirrorUrl}
               rel='noopener noreferrer'
               target='_blank'

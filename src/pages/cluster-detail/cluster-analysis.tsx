@@ -332,7 +332,7 @@ function CitationButton({
     <button
       aria-label={`근거 기사로 이동: ${articleTitle}`}
       className={cn(
-        'ms-1 inline-flex min-h-5 items-center rounded-[var(--r-sm)] border px-1.5 py-0.5 align-middle text-[11px] font-medium leading-none first:ms-0',
+        'tap-target-inline ms-1 rounded-[var(--r-sm)] border px-1.5 py-0.5 align-middle text-[11px] font-medium leading-none first:ms-0',
         tone === 'conflict'
           ? 'border-[color:var(--info-line)] bg-[color:var(--surface)] text-[color:var(--info)]'
           : 'border-[color:var(--line-strong)] bg-[color:var(--surface-2)] text-fg-soft hover:bg-[color:var(--surface-3)]'

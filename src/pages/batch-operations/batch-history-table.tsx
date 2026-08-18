@@ -33,7 +33,7 @@ export function BatchHistoryTable({
   children,
 }: BatchHistoryTableProps) {
   return (
-    <TableScrollWrapper>
+    <TableScrollWrapper label='배치 실행 이력 표'>
       <Table aria-busy={isLoading} minWidth={520}>
         <TableHeader>
           <TableRow>
@@ -101,7 +101,7 @@ function BatchHistoryRow({
       <TableCell className='py-2.5 pl-4 align-top sm:pl-[18px]'>
         <button
           aria-label={`job ${row.id} 상세 선택`}
-          className='mono block min-w-0 rounded-[var(--r-sm)] text-left text-body font-semibold text-fg outline-none hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--focus)]'
+          className='tap-target mono min-w-0 justify-start rounded-[var(--r-sm)] text-left text-body font-semibold text-fg outline-none hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--focus)]'
           ref={buttonRef}
           onClick={(event) => {
             event.stopPropagation();
@@ -135,7 +135,13 @@ function BatchHistoryRow({
       </TableCell>
       <TableCell className='py-2.5 px-3 text-right align-top'>
         <div className='mono text-[13px] text-fg'>{row.duration}</div>
-        <div className='mono text-label whitespace-nowrap text-faint'>
+        {/* `whitespace-nowrap` only from `sm` up. Below it the 520px table
+            min-width already exceeds a 390px viewport, and forcing
+            `2026-07-27 06:10 KST` onto one line pushed this column so far
+            past the fold that only a stray digit stayed visible. Letting it
+            wrap keeps 소요 inside the first screenful; the scroll wrapper
+            still handles what genuinely does not fit. */}
+        <div className='mono text-label text-faint sm:whitespace-nowrap'>
           {row.startedAt}
         </div>
       </TableCell>

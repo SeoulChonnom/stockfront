@@ -161,7 +161,7 @@ function ClusterArticleRow({
     >
       {originalUrl ? (
         <a
-          className='wrap-anywhere font-medium text-fg underline-offset-2 hover:underline'
+          className='tap-target-text wrap-anywhere font-medium text-fg underline-offset-2 hover:underline'
           href={originalUrl}
           rel='noopener noreferrer'
           target='_blank'
@@ -194,7 +194,7 @@ function ClusterArticleRow({
         {mirrorUrl ? (
           <a
             aria-label={`${title} 네이버 미러 (새 창)`}
-            className='rounded-[var(--r-sm)] border border-line px-1.5 py-0.5 text-fg-soft no-underline'
+            className='tap-target rounded-[var(--r-sm)] border border-line px-1.5 py-0.5 text-fg-soft no-underline'
             href={mirrorUrl}
             rel='noopener noreferrer'
             target='_blank'
@@ -205,7 +205,7 @@ function ClusterArticleRow({
         {groupToggle ? (
           <button
             aria-expanded={groupToggle.expanded}
-            className='ms-auto rounded-[var(--r-sm)] border border-[color:var(--line-strong)] bg-[color:var(--surface)] px-2 py-0.5 text-caption font-semibold text-fg-soft'
+            className='tap-target ms-auto rounded-[var(--r-sm)] border border-[color:var(--line-strong)] bg-[color:var(--surface)] px-2 py-0.5 text-caption font-semibold text-fg-soft'
             onClick={groupToggle.onToggle}
             type='button'
           >

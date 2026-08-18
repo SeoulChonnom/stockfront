@@ -31,7 +31,7 @@ export function ClusterBreadcrumb({
         className='flex flex-wrap items-center gap-1.5 text-body-sm text-faint'
       >
         <a
-          className='text-fg-soft underline-offset-2 hover:underline'
+          className='tap-target text-fg-soft underline-offset-2 hover:underline'
           href={withBasePath(href)}
           onClick={createNavigateHandler(href)}
         >

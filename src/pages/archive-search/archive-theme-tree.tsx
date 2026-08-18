@@ -60,14 +60,14 @@ function ThemeNode({
           aria-describedby={descriptionId}
           aria-label={accessiblePath}
           checked={selectedCodes.includes(node.code)}
-          className='mt-1 size-4 shrink-0 accent-[var(--primary)]'
+          className='tap-check mt-1 size-4 shrink-0 accent-[var(--primary)]'
           id={inputId}
           onChange={() => onToggle(node.code)}
           type='checkbox'
         />
         <div className='min-w-0'>
           <label
-            className='block cursor-pointer text-body-sm font-semibold text-fg'
+            className='tap-target justify-start cursor-pointer text-body-sm font-semibold text-fg'
             htmlFor={inputId}
           >
             {node.label}

@@ -93,6 +93,11 @@
   --sh2: 0 8px 24px rgba(15, 39, 67, 0.1);
   --sh3: 0 24px 56px rgba(15, 39, 67, 0.2);
 
+  /* Edge shading for scoped scroll containers. Darkening (not a surface-
+     coloured wash) so the affordance survives a selected or tinted table
+     row instead of smearing white across it. */
+  --scroll-edge: rgba(15, 39, 67, 0.22);
+
   --dur-fast: 120ms;
   --dur: 200ms;
   --ease: cubic-bezier(0.4, 0, 0.2, 1);
@@ -128,6 +133,8 @@
   --text: #e9f1fb;
   --text-soft: #a3b6d0;
   --text-faint: #7c92b0;
+
+  --scroll-edge: rgba(0, 0, 0, 0.55);
 
   --primary: #6b9cff;
   --primary-fg: #07101d;

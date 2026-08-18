@@ -1,3 +1,87 @@
+/**
+ * Inline control hit area.
+ *
+ * Dense meta rows (`원문 ↗`, `네이버 미러 ↗`, 유사 기사 토글, 결과 행 링크)
+ * sit next to caption-sized text, so an unconditional 44px box would wreck
+ * the vertical rhythm the whole app is tuned around. Two floors instead of
+ * one:
+ *
+ *   - 24px on every pointer — WCAG 2.2 SC 2.5.8 (AA) outright, so the rule
+ *     is satisfied on its own rather than by arguing the spacing exception
+ *     for each adjacent pair.
+ *   - 44px when the pointer is actually a finger — SC 2.5.5 (AAA) where it
+ *     is the only thing that matters, and nowhere it costs density.
+ *
+ * `min-width` matters as much as `min-height` here: `원문 ↗` renders ~37px
+ * wide, so a height-only floor still leaves a target that misses on touch.
+ */
+.tap-target {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 24px;
+  min-width: 24px;
+}
+
+@media (pointer: coarse) {
+  .tap-target {
+    min-height: var(--tap-min);
+    min-width: var(--tap-min);
+  }
+}
+
+/**
+ * A `.tap-target` that must keep flowing as text (title links that wrap
+ * across lines). Dropping to `inline` restores normal line-breaking; the
+ * hit area is bought back with vertical padding instead of a min-height,
+ * because `min-height` does nothing on a non-replaced inline box.
+ */
+.tap-target-text {
+  min-height: 0;
+  min-width: 0;
+  display: inline;
+  padding-block: 3px;
+}
+
+@media (pointer: coarse) {
+  .tap-target-text {
+    min-height: 0;
+    min-width: 0;
+    padding-block: 11px;
+  }
+}
+
+/**
+ * Citation chips sit *inside* running analysis prose and frequently run two
+ * or three in a row (`한국경제` `연합뉴스`). They get the 24px AA floor and
+ * deliberately NOT the 44px coarse bump: at 44px two adjacent chips would
+ * either overlap hit areas — trading a small target for a wrong one — or
+ * force the paragraph's line box open and wreck the reading rhythm the
+ * analysis block depends on. 24px is met outright, so the spacing exception
+ * never has to carry the argument.
+ */
+.tap-target-inline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 24px;
+  min-width: 24px;
+}
+
+/**
+ * Checkboxes cannot grow their hit area with padding the way a link can —
+ * the box IS the control. The theme tree's 16px boxes therefore scale up
+ * on touch, where the label alone is not a reliable second target because
+ * its text can be a single short word.
+ */
+@media (pointer: coarse) {
+  .tap-check {
+    width: 24px;
+    height: 24px;
+    margin-top: 0;
+  }
+}
+
 /* Keyframes used by the skeleton shimmer and drawer entrance utilities. */
 
 @keyframes skeleton-shimmer {
