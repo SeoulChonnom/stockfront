@@ -82,6 +82,65 @@
   }
 }
 
+/**
+ * 착지 표시 — `src/lib/arrival-mark.ts` 참고.
+ *
+ * 채움을 `background-color`가 아니라 inset `box-shadow`로 칠하는 것이
+ * 핵심이다. 표시 대상 중에는 자기 배경을 이미 가진 것이 있고(유사 기사
+ * 그룹 멤버 행의 `--surface-2`), 배경색을 애니메이션하면 표시가 끝난 뒤
+ * 그 배경으로 돌아갈 값을 여기서 알아야 한다. inset 그림자는 배경 위에
+ * 얹혔다 사라지므로 대상이 무엇이든 원래 상태로 정확히 복귀한다. 그림자는
+ * 콘텐츠 뒤에 그려지므로 글자를 덮지도 않는다.
+ *
+ * 목록 순서가 곧 쌓임 순서다 — 1px 링을 먼저 적어 면 위에 남긴다.
+ *
+ * 앞 1/3을 꽉 찬 색으로 버틴다. 스크롤이 멈추는 순간과 눈이 그 지점을
+ * 찾는 순간 사이에는 간격이 있어서, 바로 빠지기 시작하면 표시가 가장
+ * 진했던 프레임을 아무도 못 본다.
+ */
+@keyframes arrival-mark {
+  0%,
+  32% {
+    box-shadow:
+      inset 0 0 0 1px var(--primary-line),
+      inset 0 0 0 100vmax var(--primary-soft);
+  }
+  100% {
+    box-shadow:
+      inset 0 0 0 1px transparent,
+      inset 0 0 0 100vmax transparent;
+  }
+}
+
+[data-arrived] {
+  animation: arrival-mark var(--dur-arrival) var(--ease) both;
+}
+
+/**
+ * 테마 전환 크로스페이드.
+ *
+ * 팔레트 전체가 한 프레임에 뒤집히면 전환이 아니라 결함처럼 읽힌다.
+ * 상시 전역 트랜지션은 호버·포커스까지 늘어지게 만드는 안티패턴이라,
+ * `setTheme`이 이 속성을 220ms 동안만 걸었다가 뗀다.
+ *
+ * `!important`가 필요 없다. 이 파일은 레이어 밖에 있고 Tailwind 유틸리티는
+ * `@layer utilities` 안에 있어서, 레이어 없는 선언이 캐스케이드에서 이긴다.
+ *
+ * `prefers-reduced-motion`에서는 위의 킬 스위치가 이 트랜지션을 0.01ms로
+ * 눌러 즉시 전환된다 — 그 사용자가 원하는 결과가 정확히 그것이다.
+ */
+:root[data-theme-changing],
+:root[data-theme-changing] *,
+:root[data-theme-changing] *::before,
+:root[data-theme-changing] *::after {
+  transition:
+    background-color var(--dur-theme) var(--ease),
+    border-color var(--dur-theme) var(--ease),
+    color var(--dur-theme) var(--ease),
+    fill var(--dur-theme) var(--ease),
+    box-shadow var(--dur-theme) var(--ease);
+}
+
 /* Keyframes used by the skeleton shimmer and drawer entrance utilities. */
 
 @keyframes skeleton-shimmer {
@@ -99,5 +158,17 @@
   }
   to {
     transform: translateX(0);
+  }
+}
+
+/* 드로어 뒤의 암막. 패널은 밀려 들어오는데 암막만 한 프레임에 55% 검정으로
+   꽂혀서, 앱에서 가장 거친 순간이었다. 패널보다 짧게(160ms) 끝내 패널이
+   도착할 때는 이미 자리를 잡고 있게 한다. */
+@keyframes overlay-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
   }
 }

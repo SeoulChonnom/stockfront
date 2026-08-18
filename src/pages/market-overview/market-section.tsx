@@ -52,7 +52,13 @@ export function MarketSection({
       className='flex min-w-0 scroll-mt-[calc(var(--topbar-height)+8px)] flex-col overflow-hidden rounded-[var(--r-lg)] border border-line bg-[color:var(--surface)]'
       id={marketSectionId(index)}
     >
-      <div className='flex flex-wrap items-baseline gap-x-3 gap-y-2 border-b border-line px-[18px] py-4'>
+      {/* 착지 표시는 카드 전체가 아니라 이 헤더 띠가 받는다
+          (`src/lib/arrival-mark.ts`의 `resolveHost`). 섹션 전체를 칠하면
+          화면 한 판이 물들어 표시가 아니라 상태로 읽힌다. */}
+      <div
+        className='flex flex-wrap items-baseline gap-x-3 gap-y-2 border-b border-line px-[18px] py-4'
+        data-arrival-host=''
+      >
         {/* Show the market scope before its name. */}
         {market.marketType ? (
           <span className='tnum rounded-[var(--r-sm)] border border-[color:var(--line-strong)] px-1.75 py-0.5 text-label font-semibold tracking-caps text-fg-soft'>

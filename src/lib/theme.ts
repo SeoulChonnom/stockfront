@@ -73,6 +73,38 @@ export function applyTheme(theme: Theme): void {
   updateThemeColorMeta(theme);
 }
 
+const THEME_CHANGE_ATTRIBUTE = 'data-theme-changing';
+/** `--dur-theme`과 같은 값. */
+const THEME_CHANGE_MS = 220;
+
+let themeChangeTimer: number | null = null;
+
+/**
+ * 팔레트가 바뀌는 동안만 전역 색 트랜지션을 켠다.
+ *
+ * `applyTheme`이 아니라 `setTheme`에만 있다. `applyTheme`은 첫 마운트와
+ * OS 테마 추종에서도 불리는데, 마운트 때 크로스페이드를 걸면 첫 화면이
+ * 이전 팔레트에서 페이드되는 것처럼 보인다 — 페이드해 올 이전 상태가
+ * 없는데도. 사용자가 직접 토글한 순간만 전환으로 보여 준다.
+ */
+function crossfadeTheme(): void {
+  if (typeof document === 'undefined' || typeof window === 'undefined') {
+    return;
+  }
+
+  const root = document.documentElement;
+
+  if (themeChangeTimer !== null) {
+    window.clearTimeout(themeChangeTimer);
+  }
+
+  root.setAttribute(THEME_CHANGE_ATTRIBUTE, '');
+  themeChangeTimer = window.setTimeout(() => {
+    themeChangeTimer = null;
+    root.removeAttribute(THEME_CHANGE_ATTRIBUTE);
+  }, THEME_CHANGE_MS);
+}
+
 export function setTheme(theme: Theme): void {
   if (typeof window !== 'undefined') {
     try {
@@ -82,6 +114,7 @@ export function setTheme(theme: Theme): void {
     }
   }
 
+  crossfadeTheme();
   applyTheme(theme);
 }
 

@@ -13,6 +13,7 @@ import { Pagination } from '@/components/ui/pagination';
 import type { ArchiveListParams } from '@/lib/api/archive';
 import { ApiError } from '@/lib/api/client';
 import type { ArchiveStatusResponse, ThemeNodeResponse } from '@/lib/api/types';
+import { markArrival } from '@/lib/arrival-mark';
 import type { Audience } from '@/lib/audience-copy';
 import {
   errorCodeCopy,
@@ -317,6 +318,10 @@ export function ArchiveSearchPage({
     if (typeof heading?.scrollIntoView === 'function') {
       heading.scrollIntoView({ block: 'start' });
     }
+    // 필터를 적용하거나 페이지를 넘기면 표 내용이 통째로 갈린다. 표시는
+    // "여기가 방금 바뀐 결과"라는 뜻이며, 제목 한 줄이 아니라 개수·기간이
+    // 함께 있는 머리줄 전체가 받는다.
+    markArrival(heading);
   }
 
   function handleApply(next: ArchiveFilterDraft) {
@@ -454,7 +459,10 @@ function ArchiveResultsCard({
       aria-busy={isInitialLoading || undefined}
       className='flex min-w-0 flex-col overflow-hidden'
     >
-      <div className='flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-line px-[18px] py-3.5'>
+      <div
+        className='flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-line px-[18px] py-3.5'
+        data-arrival-host=''
+      >
         <div className='flex flex-wrap items-center gap-x-3 gap-y-2'>
           <h2
             className='m-0 scroll-mt-24 text-h2 font-semibold text-fg focus:outline-none'

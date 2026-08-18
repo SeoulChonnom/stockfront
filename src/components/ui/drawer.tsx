@@ -35,7 +35,7 @@ export function Drawer({
       {/* Real button keeps overlay dismissal keyboard-operable. */}
       <button
         aria-hidden='true'
-        className='absolute inset-0 bg-[rgba(8,17,31,.55)]'
+        className='absolute inset-0 animate-[overlay-fade-in_160ms_var(--ease)] bg-[rgba(8,17,31,.55)]'
         data-dismiss-overlay=''
         onClick={onClose}
         tabIndex={-1}

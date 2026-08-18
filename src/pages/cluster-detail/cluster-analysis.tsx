@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 
 import { InlineAlert } from '@/components/state';
+import { markArrival } from '@/lib/arrival-mark';
 import { cn } from '@/lib/utils';
 
 import type {
@@ -305,6 +306,7 @@ function focusArticleRow(articleId: number) {
     if (typeof target.scrollIntoView === 'function') {
       target.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
+    markArrival(target);
     return;
   }
 

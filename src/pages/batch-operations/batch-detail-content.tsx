@@ -253,7 +253,7 @@ export function BatchDetailContent({
       <div className='flex flex-wrap items-center gap-2 pt-1'>
         {snapshotHref ? (
           <a
-            className='inline-flex min-h-10 items-center rounded-[var(--r-md)] border border-[color:var(--line-strong)] px-3.5 text-body font-semibold text-fg hover:-translate-y-px'
+            className='inline-flex min-h-10 items-center rounded-[var(--r-md)] border border-[color:var(--line-strong)] px-3.5 text-body font-semibold text-fg transition-[scale,background-color] duration-(--dur-fast) ease-(--ease) hover:bg-[color:var(--surface-2)] active:scale-[0.98]'
             href={withBasePath(snapshotHref)}
             onClick={createNavigateHandler(snapshotHref)}
           >

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 
 import { EmptyState, InlineAlert } from '@/components/state';
 import { Button } from '@/components/ui/button';
+import { markArrival } from '@/lib/arrival-mark';
 
 import type { ArticleGrouping, ClusterArticle } from '../../lib/view-models';
 import {
@@ -145,9 +146,13 @@ function ClusterArticleRow({
   // `ClusterAnalysis`'s sentence-level citations (A-3 "근거 기사 참조 UX"):
   // a citation click scrolls here and calls `.focus()`, expanding this
   // row's similar-article group first if it's currently collapsed (B-4,
-  // A-5 — see `article-focus-event.ts`). The row isn't a natural tab stop,
-  // but `base.css`'s global `:focus-visible` rule still rings it once
-  // programmatically focused — no local outline override needed.
+  // A-5 — see `article-focus-event.ts`). The row isn't a natural tab stop.
+  //
+  // 예전 주석은 전역 `:focus-visible` 규칙이 프로그램 포커스에도 링을
+  // 그려 준다고 적혀 있었는데, 측정해 보니 사실이 아니다: 마우스로 인용
+  // 칩을 누르면 마지막 입력이 포인터라 이 행은 `:focus-visible`에 걸리지
+  // 않는다(`outline-style: none`). 키보드 경로는 여전히 링이 뜨고, 마우스
+  // 경로는 `markArrival`의 착지 표시가 받는다.
   // `scroll-mt-24` matches the anchor-offset convention already used for
   // `archive-search-page.tsx`'s results heading.
   return (
@@ -340,6 +345,7 @@ export function ClusterArticlesList({
       if (typeof target.scrollIntoView === 'function') {
         target.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
+      markArrival(target);
       setPendingFocusArticleId(null);
       return;
     }

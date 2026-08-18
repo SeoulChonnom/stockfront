@@ -3,6 +3,7 @@ import {
   buildScrollKey,
   getScrollPosition,
 } from '@/components/shell/scroll-restoration';
+import { markArrival } from '@/lib/arrival-mark';
 import { useCapabilities } from '@/lib/capabilities';
 import { buildUrl, navigate, useUrlState } from '@/lib/router';
 import type { MarketSnapshot } from '@/lib/view-models';
@@ -153,6 +154,9 @@ export function MarketOverviewPage({
       section?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       // 스크롤은 위에서 이미 했으므로 포커스가 다시 스크롤하지 않게 막는다.
       heading?.focus({ preventScroll: true });
+      // 마우스로 온 사람에게는 포커스 링이 뜨지 않는다 — 표시가 없으면
+      // 화면이 굴러간 뒤 어디를 보라는 신호가 하나도 없다.
+      markArrival(section);
     });
 
     return () => cancelAnimationFrame(frame);
