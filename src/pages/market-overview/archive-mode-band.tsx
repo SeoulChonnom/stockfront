@@ -1,4 +1,6 @@
+import { TONE_SURFACE } from '@/components/state/tone-surface';
 import { Button } from '@/components/ui/button';
+import { useCapabilities } from '@/lib/capabilities';
 import { navigate } from '@/lib/router';
 
 import { buildArchiveSearchHref, type FilterQueryParams } from './navigation';
@@ -58,17 +60,27 @@ export function ArchiveModeBand({
   filterQuery,
   navigation,
 }: ArchiveModeBandProps) {
+  const { can } = useCapabilities();
+  const canViewOps = can('ops.view');
   const prevDate = adjacentDate(navigation, 'previous');
   const nextDate = adjacentDate(navigation, 'next');
   const prevDisabled = navigation.status !== 'ready' || prevDate === null;
   const nextDisabled = navigation.status !== 'ready' || nextDate === null;
   return (
-    <div className='flex flex-wrap items-center gap-x-3.5 gap-y-2.5 rounded-[var(--r-lg)] border border-[color:var(--warning-line)] border-l-4 border-l-[color:var(--warning)] bg-[color:var(--warning-soft)] px-4 py-3'>
-      <span className='text-body-sm font-bold tracking-caps text-[color:var(--warning)] uppercase'>
+    <div
+      // 이 밴드는 경고가 아니라 **모드 표시**다 — "지금 보는 것은 과거
+      // 스냅샷"이라는 사실과 날짜 이동 수단을 담는다. 예전에는 호박색이라
+      // 같은 화면에 함께 뜨는 `PartialBanner`(진짜 데이터 누락 경고)와
+      // 색·모양이 겹쳤고, 그러면 "과거를 보는 중"과 "데이터가 빠졌다"가
+      // 한 신호로 읽힌다. PRODUCT.md에서 아카이브는 예외 상태가 아니라
+      // 정식 모드이므로 경고색을 쓸 이유도 없다.
+      className={`flex flex-wrap items-center gap-x-3.5 gap-y-2.5 rounded-[var(--r-lg)] border px-4 py-3 ${TONE_SURFACE.info}`}
+    >
+      <span className='text-body-sm font-bold tracking-caps text-[color:var(--info)] uppercase'>
         아카이브 스냅샷
       </span>
       <span className='tnum text-body font-semibold'>{businessDate}</span>
-      {pageId !== null && versionNo !== null ? (
+      {canViewOps && pageId !== null && versionNo !== null ? (
         <span className='tnum text-label text-fg-soft'>
           pageId {pageId} · v{versionNo}
         </span>

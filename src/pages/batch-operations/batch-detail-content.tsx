@@ -1,5 +1,6 @@
 import type { RefObject } from 'react';
 import { InlineAlert, StatusBadge } from '@/components/state';
+import { TONE_SURFACE } from '@/components/state/tone-surface';
 import { BatchTypeBadge } from '@/components/ui/batch-type-badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -198,7 +199,9 @@ export function BatchDetailContent({
       ) : null}
 
       {hasError ? (
-        <div className='min-w-0 rounded-[var(--r-md)] border border-[color:var(--danger-line)] bg-[color:var(--danger-soft)] p-3 shadow-[inset_3px_0_0_var(--danger)]'>
+        <div
+          className={`min-w-0 rounded-[var(--r-md)] border p-3 ${TONE_SURFACE.danger}`}
+        >
           {run.errorCode ? (
             <p className='mono m-0 font-semibold text-[color:var(--danger)]'>
               {run.errorCode}

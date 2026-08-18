@@ -2,24 +2,9 @@ import type { AriaRole, ReactNode } from 'react';
 
 import { cn } from '@/lib/utils';
 
-type AlertTone = 'danger' | 'warning' | 'info' | 'success';
+import { type SurfaceTone, TONE_ACCENT, TONE_SURFACE } from './tone-surface';
 
-const TONE_CLASSES: Readonly<Record<AlertTone, string>> = {
-  danger:
-    'border-[color:var(--danger-line)] bg-[color:var(--danger-soft)] border-l-[color:var(--danger)]',
-  warning:
-    'border-[color:var(--warning-line)] bg-[color:var(--warning-soft)] border-l-[color:var(--warning)]',
-  info: 'border-[color:var(--info-line)] bg-[color:var(--info-soft)]',
-  success:
-    'border-[color:var(--success-line)] bg-[color:var(--success-soft)] border-l-[color:var(--success)]',
-};
-
-const TONE_TITLE_CLASSES: Readonly<Record<AlertTone, string>> = {
-  danger: 'text-[color:var(--danger)]',
-  warning: 'text-[color:var(--warning)]',
-  info: 'text-[color:var(--info)]',
-  success: 'text-[color:var(--success)]',
-};
+type AlertTone = SurfaceTone;
 
 export type InlineAlertProps = {
   tone: AlertTone;
@@ -49,7 +34,7 @@ export function InlineAlert({
         <h3
           className={cn(
             'm-0 mb-1 text-card-heading font-semibold',
-            TONE_TITLE_CLASSES[tone]
+            TONE_ACCENT[tone]
           )}
         >
           {title}
@@ -71,8 +56,8 @@ export function InlineAlert({
       aria-live={ariaLive}
       className={cn(
         'min-w-0 rounded-[var(--r-md)] border',
-        isInfo ? 'flex gap-2.5 py-3 px-4' : 'border-l-4 p-4',
-        TONE_CLASSES[tone],
+        isInfo ? 'flex gap-2.5 py-3 px-4' : 'p-4',
+        TONE_SURFACE[tone],
         className
       )}
       role={resolvedRole}

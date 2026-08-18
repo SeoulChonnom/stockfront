@@ -42,7 +42,8 @@ describe('audience-copy', () => {
       '운영 콘솔 배치 재실행 재수집 provider 임계값 로그 파이프라인 오류';
 
     const userFacing = [
-      noHeadlineCopy(user),
+      noHeadlineCopy(user, { hasMarketSections: true }),
+      noHeadlineCopy(user, { hasMarketSections: false }),
       noNarrativeCopy(user),
       noIndexDataCopy(user),
       partialBannerCopy(user).title,
@@ -99,6 +100,21 @@ describe('audience-copy', () => {
     expect(unknownErrorMessageCopy(operator, '')).toBe(
       '알 수 없는 오류가 발생했습니다.'
     );
+  });
+
+  it('never points at market data that is not on the page', () => {
+    // FAILED 스냅샷(`markets: []`)에서 "아래 …확인할 수 있습니다"라고
+    // 안내하면 사용자는 없는 데이터를 찾으러 내려간다.
+    for (const audience of [user, operator]) {
+      const withoutSections = noHeadlineCopy(audience, {
+        hasMarketSections: false,
+      });
+      expect(withoutSections).not.toContain('아래');
+      expect(withoutSections).not.toContain('확인');
+    }
+
+    // 헤드라인만 빠진 경우에는 반대로 남은 데이터를 안내해야 한다.
+    expect(noHeadlineCopy(user, { hasMarketSections: true })).toContain('아래');
   });
 
   it("gives a regular user's error presentation a null code and keeps the operator's code intact", () => {

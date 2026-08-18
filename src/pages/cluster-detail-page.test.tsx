@@ -110,6 +110,39 @@ afterEach(() => {
   mockUseClusterDetail.mockReset();
 });
 
+describe('ClusterDetailPage — 돌아갈 곳', () => {
+  it('offers one action when the back link already points at this cluster’s own brief', () => {
+    // 진입 경로 없이 직접 들어오면 "돌아가기"의 목적지가 이 클러스터의
+    // 기준일 브리프가 된다. 그 옆에 같은 곳으로 가는 버튼을 하나 더 두면
+    // 선택지가 둘로 보이지만 실제로는 하나다.
+    setLocation();
+    mockReady(baseDetail());
+
+    render(<ClusterDetailPage clusterId='cluster-1' />);
+
+    expect(
+      screen.getByRole('button', { name: /해당 날짜 브리프 열기/ })
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /시장 브리프 보기/ })
+    ).not.toBeInTheDocument();
+  });
+
+  it('keeps both actions when they lead to different places', () => {
+    setLocation('?origin=latest');
+    mockReady(baseDetail());
+
+    render(<ClusterDetailPage clusterId='cluster-1' />);
+
+    expect(
+      screen.getByRole('button', { name: /최신 브리프로 돌아가기/ })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /시장 브리프 보기/ })
+    ).toBeInTheDocument();
+  });
+});
+
 describe('ClusterDetailPage', () => {
   it('renders only http/https URLs as real links, and only a distinct mirror URL as 네이버 미러', () => {
     setLocation('?origin=latest');

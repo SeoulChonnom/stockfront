@@ -12,7 +12,26 @@ export function serviceTagline(audience: Audience): string {
     : 'AI 시장 브리프';
 }
 
-export function noHeadlineCopy(audience: Audience): string {
+/**
+ * 헤드라인이 비었을 때 `<h1>` 자리에 들어가는 문장.
+ *
+ * **아래에 시장 섹션이 실제로 있는지**를 받아야 한다. 예전에는 인자가
+ * `audience` 하나뿐이어서 어떤 경우에도 "아래 시장별 지수와 이슈는 그대로
+ * 확인할 수 있습니다"라고 안내했는데, FAILED 스냅샷(`markets: []`)에서는
+ * 그 아래에 아무 것도 없다. 사용자는 없는 데이터를 찾으러 내려갔다.
+ *
+ * 시장 섹션이 없을 때는 안내를 하지 않는다 — 그 자리는 페이지의 제목이고,
+ * 원인과 다음 행동은 바로 아래 `EmptyMarketsPanel`이 이미 담당한다. 같은
+ * 말을 두 번 하면 어느 쪽이 진짜인지 알 수 없어진다.
+ */
+export function noHeadlineCopy(
+  audience: Audience,
+  context: { hasMarketSections: boolean }
+): string {
+  if (!context.hasMarketSections) {
+    return '이 날짜의 브리프가 없습니다';
+  }
+
   return audience.canViewOps
     ? '글로벌 헤드라인이 생성되지 않았습니다. AI 요약 단계가 실패했을 수 있습니다 — 아래 상태와 배치 로그에서 원인을 확인하세요.'
     : '오늘의 헤드라인이 아직 준비되지 않았습니다. 아래 시장별 지수와 이슈는 그대로 확인할 수 있습니다.';

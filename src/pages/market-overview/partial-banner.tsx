@@ -1,3 +1,4 @@
+import { TONE_ACCENT, TONE_SURFACE } from '@/components/state/tone-surface';
 import { Button } from '@/components/ui/button';
 import {
   DescriptionList,
@@ -37,8 +38,16 @@ export function PartialBanner({
   snapshot: MarketSnapshot;
   canViewOps: boolean;
 }) {
+  // "일부 데이터가 누락됐다"는 말은 **일부 데이터가 있을 때만** 참이다.
+  // 예전에는 `partialMessage`만 있으면 떴는데, FAILED 스냅샷도 그 필드를
+  // 채워 보내므로 시장 섹션이 하나도 없는 화면에 "일부 누락 · 참고용으로
+  // 제공됩니다"라는 호박색 배너가 붙었다. 사용자는 남은 데이터를 찾으러
+  // 내려갔다가 빈 화면을 만났다. 전체 실패는 `EmptyMarketsPanel`이 사실
+  // 그대로 설명한다.
+  const hasMarketSections = snapshot.markets.length > 0;
   const shouldShow =
-    snapshot.status === 'partial' || Boolean(snapshot.partialMessage);
+    hasMarketSections &&
+    (snapshot.status === 'partial' || Boolean(snapshot.partialMessage));
 
   if (!shouldShow) {
     return null;
@@ -50,13 +59,10 @@ export function PartialBanner({
   return (
     <section
       aria-labelledby='partial-banner-heading'
-      className='rounded-[var(--r-lg)] border border-[color:var(--warning-line)] border-l-4 border-l-[color:var(--warning)] bg-[color:var(--surface)] px-[18px] py-4'
+      className={`rounded-[var(--r-lg)] border px-[18px] py-4 ${TONE_SURFACE.warning}`}
     >
       <div className='flex items-start gap-2'>
-        <span
-          aria-hidden='true'
-          className='font-bold text-[color:var(--warning)]'
-        >
+        <span aria-hidden='true' className={`font-bold ${TONE_ACCENT.warning}`}>
           !
         </span>
         <div className='min-w-0 flex-1'>

@@ -653,7 +653,9 @@ describe('MarketOverviewPage — 글로벌 헤드라인', () => {
 });
 
 describe('MarketOverviewPage — 데이터 정보', () => {
-  it('moves pageId/versionNo/pipeline counts into a collapsed 데이터 정보 block at the bottom of the page', () => {
+  it('moves pageId/versionNo/pipeline counts into a collapsed 데이터 정보 block for an operator', () => {
+    setRoleOverride('admin');
+
     render(
       <MarketOverviewPage
         mode='latest'
@@ -673,9 +675,61 @@ describe('MarketOverviewPage — 데이터 정보', () => {
     expect(details).toHaveTextContent('pageId 501 · v3');
     expect(details).toHaveTextContent('마지막 갱신 2026-03-17 09:31 KST');
   });
+
+  it('keeps the pipeline counts and internal ids away from a regular user', () => {
+    setRoleOverride('user');
+
+    render(
+      <MarketOverviewPage
+        mode='latest'
+        now={FIXED_NOW}
+        snapshot={buildSnapshot()}
+      />
+    );
+
+    const details = screen.getByText('데이터 정보').closest('details');
+    expect(details).not.toBeNull();
+    // 갱신 시각은 사용자에게도 의미가 있으므로 남는다.
+    expect(details).toHaveTextContent('마지막 갱신 2026-03-17 09:31 KST');
+    expect(details).not.toHaveTextContent('pageId');
+    expect(details).not.toHaveTextContent('클러스터 21건');
+  });
 });
 
 describe('MarketOverviewPage — markets:[] 빈 상태', () => {
+  it('never shows a green 준비 완료 badge over a page with no market data', () => {
+    // 백엔드는 `status: 'ready'`인데 `markets`가 빈 스냅샷을 보낼 수 있다.
+    // 배치 상태를 그대로 그리면 화면에서 가장 먼저 읽히는 요소가 화면
+    // 내용과 정반대를 말한다.
+    setRoleOverride('user');
+    render(
+      <MarketOverviewPage
+        mode='latest'
+        now={FIXED_NOW}
+        snapshot={buildSnapshot({ status: 'ready', markets: [] })}
+      />
+    );
+
+    expect(screen.queryByText('준비 완료')).not.toBeInTheDocument();
+    expect(screen.getByText('부분 생성')).toBeInTheDocument();
+    expect(
+      screen.getByText('시장 섹션이 생성되지 않았습니다')
+    ).toBeInTheDocument();
+  });
+
+  it('keeps the 준비 완료 badge when the page actually carries its markets', () => {
+    setRoleOverride('user');
+    render(
+      <MarketOverviewPage
+        mode='latest'
+        now={FIXED_NOW}
+        snapshot={buildSnapshot({ status: 'ready' })}
+      />
+    );
+
+    expect(screen.getByText('준비 완료')).toBeInTheDocument();
+  });
+
   // `EmptyMarketsPanel`'s reason text now routes through
   // `emptyMarketsReasonCopy` (`src/lib/audience-copy.ts`), so FAILED/non-FAILED
   // and admin/user are each asserted against the copy that audience should

@@ -5,12 +5,16 @@ import { formatDurationKo } from './format-batch';
 
 type TileTone = 'danger' | 'warning' | 'neutral';
 
-const TILE_BAR_CLASSES: Readonly<Record<TileTone, string>> = {
-  danger: 'border-l-[3px] border-l-[color:var(--danger)]',
-  warning: 'border-l-[3px] border-l-[color:var(--warning)]',
-  neutral: '',
-};
-
+/**
+ * 타일은 색 막대를 달지 않는다.
+ *
+ * 예전에는 실패·부분 실패 타일 왼쪽에 3px 색 막대가 있었다. 그런데 바로
+ * 아래 숫자가 이미 같은 색이라 막대는 같은 말을 두 번 하고 있었고, 성공
+ * 타일에는 막대가 없어 세 타일이 서로 다른 골격을 갖고 있었다. 같은 화면의
+ * 주의 배너에서도 굵은 좌측 막대를 걷어냈으므로
+ * (`src/components/state/tone-surface.ts`), 여기만 남기면 한 화면 안에서
+ * 관용구가 갈린다. 톤은 숫자 색이 그대로 전한다.
+ */
 const TILE_NUMBER_CLASSES: Readonly<Record<TileTone, string>> = {
   danger: 'text-[color:var(--danger)]',
   warning: 'text-[color:var(--warning)]',
@@ -29,13 +33,7 @@ function SummaryTile({
   tone: TileTone;
 }) {
   return (
-    <Card
-      className={cn(
-        // Keep tile spacing independent from its status tone.
-        'min-w-0 px-2 py-2 min-[641px]:px-4 min-[641px]:py-3.5',
-        TILE_BAR_CLASSES[tone]
-      )}
-    >
+    <Card className='min-w-0 px-2 py-2 min-[641px]:px-4 min-[641px]:py-3.5'>
       <p className='m-0 text-label font-semibold tracking-caps text-faint uppercase'>
         {label}
       </p>

@@ -24,12 +24,19 @@ export function ClusterHeader({
   origin: string | null;
 }) {
   const back = getOriginLink(origin, detail.businessDate);
+  const ownBriefHref = `/market/archive/${detail.businessDate}`;
   const backLabel =
     origin === 'latest'
       ? '최신 브리프로 돌아가기'
       : origin
         ? `${origin} 브리프로 돌아가기`
         : '해당 날짜 브리프 열기';
+
+  // 진입 경로 없이 직접 들어오면 `getOriginLink`가 이 클러스터의 기준일
+  // 브리프를 되돌아갈 곳으로 준다 — 그럼 아래 "…시장 브리프 보기"와 목적지가
+  // 같아져서, 같은 곳으로 가는 버튼 두 개가 나란히 놓인다. 그때는 하나만
+  // 남긴다. 어디로 갈지 고르라고 하면서 선택지가 하나뿐인 셈이기 때문이다.
+  const showOwnBriefShortcut = back.href !== ownBriefHref;
 
   return (
     <Card className='flex min-w-0 flex-col gap-3.5 p-5'>
@@ -84,13 +91,15 @@ export function ClusterHeader({
           <ArrowLeft aria-hidden='true' size={16} />
           {backLabel}
         </Button>
-        <Button
-          onClick={() => navigate(`/market/archive/${detail.businessDate}`)}
-          type='button'
-          variant='secondary'
-        >
-          {detail.businessDate} 시장 브리프 보기
-        </Button>
+        {showOwnBriefShortcut ? (
+          <Button
+            onClick={() => navigate(ownBriefHref)}
+            type='button'
+            variant='secondary'
+          >
+            {detail.businessDate} 시장 브리프 보기
+          </Button>
+        ) : null}
       </div>
     </Card>
   );

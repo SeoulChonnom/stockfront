@@ -39,7 +39,8 @@ describe('ArchiveResultsTable', () => {
       'href',
       expectedHref
     );
-    expect(screen.getByText('pageId 42')).toBeInTheDocument();
+    // `pageId`는 내부 식별자다 — 운영자에게만 보인다.
+    expect(screen.queryByText('pageId 42')).not.toBeInTheDocument();
   });
 
   it('marks FAILED rows with the danger tone and shows the failure reason as a subline to an operator', () => {

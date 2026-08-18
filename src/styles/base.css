@@ -44,9 +44,15 @@
   --danger: #be3348;
   --danger-soft: #fdecef;
   --danger-line: #f0b8c2;
-  --info: #0f5bff;
-  --info-soft: #eaf1ff;
-  --info-line: #bdd2ff;
+  /* 알림 색은 동작 색과 달라야 한다. 예전에는 `--info`가 `--primary`와
+     글자 그대로 같은 값(#0f5bff)이었고 `--info-soft`/`--info-line`도
+     `--primary-*`와 같았다. 그래서 "실행 중" 배지와 안내 알림이 기본 CTA와
+     구별되지 않았다 — 누를 것이 아닌데 누를 것처럼 보였다.
+     청록 쪽으로 옮기면 동작 파랑(`--primary`)뿐 아니라 하락 파랑(`--down`
+     #0364b4)과도 멀어져, 파란 계열 세 개가 서로 섞이지 않는다. */
+  --info: #0b6a86;
+  --info-soft: #e3f2f7;
+  --info-line: #a5d3e2;
   --neutral: #4a6180;
   --neutral-soft: #eef1f6;
   --neutral-line: #d5dde8;
@@ -226,9 +232,9 @@
   --danger: #ff7c91;
   --danger-soft: #39191f;
   --danger-line: #6b2c37;
-  --info: #6b9cff;
-  --info-soft: #17253f;
-  --info-line: #304b7c;
+  --info: #63c8e6;
+  --info-soft: #102a34;
+  --info-line: #235a6e;
   --neutral: #a3b6d0;
   --neutral-soft: #17233a;
   --neutral-line: #2a3b5c;

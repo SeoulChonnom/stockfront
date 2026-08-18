@@ -205,7 +205,7 @@ export function MarketOverviewPage({
         </>
       )}
 
-      <PageDataDetails snapshot={snapshot} />
+      <PageDataDetails canViewOps={canViewOps} snapshot={snapshot} />
     </div>
   );
 }

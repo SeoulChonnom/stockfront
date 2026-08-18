@@ -1,4 +1,5 @@
 import { Skeleton } from '@/components/state';
+import { TONE_SURFACE } from '@/components/state/tone-surface';
 import { Button } from '@/components/ui/button';
 
 import { ApiError } from '../lib/api/client';
@@ -137,7 +138,7 @@ function ClusterDetailErrorState({
   return (
     <section
       aria-labelledby='page-title'
-      className='min-w-0 rounded-[var(--r-lg)] border border-[color:var(--danger-line)] border-l-4 border-l-[color:var(--danger)] bg-[color:var(--surface)] p-5'
+      className={`min-w-0 rounded-[var(--r-lg)] border p-5 ${TONE_SURFACE.danger}`}
       role='alert'
     >
       {badge ? (

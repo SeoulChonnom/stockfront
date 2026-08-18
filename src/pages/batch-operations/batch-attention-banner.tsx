@@ -1,3 +1,4 @@
+import { TONE_SURFACE } from '@/components/state/tone-surface';
 import { Button } from '@/components/ui/button';
 
 export function BatchAttentionBanner({
@@ -12,7 +13,9 @@ export function BatchAttentionBanner({
   onFilterPartial: () => void;
 }) {
   return (
-    <div className='flex min-w-0 flex-wrap items-center gap-2.5 rounded-[var(--r-lg)] border border-[color:var(--danger-line)] border-l-4 border-l-[color:var(--danger)] bg-[color:var(--surface)] px-4 py-3'>
+    <div
+      className={`flex min-w-0 flex-wrap items-center gap-2.5 rounded-[var(--r-lg)] border px-4 py-3 ${TONE_SURFACE.danger}`}
+    >
       <p className='wrap-anywhere m-0 text-body font-semibold text-fg'>
         {failedCount}건 실패, {partialCount}건 부분 실패 — 확인이 필요합니다.
       </p>

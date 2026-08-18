@@ -46,13 +46,28 @@ function contrast(a, b) {
 
 /** 앱에서 실제로 나타나는 조합만 검사한다. */
 const BACKGROUNDS = ['surface', 'bg', 'surface-2'];
-const NORMAL_TEXT = ['text', 'text-soft', 'text-faint', 'primary', 'up', 'down', 'warning', 'danger', 'success'];
+const NORMAL_TEXT = ['text', 'text-soft', 'text-faint', 'primary', 'info', 'up', 'down', 'warning', 'danger', 'success'];
+/**
+ * 톤 표면 위의 본문.
+ *
+ * 알림·배너가 `*-soft` 바탕을 쓰므로(`src/components/state/tone-surface.ts`)
+ * 제목(톤 색)뿐 아니라 **본문(`text` / `text-soft`)도 그 바탕 위에 놓인다.**
+ * 이 조합이 목록에 없으면 감사는 통과하는데 화면은 안 읽히는 상태가 될 수
+ * 있다.
+ */
 const PAIRS = [
   ['primary-fg', 'primary'],
   ['primary', 'primary-soft'],
+  ['info', 'info-soft'],
   ['warning', 'warning-soft'],
   ['danger', 'danger-soft'],
   ['success', 'success-soft'],
+  ...['info-soft', 'warning-soft', 'danger-soft', 'success-soft'].flatMap(
+    (soft) => [
+      ['text', soft],
+      ['text-soft', soft],
+    ]
+  ),
 ];
 
 const AA_NORMAL = 4.5;

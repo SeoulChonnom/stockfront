@@ -19,12 +19,43 @@ function buildSnapshot(
     keyPoints: [],
     issues: [],
     navigation: { previousBusinessDate: null, nextBusinessDate: null },
-    markets: [],
+    // "일부 누락"은 일부가 있을 때만 참이므로 배너는 시장 섹션이 하나라도
+    // 있을 때만 뜬다. 기본 픽스처가 `markets: []`이면 실제로는 올 수 없는
+    // 조합(부분 생성인데 시장이 통째로 없음)을 검증하게 된다.
+    markets: [
+      {
+        label: '미국 증시',
+        marketType: 'US',
+        summaryTitle: null,
+        summaryBody: null,
+        indices: [],
+        clusters: [],
+      },
+    ],
     ...overrides,
   };
 }
 
 describe('PartialBanner', () => {
+  it('stays silent when the whole page failed — "일부 누락"은 일부가 있어야 참이다', () => {
+    // FAILED 스냅샷도 `partialMessage`를 채워 보낸다. 예전에는 그것만 보고
+    // 배너를 띄워서, 시장 섹션이 하나도 없는 화면에 "일부 데이터가 누락되어
+    // 참고용으로 제공됩니다"가 붙었다 — 남은 데이터를 찾아 내려가면 아무
+    // 것도 없다. 전체 실패는 `EmptyMarketsPanel`이 설명한다.
+    const { container } = render(
+      <PartialBanner
+        canViewOps={false}
+        snapshot={buildSnapshot({
+          status: 'failed',
+          markets: [],
+          partialMessage: '수집 단계 실패',
+        })}
+      />
+    );
+
+    expect(container).toBeEmptyDOMElement();
+  });
+
   it('renders nothing for a ready page with no partialMessage/issues', () => {
     const { container } = render(
       <PartialBanner

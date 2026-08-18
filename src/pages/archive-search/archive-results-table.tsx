@@ -150,9 +150,13 @@ export function ArchiveResultsTable({
                     {/* Render the business date in monospaced ISO format. */}
                     {record.businessDate}
                   </a>
-                  <div className='tnum mt-0 text-label text-faint'>
-                    pageId {record.pageId}
-                  </div>
+                  {/* 내부 식별자. 바로 아래 `ReasonSubline`과 같은 게이트를
+                      쓴다 — 이 줄만 무조건 렌더링되고 있었다. */}
+                  {canViewOps ? (
+                    <div className='tnum mt-0 text-label text-faint'>
+                      pageId {record.pageId}
+                    </div>
+                  ) : null}
                 </TableCell>
                 <TableCell className='py-3 px-3 align-top'>
                   <a

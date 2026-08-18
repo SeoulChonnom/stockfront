@@ -6,5 +6,9 @@
     "e2e/utils/overflow.ts",
     "e2e/utils/viewports.ts"
   ],
-  "ignoreFiles": [".claude/skills/pixel-perfect-react-ui/**"]
+  "ignoreFiles": [
+    ".agent/**",
+    ".agents/skills/!(pixel-perfect-react-ui)/**",
+    ".claude/**"
+  ]
 }
