@@ -147,19 +147,18 @@ export function ArchiveSearchFilters({
       <Card className='flex flex-col gap-3' padding='inset'>
         {/* Keep the heading and applied summary in one wrapping row. */}
         <div className='flex flex-wrap items-center gap-2.5'>
-          {/* Dense card headings use 14–15px rather than the shared 17px scale. */}
           <h2
-            className='m-0 text-[14px] font-semibold text-fg'
+            className='m-0 text-label font-semibold tracking-caps text-fg-soft uppercase'
             id='archive-filter-heading'
           >
             필터
           </h2>
-          <span className='mono wrap-anywhere text-caption text-faint'>
+          <span className='tnum wrap-anywhere text-body-sm text-faint'>
             적용됨 · {applied.from} ~ {applied.to} ·{' '}
             {getStatusSummaryLabel(applied.status)}
           </span>
           {applied.market || applied.themes.length > 0 || applied.q ? (
-            <span className='mono wrap-anywhere text-caption text-faint'>
+            <span className='tnum wrap-anywhere text-body-sm text-faint'>
               {applied.market ? `시장 ${applied.market}` : '시장 전체'} ·{' '}
               {getAppliedThemeSummary()}
               {applied.q ? ` · 검색어 ${applied.q}` : ''}
@@ -176,7 +175,7 @@ export function ArchiveSearchFilters({
           <FilterField error={errors.from} htmlFor='from' label='시작일'>
             <Input
               className={cn(
-                'mono rounded-[var(--r-md)] bg-[color:var(--surface)] px-3 py-0 text-body',
+                'tnum rounded-[var(--r-md)] bg-[color:var(--surface)] px-3 py-0 text-body',
                 !errors.from && 'border-[color:var(--line-strong)]'
               )}
               invalid={Boolean(errors.from)}
@@ -187,7 +186,7 @@ export function ArchiveSearchFilters({
           <FilterField error={errors.to} htmlFor='to' label='종료일'>
             <Input
               className={cn(
-                'mono rounded-[var(--r-md)] bg-[color:var(--surface)] px-3 py-0 text-body',
+                'tnum rounded-[var(--r-md)] bg-[color:var(--surface)] px-3 py-0 text-body',
                 !errors.to && 'border-[color:var(--line-strong)]'
               )}
               invalid={Boolean(errors.to)}
@@ -230,11 +229,11 @@ export function ArchiveSearchFilters({
             />
           </FilterField>
           <fieldset className='min-w-0 rounded-[var(--r-md)] border border-line p-3 min-[1181px]:col-span-3'>
-            <legend className='px-1 text-[12px] font-semibold text-fg-soft'>
+            <legend className='px-1 text-label font-semibold text-fg-soft'>
               테마
             </legend>
             <p
-              className='m-0 mb-2 text-caption text-faint'
+              className='m-0 mb-2 text-body-sm text-faint'
               id='archive-theme-help'
             >
               부모와 자식 테마를 각각 선택할 수 있습니다. 선택한 테마는 최대

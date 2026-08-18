@@ -52,13 +52,13 @@ export function MarketOverviewRouteShell({
             {isArchive ? '아카이브 스냅샷' : '최신 브리프'}
           </span>
           <span className='text-body-sm text-faint'>기준일</span>
-          <span className='mono text-[14px] font-semibold'>
+          <span className='tnum text-body font-semibold'>
             {businessDate ?? '확인할 수 없음'}
           </span>
         </div>
 
         <h1
-          className='m-0 text-[15px] font-semibold tracking-[0.01em] text-faint'
+          className='m-0 text-h1 font-semibold text-fg'
           id='page-title'
           tabIndex={-1}
         >

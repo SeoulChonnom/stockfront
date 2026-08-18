@@ -146,7 +146,7 @@ export interface TableProps extends TableHTMLAttributes<HTMLTableElement> {
 export function Table({ className, minWidth, style, ...props }: TableProps) {
   return (
     <table
-      className={cn('w-full caption-bottom text-[13px]', className)}
+      className={cn('w-full caption-bottom text-body-sm', className)}
       style={{ ...style, minWidth }}
       {...props}
     />
@@ -202,7 +202,7 @@ export function TableHead({ className, padding, ...props }: TableHeadProps) {
   return (
     <th
       className={cn(
-        'h-12 border-b border-line px-0 text-left align-middle text-label uppercase tracking-[0.06em] text-faint font-semibold',
+        'h-12 border-b border-line px-0 text-left align-middle text-label uppercase tracking-caps text-faint font-semibold',
         tableCellPaddingVariants({ padding }),
         className
       )}

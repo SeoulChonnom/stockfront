@@ -95,7 +95,7 @@ function DirectionTag({ direction }: { direction: KeyPointDirection }) {
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1 text-caption font-semibold',
+        'inline-flex items-center gap-1 text-body-sm font-semibold',
         meta.toneClass
       )}
     >
@@ -120,7 +120,7 @@ export function KeyPointsBlock({ keyPoints }: { keyPoints: KeyPoint[] }) {
       className='rounded-[var(--r-lg)] border border-line bg-[color:var(--surface)] p-5'
     >
       <h2
-        className='m-0 mb-3 text-card-heading font-semibold text-fg'
+        className='m-0 mb-3 text-h2 font-semibold text-fg'
         id='key-points-heading'
       >
         오늘의 핵심

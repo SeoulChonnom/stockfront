@@ -55,19 +55,19 @@ export function MarketSection({
       <div className='flex flex-wrap items-baseline gap-x-3 gap-y-2 border-b border-line px-[18px] py-4'>
         {/* Show the market scope before its name. */}
         {market.marketType ? (
-          <span className='mono rounded-[var(--r-sm)] border border-[color:var(--line-strong)] px-1.75 py-0.5 text-label font-semibold tracking-[0.08em] text-fg-soft'>
+          <span className='tnum rounded-[var(--r-sm)] border border-[color:var(--line-strong)] px-1.75 py-0.5 text-label font-semibold tracking-caps text-fg-soft'>
             {market.marketType}
           </span>
         ) : null}
         <h2
-          className='m-0 text-[length:var(--fs-h2)] font-semibold outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--focus)]'
+          className='m-0 text-h2 font-semibold outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--focus)]'
           id={marketHeadingId(index)}
           tabIndex={-1}
         >
           {market.label}
         </h2>
         {market.summaryTitle ? (
-          <span className='text-pretty text-[14px] text-fg-soft'>
+          <span className='text-pretty text-body text-fg-soft'>
             — {market.summaryTitle}
           </span>
         ) : null}
@@ -90,7 +90,7 @@ export function MarketSection({
 
       <div className='flex flex-col gap-3.5 px-[18px] py-4'>
         {hasNarrative ? (
-          <p className='measure-summary text-pretty wrap-anywhere m-0 text-[length:var(--fs-lead)] leading-[var(--lh-lead)] text-fg'>
+          <p className='measure-summary text-pretty wrap-anywhere m-0 text-lead text-fg'>
             {market.summaryBody}
           </p>
         ) : null}
@@ -103,8 +103,8 @@ export function MarketSection({
       </div>
 
       <div className='flex items-baseline gap-2.5 border-t border-line bg-[color:var(--surface-2)] px-[18px] py-3'>
-        <h3 className='m-0 text-body font-semibold'>대표 지수</h3>
-        <span className='mono text-caption text-faint'>
+        <h3 className='m-0 text-card-heading font-semibold'>대표 지수</h3>
+        <span className='tnum text-body-sm text-faint'>
           {market.indices.length}종
         </span>
       </div>
@@ -122,8 +122,8 @@ export function MarketSection({
       </div>
 
       <div className='flex items-baseline gap-2.5 border-t border-line bg-[color:var(--surface-2)] px-[18px] py-3'>
-        <h3 className='m-0 text-body font-semibold'>핵심 이슈</h3>
-        <span className='mono text-caption text-faint'>
+        <h3 className='m-0 text-card-heading font-semibold'>핵심 이슈</h3>
+        <span className='tnum text-body-sm text-faint'>
           {market.clusters.length}건
         </span>
       </div>

@@ -24,12 +24,10 @@ export function MarketIndexCards({ indices }: { indices: MarketIndex[] }) {
             <div className='text-body-sm text-faint'>데이터 없음</div>
           ) : (
             <>
-              <div className='mono text-[length:var(--fs-h2)] font-semibold'>
-                {item.value}
-              </div>
+              <div className='tnum text-h2 font-semibold'>{item.value}</div>
               <div
                 className={cn(
-                  'mono flex flex-wrap items-center gap-2 text-body',
+                  'tnum flex flex-wrap items-center gap-2 text-body',
                   directionTextClass(item.direction)
                 )}
               >
@@ -38,7 +36,7 @@ export function MarketIndexCards({ indices }: { indices: MarketIndex[] }) {
                 <span>{item.changeRate}</span>
               </div>
               {item.high === NO_VALUE && item.low === NO_VALUE ? null : (
-                <div className='mono text-body-sm text-faint'>
+                <div className='tnum text-body-sm text-faint'>
                   고가 {item.high} · 저가 {item.low}
                 </div>
               )}

@@ -11,7 +11,7 @@ export function PageDataDetails({ snapshot }: { snapshot: MarketSnapshot }) {
       <summary className='flex min-h-tap cursor-pointer items-center text-body font-semibold text-fg-soft'>
         데이터 정보
       </summary>
-      <div className='mono flex flex-wrap gap-x-4.5 gap-y-2 pt-2 text-body-sm text-faint'>
+      <div className='tnum flex flex-wrap gap-x-4.5 gap-y-2 pt-2 text-body-sm text-faint'>
         {metadata ? (
           <span className='whitespace-nowrap'>
             원문 {metadata.rawNewsCount}건 → 정제 {metadata.processedNewsCount}

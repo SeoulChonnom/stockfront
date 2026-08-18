@@ -86,7 +86,7 @@ function ReasonSubline({
   }
 
   return (
-    <div className='wrap-anywhere mt-1 text-[12px] text-faint'>
+    <div className='wrap-anywhere mt-1 text-label text-faint'>
       {record.detail}
     </div>
   );
@@ -94,7 +94,7 @@ function ReasonSubline({
 
 function GeneratedAtSubline({ record }: { record: ArchiveRecord }) {
   return (
-    <div className='mono mt-1 text-caption text-faint min-[1181px]:hidden'>
+    <div className='tnum mt-1 text-body-sm text-faint min-[1181px]:hidden'>
       생성 {record.generatedAt}
     </div>
   );
@@ -143,14 +143,14 @@ export function ArchiveResultsTable({
                 {/* This dense table uses 12px vertical cell padding. */}
                 <TableCell className='py-3 pr-3 pl-[18px] align-top'>
                   <a
-                    className='tap-target mono justify-start text-body font-semibold text-fg underline-offset-2 hover:text-[color:var(--primary)] hover:underline'
+                    className='tap-target tnum justify-start text-body font-semibold text-fg underline-offset-2 hover:text-[color:var(--primary)] hover:underline'
                     href={withBasePath(href)}
                     onClick={onOpen}
                   >
                     {/* Render the business date in monospaced ISO format. */}
                     {record.businessDate}
                   </a>
-                  <div className='mono mt-0 text-label text-faint'>
+                  <div className='tnum mt-0 text-label text-faint'>
                     pageId {record.pageId}
                   </div>
                 </TableCell>
@@ -169,7 +169,7 @@ export function ArchiveResultsTable({
                   {/* Use the compact row-level badge size. */}
                   <StatusBadge size='sm' status={record.status} />
                 </TableCell>
-                <TableCell className='mono hidden py-3 pr-[18px] pl-3 text-left text-[12px] whitespace-nowrap text-fg-soft min-[1181px]:table-cell'>
+                <TableCell className='tnum hidden py-3 pr-[18px] pl-3 text-left text-label whitespace-nowrap text-fg-soft min-[1181px]:table-cell'>
                   {record.generatedAt}
                 </TableCell>
               </TableRow>

@@ -48,7 +48,7 @@ export function InlineAlert({
       {title ? (
         <h3
           className={cn(
-            'm-0 mb-1 text-[15px] font-semibold',
+            'm-0 mb-1 text-card-heading font-semibold',
             TONE_TITLE_CLASSES[tone]
           )}
         >

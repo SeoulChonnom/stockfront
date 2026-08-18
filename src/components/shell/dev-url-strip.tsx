@@ -7,7 +7,7 @@ export function DevUrlStrip({
   search: string;
 }) {
   return (
-    <div className='mono border-b border-line bg-[color:var(--surface-2)] px-3 py-1 text-caption text-faint'>
+    <div className='mono border-b border-line bg-[color:var(--surface-2)] px-3 py-1 text-body-sm text-faint'>
       {pathname}
       {search}
     </div>

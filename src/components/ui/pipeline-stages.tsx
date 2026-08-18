@@ -37,7 +37,7 @@ export function PipelineStages({ steps, className }: PipelineStagesProps) {
   return (
     <div className={cn('min-w-0', className)}>
       <div className='mb-2 flex items-center gap-2'>
-        <h3 className='m-0 text-[15px] font-semibold text-fg'>
+        <h3 className='m-0 text-card-heading font-semibold text-fg'>
           파이프라인 단계
         </h3>
       </div>
@@ -68,9 +68,9 @@ export function PipelineStages({ steps, className }: PipelineStagesProps) {
                 <span className='min-w-0 flex-1 text-body font-medium text-fg'>
                   {step.label}
                 </span>
-                <span className='mono shrink-0 text-right text-body-sm font-semibold text-fg-soft'>
+                <span className='tnum shrink-0 text-right text-body-sm font-semibold text-fg-soft'>
                   {statusText}
-                  <span className='mono block text-label font-normal text-faint'>
+                  <span className='tnum block text-label font-normal text-faint'>
                     {step.duration}
                   </span>
                 </span>

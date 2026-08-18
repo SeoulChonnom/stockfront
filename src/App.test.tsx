@@ -524,7 +524,7 @@ describe('App routing', () => {
     expect(
       screen.getByRole('heading', { level: 1, name: '아카이브' })
     ).toBeInTheDocument();
-    // 페이지 표시는 공용 Pagination의 mono `page / totalPages` 이고,
+    // 페이지 표시는 공용 Pagination의 tnum `page / totalPages` 이고,
     // 적용 버튼은 draft/applied 분리를 반영한 '필터 적용'이다.
     expect(screen.getByText('2 / 3')).toBeInTheDocument();
     expect(

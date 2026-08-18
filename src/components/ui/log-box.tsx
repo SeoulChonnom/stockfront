@@ -97,7 +97,7 @@ export function LogBox({ content, className, heading }: LogBoxProps) {
           </Button>
         ) : null}
       </div>
-      <pre className='mono m-0 max-h-[240px] overflow-auto rounded-[var(--r-md)] border border-line bg-[color:var(--surface-2)] p-3 text-caption break-words whitespace-pre-wrap [overflow-wrap:anywhere]'>
+      <pre className='mono m-0 max-h-[240px] overflow-auto rounded-[var(--r-md)] border border-line bg-[color:var(--surface-2)] p-3 text-body-sm break-words whitespace-pre-wrap [overflow-wrap:anywhere]'>
         {displayed}
       </pre>
     </div>

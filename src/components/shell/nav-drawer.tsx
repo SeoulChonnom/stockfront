@@ -36,12 +36,12 @@ export function NavDrawer({
       <div className='flex items-center justify-between border-b border-line px-4 py-4'>
         <div className='min-w-0'>
           <p
-            className='truncate text-[15px] font-bold tracking-[-0.02em] text-fg'
+            className='truncate text-h2 font-bold text-fg'
             id={DRAWER_TITLE_ID}
           >
             Market Brief
           </p>
-          <p className='truncate text-caption text-faint'>
+          <p className='truncate text-body-sm text-faint'>
             {ROLE_LABELS[role]} · ops.analyst
           </p>
         </div>

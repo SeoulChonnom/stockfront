@@ -73,7 +73,7 @@ function ThemeNode({
             {node.label}
           </label>
           <p
-            className='wrap-anywhere m-0 text-caption text-faint'
+            className='wrap-anywhere m-0 text-body-sm text-faint'
             id={descriptionId}
           >
             {node.description}
@@ -140,7 +140,7 @@ export function ArchiveThemeTree({
       {limitReached ? (
         <p
           aria-live='polite'
-          className='wrap-anywhere m-0 mt-2 text-caption font-semibold text-[color:var(--warning)]'
+          className='wrap-anywhere m-0 mt-2 text-body-sm font-semibold text-[color:var(--warning)]'
           role='status'
         >
           {THEME_LIMIT_MESSAGE}

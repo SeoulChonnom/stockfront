@@ -37,9 +37,9 @@ const TONE_CLASSES: Readonly<Record<BadgeTone, string>> = {
 };
 
 const BADGE_BASE_CLASSES =
-  'inline-flex items-center gap-1.5 rounded-[var(--r-sm)] border px-[9px] py-1 text-[12px] font-semibold whitespace-nowrap';
+  'inline-flex items-center gap-1.5 rounded-[var(--r-sm)] border px-[9px] py-1 text-label font-semibold whitespace-nowrap';
 
-const BADGE_SM_CLASSES = 'gap-[5px] px-2 py-[3px] text-caption';
+const BADGE_SM_CLASSES = 'gap-[5px] px-2 py-[3px] text-body-sm';
 
 function normalizeStatus(status: string): string {
   return status.trim().toLowerCase();

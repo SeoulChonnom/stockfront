@@ -21,7 +21,7 @@ export function MarketAnalysisBlock({
     <div className='grid grid-cols-1 gap-3 lg:grid-cols-2'>
       {background.length > 0 ? (
         <div className='min-w-0'>
-          <div className='mb-1.5 text-label font-semibold tracking-[0.07em] text-faint uppercase'>
+          <div className='mb-1.5 text-label font-semibold tracking-caps text-faint uppercase'>
             배경
           </div>
           <ul className='m-0 flex list-disc flex-col gap-0.5 pl-4 text-body text-fg-soft'>
@@ -36,7 +36,7 @@ export function MarketAnalysisBlock({
       <div className='flex min-w-0 flex-col gap-3'>
         {keyThemes.length > 0 ? (
           <div>
-            <div className='mb-1.5 text-label font-semibold tracking-[0.07em] text-faint uppercase'>
+            <div className='mb-1.5 text-label font-semibold tracking-caps text-faint uppercase'>
               핵심 테마
             </div>
             <div className='flex flex-wrap gap-1.5'>
@@ -53,7 +53,7 @@ export function MarketAnalysisBlock({
         ) : null}
         {outlook ? (
           <div>
-            <div className='mb-1.5 text-label font-semibold tracking-[0.07em] text-faint uppercase'>
+            <div className='mb-1.5 text-label font-semibold tracking-caps text-faint uppercase'>
               관전 포인트
             </div>
             <p className='text-pretty wrap-anywhere m-0 text-body text-fg-soft'>

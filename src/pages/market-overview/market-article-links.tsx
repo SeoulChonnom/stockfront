@@ -22,8 +22,8 @@ export function MarketArticleLinks({ links }: { links: ArticleLink[] }) {
   return (
     <div className='border-t border-line px-[18px] py-3.5'>
       <div className='mb-2.5 flex flex-wrap items-center gap-2.5'>
-        <h3 className='m-0 text-body font-semibold'>근거 원문</h3>
-        <span className='mono text-caption text-faint'>
+        <h3 className='m-0 text-card-heading font-semibold'>근거 원문</h3>
+        <span className='tnum text-body-sm text-faint'>
           원문 {links.length}건
         </span>
         {needsToggle ? (
@@ -67,7 +67,7 @@ function ArticleLinkRow({ link }: { link: ArticleLink }) {
           {link.title}
         </span>
       )}
-      <span className='mono wrap-anywhere text-caption text-faint'>{meta}</span>
+      <span className='tnum wrap-anywhere text-body-sm text-faint'>{meta}</span>
       {/* B-4 (docs/backend-requests-2026-08-12.md#A-5 "표시 규칙"): only
           shown when > 0 — mirrors the same rule in
           `cluster-detail/cluster-articles-list.tsx`. Never the similar
@@ -75,13 +75,13 @@ function ArticleLinkRow({ link }: { link: ArticleLink }) {
           collapse UI at all (cluster-detail only), only the duplicate
           badge. */}
       {link.exactDuplicateCount > 0 ? (
-        <span className='rounded-[var(--r-sm)] border border-line px-1.5 py-0.5 text-caption text-faint'>
+        <span className='rounded-[var(--r-sm)] border border-line px-1.5 py-0.5 text-body-sm text-faint'>
           원문 중복 {link.exactDuplicateCount}건
         </span>
       ) : null}
       {mirrorUrl ? (
         <a
-          className='tap-target text-caption text-faint underline'
+          className='tap-target text-body-sm text-faint underline'
           href={mirrorUrl}
           rel='noopener noreferrer'
           target='_blank'

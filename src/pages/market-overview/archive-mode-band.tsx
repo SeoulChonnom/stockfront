@@ -64,12 +64,12 @@ export function ArchiveModeBand({
   const nextDisabled = navigation.status !== 'ready' || nextDate === null;
   return (
     <div className='flex flex-wrap items-center gap-x-3.5 gap-y-2.5 rounded-[var(--r-lg)] border border-[color:var(--warning-line)] border-l-4 border-l-[color:var(--warning)] bg-[color:var(--warning-soft)] px-4 py-3'>
-      <span className='text-caption font-bold tracking-[0.07em] text-[color:var(--warning)] uppercase'>
+      <span className='text-body-sm font-bold tracking-caps text-[color:var(--warning)] uppercase'>
         아카이브 스냅샷
       </span>
-      <span className='mono text-[14px] font-semibold'>{businessDate}</span>
+      <span className='tnum text-body font-semibold'>{businessDate}</span>
       {pageId !== null && versionNo !== null ? (
-        <span className='mono text-[12px] text-fg-soft'>
+        <span className='tnum text-label text-fg-soft'>
           pageId {pageId} · v{versionNo}
         </span>
       ) : null}
@@ -86,7 +86,7 @@ export function ArchiveModeBand({
           </Button>
         ) : null}
         <Button
-          className='mono min-h-9 px-3 text-body-sm'
+          className='tnum min-h-9 px-3 text-body-sm'
           disabled={prevDisabled}
           onClick={() => {
             if (prevDate) {
@@ -100,7 +100,7 @@ export function ArchiveModeBand({
           {adjacentLabel(navigation, '이전', prevDate)}
         </Button>
         <Button
-          className='mono min-h-9 px-3 text-body-sm'
+          className='tnum min-h-9 px-3 text-body-sm'
           disabled={nextDisabled}
           onClick={() => {
             if (nextDate) {

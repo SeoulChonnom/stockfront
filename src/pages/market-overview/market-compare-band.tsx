@@ -45,7 +45,7 @@ export function MarketCompareBand({
       className='flex min-w-0 flex-col overflow-hidden rounded-[var(--r-lg)] border border-line bg-[color:var(--surface)]'
     >
       <h2
-        className='m-0 border-b border-line px-[18px] py-3 text-body font-semibold'
+        className='m-0 border-b border-line px-[18px] py-3 text-h2 font-semibold'
         id='market-compare-band-title'
       >
         두 시장 한눈에
@@ -90,7 +90,7 @@ function BandRow({
     >
       <span className='flex min-w-0 shrink-0 items-center gap-2'>
         {market.marketType ? (
-          <span className='mono rounded-[var(--r-sm)] border border-[color:var(--line-strong)] px-1.75 py-0.5 text-label font-semibold tracking-[0.08em] text-fg-soft'>
+          <span className='tnum rounded-[var(--r-sm)] border border-[color:var(--line-strong)] px-1.75 py-0.5 text-label font-semibold tracking-caps text-fg-soft'>
             {market.marketType}
           </span>
         ) : null}
@@ -119,7 +119,7 @@ function IndexReading({ item }: { item: MarketIndex }) {
       </span>
       <span
         className={cn(
-          'mono flex items-center gap-1 text-body font-semibold',
+          'tnum flex items-center gap-1 text-body font-semibold',
           directionTextClass(item.direction)
         )}
       >

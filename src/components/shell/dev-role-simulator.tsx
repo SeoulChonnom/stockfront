@@ -7,7 +7,7 @@ export function DevRoleSimulator() {
 
   return (
     <div className='flex items-center gap-1 rounded-[var(--r-md)] border border-line bg-[color:var(--surface-2)] p-1'>
-      <span className='px-1 text-[10.5px] font-semibold uppercase tracking-[0.06em] text-faint'>
+      <span className='px-1 text-label font-semibold uppercase tracking-caps text-faint'>
         DEV
       </span>
       <Button

@@ -20,7 +20,7 @@ export function DescriptionListItem({
       {/* Labels inherit the list's 12.5px type size and add only muted color
           plus a 2px bottom margin; they intentionally avoid uppercase tracking. */}
       <dt className='m-0 mb-0.5 text-faint'>{label}</dt>
-      <dd className='mono wrap-anywhere m-0 text-fg'>{value}</dd>
+      <dd className='tnum wrap-anywhere m-0 text-fg'>{value}</dd>
     </div>
   );
 }

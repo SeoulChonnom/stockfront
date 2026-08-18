@@ -57,18 +57,18 @@ export function ClusterAnalysis({
     >
       <div className='mb-3 flex flex-wrap items-center gap-x-3 gap-y-1'>
         <h2
-          className='m-0 text-card-heading font-semibold text-fg'
+          className='m-0 text-h2 font-semibold text-fg'
           id='cluster-analysis-heading'
         >
           AI 심층 분석
         </h2>
         {analysisGeneratedAt ? (
-          <span className='mono text-body-sm text-faint'>
+          <span className='tnum text-body-sm text-faint'>
             생성 기준 {analysisGeneratedAt}
           </span>
         ) : null}
         {conflictStatus === 'FOUND' ? (
-          <span className='inline-flex items-center rounded-[var(--r-sm)] border border-[color:var(--info-line)] bg-[color:var(--info-soft)] px-1.5 py-0.5 text-caption font-semibold text-[color:var(--info)]'>
+          <span className='inline-flex items-center rounded-[var(--r-sm)] border border-[color:var(--info-line)] bg-[color:var(--info-soft)] px-1.5 py-0.5 text-body-sm font-semibold text-[color:var(--info)]'>
             상충하는 보도가 있음
           </span>
         ) : null}
@@ -84,7 +84,7 @@ export function ClusterAnalysis({
           UNAVAILABLE the guidance state below already covers "확인되지
           않음"; repeating it here would be redundant, not informative. */}
       {conflictStatus === 'NOT_CHECKED' && analysisStatus !== 'UNAVAILABLE' ? (
-        <p className='m-0 mb-3 text-caption text-faint'>
+        <p className='m-0 mb-3 text-body-sm text-faint'>
           이 분석은 근거 충돌 여부를 확인하지 못했습니다.
         </p>
       ) : null}
@@ -142,7 +142,7 @@ function AnalysisSectionBlock({
 }) {
   return (
     <div className='min-w-0'>
-      <h3 className='m-0 mb-2 text-[13px] font-semibold tracking-[0.05em] text-faint uppercase'>
+      <h3 className='m-0 mb-2 text-label font-semibold tracking-caps text-faint uppercase'>
         {section.title}
       </h3>
       <div className='flex flex-col gap-3 border-l-2 border-[color:var(--line-strong)] pl-3'>
@@ -174,7 +174,7 @@ function ParagraphBlock({
 
   return (
     <div className='flex flex-col gap-2'>
-      <p className='measure-analysis wrap-anywhere m-0 text-body text-fg-soft leading-[1.65]'>
+      <p className='measure-analysis wrap-anywhere m-0 text-body text-fg-soft'>
         {paragraph.sentences.map((sentence, index) => (
           <SentenceText
             articleLookup={articleLookup}
@@ -242,13 +242,13 @@ function ConflictDetail({
 }) {
   return (
     <div className='rounded-[var(--r-md)] border border-[color:var(--info-line)] bg-[color:var(--info-soft)] p-3'>
-      <p className='m-0 mb-2 flex items-center gap-1.5 text-[color:var(--info)] text-caption font-semibold'>
+      <p className='m-0 mb-2 flex items-center gap-1.5 text-[color:var(--info)] text-body-sm font-semibold'>
         <span aria-hidden='true'>i</span>
         상충하는 보도가 있음
       </p>
       <div className='flex flex-col gap-1.5'>
         <div className='flex flex-wrap items-center gap-1.5'>
-          <span className='text-caption font-semibold text-faint'>
+          <span className='text-body-sm font-semibold text-faint'>
             지지 기사
           </span>
           {sentence.sourceArticleIds.map((articleId) => (
@@ -261,7 +261,7 @@ function ConflictDetail({
           ))}
         </div>
         <div className='flex flex-wrap items-center gap-1.5'>
-          <span className='text-caption font-semibold text-faint'>
+          <span className='text-body-sm font-semibold text-faint'>
             상충 기사
           </span>
           {sentence.conflictingSourceArticleIds.map((articleId) => (
@@ -332,7 +332,7 @@ function CitationButton({
     <button
       aria-label={`근거 기사로 이동: ${articleTitle}`}
       className={cn(
-        'tap-target-inline ms-1 rounded-[var(--r-sm)] border px-1.5 py-0.5 align-middle text-[11px] font-medium leading-none first:ms-0',
+        'tap-target-inline ms-1 rounded-[var(--r-sm)] border px-1.5 py-0.5 align-middle text-label font-medium leading-none first:ms-0',
         tone === 'conflict'
           ? 'border-[color:var(--info-line)] bg-[color:var(--surface)] text-[color:var(--info)]'
           : 'border-[color:var(--line-strong)] bg-[color:var(--surface-2)] text-fg-soft hover:bg-[color:var(--surface-3)]'

@@ -57,7 +57,7 @@ export function StatusCard({
         {badge ? (
           <span
             className={cn(
-              'mono inline-flex items-center gap-1.5 rounded-[var(--r-sm)] border px-2 py-0.5 text-body-sm font-semibold',
+              'tnum inline-flex items-center gap-1.5 rounded-[var(--r-sm)] border px-2 py-0.5 text-body-sm font-semibold',
               TONE_BADGE_CLASSES[tone]
             )}
           >
@@ -67,7 +67,7 @@ export function StatusCard({
         <Heading
           className={cn(
             'mb-2 font-semibold text-fg',
-            fullScreen ? 'mt-3 text-h1' : 'mt-[10px] text-[20px]'
+            fullScreen ? 'mt-3 text-h1' : 'mt-[10px] text-h2'
           )}
           id={titleId}
           tabIndex={-1}

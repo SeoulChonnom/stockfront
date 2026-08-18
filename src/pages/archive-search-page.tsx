@@ -382,7 +382,7 @@ export function ArchiveSearchPage({
         <InlineAlert
           actions={
             <Button
-              className='px-4 text-[13px]'
+              className='px-4 text-body-sm'
               onClick={() => void archiveQuery.refetch()}
               size='sm'
               type='button'
@@ -395,7 +395,7 @@ export function ArchiveSearchPage({
             <span className='flex flex-wrap items-center gap-2.5'>
               <span>{errorPresentation.title}</span>
               {errorPresentation.code ? (
-                <span className='mono rounded-[var(--r-sm)] border border-[color:var(--danger-line)] bg-[color:var(--danger-soft)] px-2 py-0.5 text-caption font-semibold text-[color:var(--danger)]'>
+                <span className='mono rounded-[var(--r-sm)] border border-[color:var(--danger-line)] bg-[color:var(--danger-soft)] px-2 py-0.5 text-body-sm font-semibold text-[color:var(--danger)]'>
                   {errorPresentation.code}
                 </span>
               ) : null}
@@ -456,9 +456,8 @@ function ArchiveResultsCard({
     >
       <div className='flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-line px-[18px] py-3.5'>
         <div className='flex flex-wrap items-center gap-x-3 gap-y-2'>
-          {/* Keep this dense card heading at 14.5px. */}
           <h2
-            className='m-0 scroll-mt-24 text-card-heading font-semibold text-fg focus:outline-none'
+            className='m-0 scroll-mt-24 text-h2 font-semibold text-fg focus:outline-none'
             id='archive-results-heading'
             ref={resultsHeadingRef}
             tabIndex={-1}
@@ -466,19 +465,19 @@ function ArchiveResultsCard({
             검색 결과
           </h2>
           {data ? (
-            <span className='mono text-body-sm font-semibold text-fg'>
+            <span className='tnum text-body-sm font-semibold text-fg'>
               {formatInteger(data.totalCount)}건
             </span>
           ) : null}
           {/* The result range lives next to the heading rather than beside the pager. */}
           {data && data.totalCount > 0 ? (
-            <span className='mono text-caption text-faint'>
+            <span className='tnum text-body-sm text-faint'>
               {(data.page - 1) * PAGE_SIZE + 1}–
               {Math.min(data.page * PAGE_SIZE, data.totalCount)} /{' '}
               {data.totalCount}
             </span>
           ) : null}
-          <span className='wrap-anywhere text-caption text-faint'>
+          <span className='wrap-anywhere text-body-sm text-faint'>
             {getAppliedFilterSummary(applied, themeCatalog)}
           </span>
         </div>
@@ -501,7 +500,7 @@ function ArchiveResultsCard({
         />
       ) : data && rows.length === 0 ? (
         <div className='px-5 py-8 text-left'>
-          <h3 className='m-0 mb-2 text-[15.5px] font-semibold text-fg'>
+          <h3 className='m-0 mb-2 text-card-heading font-semibold text-fg'>
             조건에 맞는 스냅샷이 없습니다
           </h3>
           <p className='wrap-anywhere m-0 mb-3.5 max-w-[60ch] text-body text-fg-soft'>
@@ -513,7 +512,7 @@ function ArchiveResultsCard({
             기간을 넓히거나 상태 필터를 해제해 보세요.
           </p>
           <Button
-            className='px-4 text-[13px]'
+            className='px-4 text-body-sm'
             onClick={onReset}
             size='sm'
             type='button'

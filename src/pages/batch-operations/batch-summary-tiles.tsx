@@ -36,18 +36,18 @@ function SummaryTile({
         TILE_BAR_CLASSES[tone]
       )}
     >
-      <p className='m-0 text-label font-semibold tracking-[0.07em] text-faint uppercase'>
+      <p className='m-0 text-label font-semibold tracking-caps text-faint uppercase'>
         {label}
       </p>
       <p
         className={cn(
-          'mono m-0 text-[22px] font-semibold min-[641px]:text-[26px]',
+          'tnum m-0 text-h1 font-semibold',
           TILE_NUMBER_CLASSES[tone]
         )}
       >
         {value}
       </p>
-      <p className='wrap-anywhere m-0 text-caption text-fg-soft min-[641px]:text-[12px]'>
+      <p className='wrap-anywhere m-0 text-body-sm text-fg-soft min-[641px]:text-label'>
         {supporting}
       </p>
     </Card>

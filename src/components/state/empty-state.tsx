@@ -46,7 +46,7 @@ export function EmptyState({
         className
       )}
     >
-      <h3 className='m-0 mb-1 text-[15px] font-semibold text-fg'>
+      <h3 className='m-0 mb-1 text-card-heading font-semibold text-fg'>
         {title ?? copy.title}
       </h3>
       <p className='wrap-anywhere m-0 text-body text-fg-soft'>

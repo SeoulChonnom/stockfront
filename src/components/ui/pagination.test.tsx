@@ -53,7 +53,7 @@ describe('Pagination', () => {
     expect(screen.getByRole('button', { name: '다음' })).toBeDisabled();
   });
 
-  it("renders only the mono page indicator because count ranges live in each list panel's heading", () => {
+  it("renders only the tnum page indicator because count ranges live in each list panel's heading", () => {
     render(<Pagination onPageChange={vi.fn()} page={2} totalPages={3} />);
 
     expect(screen.getByText('2 / 3')).toBeInTheDocument();
@@ -107,7 +107,7 @@ describe('Pagination', () => {
     expect(screen.getByRole('button', { name: '이전' }).className).toContain(
       'min-h-10'
     );
-    expect(screen.getByText('2 / 3').className).toContain('text-[12px]');
+    expect(screen.getByText('2 / 3').className).toContain('text-label');
     expect(screen.getByText('2 / 3').className).toContain('text-faint');
   });
 });

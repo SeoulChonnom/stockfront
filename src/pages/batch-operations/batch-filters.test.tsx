@@ -26,7 +26,7 @@ function setDateValue(input: HTMLElement, value: string) {
 const applied = { from: '2026-07-13', to: '2026-07-27', status: '', type: '' };
 
 describe('BatchFilters', () => {
-  it('renders the applied filters as a mono summary line including status and type', () => {
+  it('renders the applied filters as a tnum summary line including status and type', () => {
     renderWithAnnounce(
       <BatchFilters applied={applied} onApply={vi.fn()} onReset={vi.fn()} />
     );

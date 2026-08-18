@@ -141,12 +141,12 @@ function ClusterDetailErrorState({
       role='alert'
     >
       {badge ? (
-        <span className='mono inline-flex rounded-[var(--r-sm)] border border-[color:var(--danger-line)] bg-[color:var(--danger-soft)] px-2 py-0.5 text-caption font-semibold text-[color:var(--danger)]'>
+        <span className='mono inline-flex rounded-[var(--r-sm)] border border-[color:var(--danger-line)] bg-[color:var(--danger-soft)] px-2 py-0.5 text-body-sm font-semibold text-[color:var(--danger)]'>
           {badge}
         </span>
       ) : null}
       <h1
-        className='m-0 mt-2 mb-1.5 text-[19px] font-semibold text-fg'
+        className='m-0 mt-2 mb-1.5 text-h1 font-semibold text-fg'
         id='page-title'
         tabIndex={-1}
       >

@@ -31,7 +31,7 @@
      같은 빨강 계열이라 ΔE 0.060에 그친다. 이건 한계를 인정한 선택이다:
      빨강 계열을 벗어나면 한국 시장 빨강으로 읽히지 않는다. 대신 방향과
      상태는 색이 아니라 표기 방식으로 갈린다 — 방향은 ▲▼와 부호가 붙은
-     mono 숫자, 상태는 테두리와 단어가 있는 배지다. */
+     자릿수 정렬 숫자(`.tnum`), 상태는 테두리와 단어가 있는 배지다. */
   --up: #bc010c;
   --down: #0364b4;
 
@@ -53,35 +53,83 @@
 
   --focus: #0f5bff;
 
+  /* Faces.
+
+     이 앱은 웹폰트를 싣지 않는다. 화면 문구가 한국어이고, 한글 웹폰트는
+     서브셋해도 가중치당 수백 KB라 slow 3G 기준선(현재 초기 번들 109KB gzip)을
+     그대로 무너뜨린다. 대신 **플랫폼별 기본 UI 서체를 명시적으로 지정한다.**
+
+     예전 스택은 `"IBM Plex Sans KR", system-ui, …` 였는데, IBM Plex는 이
+     저장소 어디에서도 로드되지 않는다(@font-face 없음, 링크 없음, 패키지
+     없음). CDP `CSS.getPlatformFontsForNode`로 실제 렌더링 서체를 찍어 보면
+     h1은 `.SF NS + Apple SD Gothic Neo`, `.mono`는 `Menlo`였다 — 선언된 첫
+     서체가 한 글자도 그리지 않았다. 있지도 않은 서체를 1순위로 적어 두면
+     "타이포그래피가 정해져 있다"는 착각만 남고 실제 결과는 OS 기본값이다.
+
+     라틴은 `system-ui`(macOS SF Pro / Windows Segoe UI / Android Roboto)가
+     받고, **한글은 그 뒤의 명시 서체가 받는다.** 이 부분이 핵심이다: 한글
+     서체를 적지 않으면 폴백 선택이 브라우저에 맡겨져, CJK 통합 한자 구간에서
+     일본어 서체가 잡히는 고전적인 오조판이 난다. */
   --font-sans:
-    "IBM Plex Sans KR", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-display: var(--font-sans);
-  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    system-ui, "Segoe UI", Roboto, "Apple SD Gothic Neo", "Malgun Gothic",
+    "Noto Sans KR", sans-serif;
+  /* 한글 서체가 `monospace` 앞에 온다. 제네릭 패밀리는 항상 매치되므로 그
+     뒤에 적은 것은 도달하지 않는다. */
+  --font-mono:
+    ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono",
+    "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", monospace;
 
-  --fs-display: 30px;
-  --fs-h1: 28px;
-  --fs-h2: 20px;
-  --fs-h3: 17px;
-  --fs-lead: 17px;
-  --fs-body: 15px;
-  --fs-sm: 13.5px;
-  --fs-label: 13px;
-  --fs-mono-sm: 13px;
-  --fs-mono: 13.5px;
-  --fs-mono-lg: 15px;
+  /* Role scale.
 
-  --fw-regular: 400;
-  --fw-semibold: 600;
-  --fw-bold: 700;
+     rem 기준이다(1rem = 브라우저 기본 글자 크기). px로 고정하면 브라우저
+     글자 크기 설정을 쓰는 사용자에게 아무 것도 커지지 않는다 — 매일 읽는
+     제품에서 이건 그냥 못 읽는 사람이 생긴다는 뜻이다.
 
-  --lh-display: 1.3;
-  --lh-lead: 1.7;
+     역할은 일곱 개뿐이고 단계가 최소 2px씩 벌어진다. 예전 스케일은 렌더링
+     기준 13종(30·28·26·21·20·19·17·16·15.5·15·14·13.5·13)이었고, 그중
+     `--fs-h3`(17)는 `--fs-lead`(17)와, `--fs-sm`(13.5)는 `--fs-label`(13)과
+     사실상 구분되지 않았다. 크기가 역할을 나누지 못하면 크기는 정보를
+     전달하지 않는다.
+
+     `--fs-display`와 `--fs-h1`은 둘 다 `<h1>`이지만 하는 일이 다르다:
+     display는 **내용을 담은 표제**(브리프의 globalHeadline, 클러스터 제목),
+     h1은 **화면 이름**(아카이브, 배치 운영)이다. 앞의 것만 크게 읽혀야 한다.
+
+     카드 안의 소제목에는 별도 크기를 주지 않는다 — `--fs-body` + 600이다.
+     밀도 높은 대시보드에서 가장 작은 제목 단계는 본문 크기 볼드가 정석이고,
+     실제로 기존 `<h3>` 대부분이 이미 그렇게 그려지고 있었다. */
+  --fs-display: 1.875rem; /* 30px */
+  --fs-h1: 1.4375rem; /* 23px */
+  --fs-h2: 1.1875rem; /* 19px */
+  --fs-lead: 1.0625rem; /* 17px */
+  --fs-body: 0.9375rem; /* 15px */
+  --fs-sm: 0.8125rem; /* 13px */
+  --fs-label: 0.75rem; /* 12px */
+
+  /* 행간은 서체·폭·언어에 맞춘다. 한글은 음절 블록이 em 상자를 라틴 문자보다
+     꽉 채우므로 같은 크기에서 라틴보다 넉넉한 행간이 필요하다 — 본문 1.65,
+     긴 요약문 1.75가 그 값이다. 제목은 줄이 짧고 무게가 있어 반대로 좁힌다. */
+  --lh-display: 1.25;
+  --lh-h1: 1.3;
+  --lh-h2: 1.4;
+  --lh-lead: 1.75;
   --lh-body: 1.65;
-  --lh-tight: 1.2;
+  --lh-sm: 1.55;
+  --lh-label: 1.45;
 
-  --ls-display: -0.015em;
+  /* 큰 글자만 음수 자간을 받는다. 작은 한글에 음수 자간을 주면 음절이 붙는다.
+     `--ls-caps`는 대문자/마이크로 라벨 전용이며 값이 하나뿐이다 — 예전에는
+     같은 역할에 0.05·0.06·0.07·0.08em이 섞여 있었고, 앱 태그라인 "시장
+     인텔리전스"가 같은 화면에서 0.07em과 0.08em 두 가지로 그려졌다. */
+  --ls-display: -0.02em;
+  --ls-h1: -0.015em;
+  --ls-h2: -0.01em;
   --ls-caps: 0.07em;
-  --ls-caps-wide: 0.08em;
+
+  /* 다크에서만 붙는 미세 자간. 밝은 글자가 어두운 바탕 위에서 번져 보이는
+     것을 상쇄한다(빛번짐 보정). 0으로 두면 라이트와 같은 조판이 다크에서
+     한 단계 빽빽해 보인다. */
+  --ls-ambient: 0;
 
   --measure-summary: 72ch;
   --measure-error: 62ch;
@@ -179,6 +227,8 @@
 
   --focus: #8bb2ff;
 
+  --ls-ambient: 0.006em;
+
   --sh2: 0 8px 24px rgba(0, 0, 0, 0.35);
   --sh3: 0 24px 56px rgba(0, 0, 0, 0.55);
 
@@ -191,15 +241,20 @@
   }
 }
 
+/* 좁은 화면에서는 본문이 커지고(엄지 거리 읽기) 표제가 줄어든다. 그래서
+   램프 전체가 아래에서 밀려 올라오며, 위쪽 단계도 함께 조정해야 간격이
+   유지된다 — 본문만 16px로 올리면 lead·h2가 본문에 붙어 버린다.
+   `--fs-h2`가 데스크톱(19px)보다 커지는 것은 의도다: 한 칼럼으로 접힌
+   화면에서 섹션 제목은 본문 대비 더 큰 존재감이 있어야 구분된다. */
 @media (max-width: 640px) {
   :root {
     --pad: 14px;
     --gap: 12px;
-    --fs-display: 24px;
-    --fs-h1: 24px;
-    --fs-h2: 19px;
-    --fs-lead: 16px;
-    --fs-body: 16px;
+    --fs-display: 1.625rem; /* 26px */
+    --fs-h1: 1.375rem; /* 22px */
+    --fs-h2: 1.25rem; /* 20px */
+    --fs-lead: 1.125rem; /* 18px */
+    --fs-body: 1rem; /* 16px */
   }
 }
 
@@ -217,8 +272,9 @@ body,
 
 /* Keep app body sizing on #root; changing html would alter the rem basis. */
 #root {
-  font-size: 15px;
-  line-height: 1.65;
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  letter-spacing: var(--ls-ambient);
 }
 
 body {
@@ -249,6 +305,23 @@ img {
   max-width: 100%;
 }
 
+/* 자릿수 정렬.
+ *
+ * 숫자가 세로로 맞아야 하는 곳은 대부분 **한국어 문장 옆에 붙은 값**이다
+ * ("기사 9건", "고가 2,772.11 · 저가 2,742.48", "2분 32초"). 여기에
+ * 필요한 것은 고정폭 서체가 아니라 **고정폭 숫자**이고, 그건 UI 서체가
+ * 이미 갖고 있다.
+ *
+ * 예전에는 이런 줄 전체에 `.mono`가 걸려 있었다. 고정폭 서체에는 한글이
+ * 없으므로 한 문자열 안에서 숫자는 Menlo, 한글은 다른 서체로 갈라졌다 —
+ * 실측으로 `.mono` 노드의 Menlo 글리프 수는 1이었다. 한 단어 안에서
+ * 서체가 바뀌는 것이 이 화면에서 가장 눈에 띄는 조판 결함이었다. */
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+/* 진짜 고정폭. 문자 칸 자체가 의미를 갖는 내용에만 쓴다 — 로그 출력,
+   에러 코드, 식별자. 데이터가 "기술적으로 보이게" 하려고 쓰지 않는다. */
 .mono,
 [data-mono] {
   font-family: var(--font-mono);

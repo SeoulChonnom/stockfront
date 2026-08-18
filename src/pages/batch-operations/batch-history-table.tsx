@@ -101,7 +101,7 @@ function BatchHistoryRow({
       <TableCell className='py-2.5 pl-4 align-top sm:pl-[18px]'>
         <button
           aria-label={`job ${row.id} 상세 선택`}
-          className='tap-target mono min-w-0 justify-start rounded-[var(--r-sm)] text-left text-body font-semibold text-fg outline-none hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--focus)]'
+          className='tap-target tnum min-w-0 justify-start rounded-[var(--r-sm)] text-left text-body font-semibold text-fg outline-none hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--focus)]'
           ref={buttonRef}
           onClick={(event) => {
             event.stopPropagation();
@@ -111,14 +111,14 @@ function BatchHistoryRow({
         >
           {row.businessDate}
         </button>
-        <div className='mono text-label text-faint'>
+        <div className='tnum text-label text-faint'>
           job {row.id} · {getSnapshotLabel(row)}
         </div>
         <BatchTypeBadge
           className='mt-1 px-[7px] py-0.5 text-label min-[641px]:hidden'
           jobType={row.jobType}
         />
-        <div className='mono min-[1181px]:hidden text-label text-faint'>
+        <div className='tnum min-[1181px]:hidden text-label text-faint'>
           원문/정제/이슈 {row.counts}
         </div>
       </TableCell>
@@ -128,24 +128,24 @@ function BatchHistoryRow({
       <TableCell className='py-2.5 px-3 align-top'>
         <StatusBadge size='sm' status={row.rawStatus} />
         {row.rawStatus.trim().toUpperCase() === 'PARTIAL' && row.detail ? (
-          <div className='wrap-anywhere mt-1 text-caption text-faint'>
+          <div className='wrap-anywhere mt-1 text-body-sm text-faint'>
             {row.detail}
           </div>
         ) : null}
       </TableCell>
       <TableCell className='py-2.5 px-3 text-right align-top'>
-        <div className='mono text-[13px] text-fg'>{row.duration}</div>
+        <div className='tnum text-body-sm text-fg'>{row.duration}</div>
         {/* `whitespace-nowrap` only from `sm` up. Below it the 520px table
             min-width already exceeds a 390px viewport, and forcing
             `2026-07-27 06:10 KST` onto one line pushed this column so far
             past the fold that only a stray digit stayed visible. Letting it
             wrap keeps 소요 inside the first screenful; the scroll wrapper
             still handles what genuinely does not fit. */}
-        <div className='mono text-label text-faint sm:whitespace-nowrap'>
+        <div className='tnum text-label text-faint sm:whitespace-nowrap'>
           {row.startedAt}
         </div>
       </TableCell>
-      <TableCell className='mono hidden py-2.5 pr-4 text-right align-top whitespace-nowrap min-[1181px]:table-cell sm:pr-[18px]'>
+      <TableCell className='tnum hidden py-2.5 pr-4 text-right align-top whitespace-nowrap min-[1181px]:table-cell sm:pr-[18px]'>
         {row.counts}
       </TableCell>
     </TableRow>

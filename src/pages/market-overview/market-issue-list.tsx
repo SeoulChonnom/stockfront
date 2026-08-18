@@ -136,7 +136,7 @@ function IssueRow({
           <div className='flex flex-wrap gap-1.5'>
             {tags.map((tag) => (
               <span
-                className='rounded-[var(--r-sm)] border border-line bg-[color:var(--surface-2)] px-1.75 py-0.5 text-caption text-fg-soft'
+                className='rounded-[var(--r-sm)] border border-line bg-[color:var(--surface-2)] px-1.75 py-0.5 text-body-sm text-fg-soft'
                 key={tag}
               >
                 {tag}
@@ -171,7 +171,7 @@ function IssueRow({
         </div>
       </div>
       <div className='flex min-w-0 flex-col items-start gap-1.5'>
-        <span className='mono text-body-sm font-semibold text-fg-soft'>
+        <span className='tnum text-body-sm font-semibold text-fg-soft'>
           기사 {cluster.articleCount}건
         </span>
       </div>

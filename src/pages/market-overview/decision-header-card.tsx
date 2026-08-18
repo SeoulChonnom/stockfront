@@ -45,14 +45,14 @@ export function DecisionHeaderCard({
       <div className='flex flex-wrap items-center gap-x-3 gap-y-2'>
         <StatusBadge status={snapshot.status} />
         <span className='text-body-sm text-faint'>기준일</span>
-        <span className='mono text-[14px] font-semibold'>
+        <span className='tnum text-body font-semibold'>
           {snapshot.businessDate}
         </span>
         <span aria-hidden='true' className='text-[color:var(--line-strong)]'>
           |
         </span>
         <span className='text-body-sm text-faint'>생성</span>
-        <span className='mono text-body-sm text-fg-soft'>
+        <span className='tnum text-body-sm text-fg-soft'>
           {generatedDisplay}
         </span>
         {freshness ? (
@@ -62,7 +62,7 @@ export function DecisionHeaderCard({
       </div>
 
       <div>
-        <p className='m-0 mb-2 text-body-sm font-semibold tracking-[0.01em] text-faint'>
+        <p className='m-0 mb-2 text-body-sm font-semibold text-faint'>
           {mode === 'latest'
             ? '최신 시장 브리프'
             : `${snapshot.businessDate} 시장 브리프`}
@@ -71,8 +71,8 @@ export function DecisionHeaderCard({
           className={cn(
             'm-0 wrap-anywhere text-pretty',
             hasHeadline
-              ? 'text-[length:var(--fs-display)] leading-[var(--lh-display)] font-semibold tracking-[var(--ls-display)] text-fg'
-              : 'text-[length:var(--fs-lead)] leading-[var(--lh-lead)] text-faint'
+              ? 'text-display font-semibold text-fg'
+              : 'text-lead text-faint'
           )}
           id='page-title'
           tabIndex={-1}

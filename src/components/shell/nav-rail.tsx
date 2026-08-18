@@ -33,11 +33,9 @@ export function NavRail({
     <aside className='sticky top-0 hidden h-screen w-[248px] shrink-0 flex-col border-r border-line bg-[color:var(--surface)] min-[1025px]:flex'>
       <div className='px-5 pt-6 pb-4'>
         {/* Keep the wordmark on the foreground token rather than the primary accent. */}
-        <p className='m-0 text-[19px] font-bold tracking-[-0.02em] text-fg [font-family:var(--font-display)]'>
-          Market Brief
-        </p>
+        <p className='m-0 text-h2 font-bold text-fg'>Market Brief</p>
         {/* Keep secondary context visible beneath the rail wordmark. */}
-        <p className='m-0 text-[12px] text-faint'>
+        <p className='m-0 text-label text-faint'>
           {serviceTagline({ canViewOps: can('ops.view') })}
         </p>
       </div>

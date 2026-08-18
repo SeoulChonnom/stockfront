@@ -56,12 +56,12 @@ export function BatchFilters({
       <Card className='flex flex-col gap-3' padding='inset'>
         <div className='flex flex-wrap items-center gap-2.5'>
           <h2
-            className='m-0 text-[14px] font-semibold text-fg'
+            className='m-0 text-label font-semibold tracking-caps text-fg-soft uppercase'
             id='ops-filter-heading'
           >
             조회 조건
           </h2>
-          <span className='mono wrap-anywhere text-caption text-faint'>
+          <span className='tnum wrap-anywhere text-body-sm text-faint'>
             적용됨 · {applied.from} ~ {applied.to} ·{' '}
             {getBatchStatusSummaryLabel(applied.status)} ·{' '}
             {getBatchTypeSummaryLabel(applied.type)}
@@ -78,7 +78,7 @@ export function BatchFilters({
           <FilterField error={errors.from} htmlFor='from' label='기준일 시작'>
             <Input
               className={cn(
-                'mono rounded-[var(--r-md)] bg-[color:var(--surface)] px-3 py-0 text-body',
+                'tnum rounded-[var(--r-md)] bg-[color:var(--surface)] px-3 py-0 text-body',
                 !errors.from && 'border-[color:var(--line-strong)]'
               )}
               invalid={Boolean(errors.from)}
@@ -89,7 +89,7 @@ export function BatchFilters({
           <FilterField error={errors.to} htmlFor='to' label='기준일 종료'>
             <Input
               className={cn(
-                'mono rounded-[var(--r-md)] bg-[color:var(--surface)] px-3 py-0 text-body',
+                'tnum rounded-[var(--r-md)] bg-[color:var(--surface)] px-3 py-0 text-body',
                 !errors.to && 'border-[color:var(--line-strong)]'
               )}
               invalid={Boolean(errors.to)}

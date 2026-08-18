@@ -21,7 +21,7 @@ export function EmptyMarketsPanel({
       className='rounded-[var(--r-lg)] border border-dashed border-[color:var(--line-strong)] bg-[color:var(--surface)] px-[22px] py-7'
     >
       <h2
-        className='m-0 mb-2 text-[16px] font-semibold'
+        className='m-0 mb-2 text-card-heading font-semibold'
         id='empty-markets-heading'
       >
         시장 섹션이 생성되지 않았습니다

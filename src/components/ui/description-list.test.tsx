@@ -43,7 +43,7 @@ describe('DescriptionList', () => {
       'text-faint'
     );
     expect(firstItem?.querySelector('dd')).toHaveClass(
-      'mono',
+      'tnum',
       'wrap-anywhere',
       'm-0',
       'text-fg'

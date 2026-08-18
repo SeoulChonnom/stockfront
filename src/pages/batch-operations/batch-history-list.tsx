@@ -98,21 +98,19 @@ export function BatchHistoryList({
       <CardContent className='flex min-w-0 flex-col gap-0 p-0'>
         <div className='flex flex-wrap items-center justify-between gap-2 border-b border-line px-4 py-3.5 sm:px-[18px]'>
           <div className='flex min-w-0 flex-wrap items-baseline gap-2'>
-            <h2 className='m-0 text-card-heading font-semibold text-fg'>
-              실행 이력
-            </h2>
-            <span className='mono text-body-sm font-semibold text-fg-soft'>
+            <h2 className='m-0 text-h2 font-semibold text-fg'>실행 이력</h2>
+            <span className='tnum text-body-sm font-semibold text-fg-soft'>
               {totalCount === 0
                 ? '0 / 0'
                 : `${(applied.page - 1) * pageSize + 1}–${Math.min(applied.page * pageSize, totalCount)} / ${totalCount}`}
             </span>
-            <span className='mono text-caption text-faint'>
+            <span className='tnum text-body-sm text-faint'>
               · {getBatchStatusSummaryLabel(applied.status)} ·{' '}
               {getBatchTypeSummaryLabel(applied.type)}
             </span>
           </div>
           <div className='flex flex-wrap items-center gap-2'>
-            <span className='mono text-caption text-faint'>
+            <span className='tnum text-body-sm text-faint'>
               <time dateTime={updatedAtIso ?? undefined}>
                 {`마지막 갱신 ${relativeUpdatedAt ?? '-'}`}
               </time>

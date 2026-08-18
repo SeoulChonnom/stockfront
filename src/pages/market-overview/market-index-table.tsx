@@ -26,7 +26,7 @@ const NO_VALUE = '-';
  * 그대로 지킨다.
  *
  * The nullable `MarketIndex.code` is already mapped into the view model; this
- * table renders it as the mono subline beside each index name.
+ * table renders it as the tnum subline beside each index name.
  */
 export function MarketIndexTable({
   indices,
@@ -87,7 +87,7 @@ function IndexRow({ item }: { item: MarketIndex }) {
     <TableCell className='min-w-0 px-[18px] py-[9px] font-semibold'>
       {item.label}
       {item.code ? (
-        <div className='mono text-label font-normal text-faint'>
+        <div className='tnum text-label font-normal text-faint'>
           {item.code}
         </div>
       ) : null}
@@ -112,7 +112,7 @@ function IndexRow({ item }: { item: MarketIndex }) {
   return (
     <TableRow>
       {labelCell}
-      <TableCell className='mono text-right font-semibold' padding='compact'>
+      <TableCell className='tnum text-right font-semibold' padding='compact'>
         {item.value}
         {item.high === NO_VALUE && item.low === NO_VALUE ? null : (
           <div className='text-body-sm font-normal whitespace-nowrap text-faint sm:hidden'>
@@ -122,7 +122,7 @@ function IndexRow({ item }: { item: MarketIndex }) {
       </TableCell>
       <TableCell
         className={cn(
-          'mono text-right font-semibold',
+          'tnum text-right font-semibold',
           directionTextClass(item.direction)
         )}
         padding='compact'
@@ -134,7 +134,7 @@ function IndexRow({ item }: { item: MarketIndex }) {
       </TableCell>
       <TableCell
         className={cn(
-          'mono text-right font-semibold',
+          'tnum text-right font-semibold',
           directionTextClass(item.direction)
         )}
         padding='compact'
@@ -142,12 +142,12 @@ function IndexRow({ item }: { item: MarketIndex }) {
         {item.changeRate}
       </TableCell>
       <TableCell
-        className='mono hidden text-right text-fg-soft sm:table-cell'
+        className='tnum hidden text-right text-fg-soft sm:table-cell'
         padding='compact'
       >
         {item.high}
       </TableCell>
-      <TableCell className='mono hidden px-[18px] py-[9px] text-right text-fg-soft sm:table-cell'>
+      <TableCell className='tnum hidden px-[18px] py-[9px] text-right text-fg-soft sm:table-cell'>
         {item.low}
       </TableCell>
     </TableRow>

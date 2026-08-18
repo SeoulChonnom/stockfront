@@ -18,7 +18,7 @@ import { saveScrollPosition } from './scroll-restoration';
 /** Shared nav renderer; omit the admin group entirely for unauthorized users. */
 
 const GROUP_LABEL_CLASSES =
-  'px-2 text-label font-semibold uppercase tracking-[0.08em] text-faint';
+  'px-2 text-label font-semibold uppercase tracking-caps text-faint';
 
 function NavGroupLabel({ children }: { children: string }) {
   return <p className={GROUP_LABEL_CLASSES}>{children}</p>;
@@ -40,7 +40,7 @@ function FailedCountBadge({ count }: { count: number }) {
   return (
     <span
       aria-label='최근 7일 실패'
-      className='mono ml-auto inline-flex min-w-[20px] items-center justify-center rounded-full border border-[color:var(--danger-line)] bg-[color:var(--danger-soft)] px-1.5 py-0.5 text-label font-semibold text-[color:var(--danger)]'
+      className='tnum ml-auto inline-flex min-w-[20px] items-center justify-center rounded-full border border-[color:var(--danger-line)] bg-[color:var(--danger-soft)] px-1.5 py-0.5 text-label font-semibold text-[color:var(--danger)]'
       data-testid='ops-failed-count-badge'
       role='status'
       title='최근 7일 실패'

@@ -171,20 +171,20 @@ function ClusterArticleRow({
       ) : (
         <span className='wrap-anywhere font-medium text-fg'>{title}</span>
       )}
-      <div className='mono mt-1 flex flex-wrap items-center gap-2 text-caption text-faint'>
+      <div className='tnum mt-1 flex flex-wrap items-center gap-2 text-body-sm text-faint'>
         <span>{displaySource(article.source)}</span>
         <span>{displayPublishedAt(article.publishedAt)}</span>
-        {/* Product layout: "제목 링크 + mono 메타 + 원문 배지 + 네이버 미러 ↗"
+        {/* Product layout: "제목 링크 + tnum 메타 + 원문 배지 + 네이버 미러 ↗"
             — the title itself links to the original source; this badge
             labels that destination in words (not color-only), distinct
             from the 네이버 미러 link below. */}
-        <span className='rounded-[var(--r-sm)] border border-[color:var(--line-strong)] px-1.5 py-0.5 text-caption font-semibold text-faint'>
+        <span className='rounded-[var(--r-sm)] border border-[color:var(--line-strong)] px-1.5 py-0.5 text-body-sm font-semibold text-faint'>
           원문
         </span>
         {/* B-4 (A-5 "표시 규칙"): only shown when > 0 — never a "0건"
             badge, and never the similar-group's other-article count. */}
         {article.exactDuplicateCount > 0 ? (
-          <span className='rounded-[var(--r-sm)] border border-line px-1.5 py-0.5 text-caption text-faint'>
+          <span className='rounded-[var(--r-sm)] border border-line px-1.5 py-0.5 text-body-sm text-faint'>
             원문 중복 {article.exactDuplicateCount}건
           </span>
         ) : null}
@@ -205,7 +205,7 @@ function ClusterArticleRow({
         {groupToggle ? (
           <button
             aria-expanded={groupToggle.expanded}
-            className='tap-target ms-auto rounded-[var(--r-sm)] border border-[color:var(--line-strong)] bg-[color:var(--surface)] px-2 py-0.5 text-caption font-semibold text-fg-soft'
+            className='tap-target ms-auto rounded-[var(--r-sm)] border border-[color:var(--line-strong)] bg-[color:var(--surface)] px-2 py-0.5 text-body-sm font-semibold text-fg-soft'
             onClick={groupToggle.onToggle}
             type='button'
           >
@@ -398,14 +398,13 @@ export function ClusterArticlesList({
       className='flex min-w-0 flex-col overflow-hidden rounded-[var(--r-lg)] border border-line bg-[color:var(--surface)]'
     >
       <div className='flex flex-wrap items-center gap-2.5 border-b border-line px-[18px] py-3.5'>
-        {/* Keep this dense card heading at 15px. */}
         <h2
-          className='m-0 text-[15px] font-semibold text-fg'
+          className='m-0 text-h2 font-semibold text-fg'
           id='cluster-articles-heading'
         >
           관련 기사
         </h2>
-        <span className='mono text-caption text-faint'>
+        <span className='tnum text-body-sm text-faint'>
           관련 기사 {articles.length}건
         </span>
       </div>

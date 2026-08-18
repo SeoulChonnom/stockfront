@@ -30,7 +30,7 @@ export function ClusterRepresentativeAside({
     >
       {/* The h2 is the accessible section label; the article title follows. */}
       <h2
-        className='m-0 mb-1 text-[12px] font-semibold tracking-[0.07em] text-faint uppercase'
+        className='m-0 mb-1 text-label font-semibold tracking-caps text-faint uppercase'
         id='cluster-representative-heading'
       >
         대표 기사
@@ -38,7 +38,7 @@ export function ClusterRepresentativeAside({
       <p className='m-0 mb-2 text-card-heading font-semibold text-fg'>
         {representative.title}
       </p>
-      <div className='mono mb-3 flex flex-col gap-0.5 text-caption text-faint'>
+      <div className='tnum mb-3 flex flex-col gap-0.5 text-body-sm text-faint'>
         <span>{displaySource(representative.source)}</span>
         <span>{displayPublishedAt(representative.publishedAt)}</span>
         {representative.sourceSummary ? (

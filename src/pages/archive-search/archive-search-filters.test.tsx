@@ -68,7 +68,7 @@ function renderFilters(
 }
 
 describe('ArchiveSearchFilters', () => {
-  it('renders the applied filters as a mono summary line', () => {
+  it('renders the applied filters as a tnum summary line', () => {
     renderFilters();
 
     expect(

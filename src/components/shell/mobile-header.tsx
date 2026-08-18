@@ -34,12 +34,10 @@ export function MobileHeader({
       </Button>
 
       <div className='min-w-0 flex-1'>
-        <p className='truncate text-label font-semibold uppercase tracking-[0.07em] text-faint'>
+        <p className='truncate text-label font-semibold uppercase tracking-caps text-faint'>
           {groupLabel}
         </p>
-        <p className='truncate text-[14px] font-semibold text-fg'>
-          {itemLabel}
-        </p>
+        <p className='truncate text-body font-semibold text-fg'>{itemLabel}</p>
       </div>
 
       <ThemeToggleButton onToggle={onToggleTheme} theme={theme} />
