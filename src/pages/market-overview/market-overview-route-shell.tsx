@@ -66,7 +66,7 @@ export function MarketOverviewRouteShell({
         </h1>
 
         {!isArchive ? (
-          <p className='m-0 text-body text-fg-soft'>
+          <p className='measure-error m-0 text-body text-fg-soft'>
             최신 브리프의 기준일을 확인할 수 없습니다.
           </p>
         ) : null}

@@ -87,7 +87,7 @@ export function MarketSection({
           >
             !
           </span>
-          <p className='m-0 text-body text-fg'>
+          <p className='measure-error m-0 text-body text-fg'>
             <strong className='font-semibold'>누락 </strong>
             {metadata.partialMessage}
           </p>
@@ -102,7 +102,7 @@ export function MarketSection({
         ) : null}
         <MarketAnalysisBlock analysis={market.analysis} />
         {hasNarrative ? null : (
-          <p className='m-0 rounded-[var(--r-md)] border border-dashed border-[color:var(--line-strong)] px-3.5 py-3 text-body text-faint'>
+          <p className='measure-error m-0 rounded-[var(--r-md)] border border-dashed border-[color:var(--line-strong)] px-3.5 py-3 text-body text-faint'>
             {noNarrativeCopy(audience)}
           </p>
         )}

@@ -128,7 +128,7 @@ function IssueRow({
           {cluster.title}
         </a>
         {cluster.summary ? (
-          <p className='text-pretty wrap-anywhere m-0 line-clamp-3 text-body text-fg-soft'>
+          <p className='measure-summary text-pretty wrap-anywhere m-0 line-clamp-3 text-body text-fg-soft'>
             {cluster.summary}
           </p>
         ) : null}

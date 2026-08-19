@@ -24,7 +24,7 @@ export function MarketAnalysisBlock({
           <div className='mb-1.5 text-label font-semibold tracking-caps text-faint uppercase'>
             배경
           </div>
-          <ul className='m-0 flex list-disc flex-col gap-0.5 pl-4 text-body text-fg-soft'>
+          <ul className='measure-analysis m-0 flex list-disc flex-col gap-0.5 pl-4 text-body text-fg-soft'>
             {background.map((line) => (
               <li className='wrap-anywhere' key={line}>
                 {line}
@@ -56,7 +56,7 @@ export function MarketAnalysisBlock({
             <div className='mb-1.5 text-label font-semibold tracking-caps text-faint uppercase'>
               관전 포인트
             </div>
-            <p className='text-pretty wrap-anywhere m-0 text-body text-fg-soft'>
+            <p className='measure-analysis text-pretty wrap-anywhere m-0 text-body text-fg-soft'>
               {outlook}
             </p>
           </div>

@@ -9,7 +9,7 @@ export function BatchHeader() {
         >
           배치 운영
         </h1>
-        <p className='wrap-anywhere mt-1 max-w-[70ch] text-body text-fg-soft'>
+        <p className='measure-summary wrap-anywhere mt-1 text-body text-fg-soft'>
           검색 결과 저장과 스냅샷 생성 배치는 각각 독립적으로 실행됩니다.
           기간·상태·타입으로 이력을 조회하고 단계별 진행, 실패 지점, 영향 범위를
           확인합니다.

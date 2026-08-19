@@ -16,6 +16,19 @@ import type { KeyPoint, KeyPointDirection } from '@/lib/view-models';
  *   자체가 이미 방향을 온전히 설명하므로 이 태그는 보조 요약일 뿐이다.
  * - `globalHeadline`이나 시장별 요약에서 항목을 합성하지 않는다 — 서버가
  *   내려준 순서를 그대로 표시할 뿐이다.
+ *
+ * 이 블록은 **자기 카드를 갖지 않는다.** 예전에는 `DecisionHeaderCard`와
+ * 글자 그대로 같은 chrome(`rounded-[var(--r-lg)] border border-line
+ * bg-[color:var(--surface)] p-5`)을 걸고 그 카드 *안에* 들어갔다. 표면색·
+ * 테두리·radius·패딩이 전부 같으니 두 카드의 경계가 보이지 않았다 —
+ * 구분이라는 일은 못 하면서 패딩만 두 겹(40px) 먹고, 화면에서 가장 먼저
+ * 읽히는 블록의 위계를 흐렸다.
+ *
+ * 대신 `border-t` 한 줄이 구획을 맡는다. `-mx-5 … px-5`로 부모의 `p-5`를
+ * 상쇄해 선을 카드 폭 끝까지 흘리는데, 이건 장식이 아니라 위계 신호다:
+ * 이 선은 카드를 두 구역으로 가르고, 아래 `<li>`의 인셋 `border-t`는 항목을
+ * 가른다. 두 선의 굵기와 색은 같고 **뻗는 범위만 다르다** — 같은 재료로
+ * 두 단계를 만든다. 본문 시작선도 위 `<h1>`과 같은 20px에 맞춰진다.
  */
 
 const DIRECTION_META: Record<
@@ -117,7 +130,7 @@ export function KeyPointsBlock({ keyPoints }: { keyPoints: KeyPoint[] }) {
   return (
     <section
       aria-labelledby='key-points-heading'
-      className='rounded-[var(--r-lg)] border border-line bg-[color:var(--surface)] p-5'
+      className='-mx-5 border-t border-line px-5 pt-4'
     >
       <h2
         className='m-0 mb-3 text-h2 font-semibold text-fg'
@@ -139,7 +152,7 @@ export function KeyPointsBlock({ keyPoints }: { keyPoints: KeyPoint[] }) {
                 <DirectionTag direction={point.direction} />
               ) : null}
             </div>
-            <p className='text-pretty wrap-anywhere m-0 text-body text-fg'>
+            <p className='measure-summary text-pretty wrap-anywhere m-0 text-body text-fg'>
               {point.text}
             </p>
           </li>

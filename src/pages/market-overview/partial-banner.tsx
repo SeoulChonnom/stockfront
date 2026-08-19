@@ -72,7 +72,9 @@ export function PartialBanner({
           >
             {copy.title}
           </h2>
-          <p className='m-0 mb-3 text-body text-fg-soft'>{copy.body}</p>
+          <p className='measure-error m-0 mb-3 text-body text-fg-soft'>
+            {copy.body}
+          </p>
 
           {snapshot.issues.length > 0 ? (
             // 서버 `message`는 provider endpoint·SQL·스택 트레이스를 담지
@@ -94,7 +96,7 @@ export function PartialBanner({
           ) : null}
 
           {canViewOps && snapshot.partialMessage ? (
-            <p className='wrap-anywhere m-0 mb-3 text-body text-fg-soft'>
+            <p className='measure-error wrap-anywhere m-0 mb-3 text-body text-fg-soft'>
               {snapshot.partialMessage}
             </p>
           ) : null}

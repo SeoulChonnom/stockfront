@@ -366,7 +366,7 @@ export function ArchiveSearchPage({
         </h1>
         {/* Keep the summary measure at 70ch rather than the shared 76ch.
             The title section's 6px flex gap replaces paragraph margin. */}
-        <p className='wrap-anywhere max-w-[70ch] text-body text-fg-soft'>
+        <p className='measure-summary wrap-anywhere text-body text-fg-soft'>
           기준일 범위와 생성 상태로 과거 스냅샷을 찾습니다. 결과를 열면 해당
           날짜의 시장 브리프로 이동하고, 돌아올 때 필터·페이지·스크롤 위치가
           복원됩니다.
@@ -511,7 +511,7 @@ function ArchiveResultsCard({
           <h3 className='m-0 mb-2 text-card-heading font-semibold text-fg'>
             조건에 맞는 스냅샷이 없습니다
           </h3>
-          <p className='wrap-anywhere m-0 mb-3.5 max-w-[60ch] text-body text-fg-soft'>
+          <p className='measure-error wrap-anywhere m-0 mb-3.5 text-body text-fg-soft'>
             선택한 기간에 생성된 브리프가 없거나, 상태 필터가 결과를 모두
             제외했습니다.
             {applied.market || applied.themes.length > 0 || applied.q

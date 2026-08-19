@@ -71,7 +71,7 @@ export function BatchFilters({
 
         <FilterBar
           applyLabel='조회'
-          className='gap-3.5 [&_label]:mb-[5px] [&>div:first-child]:grid-cols-[repeat(auto-fit,minmax(168px,1fr))] [&>div:first-child]:items-start'
+          className='gap-3.5 [&_label]:mb-[5px] [&_[data-filter-grid]]:grid-cols-[repeat(auto-fit,minmax(168px,1fr))] [&_[data-filter-grid]]:items-start'
           onReset={reset}
           onSubmit={handleSubmit}
         >

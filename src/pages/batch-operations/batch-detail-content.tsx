@@ -190,7 +190,7 @@ export function BatchDetailContent({
           <h3 className='m-0 mb-1.5 text-card-heading font-semibold text-fg'>
             사용자 영향
           </h3>
-          <ul className='wrap-anywhere m-0 flex list-disc flex-col gap-1 pl-5 text-body text-fg-soft'>
+          <ul className='measure-summary wrap-anywhere m-0 flex list-disc flex-col gap-1 pl-5 text-body text-fg-soft'>
             {impacts.map((impact) => (
               <li key={impact}>{impact}</li>
             ))}
@@ -208,7 +208,7 @@ export function BatchDetailContent({
             </p>
           ) : null}
           {run.errorMessage ? (
-            <p className='wrap-anywhere m-0 mt-1 text-body text-fg'>
+            <p className='measure-summary wrap-anywhere m-0 mt-1 text-body text-fg'>
               {run.errorMessage}
             </p>
           ) : null}
