@@ -78,22 +78,33 @@ export function DecisionHeaderCard({
       aria-labelledby='page-title'
       className='flex flex-col gap-4 rounded-[var(--r-lg)] border border-line bg-[color:var(--surface)] p-5'
     >
+      {/* 라벨과 값은 한 덩어리로 감싼다. 예전에는 `기준일`·날짜·`생성`·시각이
+          모두 이 flex의 형제였고, 390px에서 줄바꿈이 `생성`과 그 시각 사이에
+          떨어져 라벨만 윗줄 끝에 홀로 남았다 — 값 없는 라벨은 읽는 사람에게
+          아무 것도 말하지 않는다. 구분자 `|`도 두 번째 덩어리 안으로 넣어,
+          그룹이 다음 줄로 내려갈 때 함께 내려가게 한다. */}
       <div className='flex flex-wrap items-center gap-x-3 gap-y-2'>
         <StatusBadge status={displayStatus} />
-        <span className='text-body-sm text-faint'>기준일</span>
-        <span className='tnum text-body font-semibold'>
-          {snapshot.businessDate}
+        <span className='inline-flex items-baseline gap-1.5 whitespace-nowrap'>
+          <span className='text-body-sm text-faint'>기준일</span>
+          <span className='tnum text-body font-semibold'>
+            {snapshot.businessDate}
+          </span>
         </span>
-        <span aria-hidden='true' className='text-[color:var(--line-strong)]'>
-          |
+        <span className='inline-flex flex-wrap items-baseline gap-x-1.5 gap-y-1'>
+          <span aria-hidden='true' className='text-[color:var(--line-strong)]'>
+            |
+          </span>
+          <span className='text-body-sm text-faint'>생성</span>
+          <span className='tnum whitespace-nowrap text-body-sm text-fg-soft'>
+            {generatedDisplay}
+          </span>
+          {freshness ? (
+            <span className='whitespace-nowrap text-body-sm text-fg-soft'>
+              · {freshness} 생성
+            </span>
+          ) : null}
         </span>
-        <span className='text-body-sm text-faint'>생성</span>
-        <span className='tnum text-body-sm text-fg-soft'>
-          {generatedDisplay}
-        </span>
-        {freshness ? (
-          <span className='text-body-sm text-fg-soft'>· {freshness} 생성</span>
-        ) : null}
         {isRefetching ? <RefetchBadge /> : null}
       </div>
 

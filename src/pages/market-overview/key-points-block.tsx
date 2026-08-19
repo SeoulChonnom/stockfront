@@ -25,10 +25,15 @@ import type { KeyPoint, KeyPointDirection } from '@/lib/view-models';
  * 읽히는 블록의 위계를 흐렸다.
  *
  * 대신 `border-t` 한 줄이 구획을 맡는다. `-mx-5 … px-5`로 부모의 `p-5`를
- * 상쇄해 선을 카드 폭 끝까지 흘리는데, 이건 장식이 아니라 위계 신호다:
- * 이 선은 카드를 두 구역으로 가르고, 아래 `<li>`의 인셋 `border-t`는 항목을
- * 가른다. 두 선의 굵기와 색은 같고 **뻗는 범위만 다르다** — 같은 재료로
- * 두 단계를 만든다. 본문 시작선도 위 `<h1>`과 같은 20px에 맞춰진다.
+ * 상쇄해 선을 카드 폭 끝까지 흘린다. 본문 시작선은 위 `<h1>`과 같은 20px에
+ * 맞춰진다.
+ *
+ * **카드 안의 선은 이 하나뿐이다.** 처음에는 항목 사이에도 인셋 `border-t`를
+ * 두고 "굵기·색은 같고 뻗는 범위만 다르니 두 단계가 생긴다"고 봤는데, 실제로
+ * 렌더해 보니 1126px 대 1086px이었다 — 양쪽 20px 차이는 단계로 읽히지 않고
+ * 같은 선이 어정쩡하게 어긋난 것으로 읽힌다. 같지도 다르지도 않은 상태가
+ * 가장 나쁘다. 항목은 여백으로 가른다: 라벨(`text-body-sm` faint)이 이미 각
+ * 항목의 머리를 표시하므로 선이 할 일이 남지 않는다.
  */
 
 const DIRECTION_META: Record<
@@ -138,10 +143,10 @@ export function KeyPointsBlock({ keyPoints }: { keyPoints: KeyPoint[] }) {
       >
         오늘의 핵심
       </h2>
-      <ul className='m-0 flex list-none flex-col gap-3 p-0'>
+      <ul className='m-0 flex list-none flex-col gap-4 p-0'>
         {visibleKeyPoints.map((point) => (
           <li
-            className='flex flex-col gap-1 border-t border-line pt-3 first:border-t-0 first:pt-0'
+            className='flex flex-col gap-1'
             key={`${point.kind}-${point.text}`}
           >
             <div className='flex flex-wrap items-center gap-2'>

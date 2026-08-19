@@ -313,6 +313,22 @@ body,
   font-size: var(--fs-body);
   line-height: var(--lh-body);
   letter-spacing: var(--ls-ambient);
+
+  /* 한글 줄바꿈은 어절 단위로 한다.
+   *
+   * 브라우저 기본값(`word-break: normal`)은 한글을 CJK로 보고 **음절 사이
+   * 아무 데서나** 줄을 넘긴다. 실제 화면에서 그대로 나왔다 — 운영 화면
+   * 요약이 "전체 타 / 입", 요약 타일 캡션이 "일부 지수·요약 누 / 락"과
+   * "평균 소요 2분 49 / 초"로 갈렸다. 라틴 문장을 "sema / ntic"으로 끊는
+   * 것과 같은 일인데, 한글이라 그냥 지나치기 쉽다.
+   *
+   * `keep-all`은 띄어쓰기(어절 경계)에서만 넘기게 한다. 비-CJK 텍스트에는
+   * 아무 영향이 없으므로 앱 전체에 걸어도 안전하다.
+   *
+   * 대가는 어절 하나가 칸보다 길 때인데, 그건 `overflow-wrap`이 받는다 —
+   * 그래서 `.wrap-anywhere`가 남아 있고 320px까지 훑는
+   * `e2e/responsive-overflow.spec.ts`가 그 조합을 지킨다. */
+  word-break: keep-all;
 }
 
 body {
@@ -402,6 +418,9 @@ img {
   border: 0;
 }
 
+/* 한 줄에 못 담는 토큰(URL·에러 토큰·로그 한 줄)을 잘라서라도 담는다.
+ * 음절 단위 줄바꿈은 이 속성이 아니라 `word-break`가 정한다 — `#root`의
+ * `keep-all` 참고. */
 .wrap-anywhere {
   overflow-wrap: anywhere;
 }
