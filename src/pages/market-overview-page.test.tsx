@@ -652,8 +652,8 @@ describe('MarketOverviewPage — 글로벌 헤드라인', () => {
   });
 });
 
-describe('MarketOverviewPage — 데이터 정보', () => {
-  it('moves pageId/versionNo/pipeline counts into a collapsed 데이터 정보 block for an operator', () => {
+describe('MarketOverviewPage — 표기와 데이터 정보', () => {
+  it('moves pageId/versionNo/pipeline counts into a collapsed 표기와 데이터 정보 block for an operator', () => {
     setRoleOverride('admin');
 
     render(
@@ -664,7 +664,7 @@ describe('MarketOverviewPage — 데이터 정보', () => {
       />
     );
 
-    const details = screen.getByText('데이터 정보').closest('details');
+    const details = screen.getByText('표기와 데이터 정보').closest('details');
     expect(details).not.toBeNull();
     // Collapsed by default so it never competes with the conclusion above it.
     expect(details).not.toHaveAttribute('open');
@@ -687,12 +687,32 @@ describe('MarketOverviewPage — 데이터 정보', () => {
       />
     );
 
-    const details = screen.getByText('데이터 정보').closest('details');
+    const details = screen.getByText('표기와 데이터 정보').closest('details');
     expect(details).not.toBeNull();
     // 갱신 시각은 사용자에게도 의미가 있으므로 남는다.
     expect(details).toHaveTextContent('마지막 갱신 2026-03-17 09:31 KST');
     expect(details).not.toHaveTextContent('pageId');
     expect(details).not.toHaveTextContent('클러스터 21건');
+  });
+
+  it('explains the two dates and the direction/status split to every audience', () => {
+    // 이 규약은 지금까지 PRODUCT.md와 코드 주석에만 있었다. 일반 사용자도
+    // 화면 안에서 배울 수 있어야 하므로 운영 게이트를 타지 않는다.
+    setRoleOverride('user');
+
+    render(
+      <MarketOverviewPage
+        mode='latest'
+        now={FIXED_NOW}
+        snapshot={buildSnapshot()}
+      />
+    );
+
+    const details = screen.getByText('표기와 데이터 정보').closest('details');
+    expect(details).toHaveTextContent('시장 결과가 속한 날짜');
+    expect(details).toHaveTextContent('이 브리프가 만들어진 시각');
+    expect(details).toHaveTextContent('상승이 빨강, 하락이 파랑');
+    expect(details).toHaveTextContent('빨간 배지는 하락이 아니라 실패입니다');
   });
 });
 
@@ -710,8 +730,13 @@ describe('MarketOverviewPage — markets:[] 빈 상태', () => {
       />
     );
 
-    expect(screen.queryByText('준비 완료')).not.toBeInTheDocument();
-    expect(screen.getByText('부분 생성')).toBeInTheDocument();
+    // 페이지 상태 배지만 본다. `표기와 데이터 정보`의 범례가 견본 배지를
+    // 하나 더 그리므로, 화면 전체에서 찾으면 둘이 잡힌다.
+    const header = document.querySelector(
+      'section[aria-labelledby="page-title"]'
+    ) as HTMLElement;
+    expect(within(header).queryByText('준비 완료')).not.toBeInTheDocument();
+    expect(within(header).getByText('부분 생성')).toBeInTheDocument();
     expect(
       screen.getByText('시장 섹션이 생성되지 않았습니다')
     ).toBeInTheDocument();
