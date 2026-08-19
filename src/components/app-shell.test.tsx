@@ -337,7 +337,10 @@ describe('AppShell', () => {
 
     const drawer = screen.getByRole('dialog', { name: 'Market Brief' });
     expect(drawer).toBeInTheDocument();
-    expect(within(drawer).getByText('Admin · ops.analyst')).toBeInTheDocument();
+    // 토큰이 없는 렌더(테스트/개발 우회)에서는 이름이 없다. 그때는 역할만
+    // 남기고 자리표시자를 지어내지 않는다 — `useAuthUserName` 참고.
+    expect(within(drawer).getByText('Admin')).toBeInTheDocument();
+    expect(within(drawer).queryByText(/·/)).not.toBeInTheDocument();
     // The drawer renders its own copy of the nav — now there should be two
     // "최신 브리프" links (rail + drawer).
     expect(screen.getAllByRole('link', { name: '최신 브리프' }).length).toBe(2);

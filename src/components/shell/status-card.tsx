@@ -4,6 +4,22 @@ import type { AriaRole, ReactNode } from 'react';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 
+/**
+ * 상태 카드. **`fullScreen`이 레이아웃 문법을 가른다.**
+ *
+ * `true`는 셸이 없는 전체 화면 상태다(인증 부트스트랩, 루트 에러 바운더리).
+ * 화면에 이것 말고 아무것도 없으므로 440px 중앙 정렬이 맞다.
+ *
+ * `false`는 앱 셸 `<main>` 안에 들어가는 인페이지 상태다(404, 브리프 로드
+ * 실패, 아카이브 날짜 없음). 예전에는 이때도 `mx-auto max-w-[440px]
+ * text-center`를 그대로 써서, 같은 화면의 다른 모든 메시지(`PartialBanner`,
+ * `InlineAlert`, 시장 섹션의 누락 안내)가 왼쪽 정렬 인라인 배너인데 이것만
+ * 가운데 뜬 좁은 카드였다. 페이지 안의 메시지가 이웃과 다른 언어를 쓰면
+ * 그 자리만 다른 제품에서 가져온 것처럼 읽힌다.
+ *
+ * 이제 인페이지는 카드 폭을 다 쓰고 왼쪽 정렬하며, 설명문은
+ * `measure-error`(62ch)로 읽는 폭을 잡는다 — 다른 인라인 안내와 같은 규칙이다.
+ */
 export type StatusCardTone = 'info' | 'danger';
 
 const TONE_BADGE_CLASSES: Readonly<Record<StatusCardTone, string>> = {
@@ -45,13 +61,16 @@ export function StatusCard({
   return (
     <div
       className={cn(
-        'flex justify-center px-4 py-10',
-        fullScreen && 'min-h-screen items-center bg-[color:var(--bg)]'
+        fullScreen &&
+          'flex min-h-screen items-center justify-center bg-[color:var(--bg)] px-4 py-10'
       )}
     >
       <Card
         aria-live={ariaLive}
-        className='mx-auto w-full max-w-[440px] p-6 text-center'
+        className={cn(
+          'p-6',
+          fullScreen ? 'mx-auto w-full max-w-[440px] text-center' : 'w-full'
+        )}
         role={role}
       >
         {badge ? (
@@ -74,17 +93,32 @@ export function StatusCard({
         >
           {title}
         </Heading>
-        <p className='wrap-anywhere mb-5 text-body text-fg-soft'>
+        <p
+          className={cn(
+            'wrap-anywhere mb-5 text-body text-fg-soft',
+            !fullScreen && 'measure-error'
+          )}
+        >
           {description}
         </p>
         {showSpinner ? (
           <Loader2
             aria-hidden='true'
-            className='mx-auto mb-5 size-6 animate-[spin_var(--dur-spinner)_linear_infinite] text-[color:var(--info)]'
+            className={cn(
+              'mb-5 size-6 animate-[spin_var(--dur-spinner)_linear_infinite] text-[color:var(--info)]',
+              fullScreen && 'mx-auto'
+            )}
           />
         ) : null}
         {actions ? (
-          <div className='flex flex-wrap justify-center gap-2'>{actions}</div>
+          <div
+            className={cn(
+              'flex flex-wrap gap-2',
+              fullScreen && 'justify-center'
+            )}
+          >
+            {actions}
+          </div>
         ) : null}
       </Card>
     </div>

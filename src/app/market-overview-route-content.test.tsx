@@ -143,10 +143,31 @@ describe('MarketOverviewRouteContent error context', () => {
     expect(document.querySelectorAll('#page-title')).toHaveLength(1);
     expect(screen.getAllByText('아카이브 스냅샷')).not.toHaveLength(0);
     expect(screen.getAllByText('2026-03-17')).not.toHaveLength(0);
-    expect(screen.getByText('403 · FORBIDDEN')).toBeInTheDocument();
+    // 일반 사용자에게는 영문 코드를 감춘다.
+    expect(screen.queryByText('403 · FORBIDDEN')).not.toBeInTheDocument();
     expect(
       screen.getByText('이 화면에 접근할 권한이 없습니다')
     ).toBeInTheDocument();
+  });
+
+  it('shows the raw 403 code to an operator, who can act on it', () => {
+    // 시장 페이지의 403은 서버에서 오므로 운영자도 만난다. 그때는 진단
+    // 정보를 그대로 준다 — `errorCodeCopy`의 두 갈래를 모두 고정한다.
+    setRoleOverride('admin');
+    mockUseLatestMarketPage.mockReturnValue({
+      data: undefined,
+      error: null,
+      isFetching: false,
+      isLoading: false,
+      refetch: vi.fn(),
+    });
+    mockUseArchiveMarketPage.mockReturnValue(
+      mockQuery(new ApiError('forbidden', 403, null))
+    );
+
+    renderRoute('/market/archive/2026-03-17');
+
+    expect(screen.getByText('403 · FORBIDDEN')).toBeInTheDocument();
   });
 });
 

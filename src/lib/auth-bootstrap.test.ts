@@ -61,6 +61,7 @@ describe('auth bootstrap', () => {
       accessToken: 'issued-token',
       error: null,
       roles: [],
+      name: null,
     });
     expect(getAccessToken()).toBe('issued-token');
     expect(getAuthBootstrapState()).toEqual({
@@ -68,6 +69,7 @@ describe('auth bootstrap', () => {
       accessToken: 'issued-token',
       error: null,
       roles: [],
+      name: null,
     });
   });
 
@@ -113,6 +115,7 @@ describe('auth bootstrap', () => {
       error:
         'Token bootstrap response must include a non-empty accessToken string.',
       roles: [],
+      name: null,
     });
     expect(assignMock).toHaveBeenCalledWith(
       expect.stringMatching(/^http:\/\/localhost:8000\/main\/login\?redirect=/)
@@ -139,6 +142,7 @@ describe('auth bootstrap', () => {
       error:
         'Token bootstrap response must include a non-empty accessToken string.',
       roles: [],
+      name: null,
     });
     expect(assignMock).not.toHaveBeenCalled();
   });
@@ -158,6 +162,7 @@ describe('auth bootstrap', () => {
       accessToken: null,
       error: 'VITE_API_HOST is not configured.',
       roles: [],
+      name: null,
     });
     expect(fetchMock).not.toHaveBeenCalled();
     expect(assignMock).not.toHaveBeenCalled();
@@ -177,6 +182,7 @@ describe('auth bootstrap', () => {
       accessToken: null,
       error: 'VITE_API_HOST is not configured.',
       roles: [],
+      name: null,
     });
     expect(fetchMock).not.toHaveBeenCalled();
     expect(assignMock).not.toHaveBeenCalled();
@@ -231,6 +237,7 @@ describe('auth bootstrap', () => {
       accessToken: null,
       error: null,
       roles: [],
+      name: null,
     });
 
     resolveResponse?.(createJsonResponse({ accessToken: 'issued-token' }));
@@ -240,6 +247,7 @@ describe('auth bootstrap', () => {
       accessToken: 'issued-token',
       error: null,
       roles: [],
+      name: null,
     });
 
     await expect(bootstrapAuth()).resolves.toEqual({
@@ -247,6 +255,7 @@ describe('auth bootstrap', () => {
       accessToken: 'issued-token',
       error: null,
       roles: [],
+      name: null,
     });
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
@@ -267,8 +276,56 @@ describe('auth bootstrap', () => {
       accessToken: 'issued-token',
       error: null,
       roles: [],
+      name: null,
     });
   });
+
+  it('reads the display name from the token response', async () => {
+    vi.stubEnv('VITE_API_HOST', 'http://localhost:8000');
+    vi.stubGlobal(
+      'fetch',
+      vi
+        .fn<
+          (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>
+        >()
+        .mockResolvedValue(
+          createJsonResponse({
+            accessToken: 'issued-token',
+            name: '류지호',
+            roleList: ['ADMIN'],
+            // 로그인 아이디는 계약에 있지만 화면에 쓰지 않는다.
+            username: 'jiho.ryu',
+          })
+        )
+    );
+
+    await bootstrapAuth();
+
+    expect(getAuthBootstrapState().name).toBe('류지호');
+  });
+
+  it.each([
+    ['field missing', { accessToken: 'issued-token' }],
+    ['non-string', { accessToken: 'issued-token', name: 42 }],
+    ['blank', { accessToken: 'issued-token', name: '   ' }],
+  ])(
+    'falls back to a null name rather than an empty label (%s)',
+    async (_label, body) => {
+      vi.stubEnv('VITE_API_HOST', 'http://localhost:8000');
+      vi.stubGlobal(
+        'fetch',
+        vi
+          .fn<
+            (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>
+          >()
+          .mockResolvedValue(createJsonResponse(body))
+      );
+
+      await bootstrapAuth();
+
+      expect(getAuthBootstrapState().name).toBeNull();
+    }
+  );
 
   it('parses a roleList array of strings from the token response verbatim', async () => {
     vi.stubEnv('VITE_API_HOST', 'http://localhost:8000');
@@ -291,6 +348,7 @@ describe('auth bootstrap', () => {
       accessToken: 'issued-token',
       error: null,
       roles: ['USER', 'ADMIN'],
+      name: null,
     });
   });
 
@@ -315,6 +373,7 @@ describe('auth bootstrap', () => {
       accessToken: 'issued-token',
       error: null,
       roles: ['USER', 'ADMIN'],
+      name: null,
     });
   });
 
@@ -339,6 +398,7 @@ describe('auth bootstrap', () => {
       accessToken: 'issued-token',
       error: null,
       roles: [],
+      name: null,
     });
   });
 });

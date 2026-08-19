@@ -212,7 +212,9 @@ describe('BatchOperationsPage — non-admin user', () => {
         name: '이 화면에 접근할 권한이 없습니다',
       })
     ).toBeInTheDocument();
-    expect(screen.getByText('403 · FORBIDDEN')).toBeInTheDocument();
+    // 이 화면은 정의상 `ops.view`가 없는 사람에게만 뜬다. 영문 에러 코드는
+    // 그 사람에게 노출하지 않는다 (PRODUCT.md).
+    expect(screen.queryByText('403 · FORBIDDEN')).not.toBeInTheDocument();
     expect(
       screen.getByRole('button', { name: '최신 브리프로 이동' })
     ).toBeInTheDocument();

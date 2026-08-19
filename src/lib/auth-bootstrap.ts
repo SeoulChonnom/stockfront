@@ -14,13 +14,26 @@ export type AuthBootstrapState = Readonly<{
   error: string | null;
   /** Sanitized roleList; role interpretation belongs to capabilities.ts. */
   roles: readonly string[];
+  /**
+   * 표시용 사용자 이름(`UserRdo.name`). 값이 없거나 문자열이 아니면 `null`이며,
+   * 그때 화면은 이름 줄을 지운다 — 자리표시자를 지어내지 않는다.
+   */
+  name: string | null;
 }>;
 
 type AuthBootstrapListener = () => void;
 
+/**
+ * `${VITE_API_HOST}/api/user/token` 응답 본문.
+ *
+ * 실제 계약은 `{ accessToken, name, roleList, username }`이다. 이 타입은 그중
+ * **읽는 것만** 선언한다 — `username`(로그인 아이디)은 화면에 쓰지 않으므로
+ * 넣지 않았다. 표시용 이름은 `name`이다.
+ */
 type UserRdo = {
   accessToken?: unknown;
   roleList?: unknown;
+  name?: unknown;
 };
 
 const idleState: AuthBootstrapState = Object.freeze({
@@ -28,6 +41,7 @@ const idleState: AuthBootstrapState = Object.freeze({
   accessToken: null,
   error: null,
   roles: [],
+  name: null,
 });
 
 let currentState = idleState;
@@ -45,13 +59,15 @@ function createState(
   status: AuthBootstrapStatus,
   accessToken: string | null,
   error: string | null = null,
-  roles: readonly string[] = []
+  roles: readonly string[] = [],
+  name: string | null = null
 ): AuthBootstrapState {
   return Object.freeze({
     status,
     accessToken,
     error,
     roles,
+    name,
   });
 }
 
@@ -112,6 +128,26 @@ function readRoleList(body: unknown): readonly string[] {
   return rawRoleList.filter(
     (entry): entry is string => typeof entry === 'string'
   );
+}
+
+/**
+ * 표시용 이름. `readRoleList`와 같은 방어 수준을 쓴다 — 필드가 없거나 문자열이
+ * 아니거나 공백뿐이면 `null`이다. 빈 문자열을 그대로 통과시키면 화면에 이름
+ * 줄만 남고 내용이 없는 상태가 된다.
+ */
+function readName(body: unknown): string | null {
+  const rawName =
+    body && typeof body === 'object' && 'name' in body
+      ? (body as UserRdo).name
+      : undefined;
+
+  if (typeof rawName !== 'string') {
+    return null;
+  }
+
+  const trimmed = rawName.trim();
+
+  return trimmed.length > 0 ? trimmed : null;
 }
 
 function getBootstrapFailureState(message: string) {
@@ -213,6 +249,7 @@ export async function requestAccessTokenBootstrap() {
 type TokenBootstrapResult = Readonly<{
   accessToken: string;
   roles: readonly string[];
+  name: string | null;
 }>;
 
 async function requestTokenBootstrap(): Promise<TokenBootstrapResult> {
@@ -221,6 +258,7 @@ async function requestTokenBootstrap(): Promise<TokenBootstrapResult> {
   return {
     accessToken: readAccessToken(parsedBody),
     roles: readRoleList(parsedBody),
+    name: readName(parsedBody),
   };
 }
 
@@ -241,8 +279,8 @@ export function bootstrapAuth() {
   publishState(createState('loading', null));
 
   inFlightBootstrap = requestTokenBootstrap()
-    .then(({ accessToken, roles }) =>
-      publishState(createState('authenticated', accessToken, null, roles))
+    .then(({ accessToken, roles, name }) =>
+      publishState(createState('authenticated', accessToken, null, roles, name))
     )
     .catch((error: unknown) =>
       getBootstrapFailureState(

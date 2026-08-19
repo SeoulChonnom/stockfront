@@ -38,7 +38,10 @@ test.describe('non-admin user permissions', () => {
     await installMockApi(page, { scenario: 'ready', role: 'user' });
     await page.goto('ops/batches');
 
-    await expect(page.getByText('403 · FORBIDDEN')).toBeVisible();
+    // 이 화면은 `ops.view`가 없는 사람에게만 뜬다. 영문 에러 코드는 그
+    // 사람에게 노출하지 않는다 — 이 파일의 "never shows an English error code
+    // to a regular user"와 같은 규칙이다(PRODUCT.md).
+    await expect(page.getByText('403 · FORBIDDEN')).toHaveCount(0);
     await expect(
       page.getByRole('heading', { name: '이 화면에 접근할 권한이 없습니다' })
     ).toBeVisible();
@@ -67,7 +70,9 @@ test.describe('non-admin user permissions', () => {
     });
 
     await page.goto('ops/batches');
-    await expect(page.getByText('403 · FORBIDDEN')).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: '이 화면에 접근할 권한이 없습니다' })
+    ).toBeVisible();
     expect(requestedPaths).toEqual([]);
   });
 });

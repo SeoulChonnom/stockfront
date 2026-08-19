@@ -2,6 +2,7 @@ import { X } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Drawer } from '@/components/ui/drawer';
+import { useAuthUserName } from '@/lib/auth-user';
 import { useCapabilities } from '@/lib/capabilities';
 
 import { NavList } from './nav-list';
@@ -30,6 +31,7 @@ export function NavDrawer({
   failedCount: number | null;
 }) {
   const { role } = useCapabilities();
+  const userName = useAuthUserName();
 
   return (
     <Drawer isOpen={isOpen} labelledBy={DRAWER_TITLE_ID} onClose={onClose}>
@@ -41,8 +43,11 @@ export function NavDrawer({
           >
             Market Brief
           </p>
+          {/* 이름이 없으면 역할만 남긴다 — `useAuthUserName` 참고. */}
           <p className='truncate text-body-sm text-faint'>
-            {ROLE_LABELS[role]} · ops.analyst
+            {userName
+              ? `${ROLE_LABELS[role]} · ${userName}`
+              : ROLE_LABELS[role]}
           </p>
         </div>
         <Button

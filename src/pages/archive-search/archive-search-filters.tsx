@@ -228,12 +228,17 @@ export function ArchiveSearchFilters({
               {...getFieldProps('q')}
             />
           </FilterField>
-          <fieldset className='min-w-0 rounded-[var(--r-md)] border border-line p-3 min-[1181px]:col-span-3'>
-            <legend className='px-1 text-label font-semibold text-fg-soft'>
+          {/* 테마도 다른 필드와 같은 문법을 쓴다: 라벨이 위에 서고, 그 아래
+              컨트롤이 `--line-strong` 테두리를 두른다. 예전에는 이 필드만
+              `<legend>`이 테두리에 파여 들어간 fieldset 박스여서, 같은 폼
+              안에서 혼자 다른 종족처럼 보였다. `<fieldset>`/`<legend>` 자체는
+              체크박스 묶음의 접근성 그룹이라 유지하고, 테두리만 옮긴다. */}
+          <fieldset className='min-w-0 min-[1181px]:col-span-3'>
+            <legend className='mb-1 block text-label font-semibold text-fg-soft'>
               테마
             </legend>
             <p
-              className='m-0 mb-2 text-body-sm text-faint'
+              className='measure-error m-0 mb-2 text-body-sm text-faint'
               id='archive-theme-help'
             >
               부모와 자식 테마를 각각 선택할 수 있습니다. 선택한 테마는 최대
@@ -273,11 +278,13 @@ export function ArchiveSearchFilters({
                 선택할 수 있는 테마가 없습니다.
               </p>
             ) : (
-              <ArchiveThemeTree
-                nodes={catalog}
-                onChange={setSelectedThemes}
-                selectedCodes={selectedThemes}
-              />
+              <div className='rounded-[var(--r-md)] border border-[color:var(--line-strong)] bg-[color:var(--surface)] px-3 py-2.5'>
+                <ArchiveThemeTree
+                  nodes={catalog}
+                  onChange={setSelectedThemes}
+                  selectedCodes={selectedThemes}
+                />
+              </div>
             )}
           </fieldset>
         </FilterBar>
