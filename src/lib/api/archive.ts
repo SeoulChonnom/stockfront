@@ -1,10 +1,10 @@
-import { apiRequest } from './client';
+import { apiRequest } from '@/lib/api/client';
 import type {
   ArchiveListResponse,
   ArchiveStatusResponse,
   MarketTypeResponse,
   ThemeNodeResponse,
-} from './types';
+} from '@/lib/api/types';
 
 export type ArchiveListParams = {
   fromDate?: string;

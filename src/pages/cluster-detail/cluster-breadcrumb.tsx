@@ -1,8 +1,8 @@
 import { InlineAlert } from '@/components/state';
 
-import { createNavigateHandler } from '../../lib/app-state';
-import { withBasePath } from '../../lib/router';
-import { getOriginLink } from './origin-link';
+import { createNavigateHandler } from '@/lib/app-state';
+import { withBasePath } from '@/lib/router';
+import { getOriginLink } from '@/pages/cluster-detail/origin-link';
 
 /**
  * `nav[aria-label="위치"]` breadcrumb with an origin-aware first

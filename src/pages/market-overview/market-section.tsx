@@ -1,13 +1,16 @@
 import { noIndexDataCopy, noNarrativeCopy } from '@/lib/audience-copy';
 import type { MarketSnapshot } from '@/lib/view-models';
 
-import { MarketAnalysisBlock } from './market-analysis-block';
-import { MarketArticleLinks } from './market-article-links';
-import { MarketIndexCards } from './market-index-cards';
-import { MarketIndexTable } from './market-index-table';
-import { MarketIssueList } from './market-issue-list';
-import { marketHeadingId, marketSectionId } from './market-section-ids';
-import type { ClusterOriginQuery } from './navigation';
+import { MarketAnalysisBlock } from '@/pages/market-overview/market-analysis-block';
+import { MarketArticleLinks } from '@/pages/market-overview/market-article-links';
+import { MarketIndexCards } from '@/pages/market-overview/market-index-cards';
+import { MarketIndexTable } from '@/pages/market-overview/market-index-table';
+import { MarketIssueList } from '@/pages/market-overview/market-issue-list';
+import {
+  marketHeadingId,
+  marketSectionId,
+} from '@/pages/market-overview/market-section-ids';
+import type { ClusterOriginQuery } from '@/pages/market-overview/navigation';
 
 /**
  * 시장 섹션. 화면 표시 순서는 `market-display-order.ts`가 정하고

@@ -10,8 +10,8 @@ import { cn } from '@/lib/utils';
 import {
   BatchDetailContent,
   type RetryAiMutationState,
-} from './batch-detail-content';
-import { useRetryAnnounce } from './use-retry-announce';
+} from '@/pages/batch-operations/batch-detail-content';
+import { useRetryAnnounce } from '@/pages/batch-operations/use-retry-announce';
 
 export type BatchDetailPanelProps = {
   run: BatchRunRow | null;

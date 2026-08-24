@@ -7,12 +7,12 @@ import { withBasePath } from '@/lib/router';
 import { cn } from '@/lib/utils';
 import type { ClusterCard } from '@/lib/view-models';
 
-import { getSafeExternalUrl } from './link-utils';
+import { getSafeExternalUrl } from '@/pages/market-overview/link-utils';
 import {
   buildClusterHref,
   type ClusterOriginQuery,
   createScrollSavingNavigateHandler,
-} from './navigation';
+} from '@/pages/market-overview/navigation';
 
 /**
  * 핵심 이슈 — 카드 그리드 대신 행 리스트. 우측 열 200px,

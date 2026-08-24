@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
-import { Card } from './card';
+import { Card } from '@/components/ui/card';
 
 describe('Card', () => {
   it('exposes the inset padding variant and lets caller classes override it', () => {

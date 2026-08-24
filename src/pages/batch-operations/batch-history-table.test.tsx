@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import type { BatchRunRow } from '@/lib/query-hooks';
 
-import { BatchHistoryTable } from './batch-history-table';
+import { BatchHistoryTable } from '@/pages/batch-operations/batch-history-table';
 
 function createRow(overrides: Partial<BatchRunRow> = {}): BatchRunRow {
   return {

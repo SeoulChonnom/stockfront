@@ -7,7 +7,7 @@ import {
   formatNumericText,
   formatRelativeFreshness,
   formatSignedNumber,
-} from './formatters';
+} from '@/lib/formatters';
 
 describe('formatters', () => {
   it.each([

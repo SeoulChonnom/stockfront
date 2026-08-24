@@ -1,10 +1,14 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
-import { FilterBar, FilterDirtyBadge, FilterField } from './filter-bar';
-import { Input } from './input';
-import type { FilterErrors } from './use-filter-draft';
-import { useFilterDraft } from './use-filter-draft';
+import {
+  FilterBar,
+  FilterDirtyBadge,
+  FilterField,
+} from '@/components/ui/filter-bar';
+import { Input } from '@/components/ui/input';
+import type { FilterErrors } from '@/components/ui/use-filter-draft';
+import { useFilterDraft } from '@/components/ui/use-filter-draft';
 
 type TestFilters = {
   from: string;

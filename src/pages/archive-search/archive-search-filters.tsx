@@ -14,14 +14,14 @@ import { useFilterDraft } from '@/components/ui/use-filter-draft';
 import type { ThemeNodeResponse } from '@/lib/api/types';
 import { cn } from '@/lib/utils';
 
-import { ArchiveThemeTree } from './archive-theme-tree';
+import { ArchiveThemeTree } from '@/pages/archive-search/archive-theme-tree';
 import {
   type ArchiveFilterDraft,
   getDefaultArchiveFilters,
   getStatusOptions,
   getStatusSummaryLabel,
   validateArchiveFilters,
-} from './filter-copy';
+} from '@/pages/archive-search/filter-copy';
 
 type ArchiveTextFilterDraft = Omit<ArchiveFilterDraft, 'themes'>;
 

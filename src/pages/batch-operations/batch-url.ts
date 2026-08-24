@@ -1,7 +1,7 @@
 import type { ListFilters } from '@/lib/app-state';
 import { buildUrl } from '@/lib/router';
 
-import { BATCH_TYPES } from './filter-copy';
+import { BATCH_TYPES } from '@/pages/batch-operations/filter-copy';
 
 export type BatchFilters = Pick<
   ListFilters,

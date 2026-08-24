@@ -1,8 +1,8 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
-import { DirectionIndicator } from './direction-indicator';
-import { directionTextClass } from './direction-text-class';
+import { DirectionIndicator } from '@/components/state/direction-indicator';
+import { directionTextClass } from '@/components/state/direction-text-class';
 
 describe('DirectionIndicator', () => {
   it('states 상승 in words next to the up glyph', () => {

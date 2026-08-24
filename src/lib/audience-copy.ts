@@ -2,7 +2,7 @@
  * 권한별 문구 선택. 컴포넌트마다 분기를 흩뿌리지 않기 위해 한 곳에 모은다.
  * 일반 사용자에게는 내부 파이프라인 용어와 접근할 수 없는 복구 수단을 노출하지 않는다.
  */
-import type { MarketSnapshot } from './view-models';
+import type { MarketSnapshot } from '@/lib/view-models';
 
 export type Audience = { canViewOps: boolean };
 

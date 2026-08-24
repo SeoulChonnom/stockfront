@@ -1,5 +1,5 @@
-import { apiRequest } from './client';
-import type { ClusterDetailResponse } from './types';
+import { apiRequest } from '@/lib/api/client';
+import type { ClusterDetailResponse } from '@/lib/api/types';
 
 export function getClusterDetail(clusterId: string, signal?: AbortSignal) {
   return apiRequest<ClusterDetailResponse>(

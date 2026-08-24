@@ -5,7 +5,7 @@ import {
   getDefaultArchiveFilters,
   getStatusOptions,
   validateArchiveFilters,
-} from './filter-copy';
+} from '@/pages/archive-search/filter-copy';
 
 describe('getDefaultArchiveFilters', () => {
   it('defaults to the KST calendar date, not the UTC one, in the early-KST-morning boundary window', () => {

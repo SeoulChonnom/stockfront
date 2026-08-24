@@ -12,9 +12,9 @@ import type {
   ClusterSection,
   ClusterSentence,
   ConflictStatus,
-} from '../../lib/view-models';
-import { requestArticleFocus } from './article-focus-event';
-import { displaySource } from './copy-fallbacks';
+} from '@/lib/view-models';
+import { requestArticleFocus } from '@/pages/cluster-detail/article-focus-event';
+import { displaySource } from '@/pages/cluster-detail/copy-fallbacks';
 
 /**
  * "AI 심층 분석" renders `summary.long` (as `analysisLead`) followed by the

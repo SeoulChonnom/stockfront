@@ -1,8 +1,8 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
-import { withBasePath } from '../../lib/router';
-import { ArchiveResultsTable } from './archive-results-table';
+import { withBasePath } from '@/lib/router';
+import { ArchiveResultsTable } from '@/pages/archive-search/archive-results-table';
 
 const filters = { from: '2026-03-01', to: '2026-03-31', status: '', page: 1 };
 

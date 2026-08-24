@@ -1,6 +1,5 @@
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-
-import { Button } from './button';
 
 /** Shared pager; page changes announce through the app's single live region. */
 

@@ -2,13 +2,13 @@ import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { getPageNavigation } from '../lib/api/pages';
+import { getPageNavigation } from '@/lib/api/pages';
 import {
   resetRoleOverrideForTesting,
   setRoleOverride,
-} from '../lib/capabilities';
-import type { MarketSnapshot } from '../lib/view-models';
-import { MarketOverviewPage } from './market-overview-page';
+} from '@/lib/capabilities';
+import type { MarketSnapshot } from '@/lib/view-models';
+import { MarketOverviewPage } from '@/pages/market-overview-page';
 
 // B-5: `MarketOverviewPage` always has an already-loaded daily-page
 // response, so its prev/next band reads `snapshot.navigation` directly —
@@ -17,8 +17,8 @@ import { MarketOverviewPage } from './market-overview-page';
 // `archive-not-found-state.tsx`). Spying on `getPageNavigation` here (rather
 // than mocking a hook) proves this component genuinely has no code path
 // that reaches the network client for it.
-vi.mock('../lib/api/pages', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('../lib/api/pages')>();
+vi.mock('@/lib/api/pages', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/api/pages')>();
   return {
     ...actual,
     getPageNavigation: vi.fn(actual.getPageNavigation),

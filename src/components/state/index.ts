@@ -1,7 +1,11 @@
-export { DirectionIndicator } from './direction-indicator';
-export { directionTextClass } from './direction-text-class';
-export { EmptyState } from './empty-state';
-export { InlineAlert } from './inline-alert';
-export { PermissionState } from './permission-state';
-export { Skeleton, SkeletonTableRows, SkeletonText } from './skeleton';
-export { RefetchBadge, StatusBadge } from './status-badge';
+export { DirectionIndicator } from '@/components/state/direction-indicator';
+export { directionTextClass } from '@/components/state/direction-text-class';
+export { EmptyState } from '@/components/state/empty-state';
+export { InlineAlert } from '@/components/state/inline-alert';
+export { PermissionState } from '@/components/state/permission-state';
+export {
+  Skeleton,
+  SkeletonTableRows,
+  SkeletonText,
+} from '@/components/state/skeleton';
+export { RefetchBadge, StatusBadge } from '@/components/state/status-badge';

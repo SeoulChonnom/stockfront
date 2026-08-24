@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
-import { TableCell, TableHead } from './table';
+import { TableCell, TableHead } from '@/components/ui/table';
 
 describe('Table cell padding variants', () => {
   it('applies compact padding to heads and cells while preserving caller overrides', () => {

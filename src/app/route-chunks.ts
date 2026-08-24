@@ -8,9 +8,9 @@
  */
 
 export const loadArchiveSearchPage = () =>
-  import('../pages/archive-search-page');
+  import('@/pages/archive-search-page');
 export const loadClusterDetailPage = () =>
-  import('../pages/cluster-detail-page');
+  import('@/pages/cluster-detail-page');
 export const loadBatchOperationsPage = () =>
-  import('../pages/batch-operations-page');
-export const loadNotFoundPage = () => import('../pages/not-found-page');
+  import('@/pages/batch-operations-page');
+export const loadNotFoundPage = () => import('@/pages/not-found-page');

@@ -6,7 +6,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { AnnounceProvider } from '@/components/shell/announce-context';
 import { getTodayIso } from '@/lib/kst-date';
 
-import { BatchFilters } from './batch-filters';
+import { BatchFilters } from '@/pages/batch-operations/batch-filters';
 
 function renderWithAnnounce(ui: ReactNode) {
   return render(<AnnounceProvider pathname='/test'>{ui}</AnnounceProvider>);

@@ -3,8 +3,11 @@ import { Button } from '@/components/ui/button';
 import { useCapabilities } from '@/lib/capabilities';
 import { navigate } from '@/lib/router';
 
-import { buildArchiveSearchHref, type FilterQueryParams } from './navigation';
-import type { AdjacentNavigationState } from './use-adjacent-navigation';
+import {
+  buildArchiveSearchHref,
+  type FilterQueryParams,
+} from '@/pages/market-overview/navigation';
+import type { AdjacentNavigationState } from '@/pages/market-overview/use-adjacent-navigation';
 
 /**
  * 아카이브 모드 밴드. Archive Detail만 Latest 위에 얹는 상단 밴드. 정상

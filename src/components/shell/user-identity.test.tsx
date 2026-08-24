@@ -1,12 +1,10 @@
 import { render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-
+import { NavRail } from '@/components/shell/nav-rail';
 import {
   resetRoleOverrideForTesting,
   setRoleOverride,
 } from '@/lib/capabilities';
-
-import { NavRail } from './nav-rail';
 
 /**
  * 셸이 표시하는 사용자 신원. 예전에는 `ops.analyst`가 리터럴로 박혀 있어

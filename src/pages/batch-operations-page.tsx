@@ -11,23 +11,23 @@ import {
 } from '@/lib/query-hooks';
 import { navigate } from '@/lib/router';
 
-import { BatchAttentionBanner } from './batch-operations/batch-attention-banner';
-import { BatchDetailPanel } from './batch-operations/batch-detail-panel';
-import { BatchFilters } from './batch-operations/batch-filters';
-import { BatchHeader } from './batch-operations/batch-header';
-import { BatchHistoryList } from './batch-operations/batch-history-list';
-import { BatchSummaryTiles } from './batch-operations/batch-summary-tiles';
+import { BatchAttentionBanner } from '@/pages/batch-operations/batch-attention-banner';
+import { BatchDetailPanel } from '@/pages/batch-operations/batch-detail-panel';
+import { BatchFilters } from '@/pages/batch-operations/batch-filters';
+import { BatchHeader } from '@/pages/batch-operations/batch-header';
+import { BatchHistoryList } from '@/pages/batch-operations/batch-history-list';
+import { BatchSummaryTiles } from '@/pages/batch-operations/batch-summary-tiles';
 import {
   type BatchFilters as BatchFiltersState,
   buildBatchOperationsUrl,
   isDetailViewParam,
   parseJobIdParam,
   parseJobTypeParam,
-} from './batch-operations/batch-url';
+} from '@/pages/batch-operations/batch-url';
 import {
   BATCH_STATUSES,
   type BatchFilterDraft,
-} from './batch-operations/filter-copy';
+} from '@/pages/batch-operations/filter-copy';
 
 const PAGE_SIZE = 20;
 

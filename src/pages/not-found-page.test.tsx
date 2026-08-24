@@ -4,8 +4,8 @@ import { afterEach, describe, expect, it } from 'vitest';
 import {
   resetRoleOverrideForTesting,
   setRoleOverride,
-} from '../lib/capabilities';
-import { NotFoundPage } from './not-found-page';
+} from '@/lib/capabilities';
+import { NotFoundPage } from '@/pages/not-found-page';
 
 afterEach(() => {
   resetRoleOverrideForTesting();

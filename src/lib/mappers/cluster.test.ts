@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import type { ClusterDetailResponse } from '../api/types';
-import { mapClusterDetailToView } from './cluster';
+import type { ClusterDetailResponse } from '@/lib/api/types';
+import { mapClusterDetailToView } from '@/lib/mappers/cluster';
 
 function readySummary(
   overrides: Partial<ClusterDetailResponse['summary']> = {}

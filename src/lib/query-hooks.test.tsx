@@ -2,14 +2,14 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import type { ArchiveListParams } from './api/archive';
+import type { ArchiveListParams } from '@/lib/api/archive';
 import type {
   AiRetryRunResponse,
   BatchJobDetailResponse,
   BatchJobListResponse,
   DailyPageResponse,
   PageDateNavigationResponse,
-} from './api/types';
+} from '@/lib/api/types';
 import {
   useArchiveList,
   useArchiveMarketPage,
@@ -18,7 +18,7 @@ import {
   useBatchJobs,
   usePageNavigation,
   useRetryAiMutation,
-} from './query-hooks';
+} from '@/lib/query-hooks';
 
 const {
   mockGetArchiveList,
@@ -42,19 +42,19 @@ const {
   mockRetryAiSummary: vi.fn(),
 }));
 
-vi.mock('./api/archive', () => ({
+vi.mock('@/lib/api/archive', () => ({
   getArchiveList: mockGetArchiveList,
   getArchiveThemes: mockGetArchiveThemes,
 }));
 
-vi.mock('./api/pages', () => ({
+vi.mock('@/lib/api/pages', () => ({
   getDailyPageByBusinessDate: mockGetDailyPageByBusinessDate,
   getDailyPageByPageId: mockGetDailyPageByPageId,
   getLatestDailyPage: mockGetLatestDailyPage,
   getPageNavigation: mockGetPageNavigation,
 }));
 
-vi.mock('./api/batch', () => ({
+vi.mock('@/lib/api/batch', () => ({
   getBatchJobs: mockGetBatchJobs,
   getBatchJobDetail: mockGetBatchJobDetail,
   retryAiSummary: mockRetryAiSummary,

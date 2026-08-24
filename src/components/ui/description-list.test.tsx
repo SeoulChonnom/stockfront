@@ -1,7 +1,10 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
-import { DescriptionList, DescriptionListItem } from './description-list';
+import {
+  DescriptionList,
+  DescriptionListItem,
+} from '@/components/ui/description-list';
 
 describe('DescriptionList', () => {
   it('renders labels and values with definition-list semantics and responsive layout', () => {

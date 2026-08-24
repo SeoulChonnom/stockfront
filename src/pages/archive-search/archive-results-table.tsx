@@ -15,8 +15,8 @@ import {
   TableScrollWrapper,
 } from '@/components/ui/table';
 
-import { buildUrl, navigate, withBasePath } from '../../lib/router';
-import type { ArchiveRecord } from '../../lib/view-models';
+import { buildUrl, navigate, withBasePath } from '@/lib/router';
+import type { ArchiveRecord } from '@/lib/view-models';
 
 export type ArchiveRowFilters = {
   from: string;

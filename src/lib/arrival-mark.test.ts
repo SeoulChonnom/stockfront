@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { ARRIVAL_MARK_MS, markArrival } from './arrival-mark';
+import { ARRIVAL_MARK_MS, markArrival } from '@/lib/arrival-mark';
 
 const MARK = 'data-arrived';
 

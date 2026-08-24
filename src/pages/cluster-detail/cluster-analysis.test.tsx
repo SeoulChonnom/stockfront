@@ -8,7 +8,7 @@ import type {
   ClusterSection,
 } from '@/lib/view-models';
 
-import { ClusterAnalysis } from './cluster-analysis';
+import { ClusterAnalysis } from '@/pages/cluster-detail/cluster-analysis';
 
 const ARTICLES: ClusterArticle[] = [
   {

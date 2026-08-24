@@ -1,6 +1,9 @@
 import { type ReactNode, useMemo, useState } from 'react';
 
-import { AnnounceContext, type AnnounceFn } from './use-announce';
+import {
+  AnnounceContext,
+  type AnnounceFn,
+} from '@/components/shell/use-announce';
 
 /** One app-wide polite live region; clear only on pathname changes so query-only messages survive. */
 export function AnnounceProvider({

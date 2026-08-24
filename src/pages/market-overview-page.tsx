@@ -8,23 +8,23 @@ import { useCapabilities } from '@/lib/capabilities';
 import { buildUrl, navigate, useUrlState } from '@/lib/router';
 import type { MarketSnapshot } from '@/lib/view-models';
 
-import { ArchiveModeBand } from './market-overview/archive-mode-band';
-import { DecisionHeaderCard } from './market-overview/decision-header-card';
-import { EmptyMarketsPanel } from './market-overview/empty-markets-panel';
-import { MarketCompareBand } from './market-overview/market-compare-band';
-import { orderMarketsForDisplay } from './market-overview/market-display-order';
-import { MarketSection } from './market-overview/market-section';
+import { ArchiveModeBand } from '@/pages/market-overview/archive-mode-band';
+import { DecisionHeaderCard } from '@/pages/market-overview/decision-header-card';
+import { EmptyMarketsPanel } from '@/pages/market-overview/empty-markets-panel';
+import { MarketCompareBand } from '@/pages/market-overview/market-compare-band';
+import { orderMarketsForDisplay } from '@/pages/market-overview/market-display-order';
+import { MarketSection } from '@/pages/market-overview/market-section';
 import {
   marketHeadingId,
   marketSectionId,
-} from './market-overview/market-section-ids';
+} from '@/pages/market-overview/market-section-ids';
 import {
   type ClusterOriginQuery,
   extractFilterQuery,
-} from './market-overview/navigation';
-import { PageDataDetails } from './market-overview/page-data-details';
-import { PartialBanner } from './market-overview/partial-banner';
-import type { AdjacentNavigationState } from './market-overview/use-adjacent-navigation';
+} from '@/pages/market-overview/navigation';
+import { PageDataDetails } from '@/pages/market-overview/page-data-details';
+import { PartialBanner } from '@/pages/market-overview/partial-banner';
+import type { AdjacentNavigationState } from '@/pages/market-overview/use-adjacent-navigation';
 
 /**
  * `market` 쿼리에서 선택된 시장 인덱스를 읽는다. `marketType`(대소문자

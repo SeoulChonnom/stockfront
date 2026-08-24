@@ -1,5 +1,8 @@
-import { apiRequest } from './client';
-import type { DailyPageResponse, PageDateNavigationResponse } from './types';
+import { apiRequest } from '@/lib/api/client';
+import type {
+  DailyPageResponse,
+  PageDateNavigationResponse,
+} from '@/lib/api/types';
 
 export function getLatestDailyPage(signal?: AbortSignal) {
   return apiRequest<DailyPageResponse>('/stock/api/pages/daily/latest', {

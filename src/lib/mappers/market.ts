@@ -1,24 +1,11 @@
-import type { DailyPageResponse, IndexCardResponse } from '../api/types';
+import type { DailyPageResponse, IndexCardResponse } from '@/lib/api/types';
 import {
   formatKstDateTime,
   formatNumericText,
   formatPercent,
   formatSignedNumber,
   toStatusTone,
-} from '../formatters';
-import { isRecord } from '../utils';
-import type {
-  ArticleLink,
-  ClusterRepresentativeArticle,
-  KeyPoint,
-  MarketAnalysis,
-  MarketIndex,
-  MarketMetadata,
-  MarketSnapshot,
-  MarketSnapshotNavigation,
-  PageIssue,
-  PageMetadata,
-} from '../view-models';
+} from '@/lib/formatters';
 import {
   asArticleLinkArray,
   asBoolean,
@@ -34,7 +21,20 @@ import {
   asString,
   asStringArray,
   firstString,
-} from './coerce';
+} from '@/lib/mappers/coerce';
+import { isRecord } from '@/lib/utils';
+import type {
+  ArticleLink,
+  ClusterRepresentativeArticle,
+  KeyPoint,
+  MarketAnalysis,
+  MarketIndex,
+  MarketMetadata,
+  MarketSnapshot,
+  MarketSnapshotNavigation,
+  PageIssue,
+  PageMetadata,
+} from '@/lib/view-models';
 
 const KEY_POINT_KINDS = ['direction', 'driver', 'watch'] as const;
 const KEY_POINT_DIRECTIONS = ['UP', 'DOWN', 'MIXED', 'FLAT'] as const;

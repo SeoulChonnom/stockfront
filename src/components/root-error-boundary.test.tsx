@@ -1,12 +1,11 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-
+import { RootErrorBoundary } from '@/components/root-error-boundary';
 import {
   resetRoleOverrideForTesting,
   setRoleOverride,
-} from '../lib/capabilities';
-import { RootErrorBoundary } from './root-error-boundary';
+} from '@/lib/capabilities';
 
 function ThrowingChild(): never {
   throw new Error('render failed');

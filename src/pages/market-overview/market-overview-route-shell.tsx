@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react';
 
-import { ArchiveModeBand } from './archive-mode-band';
-import { extractFilterQuery } from './navigation';
-import { useAdjacentNavigation } from './use-adjacent-navigation';
+import { ArchiveModeBand } from '@/pages/market-overview/archive-mode-band';
+import { extractFilterQuery } from '@/pages/market-overview/navigation';
+import { useAdjacentNavigation } from '@/pages/market-overview/use-adjacent-navigation';
 
 export type MarketOverviewRouteShellProps = {
   businessDate: string | null;

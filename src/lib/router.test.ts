@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { buildUrl, navigate, withBasePath } from './router';
+import { buildUrl, navigate, withBasePath } from '@/lib/router';
 
 describe('buildUrl', () => {
   it('serializes query params and omits empty values', () => {

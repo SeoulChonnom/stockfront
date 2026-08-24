@@ -7,15 +7,15 @@ import { Pagination } from '@/components/ui/pagination';
 import { formatRelativeFreshness } from '@/lib/formatters';
 import type { BatchRunRow } from '@/lib/query-hooks';
 import { cn, computeTotalPages } from '@/lib/utils';
-import { BatchHistoryEmpty } from './batch-history-empty';
-import { BatchHistorySkeleton } from './batch-history-skeleton';
-import { BatchHistoryTable } from './batch-history-table';
-import type { BatchFilters } from './batch-url';
+import { BatchHistoryEmpty } from '@/pages/batch-operations/batch-history-empty';
+import { BatchHistorySkeleton } from '@/pages/batch-operations/batch-history-skeleton';
+import { BatchHistoryTable } from '@/pages/batch-operations/batch-history-table';
+import type { BatchFilters } from '@/pages/batch-operations/batch-url';
 import {
   getBatchStatusSummaryLabel,
   getBatchTypeSummaryLabel,
-} from './filter-copy';
-import { useRetryAnnounce } from './use-retry-announce';
+} from '@/pages/batch-operations/filter-copy';
+import { useRetryAnnounce } from '@/pages/batch-operations/use-retry-announce';
 
 /** List loading/error remain local to the table body; detail query state is independent. */
 

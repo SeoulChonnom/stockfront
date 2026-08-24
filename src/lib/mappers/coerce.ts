@@ -3,8 +3,8 @@ import type {
   ClusterArticleResponse,
   DailyPageResponse,
   IndexCardResponse,
-} from '../api/types';
-import { isRecord } from '../utils';
+} from '@/lib/api/types';
+import { isRecord } from '@/lib/utils';
 
 type DailyMarketResponse = DailyPageResponse['markets'][number];
 type DailyClusterResponse = DailyMarketResponse['topClusters'][number];

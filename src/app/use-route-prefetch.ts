@@ -1,12 +1,10 @@
 import { useEffect } from 'react';
-
-import type { AppRoute } from '../lib/app-state';
-
 import {
   loadArchiveSearchPage,
   loadBatchOperationsPage,
   loadClusterDetailPage,
-} from './route-chunks';
+} from '@/app/route-chunks';
+import type { AppRoute } from '@/lib/app-state';
 
 /**
  * 지금 화면에서 갈 수 있는 곳의 청크를 브라우저가 한가할 때 미리 받아 둔다.

@@ -3,7 +3,7 @@ import { useAnnounce } from '@/components/shell/use-announce';
 import { Button } from '@/components/ui/button';
 import { navigate } from '@/lib/router';
 
-import type { FetchErrorPresentation } from './error-presentation';
+import type { FetchErrorPresentation } from '@/pages/market-overview/error-presentation';
 
 /**
  * FAILED/5xx/401/429/offline/malformed 오류 상태. 오류는 영향

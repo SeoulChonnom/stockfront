@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { mapBatchDetailToRun, mapBatchJobsToView } from './batch';
+import { mapBatchDetailToRun, mapBatchJobsToView } from '@/lib/mappers/batch';
 
 describe('mappers - batch', () => {
   it('falls back instead of calling string methods on malformed status DTO values', () => {

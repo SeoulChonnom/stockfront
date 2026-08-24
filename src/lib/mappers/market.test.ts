@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import type { DailyPageResponse, KeyPointResponse } from '../api/types';
-import { mapDailyPageToSnapshot } from './market';
+import type { DailyPageResponse, KeyPointResponse } from '@/lib/api/types';
+import { mapDailyPageToSnapshot } from '@/lib/mappers/market';
 
 /** A valid B-1 keyPoints triplet, in the server-guaranteed direction → driver → watch order. */
 const SAMPLE_KEY_POINTS: KeyPointResponse[] = [

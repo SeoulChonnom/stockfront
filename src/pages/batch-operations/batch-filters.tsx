@@ -17,7 +17,7 @@ import {
   getBatchTypeSummaryLabel,
   getDefaultBatchFilters,
   validateBatchFilters,
-} from './filter-copy';
+} from '@/pages/batch-operations/filter-copy';
 
 export function BatchFilters({
   applied,

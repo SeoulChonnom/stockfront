@@ -1,13 +1,13 @@
-import type { ArchiveListResponse } from '../api/types';
-import { formatKstDateTime } from '../formatters';
-import { computeTotalPages } from '../utils';
-import type { ArchiveListView } from '../view-models';
+import type { ArchiveListResponse } from '@/lib/api/types';
+import { formatKstDateTime } from '@/lib/formatters';
 import {
   asFiniteNumber,
   asOptionalString,
   asString,
   toUpperStatus,
-} from './coerce';
+} from '@/lib/mappers/coerce';
+import { computeTotalPages } from '@/lib/utils';
+import type { ArchiveListView } from '@/lib/view-models';
 
 export function mapArchiveListToView(
   response: ArchiveListResponse

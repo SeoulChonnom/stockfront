@@ -6,7 +6,7 @@ import {
   getTodayIso,
   isValidIsoDate,
   parseKstAwareDate,
-} from './kst-date';
+} from '@/lib/kst-date';
 
 describe('isValidIsoDate', () => {
   it('accepts exact calendar dates, including leap day', () => {

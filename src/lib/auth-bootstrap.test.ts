@@ -8,7 +8,7 @@ import {
   requestAccessTokenBootstrap,
   resetAuthBootstrapForTesting,
   subscribeToAuthBootstrap,
-} from './auth-bootstrap';
+} from '@/lib/auth-bootstrap';
 
 function createJsonResponse(body: unknown, init?: ResponseInit) {
   return new Response(JSON.stringify(body), {

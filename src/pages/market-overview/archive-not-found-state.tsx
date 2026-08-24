@@ -4,9 +4,9 @@ import { createNavigateHandler } from '@/lib/app-state';
 import { errorCodeCopy, marketNotFoundCopy } from '@/lib/audience-copy';
 import { navigate, withBasePath } from '@/lib/router';
 
-import { ArchiveModeBand } from './archive-mode-band';
-import { extractFilterQuery } from './navigation';
-import { useAdjacentNavigation } from './use-adjacent-navigation';
+import { ArchiveModeBand } from '@/pages/market-overview/archive-mode-band';
+import { extractFilterQuery } from '@/pages/market-overview/navigation';
+import { useAdjacentNavigation } from '@/pages/market-overview/use-adjacent-navigation';
 
 /**
  * Archive Detail 404는 해당 날짜 스냅샷이 없을 때 상태 화면을 보여준다.

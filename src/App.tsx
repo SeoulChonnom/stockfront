@@ -6,35 +6,35 @@ import {
   useSyncExternalStore,
 } from 'react';
 
-import { AppPageContent } from './app/app-page-content';
-import { getPageMeta } from './app/page-meta';
-import { AppShell } from './components/app-shell';
+import { AppPageContent } from '@/app/app-page-content';
+import { getPageMeta } from '@/app/page-meta';
+import { AppShell } from '@/components/app-shell';
 import {
   buildScrollKey,
   getScrollPosition,
-} from './components/shell/scroll-restoration';
+} from '@/components/shell/scroll-restoration';
 import {
   StatusCard,
   type StatusCardTone,
-} from './components/shell/status-card';
-import { Button } from './components/ui/button';
-import { parseRoute, type ThemeMode } from './lib/app-state';
-import type { Audience } from './lib/audience-copy';
-import { errorCodeCopy } from './lib/audience-copy';
+} from '@/components/shell/status-card';
+import { Button } from '@/components/ui/button';
+import { parseRoute, type ThemeMode } from '@/lib/app-state';
+import type { Audience } from '@/lib/audience-copy';
+import { errorCodeCopy } from '@/lib/audience-copy';
 import {
   bootstrapAuth,
   getAuthBootstrapState,
   subscribeToAuthBootstrap,
-} from './lib/auth-bootstrap';
-import { useCapabilities } from './lib/capabilities';
-import { navigate, useUrlState } from './lib/router';
+} from '@/lib/auth-bootstrap';
+import { useCapabilities } from '@/lib/capabilities';
+import { navigate, useUrlState } from '@/lib/router';
 import {
   applyTheme,
   getStoredTheme,
   setTheme as persistTheme,
   resolveInitialTheme,
   subscribeToSystemTheme,
-} from './lib/theme';
+} from '@/lib/theme';
 
 type AuthBootstrapStatus = ReturnType<typeof getAuthBootstrapState>['status'];
 

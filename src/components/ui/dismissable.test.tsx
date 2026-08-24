@@ -3,8 +3,8 @@ import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
 import { describe, expect, it } from 'vitest';
 
-import { Dialog } from './dialog';
-import { Drawer } from './drawer';
+import { Dialog } from '@/components/ui/dialog';
+import { Drawer } from '@/components/ui/drawer';
 
 /**
  * Behaviour-level tests for the shared focus-trap/Escape/overlay-click/

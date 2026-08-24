@@ -1,5 +1,9 @@
-import type { PageDateNavigationResponse } from '../api/types';
-import { asNullableString, asOptionalBoolean, asString } from './coerce';
+import type { PageDateNavigationResponse } from '@/lib/api/types';
+import {
+  asNullableString,
+  asOptionalBoolean,
+  asString,
+} from '@/lib/mappers/coerce';
 
 export type NavigationView = {
   businessDate: string;

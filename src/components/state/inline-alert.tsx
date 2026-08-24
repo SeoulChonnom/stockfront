@@ -1,8 +1,10 @@
 import type { AriaRole, ReactNode } from 'react';
-
+import {
+  type SurfaceTone,
+  TONE_ACCENT,
+  TONE_SURFACE,
+} from '@/components/state/tone-surface';
 import { cn } from '@/lib/utils';
-
-import { type SurfaceTone, TONE_ACCENT, TONE_SURFACE } from './tone-surface';
 
 type AlertTone = SurfaceTone;
 

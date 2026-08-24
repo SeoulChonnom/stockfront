@@ -8,7 +8,7 @@ vi.mock('@/lib/query-hooks', () => ({
     usePageNavigationMock(businessDate, enabled),
 }));
 
-import { useAdjacentNavigation } from './use-adjacent-navigation';
+import { useAdjacentNavigation } from '@/pages/market-overview/use-adjacent-navigation';
 
 describe('useAdjacentNavigation', () => {
   it('returns the resolved prev/next dates once the query succeeds', () => {

@@ -3,7 +3,7 @@ import { useSyncExternalStore } from 'react';
 import {
   getAuthBootstrapState,
   subscribeToAuthBootstrap,
-} from './auth-bootstrap';
+} from '@/lib/auth-bootstrap';
 
 /**
  * 표시용 사용자 이름. 토큰 응답(`/api/user/token`)의 `name` 필드에서 온다.

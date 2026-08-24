@@ -1,12 +1,11 @@
 import { CircleUserRound } from 'lucide-react';
+import { DevRoleSimulator } from '@/components/shell/dev-role-simulator';
+import { NavList } from '@/components/shell/nav-list';
+import { ThemeToggleButton } from '@/components/shell/theme-toggle';
 import type { ThemeMode } from '@/lib/app-state';
 import { serviceTagline } from '@/lib/audience-copy';
 import { useAuthUserName } from '@/lib/auth-user';
 import { useCapabilities } from '@/lib/capabilities';
-
-import { DevRoleSimulator } from './dev-role-simulator';
-import { NavList } from './nav-list';
-import { ThemeToggleButton } from './theme-toggle';
 
 const ROLE_LABELS: Readonly<Record<'user' | 'admin', string>> = {
   user: 'User',

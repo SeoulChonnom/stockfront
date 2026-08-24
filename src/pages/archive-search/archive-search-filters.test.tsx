@@ -7,8 +7,8 @@ import { AnnounceProvider } from '@/components/shell/announce-context';
 import type { ThemeNodeResponse } from '@/lib/api/types';
 import { getTodayIso } from '@/lib/kst-date';
 
-import { ArchiveSearchFilters } from './archive-search-filters';
-import type { ArchiveFilterDraft } from './filter-copy';
+import { ArchiveSearchFilters } from '@/pages/archive-search/archive-search-filters';
+import type { ArchiveFilterDraft } from '@/pages/archive-search/filter-copy';
 
 function renderWithAnnounce(ui: ReactNode) {
   return render(<AnnounceProvider pathname='/test'>{ui}</AnnounceProvider>);

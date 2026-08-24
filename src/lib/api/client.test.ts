@@ -1,6 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { bootstrapAuth, resetAuthBootstrapForTesting } from '../auth-bootstrap';
-import { ApiError, apiRequest } from './client';
+import { ApiError, apiRequest } from '@/lib/api/client';
+import {
+  bootstrapAuth,
+  resetAuthBootstrapForTesting,
+} from '@/lib/auth-bootstrap';
 
 function createJsonResponse(body: unknown, init?: ResponseInit) {
   return new Response(JSON.stringify(body), {

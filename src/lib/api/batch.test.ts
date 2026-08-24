@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { retryAiSummary } from './batch';
-import type { AiRetryRunResponse } from './types';
+import { retryAiSummary } from '@/lib/api/batch';
+import type { AiRetryRunResponse } from '@/lib/api/types';
 
 function createJsonResponse(body: unknown, init?: ResponseInit) {
   return new Response(JSON.stringify(body), {

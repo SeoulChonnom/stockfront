@@ -1,9 +1,7 @@
 import { Menu } from 'lucide-react';
-
+import { ThemeToggleButton } from '@/components/shell/theme-toggle';
 import { Button } from '@/components/ui/button';
 import type { ThemeMode } from '@/lib/app-state';
-
-import { ThemeToggleButton } from './theme-toggle';
 
 export function MobileHeader({
   groupLabel,

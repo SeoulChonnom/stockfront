@@ -1,6 +1,5 @@
+import type { Direction } from '@/components/state/direction-text-class';
 import { cn } from '@/lib/utils';
-
-import type { Direction } from './direction-text-class';
 
 /**
  * 등락 방향을 색상만으로 표현하지 않기 위한 공용 표기.

@@ -2,9 +2,12 @@ import { ExternalLink } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 
-import type { ClusterDetail } from '../../lib/view-models';
-import { displayPublishedAt, displaySource } from './copy-fallbacks';
-import { getSafeExternalUrl } from './url-safety';
+import type { ClusterDetail } from '@/lib/view-models';
+import {
+  displayPublishedAt,
+  displaySource,
+} from '@/pages/cluster-detail/copy-fallbacks';
+import { getSafeExternalUrl } from '@/pages/cluster-detail/url-safety';
 
 /**
  * "대표 기사" sticky aside. Sticky only in the 2-column desktop

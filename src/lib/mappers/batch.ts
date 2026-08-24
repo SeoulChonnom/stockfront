@@ -3,21 +3,14 @@ import type {
   BatchJobListItemResponse,
   BatchJobListResponse,
   BatchJobStepRunResponse,
-} from '../api/types';
-import { getBatchStepLabel } from '../batch-type';
+} from '@/lib/api/types';
+import { getBatchStepLabel } from '@/lib/batch-type';
 import {
   formatDurationKo,
   formatDurationMs,
   formatDurationSeconds,
   formatKstDateTime,
-} from '../formatters';
-import { computeTotalPages } from '../utils';
-import type {
-  BatchJobsViewWithCounts,
-  BatchRunRow,
-  BatchStepRunView,
-  BatchSummaryView,
-} from '../view-models';
+} from '@/lib/formatters';
 import {
   asFiniteNumber,
   asNullableFiniteNumber,
@@ -26,7 +19,14 @@ import {
   asOptionalString,
   asString,
   toUpperStatus,
-} from './coerce';
+} from '@/lib/mappers/coerce';
+import { computeTotalPages } from '@/lib/utils';
+import type {
+  BatchJobsViewWithCounts,
+  BatchRunRow,
+  BatchStepRunView,
+  BatchSummaryView,
+} from '@/lib/view-models';
 
 /** Keep the full backend set so RUNNING/PENDING never fall back to FAILED. */
 const batchJobStatuses = [

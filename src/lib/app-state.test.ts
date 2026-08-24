@@ -1,10 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
-import type { ThemeNodeResponse } from './api/types';
+import type { ThemeNodeResponse } from '@/lib/api/types';
 import {
   parseListFilters,
   parseRoute,
   pruneThemeCodesToCatalog,
-} from './app-state';
+} from '@/lib/app-state';
 
 describe('parseListFilters', () => {
   it('parses valid search params into list filters', () => {

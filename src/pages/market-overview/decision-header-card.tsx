@@ -5,7 +5,7 @@ import { formatKstDateTime, formatRelativeFreshness } from '@/lib/formatters';
 import { cn } from '@/lib/utils';
 import type { MarketSnapshot } from '@/lib/view-models';
 
-import { KeyPointsBlock } from './key-points-block';
+import { KeyPointsBlock } from '@/pages/market-overview/key-points-block';
 
 /**
  * `<h1>` 자리에는 성격이 다른 세 가지가 온다: 그날의 헤드라인(표제),

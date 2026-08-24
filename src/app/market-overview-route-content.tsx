@@ -5,12 +5,12 @@ import { errorCodeCopy } from '@/lib/audience-copy';
 import { useCapabilities } from '@/lib/capabilities';
 import { useArchiveMarketPage, useLatestMarketPage } from '@/lib/query-hooks';
 import { useUrlState } from '@/lib/router';
-import { ArchiveNotFoundState } from '../pages/market-overview/archive-not-found-state';
-import { buildFetchErrorPresentation } from '../pages/market-overview/error-presentation';
-import { MarketOverviewErrorPanel } from '../pages/market-overview/market-overview-error-panel';
-import { MarketOverviewRouteShell } from '../pages/market-overview/market-overview-route-shell';
-import { MarketOverviewSkeleton } from '../pages/market-overview/market-overview-skeleton';
-import { MarketOverviewPage } from '../pages/market-overview-page';
+import { ArchiveNotFoundState } from '@/pages/market-overview/archive-not-found-state';
+import { buildFetchErrorPresentation } from '@/pages/market-overview/error-presentation';
+import { MarketOverviewErrorPanel } from '@/pages/market-overview/market-overview-error-panel';
+import { MarketOverviewRouteShell } from '@/pages/market-overview/market-overview-route-shell';
+import { MarketOverviewSkeleton } from '@/pages/market-overview/market-overview-skeleton';
+import { MarketOverviewPage } from '@/pages/market-overview-page';
 
 /** Owns latest/archive queries and dispatches loading, scoped errors, 404, or ready content. */
 export function MarketOverviewRouteContent({

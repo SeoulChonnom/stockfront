@@ -4,15 +4,15 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { AnnounceProvider } from '@/components/shell/announce-context';
 
-import type { ArchiveListParams } from '../lib/api/archive';
-import { ApiError } from '../lib/api/client';
-import type { ThemeNodeResponse } from '../lib/api/types';
+import type { ArchiveListParams } from '@/lib/api/archive';
+import { ApiError } from '@/lib/api/client';
+import type { ThemeNodeResponse } from '@/lib/api/types';
 import {
   resetRoleOverrideForTesting,
   setRoleOverride,
-} from '../lib/capabilities';
-import { withBasePath } from '../lib/router';
-import { ArchiveSearchPage } from './archive-search-page';
+} from '@/lib/capabilities';
+import { withBasePath } from '@/lib/router';
+import { ArchiveSearchPage } from '@/pages/archive-search-page';
 
 type ArchiveListQueryResult = {
   data:
@@ -44,7 +44,7 @@ const { mockUseArchiveList, mockUseArchiveThemes } = vi.hoisted(() => ({
   mockUseArchiveThemes: vi.fn(),
 }));
 
-vi.mock('../lib/query-hooks', () => ({
+vi.mock('@/lib/query-hooks', () => ({
   useArchiveList: mockUseArchiveList,
   useArchiveThemes: mockUseArchiveThemes,
 }));

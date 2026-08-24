@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { ApiError } from '@/lib/api/client';
 
-import { buildFetchErrorPresentation } from './error-presentation';
+import { buildFetchErrorPresentation } from '@/pages/market-overview/error-presentation';
 
 const user = { canViewOps: false };
 const operator = { canViewOps: true };

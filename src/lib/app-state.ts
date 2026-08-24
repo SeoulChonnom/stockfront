@@ -1,8 +1,8 @@
 import type { MouseEvent } from 'react';
 
-import type { MarketTypeResponse, ThemeNodeResponse } from './api/types';
-import { getRelativeIso, getTodayIso, isValidIsoDate } from './kst-date';
-import { navigate } from './router';
+import type { MarketTypeResponse, ThemeNodeResponse } from '@/lib/api/types';
+import { getRelativeIso, getTodayIso, isValidIsoDate } from '@/lib/kst-date';
+import { navigate } from '@/lib/router';
 
 export type ThemeMode = 'light' | 'dark';
 

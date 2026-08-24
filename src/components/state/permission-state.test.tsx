@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { expect, it, vi } from 'vitest';
 
-import { PermissionState } from './permission-state';
+import { PermissionState } from '@/components/state/permission-state';
 
 it('provides the standard route-focus heading and a working safe destination', async () => {
   const user = userEvent.setup();

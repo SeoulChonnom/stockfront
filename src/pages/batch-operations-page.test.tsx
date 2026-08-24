@@ -3,16 +3,15 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { AnnounceProvider } from '@/components/shell/announce-context';
+import type { BatchJobsParams } from '@/lib/api/batch';
 import { ApiError } from '@/lib/api/client';
+import type { AiRetryRunResponse } from '@/lib/api/types';
 import {
   resetRoleOverrideForTesting,
   setRoleOverride,
 } from '@/lib/capabilities';
-
-import type { BatchJobsParams } from './../lib/api/batch';
-import type { AiRetryRunResponse } from './../lib/api/types';
-import type { BatchRunRow } from './../lib/query-hooks';
-import { BatchOperationsPage } from './batch-operations-page';
+import type { BatchRunRow } from '@/lib/query-hooks';
+import { BatchOperationsPage } from '@/pages/batch-operations-page';
 
 /**
  * `/ops/batches`. Rewritten for the current master-detail UI:

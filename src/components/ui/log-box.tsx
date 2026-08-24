@@ -1,9 +1,7 @@
 import type { ReactNode } from 'react';
 import { useState } from 'react';
-
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-
-import { Button } from './button';
 
 /** Log output wraps long tokens, and copy falls back when Clipboard API is unavailable. */
 

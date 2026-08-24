@@ -1,11 +1,9 @@
 import { X } from 'lucide-react';
-
+import { NavList } from '@/components/shell/nav-list';
 import { Button } from '@/components/ui/button';
 import { Drawer } from '@/components/ui/drawer';
 import { useAuthUserName } from '@/lib/auth-user';
 import { useCapabilities } from '@/lib/capabilities';
-
-import { NavList } from './nav-list';
 
 const DRAWER_TITLE_ID = 'nav-drawer-title';
 

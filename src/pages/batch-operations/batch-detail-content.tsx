@@ -21,7 +21,7 @@ import {
   deriveUserImpact,
   getSnapshotLabel,
   isRunningStatus,
-} from './format-batch';
+} from '@/pages/batch-operations/format-batch';
 
 export type RetryAiMutationState = {
   data: AiRetryRunResponse | undefined;

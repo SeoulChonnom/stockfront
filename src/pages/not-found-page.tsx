@@ -1,10 +1,10 @@
 import { StatusCard } from '@/components/shell/status-card';
 import { Button } from '@/components/ui/button';
 
-import { createNavigateHandler } from '../lib/app-state';
-import { errorCodeCopy } from '../lib/audience-copy';
-import { useCapabilities } from '../lib/capabilities';
-import { withBasePath } from '../lib/router';
+import { createNavigateHandler } from '@/lib/app-state';
+import { errorCodeCopy } from '@/lib/audience-copy';
+import { useCapabilities } from '@/lib/capabilities';
+import { withBasePath } from '@/lib/router';
 
 /**
  * 404 page. Renders inside `AppShell`'s `<main>` (nav rail/header

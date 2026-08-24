@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { MarketSnapshot } from '@/lib/view-models';
 
-import { PartialBanner } from './partial-banner';
+import { PartialBanner } from '@/pages/market-overview/partial-banner';
 
 function buildSnapshot(
   overrides: Partial<MarketSnapshot> = {}

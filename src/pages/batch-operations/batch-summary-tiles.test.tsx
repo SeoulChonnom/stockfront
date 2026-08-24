@@ -1,7 +1,7 @@
 import { render, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
-import { BatchSummaryTiles } from './batch-summary-tiles';
+import { BatchSummaryTiles } from '@/pages/batch-operations/batch-summary-tiles';
 
 describe('BatchSummaryTiles', () => {
   it('keeps status tiles in failure-first semantic order with readable labels and counts', () => {

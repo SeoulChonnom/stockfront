@@ -1,7 +1,7 @@
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 
-import { formatDurationKo } from './format-batch';
+import { formatDurationKo } from '@/pages/batch-operations/format-batch';
 
 type TileTone = 'danger' | 'warning' | 'neutral';
 

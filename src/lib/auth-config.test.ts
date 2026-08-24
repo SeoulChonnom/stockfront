@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { getApiOrigin, getAuthConfig } from './auth-config';
+import { getApiOrigin, getAuthConfig } from '@/lib/auth-config';
 
 const DESKTOP_USER_AGENT =
   'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36';

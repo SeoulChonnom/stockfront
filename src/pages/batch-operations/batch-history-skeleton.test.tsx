@@ -1,7 +1,7 @@
 import { render } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
-import { BatchHistorySkeleton } from './batch-history-skeleton';
+import { BatchHistorySkeleton } from '@/pages/batch-operations/batch-history-skeleton';
 
 describe('BatchHistorySkeleton', () => {
   it('renders local aria-hidden rows directly inside the caller table body', () => {

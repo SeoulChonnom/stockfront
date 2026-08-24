@@ -1,10 +1,4 @@
 import type { MouseEvent } from 'react';
-
-import { createNavigateHandler } from '@/lib/app-state';
-import { useCapabilities } from '@/lib/capabilities';
-import { withBasePath } from '@/lib/router';
-import { cn } from '@/lib/utils';
-
 import {
   isArchiveActive,
   isLatestActive,
@@ -12,8 +6,12 @@ import {
   OPS_NAV_GROUP_LABEL,
   OPS_NAV_ITEM,
   PRIMARY_NAV_GROUP,
-} from './nav-items';
-import { saveScrollPosition } from './scroll-restoration';
+} from '@/components/shell/nav-items';
+import { saveScrollPosition } from '@/components/shell/scroll-restoration';
+import { createNavigateHandler } from '@/lib/app-state';
+import { useCapabilities } from '@/lib/capabilities';
+import { withBasePath } from '@/lib/router';
+import { cn } from '@/lib/utils';
 
 /** Shared nav renderer; omit the admin group entirely for unauthorized users. */
 

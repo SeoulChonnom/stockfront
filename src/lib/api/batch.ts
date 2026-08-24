@@ -1,9 +1,9 @@
-import { apiRequest } from './client';
+import { apiRequest } from '@/lib/api/client';
 import type {
   AiRetryRunResponse,
   BatchJobDetailResponse,
   BatchJobListResponse,
-} from './types';
+} from '@/lib/api/types';
 
 export type BatchJobsParams = {
   fromDate?: string;

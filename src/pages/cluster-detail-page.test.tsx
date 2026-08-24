@@ -1,19 +1,19 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { ApiError } from '../lib/api/client';
+import { ApiError } from '@/lib/api/client';
 import {
   resetRoleOverrideForTesting,
   setRoleOverride,
-} from '../lib/capabilities';
-import type { ClusterDetail } from '../lib/view-models';
-import { ClusterDetailPage } from './cluster-detail-page';
+} from '@/lib/capabilities';
+import type { ClusterDetail } from '@/lib/view-models';
+import { ClusterDetailPage } from '@/pages/cluster-detail-page';
 
 const { mockUseClusterDetail } = vi.hoisted(() => ({
   mockUseClusterDetail: vi.fn(),
 }));
 
-vi.mock('../lib/query-hooks', () => ({
+vi.mock('@/lib/query-hooks', () => ({
   useClusterDetail: mockUseClusterDetail,
 }));
 

@@ -6,18 +6,8 @@ import type {
   ClusterDetailResponse,
   ClusterSectionKindResponse,
   ConflictStatusResponse,
-} from '../api/types';
-import { formatKstDateTime } from '../formatters';
-import { isRecord } from '../utils';
-import type {
-  AnalysisIssue,
-  ArticleGrouping,
-  ClusterArticle,
-  ClusterDetail,
-  ClusterParagraph,
-  ClusterSection,
-  ClusterSentence,
-} from '../view-models';
+} from '@/lib/api/types';
+import { formatKstDateTime } from '@/lib/formatters';
 import {
   asArticleArray,
   asBoolean,
@@ -29,7 +19,17 @@ import {
   asOptionalString,
   asString,
   asStringArray,
-} from './coerce';
+} from '@/lib/mappers/coerce';
+import { isRecord } from '@/lib/utils';
+import type {
+  AnalysisIssue,
+  ArticleGrouping,
+  ClusterArticle,
+  ClusterDetail,
+  ClusterParagraph,
+  ClusterSection,
+  ClusterSentence,
+} from '@/lib/view-models';
 
 const SECTION_KINDS: readonly ClusterSectionKindResponse[] = [
   'background',

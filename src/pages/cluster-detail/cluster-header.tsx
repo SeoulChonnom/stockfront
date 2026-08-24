@@ -3,10 +3,10 @@ import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 
-import { formatInteger } from '../../lib/formatters';
-import { navigate } from '../../lib/router';
-import type { ClusterDetail } from '../../lib/view-models';
-import { getOriginLink } from './origin-link';
+import { formatInteger } from '@/lib/formatters';
+import { navigate } from '@/lib/router';
+import type { ClusterDetail } from '@/lib/view-models';
+import { getOriginLink } from '@/pages/cluster-detail/origin-link';
 
 /**
  * Header card. The "돌아가기" action is origin-aware,

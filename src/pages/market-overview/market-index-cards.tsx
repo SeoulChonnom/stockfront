@@ -2,7 +2,7 @@ import { DirectionIndicator, directionTextClass } from '@/components/state';
 import { cn } from '@/lib/utils';
 import type { MarketIndex } from '@/lib/view-models';
 
-import { orderIndices } from './index-order';
+import { orderIndices } from '@/pages/market-overview/index-order';
 
 const NO_VALUE = '-';
 

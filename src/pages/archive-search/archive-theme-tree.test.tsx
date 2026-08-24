@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { ThemeNodeResponse } from '@/lib/api/types';
 
-import { ArchiveThemeTree } from './archive-theme-tree';
+import { ArchiveThemeTree } from '@/pages/archive-search/archive-theme-tree';
 
 const catalog = [
   {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { getPageMeta } from './page-meta';
+import { getPageMeta } from '@/app/page-meta';
 
 describe('getPageMeta', () => {
   it('uses the archive page label in document metadata', () => {

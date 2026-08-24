@@ -1,4 +1,4 @@
-import type { AppRoute } from '../lib/app-state';
+import type { AppRoute } from '@/lib/app-state';
 
 type PageMeta = {
   title: string;

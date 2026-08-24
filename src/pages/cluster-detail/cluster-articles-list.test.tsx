@@ -4,8 +4,8 @@ import { describe, expect, it, vi } from 'vitest';
 
 import type { ArticleGrouping, ClusterArticle } from '@/lib/view-models';
 
-import { requestArticleFocus } from './article-focus-event';
-import { ClusterArticlesList } from './cluster-articles-list';
+import { requestArticleFocus } from '@/pages/cluster-detail/article-focus-event';
+import { ClusterArticlesList } from '@/pages/cluster-detail/cluster-articles-list';
 
 function makeArticles(
   count: number,

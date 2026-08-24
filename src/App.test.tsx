@@ -2,20 +2,20 @@ import { act, render, screen, waitFor } from '@testing-library/react';
 import { StrictMode, useState } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import App from './App';
+import App from '@/App';
 import {
   resetScrollPositionsForTesting,
   saveScrollPosition,
-} from './components/shell/scroll-restoration';
+} from '@/components/shell/scroll-restoration';
 import {
   authBootstrapNavigation,
   resetAuthBootstrapForTesting,
-} from './lib/auth-bootstrap';
+} from '@/lib/auth-bootstrap';
 import {
   resetRoleOverrideForTesting,
   setRoleOverride,
-} from './lib/capabilities';
-import { navigate, withBasePath } from './lib/router';
+} from '@/lib/capabilities';
+import { navigate, withBasePath } from '@/lib/router';
 
 const {
   mockUseArchiveList,
@@ -39,7 +39,7 @@ const {
   mockUseRetryAiMutation: vi.fn(),
 }));
 
-vi.mock('./lib/query-hooks', () => ({
+vi.mock('@/lib/query-hooks', () => ({
   useLatestMarketPage: mockUseLatestMarketPage,
   useArchiveMarketPage: mockUseArchiveMarketPage,
   useArchiveList: mockUseArchiveList,

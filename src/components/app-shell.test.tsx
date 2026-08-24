@@ -9,14 +9,12 @@ import {
 } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-
+import { AppShell } from '@/components/app-shell';
+import { useAnnounce } from '@/components/shell/use-announce';
 import {
   resetRoleOverrideForTesting,
   setRoleOverride,
 } from '@/lib/capabilities';
-
-import { AppShell } from './app-shell';
-import { useAnnounce } from './shell/use-announce';
 
 const { mockGetBatchJobs } = vi.hoisted(() => ({
   mockGetBatchJobs: vi.fn(),

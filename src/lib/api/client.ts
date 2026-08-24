@@ -1,7 +1,7 @@
-import { getAccessToken } from '../auth-bootstrap';
-import { getApiOrigin } from '../auth-config';
-import { isRecord } from '../utils';
-import type { ApiEnvelope } from './types';
+import type { ApiEnvelope } from '@/lib/api/types';
+import { getAccessToken } from '@/lib/auth-bootstrap';
+import { getApiOrigin } from '@/lib/auth-config';
+import { isRecord } from '@/lib/utils';
 
 type QueryValue = string | number | boolean | string[] | null | undefined;
 

@@ -1,8 +1,6 @@
 import type { ReactNode } from 'react';
-
+import { useDismissable } from '@/components/ui/use-dismissable';
 import { cn } from '@/lib/utils';
-
-import { useDismissable } from './use-dismissable';
 
 /** Drawer primitive; it must not mutate history or URL when opened/closed. */
 

@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { KeyPoint } from '@/lib/view-models';
 
-import { KeyPointsBlock } from './key-points-block';
+import { KeyPointsBlock } from '@/pages/market-overview/key-points-block';
 
 const KEY_POINTS: KeyPoint[] = [
   {

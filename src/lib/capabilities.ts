@@ -5,8 +5,8 @@ import { useMemo, useSyncExternalStore } from 'react';
 import {
   getAuthBootstrapState,
   subscribeToAuthBootstrap,
-} from './auth-bootstrap';
-import { isDevelopmentBypassEnabled } from './auth-config';
+} from '@/lib/auth-bootstrap';
+import { isDevelopmentBypassEnabled } from '@/lib/auth-config';
 
 export type Role = 'user' | 'admin';
 

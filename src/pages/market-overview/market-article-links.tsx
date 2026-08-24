@@ -2,7 +2,7 @@ import { useState } from 'react';
 
 import type { ArticleLink } from '@/lib/view-models';
 
-import { getSafeExternalUrl } from './link-utils';
+import { getSafeExternalUrl } from '@/pages/market-overview/link-utils';
 
 /**
  * 근거 원문 마지막 블록. 기본 4건 + `전체 N건 보기`

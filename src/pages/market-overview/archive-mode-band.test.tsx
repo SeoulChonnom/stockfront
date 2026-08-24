@@ -2,8 +2,8 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { ArchiveModeBand } from './archive-mode-band';
-import type { AdjacentNavigationState } from './use-adjacent-navigation';
+import { ArchiveModeBand } from '@/pages/market-overview/archive-mode-band';
+import type { AdjacentNavigationState } from '@/pages/market-overview/use-adjacent-navigation';
 
 const navigateMock = vi.fn();
 

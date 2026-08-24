@@ -2,21 +2,21 @@ import { Skeleton } from '@/components/state';
 import { TONE_SURFACE } from '@/components/state/tone-surface';
 import { Button } from '@/components/ui/button';
 
-import { ApiError } from '../lib/api/client';
-import type { Audience } from '../lib/audience-copy';
+import { ApiError } from '@/lib/api/client';
+import type { Audience } from '@/lib/audience-copy';
 import {
   errorCodeCopy,
   rawErrorMessageCopy,
   unknownErrorMessageCopy,
-} from '../lib/audience-copy';
-import { useCapabilities } from '../lib/capabilities';
-import { useClusterDetail } from '../lib/query-hooks';
-import { navigate, useUrlState } from '../lib/router';
-import { ClusterAnalysis } from './cluster-detail/cluster-analysis';
-import { ClusterArticlesList } from './cluster-detail/cluster-articles-list';
-import { ClusterBreadcrumb } from './cluster-detail/cluster-breadcrumb';
-import { ClusterHeader } from './cluster-detail/cluster-header';
-import { ClusterRepresentativeAside } from './cluster-detail/cluster-representative-aside';
+} from '@/lib/audience-copy';
+import { useCapabilities } from '@/lib/capabilities';
+import { useClusterDetail } from '@/lib/query-hooks';
+import { navigate, useUrlState } from '@/lib/router';
+import { ClusterAnalysis } from '@/pages/cluster-detail/cluster-analysis';
+import { ClusterArticlesList } from '@/pages/cluster-detail/cluster-articles-list';
+import { ClusterBreadcrumb } from '@/pages/cluster-detail/cluster-breadcrumb';
+import { ClusterHeader } from '@/pages/cluster-detail/cluster-header';
+import { ClusterRepresentativeAside } from '@/pages/cluster-detail/cluster-representative-aside';
 
 /**
  * Cluster Detail (`/market/cluster/:uuid`).

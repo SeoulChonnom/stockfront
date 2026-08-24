@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
-import { BatchHistoryEmpty } from './batch-history-empty';
+import { BatchHistoryEmpty } from '@/pages/batch-operations/batch-history-empty';
 
 describe('BatchHistoryEmpty', () => {
   it('renders the empty table row and forwards the filter-clear action', async () => {

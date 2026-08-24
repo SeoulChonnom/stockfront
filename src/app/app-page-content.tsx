@@ -1,18 +1,15 @@
 import { lazy, Suspense } from 'react';
-
-import { useCapabilities } from '@/lib/capabilities';
-
-import type { AppRoute } from '../lib/app-state';
-
-import { MarketOverviewRouteContent } from './market-overview-route-content';
-import { RouteChunkFallback } from './route-chunk-fallback';
+import { MarketOverviewRouteContent } from '@/app/market-overview-route-content';
+import { RouteChunkFallback } from '@/app/route-chunk-fallback';
 import {
   loadArchiveSearchPage,
   loadBatchOperationsPage,
   loadClusterDetailPage,
   loadNotFoundPage,
-} from './route-chunks';
-import { useRoutePrefetch } from './use-route-prefetch';
+} from '@/app/route-chunks';
+import { useRoutePrefetch } from '@/app/use-route-prefetch';
+import type { AppRoute } from '@/lib/app-state';
+import { useCapabilities } from '@/lib/capabilities';
 
 /**
  * 라우트 단위 코드 분할.

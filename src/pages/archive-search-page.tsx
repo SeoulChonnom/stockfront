@@ -13,6 +13,11 @@ import { Pagination } from '@/components/ui/pagination';
 import type { ArchiveListParams } from '@/lib/api/archive';
 import { ApiError } from '@/lib/api/client';
 import type { ArchiveStatusResponse, ThemeNodeResponse } from '@/lib/api/types';
+import {
+  type ListFilters,
+  parseListFilters,
+  pruneThemeCodesToCatalog,
+} from '@/lib/app-state';
 import { markArrival } from '@/lib/arrival-mark';
 import type { Audience } from '@/lib/audience-copy';
 import {
@@ -21,23 +26,18 @@ import {
   unknownErrorMessageCopy,
 } from '@/lib/audience-copy';
 import { useCapabilities } from '@/lib/capabilities';
-import {
-  type ListFilters,
-  parseListFilters,
-  pruneThemeCodesToCatalog,
-} from '../lib/app-state';
-import { formatInteger } from '../lib/formatters';
-import { useArchiveList, useArchiveThemes } from '../lib/query-hooks';
-import { buildUrl, navigate } from '../lib/router';
-import type { ArchiveListView } from '../lib/view-models';
-import { ArchiveResultsTable } from './archive-search/archive-results-table';
-import { ArchiveSearchFilters } from './archive-search/archive-search-filters';
+import { formatInteger } from '@/lib/formatters';
+import { useArchiveList, useArchiveThemes } from '@/lib/query-hooks';
+import { buildUrl, navigate } from '@/lib/router';
+import type { ArchiveListView } from '@/lib/view-models';
+import { ArchiveResultsTable } from '@/pages/archive-search/archive-results-table';
+import { ArchiveSearchFilters } from '@/pages/archive-search/archive-search-filters';
 import {
   ARCHIVE_SEARCH_STATUSES,
   type ArchiveFilterDraft,
   getStatusSummaryLabel,
-} from './archive-search/filter-copy';
-import { useLastGoodData } from './archive-search/use-last-good-data';
+} from '@/pages/archive-search/filter-copy';
+import { useLastGoodData } from '@/pages/archive-search/use-last-good-data';
 
 const PAGE_SIZE = 20;
 

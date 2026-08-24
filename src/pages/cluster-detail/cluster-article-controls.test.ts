@@ -10,7 +10,7 @@ import {
   findGroupIndexForArticle,
   listSources,
   revealMoreGroups,
-} from './cluster-article-controls';
+} from '@/pages/cluster-detail/cluster-article-controls';
 
 function makeArticle(
   id: string,

@@ -1,14 +1,13 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-
-import { resetAuthBootstrapForTesting } from '../auth-bootstrap';
-import type { ArchiveListParams } from './archive';
-import { getDailyPageByPageId, getPageNavigation } from './pages';
+import type { ArchiveListParams } from '@/lib/api/archive';
+import { getDailyPageByPageId, getPageNavigation } from '@/lib/api/pages';
 import type {
   ArticleLinkResponse,
   ClusterDetailResponse,
   DailyPageResponse,
   ThemeNodeResponse,
-} from './types';
+} from '@/lib/api/types';
+import { resetAuthBootstrapForTesting } from '@/lib/auth-bootstrap';
 
 const representativeArticle = {
   processedArticleId: 1024,

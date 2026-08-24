@@ -4,11 +4,11 @@ import { EmptyState, InlineAlert } from '@/components/state';
 import { Button } from '@/components/ui/button';
 import { markArrival } from '@/lib/arrival-mark';
 
-import type { ArticleGrouping, ClusterArticle } from '../../lib/view-models';
+import type { ArticleGrouping, ClusterArticle } from '@/lib/view-models';
 import {
   ARTICLE_FOCUS_REQUEST_EVENT,
   type ArticleFocusRequestDetail,
-} from './article-focus-event';
+} from '@/pages/cluster-detail/article-focus-event';
 import {
   type ArticleFilters,
   type ArticleGroup,
@@ -20,13 +20,13 @@ import {
   findGroupIndexForArticle,
   listSources,
   revealMoreGroups,
-} from './cluster-article-controls';
+} from '@/pages/cluster-detail/cluster-article-controls';
 import {
   displayArticleTitle,
   displayPublishedAt,
   displaySource,
-} from './copy-fallbacks';
-import { getSafeExternalUrl } from './url-safety';
+} from '@/pages/cluster-detail/copy-fallbacks';
+import { getSafeExternalUrl } from '@/pages/cluster-detail/url-safety';
 
 const DEFAULT_FILTERS: ArticleFilters = {
   sort: 'relevance',

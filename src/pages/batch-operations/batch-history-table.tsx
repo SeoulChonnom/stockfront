@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/table';
 import type { BatchRunRow } from '@/lib/query-hooks';
 
-import { getSnapshotLabel } from './format-batch';
+import { getSnapshotLabel } from '@/pages/batch-operations/format-batch';
 
 export type BatchHistoryTableProps = {
   rows: BatchRunRow[];

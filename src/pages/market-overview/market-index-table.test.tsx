@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { MarketIndex } from '@/lib/view-models';
 
-import { MarketIndexTable } from './market-index-table';
+import { MarketIndexTable } from '@/pages/market-overview/market-index-table';
 
 function makeIndex(overrides: Partial<MarketIndex> = {}): MarketIndex {
   return {

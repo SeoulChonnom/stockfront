@@ -1,15 +1,13 @@
 import { type ReactNode, useState } from 'react';
-
-import type { ThemeMode } from '../lib/app-state';
-
-import { AnnounceProvider } from './shell/announce-context';
-import { DevUrlStrip } from './shell/dev-url-strip';
-import { MobileHeader } from './shell/mobile-header';
-import { NavDrawer } from './shell/nav-drawer';
-import { getActiveNavContext } from './shell/nav-items';
-import { NavRail } from './shell/nav-rail';
-import { buildScrollKey } from './shell/scroll-restoration';
-import { useOpsFailedCount } from './shell/use-ops-failed-count';
+import { AnnounceProvider } from '@/components/shell/announce-context';
+import { DevUrlStrip } from '@/components/shell/dev-url-strip';
+import { MobileHeader } from '@/components/shell/mobile-header';
+import { NavDrawer } from '@/components/shell/nav-drawer';
+import { getActiveNavContext } from '@/components/shell/nav-items';
+import { NavRail } from '@/components/shell/nav-rail';
+import { buildScrollKey } from '@/components/shell/scroll-restoration';
+import { useOpsFailedCount } from '@/components/shell/use-ops-failed-count';
+import type { ThemeMode } from '@/lib/app-state';
 
 /** Shared shell: desktop rail/mobile drawer and one app-wide live region. */
 export function AppShell({

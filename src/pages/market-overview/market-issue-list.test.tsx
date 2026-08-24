@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { ClusterCard } from '@/lib/view-models';
 
-import { MarketIssueList } from './market-issue-list';
+import { MarketIssueList } from '@/pages/market-overview/market-issue-list';
 
 const cluster: ClusterCard = {
   id: 'cluster-1',

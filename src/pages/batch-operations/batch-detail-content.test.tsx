@@ -9,7 +9,7 @@ import type { BatchRunRow } from '@/lib/query-hooks';
 import {
   BatchDetailContent,
   type BatchDetailContentProps,
-} from './batch-detail-content';
+} from '@/pages/batch-operations/batch-detail-content';
 
 function createRun(overrides: Partial<BatchRunRow> = {}): BatchRunRow {
   return {

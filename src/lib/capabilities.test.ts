@@ -1,7 +1,10 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { bootstrapAuth, resetAuthBootstrapForTesting } from './auth-bootstrap';
+import {
+  bootstrapAuth,
+  resetAuthBootstrapForTesting,
+} from '@/lib/auth-bootstrap';
 import {
   can,
   getRole,
@@ -9,7 +12,7 @@ import {
   setRoleOverride,
   useCapabilities,
   useRole,
-} from './capabilities';
+} from '@/lib/capabilities';
 
 function stubTokenResponse(body: unknown) {
   vi.stubGlobal(

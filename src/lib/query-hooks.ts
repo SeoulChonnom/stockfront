@@ -4,20 +4,20 @@ import {
   type ArchiveListParams,
   getArchiveList,
   getArchiveThemes,
-} from './api/archive';
+} from '@/lib/api/archive';
 import {
   type BatchJobsParams,
   getBatchJobDetail,
   getBatchJobs,
   retryAiSummary,
-} from './api/batch';
-import { getClusterDetail } from './api/news';
+} from '@/lib/api/batch';
+import { getClusterDetail } from '@/lib/api/news';
 import {
   getDailyPageByBusinessDate,
   getDailyPageByPageId,
   getLatestDailyPage,
   getPageNavigation,
-} from './api/pages';
+} from '@/lib/api/pages';
 import {
   mapArchiveListToView,
   mapBatchDetailToRun,
@@ -25,7 +25,7 @@ import {
   mapClusterDetailToView,
   mapDailyPageToSnapshot,
   mapNavigationToView,
-} from './mappers';
+} from '@/lib/mappers';
 
 const BATCH_POLL_INTERVAL_MS = 5000;
 
@@ -50,7 +50,7 @@ function shouldPollBatchJobDetail(
   return isBatchJobInProgress(data?.status);
 }
 
-export type { BatchRunRow } from './view-models';
+export type { BatchRunRow } from '@/lib/view-models';
 
 export function useLatestMarketPage(enabled = true) {
   return useQuery({

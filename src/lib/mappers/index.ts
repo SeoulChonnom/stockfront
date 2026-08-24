@@ -1,5 +1,5 @@
-export { mapArchiveListToView } from './archive';
-export { mapBatchDetailToRun, mapBatchJobsToView } from './batch';
-export { mapClusterDetailToView } from './cluster';
-export { mapDailyPageToSnapshot } from './market';
-export { mapNavigationToView } from './navigation';
+export { mapArchiveListToView } from '@/lib/mappers/archive';
+export { mapBatchDetailToRun, mapBatchJobsToView } from '@/lib/mappers/batch';
+export { mapClusterDetailToView } from '@/lib/mappers/cluster';
+export { mapDailyPageToSnapshot } from '@/lib/mappers/market';
+export { mapNavigationToView } from '@/lib/mappers/navigation';

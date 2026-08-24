@@ -11,7 +11,7 @@ import {
   rawErrorMessageCopy,
   serviceTagline,
   unknownErrorMessageCopy,
-} from './audience-copy';
+} from '@/lib/audience-copy';
 
 const user = { canViewOps: false };
 const operator = { canViewOps: true };

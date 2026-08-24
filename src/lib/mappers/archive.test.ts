@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { mapArchiveListToView } from './archive';
+import { mapArchiveListToView } from '@/lib/mappers/archive';
 
 describe('mappers - archive', () => {
   it('maps archive pagination into table rows', () => {

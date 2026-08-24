@@ -1,4 +1,4 @@
-import { parseKstAwareDate } from './kst-date';
+import { parseKstAwareDate } from '@/lib/kst-date';
 
 const KST_TIME_ZONE = 'Asia/Seoul';
 const MINUTE_MS = 60_000;

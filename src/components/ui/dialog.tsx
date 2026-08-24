@@ -1,8 +1,6 @@
 import type { ReactNode, RefObject } from 'react';
-
+import { useDismissable } from '@/components/ui/use-dismissable';
 import { cn } from '@/lib/utils';
-
-import { useDismissable } from './use-dismissable';
 
 /** Modal primitive; focus and scroll behavior come from useDismissable. */
 

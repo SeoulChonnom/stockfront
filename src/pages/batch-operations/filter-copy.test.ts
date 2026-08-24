@@ -8,7 +8,7 @@ import {
   getBatchTypeSummaryLabel,
   getDefaultBatchFilters,
   validateBatchFilters,
-} from './filter-copy';
+} from '@/pages/batch-operations/filter-copy';
 
 describe('getDefaultBatchFilters', () => {
   it('defaults to the KST calendar date, not the UTC one, in the early-KST-morning boundary window', () => {

@@ -2,9 +2,9 @@ import { DirectionIndicator, directionTextClass } from '@/components/state';
 import { cn } from '@/lib/utils';
 import type { MarketIndex } from '@/lib/view-models';
 
-import { orderIndices } from './index-order';
-import type { DisplayMarket } from './market-display-order';
-import { marketHeadingId } from './market-section-ids';
+import { orderIndices } from '@/pages/market-overview/index-order';
+import type { DisplayMarket } from '@/pages/market-overview/market-display-order';
+import { marketHeadingId } from '@/pages/market-overview/market-section-ids';
 
 /**
  * 판단층. 아래 시장 섹션들을 읽기 전에 "오늘 두 시장이 어느 쪽으로

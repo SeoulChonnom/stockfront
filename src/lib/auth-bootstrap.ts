@@ -1,4 +1,4 @@
-import { getAuthConfig, isDevelopmentBypassEnabled } from './auth-config';
+import { getAuthConfig, isDevelopmentBypassEnabled } from '@/lib/auth-config';
 
 export type AuthBootstrapStatus =
   | 'idle'

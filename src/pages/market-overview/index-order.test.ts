@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { MarketIndex } from '@/lib/view-models';
 
-import { orderIndices } from './index-order';
+import { orderIndices } from '@/pages/market-overview/index-order';
 
 function makeIndex(code: string | null, label: string): MarketIndex {
   return {

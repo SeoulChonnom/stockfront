@@ -1,15 +1,13 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-
+import { MarketOverviewRouteContent } from '@/app/market-overview-route-content';
 import { AnnounceProvider } from '@/components/shell/announce-context';
 import { ApiError } from '@/lib/api/client';
 import {
   resetRoleOverrideForTesting,
   setRoleOverride,
 } from '@/lib/capabilities';
-
-import { MarketOverviewRouteContent } from './market-overview-route-content';
 
 const {
   mockUseArchiveMarketPage,
