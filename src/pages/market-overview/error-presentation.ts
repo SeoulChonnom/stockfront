@@ -8,22 +8,8 @@ import {
 } from '@/lib/audience-copy';
 
 /**
- * Maps a query error into the scoped, region-local presentation used for
- * Latest/Archive Detail's FAILED/5xx/offline/401/429/malformed
- * equivalence classes. The 429 message explicitly asks for a manual retry
- * because this client does not schedule automatic retries. Archive 404 uses
- * a dedicated no-snapshot state instead of the generic retry presentation.
- *
- * `ApiError.status` (from `src/lib/api/client.ts`) is `0` for a network
- * failure (no response at all) and the real HTTP status otherwise, which is
- * what lets this module tell offline/401/429/5xx/other apart without any
- * new prop being threaded down from `app-page-content.tsx` (out of this
- * agent's file-ownership scope — see the report for that constraint).
- *
- * `code`/`message` are audience-gated via `audience-copy.ts`: regular users
- * never see the raw English badge code or backend/client `error.message`
- * text, only operators do (see `errorCodeCopy`/`rawErrorMessageCopy`/
- * `unknownErrorMessageCopy`/`marketNotFoundCopy`).
+ * Maps query failures to audience-gated, region-local recovery messages.
+ * Status 0 means a network failure; Archive 404 uses a dedicated state.
  */
 
 export type FetchErrorPresentation = {
@@ -31,9 +17,7 @@ export type FetchErrorPresentation = {
   title: string;
   message: string;
   actionLabel: string;
-  /** Archive Detail only: routes to the 404 state instead of a retry-styled alert. */
   isNotFound: boolean;
-  /** The generic action is a real retry; some statuses navigate elsewhere instead. */
   actionKind: 'retry' | 'archive-search' | 'ops' | 'reload';
 };
 
@@ -99,11 +83,7 @@ export function buildFetchErrorPresentation(
       };
     }
 
-    // 200-with-thrown (e.g. `client.ts`'s "no data payload" / envelope
-    // shape errors) surfaces here — this is the closest analogue this repo
-    // has to the malformed-response class; the mapper itself
-    // is defensive about a missing `markets` array (see report), so a
-    // genuinely malformed *envelope* is what actually reaches this branch.
+    // Non-status-specific API errors are malformed response envelopes.
     return {
       code: errorCodeCopy(audience, `${error.status} · MALFORMED_RESPONSE`),
       title: '응답 형식이 올바르지 않습니다',

@@ -2,38 +2,8 @@ import { cn, isRecord } from '@/lib/utils';
 import type { KeyPoint, KeyPointDirection } from '@/lib/view-models';
 
 /**
- * B-1 "오늘의 핵심" (`keyPoints`). 서버 보장(A-2)은 all-or-nothing이고
- * `mapDailyPageToSnapshot`이 이미 그 조건을 강제한다. 다만 이 경계에서도
- * 빈 텍스트가 섞인 malformed view model은 개별 블록부터 제외한다.
- *
- * 렌더링 규칙(A-2):
- * - `keyPoints`가 비면 섹션 전체(제목 포함)를 렌더하지 않는다. 제목만 남고
- *   내용이 빈 landmark가 되면 스크린리더에서 의미 없는 헤딩이 읽힌다.
- * - `label`은 서버 고정 문자열을 그대로 쓴다. `text`는 plain text 노드로만
- *   렌더한다(HTML/Markdown/줄바꿈이 없다는 서버 계약).
- * - `direction`은 색이나 화살표만으로 표현하지 않는다 — 방향 단어(예: 혼조)를
- *   항상 텍스트로 노출하고, 아이콘/색은 보조 수단으로만 쓴다. `text` 문장
- *   자체가 이미 방향을 온전히 설명하므로 이 태그는 보조 요약일 뿐이다.
- * - `globalHeadline`이나 시장별 요약에서 항목을 합성하지 않는다 — 서버가
- *   내려준 순서를 그대로 표시할 뿐이다.
- *
- * 이 블록은 **자기 카드를 갖지 않는다.** 예전에는 `DecisionHeaderCard`와
- * 글자 그대로 같은 chrome(`rounded-[var(--r-lg)] border border-line
- * bg-[color:var(--surface)] p-5`)을 걸고 그 카드 *안에* 들어갔다. 표면색·
- * 테두리·radius·패딩이 전부 같으니 두 카드의 경계가 보이지 않았다 —
- * 구분이라는 일은 못 하면서 패딩만 두 겹(40px) 먹고, 화면에서 가장 먼저
- * 읽히는 블록의 위계를 흐렸다.
- *
- * 대신 `border-t` 한 줄이 구획을 맡는다. `-mx-5 … px-5`로 부모의 `p-5`를
- * 상쇄해 선을 카드 폭 끝까지 흘린다. 본문 시작선은 위 `<h1>`과 같은 20px에
- * 맞춰진다.
- *
- * **카드 안의 선은 이 하나뿐이다.** 처음에는 항목 사이에도 인셋 `border-t`를
- * 두고 "굵기·색은 같고 뻗는 범위만 다르니 두 단계가 생긴다"고 봤는데, 실제로
- * 렌더해 보니 1126px 대 1086px이었다 — 양쪽 20px 차이는 단계로 읽히지 않고
- * 같은 선이 어정쩡하게 어긋난 것으로 읽힌다. 같지도 다르지도 않은 상태가
- * 가장 나쁘다. 항목은 여백으로 가른다: 라벨(`text-body-sm` faint)이 이미 각
- * 항목의 머리를 표시하므로 선이 할 일이 남지 않는다.
+ * Render only valid server-provided items, hiding the entire empty section.
+ * Direction always includes text; color and glyphs are supplementary.
  */
 
 const DIRECTION_META: Record<

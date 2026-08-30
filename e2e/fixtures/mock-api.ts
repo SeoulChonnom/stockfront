@@ -1,31 +1,12 @@
 /**
- * Network-routing mock API for Playwright.
- *
- * These fixture factories intentionally model the application's API DTOs. The
- * factory functions
- * (`pageFixture`, `archiveFixture`, `clusterFixture`, `batchListFixture`,
- * `batchDetailFixture`, `ERRORS`, `LONG_SAMPLES`, `NOW_KST`, `TODAY`,
- * `shiftDate`) match the real DTO contract. The `Batch` section
- * follows `docs/api_spec.json`, including its
- * jobType-split model; see that section's comments for fixture choices where
- * the wire contract does not define an enum or example.
- *
- * `installMockApi(page, options)` is the actual Playwright integration: it
- * intercepts every request the app makes via `page.route()` and responds
- * with the `{success, data, meta}` envelope shape `src/lib/api/client.ts`
- * expects (see that file's `apiRequest()` — it throws unless the parsed body
- * has a `data` key and `success !== false`).
- *
- * Kept intentionally reusable across responsive and behavioral coverage, with
- * per-resource overrides and 401/403/409/422/429/5xx/network scenarios.
+ * Reusable Playwright API fixtures matching the documented DTO and envelope
+ * contracts, with per-resource and failure-scenario overrides.
  */
 import type { Page, Route } from '@playwright/test';
 
 import type { ApiEnvelope } from '../../src/lib/api/types';
 
-// ---------------------------------------------------------------------------
 // Shared constants / helpers
-// ---------------------------------------------------------------------------
 
 export const NOW_KST = '2026-07-27T08:24:31';
 export const TODAY = '2026-07-27';
@@ -45,12 +26,7 @@ function rep<T>(n: number, f: (i: number) => T): T[] {
   return Array.from({ length: n }, (_, i) => f(i));
 }
 
-// ---------------------------------------------------------------------------
-// DTO-shaped types (mirrors docs/api_spec_doc.md §4, not `src/lib/api/types.ts`
-// verbatim — the app's TS types declare price fields as `string`, but the
-// real backend spec uses `number`; the mock matches the documented wire
-// format).
-// ---------------------------------------------------------------------------
+// DTO fixtures follow the documented wire types, including numeric prices.
 
 export type MarketType = 'US' | 'KR';
 export type PageStatus = 'READY' | 'PARTIAL' | 'FAILED';
@@ -807,18 +783,7 @@ const LONG_TOKEN =
 const LONG_URL =
   'https://research.example.com/reports/2026/07/global-market-daily-brief-semiconductor-supply-chain-recovery-and-foreign-net-buying-analysis-v3-final-confidential.pdf';
 
-// ---------------------------------------------------------------------------
-// B-5 adjacent business day (`GET /pages/navigation`)
-// ---------------------------------------------------------------------------
-//
-// Computed from `ARCHIVE_ALL` (defined further below — safe to reference
-// here since these are only called at request time, well after module
-// evaluation finishes), excluding FAILED-only dates the same way the real
-// backend does (A-1-9: a date whose every version is FAILED does not exist
-// for public navigation). `navigableDates`/`navigationFor` are also used to
-// embed `navigation` directly on `DailyPage` fixtures — the daily page
-// response carries the same lookup the standalone endpoint serves (A-6 "어느
-// 경로를 쓸 것인가").
+// Adjacent-day navigation excludes FAILED dates and is shared by page fixtures.
 
 function navigableDates(): string[] {
   return ARCHIVE_ALL.filter((item) => item.status !== 'FAILED')
@@ -846,9 +811,7 @@ export function navigationFixture(businessDate: string): NavigationResponse {
   };
 }
 
-// ---------------------------------------------------------------------------
 // B-1 오늘의 핵심 (`keyPoints`) + page-level `issues`
-// ---------------------------------------------------------------------------
 
 /** The server-guaranteed success shape: exactly 3, direction → driver → watch. */
 function keyPointsFixture(): KeyPoint[] {
@@ -2179,9 +2142,7 @@ export const LONG_SAMPLES: { token: string; url: string; log: string } = {
   log: LONG_LOG,
 };
 
-// ---------------------------------------------------------------------------
 // Playwright network routing
-// ---------------------------------------------------------------------------
 
 /** Scenario keys exercised by the responsive overflow sweep. */
 export type Scenario =
@@ -2230,18 +2191,7 @@ export type InstallMockApiOptions = {
     | 'articleGroupingUnavailable';
   /** Batch detail log mode — `'longLog'` forces the full 4,000-char log (only takes effect for a FAILED job; see `batchDetailFixture`). Defaults from `scenario`. */
   batchDetailMode?: 'longLog';
-  /**
-   * Exercises the real role source for permission coverage.
-   * (`src/lib/capabilities.ts#getRole()` reads `auth-bootstrap.ts`'s parsed
-   * `roles`, which come from the `POST /api/users/token` response body's
-   * `roleList` field — see `readRoleList()` in that file) instead of a
-   * test-only override. `'admin'` emits `roleList: ['USER', 'ADMIN']`;
-   * `'user'` emits `roleList: ['USER']`. Omitted -> the token endpoint
-   * response carries no `roleList` field at all, so `getRole()` falls
-   * through to its own default ('admin' under this suite's
-   * `VITE_APP_ENV=development` — see that file's doc comment), preserving
-   * every pre-existing test's behavior unchanged.
-   */
+  /** Uses the token response's real `roleList`; omission preserves the dev default. */
   role?: 'user' | 'admin';
   /** AI-summary retry lifecycle. Defaults to an accepted 202 response. */
   retryAiMode?:
@@ -2305,12 +2255,7 @@ const CLUSTER_MODE_BY_SCENARIO: Partial<
   long: 'long',
 };
 
-/**
- * Installs the mock API for a single Playwright `page`. Every request the
- * app makes for `**\/stock/api/**` (and the auth bootstrap token endpoint) is
- * intercepted — nothing reaches a real network socket, so the E2E run never
- * depends on (or accidentally hits) a real backend.
- */
+/** Intercepts API and auth requests for one Playwright page. */
 export async function installMockApi(
   page: Page,
   options: InstallMockApiOptions
@@ -2327,20 +2272,7 @@ export async function installMockApi(
     options.batchDetailMode ?? (scenario === 'long' ? 'longLog' : undefined);
   const retryAiMode = options.retryAiMode ?? 'success';
 
-  // Auth bootstrap (`src/lib/auth-bootstrap.ts`): fulfilling a real 200 body
-  // (rather than aborting the request) exercises the REAL integration path —
-  // `bootstrapAuth()` -> `readAccessToken`/`readRoleList()` ->
-  // `capabilities.ts`'s `getRole()` — instead of a test-only role backdoor
-  // (the non-admin E2E coverage asserts this boundary). The body matches the
-  // settled auth contract: `accessToken` + `username` + `name` + `roleList`.
-  // `roleList` is only present when `options.role` is
-  // given (`'admin'` -> `['USER', 'ADMIN']`, `'user'` -> `['USER']`); omitted
-  // entirely otherwise so `readRoleList()` returns `[]` and `getRole()`
-  // falls through to its own default ('admin' under this suite's
-  // `VITE_APP_ENV=development`), which is exactly the previous (abort ->
-  // dev-bypass -> 'operator', now 'admin') outcome for every test that
-  // doesn't pass `role` — see `capabilities.ts`'s `getDefaultRole()` doc
-  // comment.
+  // Exercise the real token-to-capability path; omit `roleList` for dev default.
   const roleListByOption: Record<'user' | 'admin', string[]> = {
     user: ['USER'],
     admin: ['USER', 'ADMIN'],
@@ -2357,15 +2289,7 @@ export async function installMockApi(
 
   await page.route('**/stock/api/**', async (route) => {
     if (scenario === 'loading') {
-      // Deliberately unresolved for a long time — used to assert the
-      // loading-skeleton layout doesn't overflow (the assertion itself runs
-      // within ~1s of navigation). Bounded at 20s rather than truly eternal
-      // (`new Promise(() => {})`): an eternal promise pins this route
-      // handler in memory for the rest of the Node process's life even
-      // after the page/context closes, which is a real leak risk across a
-      // 100+-test run in the same worker. `.catch(() => {})` guards the
-      // rare case where the route is already gone by the time the timer
-      // fires (page/context closed before 20s elapsed).
+      // Keep loading observable without pinning an unresolved route forever.
       await new Promise((resolve) => setTimeout(resolve, 20_000));
       await route.abort('timedout').catch(() => {});
       return;

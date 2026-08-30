@@ -1,26 +1,6 @@
 /**
- * Shared `test`/`expect` for behavioral E2E specs that require zero unexpected
- * console errors or failed requests.
- *
- * Every spec file in this phase (`routing.spec.ts`, `archive-search.spec.ts`,
- * `batch-ops.spec.ts`, `trigger.spec.ts`, `a11y.spec.ts`,
- * `permissions.spec.ts`) imports `test`/`expect` from HERE instead of
- * `@playwright/test` directly. The `consoleGuard` fixture below is `auto:
- * true` (it runs for every test in those files whether or not the test
- * destructures it), attaches `page.on('console')` / `page.on('pageerror')` /
- * `page.on('requestfailed')` listeners before the test body runs, and — in
- * its teardown (the code after `await use(...)`, which Playwright runs once
- * the test body has finished) — fails the test if anything was captured that
- * the test didn't explicitly allow-list.
- *
- * A test that deliberately drives a failing request/console error (e.g. the
- * 5xx retry scenario, or a Trigger network-error scenario) MUST allow-list it
- * explicitly via `consoleGuard.allowFailedRequest(...)` /
- * `consoleGuard.allowConsoleError(...)`: the invariant is not "no errors ever"
- * but "no unexpected errors."
- *
- * Deliberately not applied to `e2e/responsive-overflow.spec.ts`, whose focus
- * is layout measurement rather than behavioral request assertions.
+ * Auto-fails behavioral E2E tests on unexpected console or request failures.
+ * Tests that deliberately trigger failures must allow-list them explicitly.
  */
 import { test as base, expect } from '@playwright/test';
 

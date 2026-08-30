@@ -44,11 +44,10 @@ export type ArticleLink = {
   publishedAt: string | null;
   originalUrl: string;
   mirrorUrl: string | null;
-  /** B-4 (A-5) — same field as `ClusterArticle.similarGroupId`; unused by this surface today but mapped for parity. */
+  /** Same grouping contract as `ClusterArticle`. */
   similarGroupId: string;
-  /** B-4 (A-5). */
   isSimilarGroupRepresentative: boolean;
-  /** B-4 (A-5) — shown as "원문 중복 N건" only when > 0 (A-5 "표시 규칙"). */
+  /** Shown only when positive. */
   exactDuplicateCount: number;
 };
 
@@ -69,11 +68,9 @@ export type PageMetadata = {
   processedNewsCount: number;
   clusterCount: number;
   lastUpdatedAt: string | null;
-  // Not currently in the API; keep nullable for a future backend field.
   isLatest: boolean | null;
 };
 
-/** `DailyPageResponse.navigation` (B-5) — the adjacent-business-day lookup this page's response already carries. */
 export type MarketSnapshotNavigation = {
   previousBusinessDate: string | null;
   nextBusinessDate: string | null;
@@ -81,12 +78,7 @@ export type MarketSnapshotNavigation = {
 
 export type KeyPointDirection = 'UP' | 'DOWN' | 'MIXED' | 'FLAT';
 
-/**
- * B-1 "오늘의 핵심" item. Discriminated on `kind` so `direction` only exists
- * on the `direction` item, mirroring `KeyPointResponse`'s compile-time
- * constraint. `mapDailyPageToSnapshot` only ever produces an all-or-nothing
- * `[]` or a valid 3-item `direction → driver → watch` array — see A-2 보장.
- */
+/** All-or-nothing `direction → driver → watch` key-point set. */
 export type KeyPoint =
   | {
       kind: 'direction';
@@ -97,7 +89,7 @@ export type KeyPoint =
   | { kind: 'driver'; label: '주요 원인'; text: string }
   | { kind: 'watch'; label: '관전 포인트'; text: string };
 
-/** Page-level generation issue (B-1's `KEY_POINTS_GENERATION_FAILED`, etc.). Server `message` is safe to render as-is (A-1-4). */
+/** Page issue whose server message is safe to render. */
 export type PageIssue = {
   category: 'AI_SUMMARY';
   code: 'KEY_POINTS_GENERATION_FAILED' | 'AI_SUMMARY_FALLBACK';
@@ -110,17 +102,16 @@ export type MarketSnapshot = {
   versionNo: number;
   generatedAt: string;
   navigation: MarketSnapshotNavigation;
-  /** Raw instant used to recompute relative freshness. */
-  // Optional for older page fixtures; the mapper always sets it.
+  /** Raw instant for relative freshness; optional for older fixtures. */
   generatedAtIso?: string | null;
   status: StatusTone;
   /** Null means no generated headline; UI chooses the fallback copy. */
   globalHeadline: string | null;
   /** Page-level PARTIAL message, distinct from each market's metadata message. */
   partialMessage?: string | null;
-  /** B-1: "오늘의 핵심". Empty means the section is hidden entirely — never partially rendered. */
+  /** Empty hides the entire section. */
   keyPoints: KeyPoint[];
-  /** B-1: page-level generation issues (e.g. keyPoints generation failure). Never `undefined`; `[]` when none. */
+  /** Always present; empty when there are no page issues. */
   issues: PageIssue[];
   // Optional for older page fixtures; the mapper always supplies it.
   metadata?: PageMetadata;
@@ -156,35 +147,23 @@ export type ClusterArticle = {
   originalUrl: string;
   /** Null means no Naver mirror; do not backfill from originalUrl. */
   mirrorUrl: string | null;
-  /**
-   * B-4 similar-article-group id (A-5). Every article belongs to exactly
-   * one group (singletons included) — never used as a "no group" sentinel.
-   * Only meaningful within one cluster-detail response; never parsed.
-   */
+  /** Response-scoped group id; singleton groups also have one. */
   similarGroupId: string;
-  /** B-4 (A-5) — exactly one article per `similarGroupId` has this `true`. */
+  /** Exactly one representative per group. */
   isSimilarGroupRepresentative: boolean;
-  /**
-   * B-4 (A-5) — raw articles merged into this one, excluding itself.
-   * Distinct from "other articles in the similar group"; never substitute
-   * one count for the other.
-   */
+  /** Merged raw articles, excluding itself; not the similar-group size. */
   exactDuplicateCount: number;
 };
 
-/** B-4 `articleGrouping.status` (docs/backend-requests-2026-08-12.md#A-5). */
 type ArticleGroupingStatus = 'READY' | 'UNAVAILABLE';
 
-/** B-4 `articleGrouping.issue` — server-fixed `message`, safe to render verbatim (A-1-4). */
+/** Server-fixed message is safe to render. */
 type ArticleGroupingIssue = {
   code: 'SIMILARITY_GROUPING_FAILED';
   message: string;
 };
 
-/**
- * `ClusterDetail.articleGrouping` (B-4, A-5). Failure here is isolated to
- * this cluster and never implies the page or the AI analysis failed.
- */
+/** Grouping failure is isolated from page and analysis status. */
 export type ArticleGrouping = {
   status: ArticleGroupingStatus;
   /** `null` exactly when `status === 'UNAVAILABLE'`. */
@@ -193,13 +172,12 @@ export type ArticleGrouping = {
   issue: ArticleGroupingIssue | null;
 };
 
-/** B-2 `summary.analysisStatus` (docs/backend-requests-2026-08-12.md#A-3). */
 export type AnalysisStatus = 'READY' | 'PARTIAL' | 'UNAVAILABLE';
 
-/** B-2 `conflictStatus` — used at both the aggregate `summary` level and per sentence. */
+/** Used at both aggregate and sentence levels. */
 export type ConflictStatus = 'NOT_CHECKED' | 'NONE' | 'FOUND';
 
-/** B-2 analysis section discriminator. Server-fixed order: background → impact → related → outlook. */
+/** Server order: background → impact → related → outlook. */
 type ClusterSectionKind = 'background' | 'impact' | 'related' | 'outlook';
 
 type AnalysisIssueCode =
@@ -208,16 +186,10 @@ type AnalysisIssueCode =
   | 'INVALID_SOURCE_REFERENCE'
   | 'CONFLICT_CHECK_FAILED';
 
-/** Server-fixed `message` (A-3 "이슈 코드") — safe to render verbatim. */
+/** Server-fixed message is safe to render. */
 export type AnalysisIssue = { code: AnalysisIssueCode; message: string };
 
-/**
- * B-2 sentence — the minimal unit of `summary → sections[] → paragraphs[] →
- * sentences[]`. Source-article grounding and conflict info attach here, not
- * at the paragraph/section level. `sourceArticleIds` /
- * `conflictingSourceArticleIds` reference `ClusterArticle.id` values from
- * the same response's `articles[]`.
- */
+/** Grounding and conflicts attach to sentences and reference this response's articles. */
 export type ClusterSentence = {
   text: string;
   sourceArticleIds: number[];
@@ -228,7 +200,7 @@ export type ClusterSentence = {
 
 export type ClusterParagraph = { sentences: ClusterSentence[] };
 
-/** `title` is server-fixed (A-3 "FE는 제목을 만들지 않는다") — never inferred from body text. */
+/** The server supplies the title; never infer it from body text. */
 export type ClusterSection = {
   kind: ClusterSectionKind;
   title: string;
@@ -255,10 +227,10 @@ export type ClusterDetail = {
   analysisGeneratedAt: string | null;
   sections: ClusterSection[];
   analysisIssues: AnalysisIssue[];
-  /** Aggregate of all sentence-level `conflictStatus` values; priority FOUND > NOT_CHECKED > NONE (A-3). */
+  /** Sentence aggregate priority: FOUND > NOT_CHECKED > NONE. */
   conflictStatus: ConflictStatus;
   articles: ClusterArticle[];
-  /** B-4 (A-5) — cluster-scoped grouping result driving `articles[]`'s `similarGroupId`s. */
+  /** Cluster-scoped grouping result for `articles`. */
   articleGrouping: ArticleGrouping;
   representative: ClusterArticle & {
     sourceSummary: string;
