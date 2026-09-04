@@ -98,6 +98,14 @@ describe('Pagination', () => {
     expect(document.querySelector('[aria-live]')).not.toBeInTheDocument();
   });
 
+  it('renders the page items as a list inside the nav', () => {
+    render(<Pagination onPageChange={vi.fn()} page={2} totalPages={5} />);
+
+    expect(screen.getByRole('list')).toBeInTheDocument();
+    // 이전 + candidates 1-5 + 다음
+    expect(screen.getAllByRole('listitem')).toHaveLength(7);
+  });
+
   it('uses the reference target size and subdued page indicator typography', () => {
     render(<Pagination onPageChange={vi.fn()} page={2} totalPages={3} />);
 

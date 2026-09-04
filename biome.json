@@ -67,6 +67,16 @@
       }
     },
     {
+      "includes": ["src/components/ui/pagination.tsx"],
+      "linter": {
+        "rules": {
+          "a11y": {
+            "noRedundantRoles": "off"
+          }
+        }
+      }
+    },
+    {
       "includes": ["**/*.test.ts", "**/*.test.tsx", "src/test/**"],
       "linter": {
         "rules": {
