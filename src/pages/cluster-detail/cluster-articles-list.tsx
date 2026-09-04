@@ -3,6 +3,10 @@ import { useEffect, useState } from 'react';
 import { EmptyState, InlineAlert } from '@/components/state';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import {
+  NativeSelect,
+  NativeSelectOption,
+} from '@/components/ui/native-select';
 import { markArrival } from '@/lib/arrival-mark';
 
 import type { ArticleGrouping, ClusterArticle } from '@/lib/view-models';
@@ -437,17 +441,19 @@ export function ClusterArticlesList({
             >
               정렬
             </Label>
-            <select
-              className='min-h-tap rounded-md border border-line bg-card px-2 text-body'
+            <NativeSelect
+              className='min-h-tap border-line bg-card text-body'
               id='article-sort'
               onChange={(event) =>
                 updateFilters({ sort: event.target.value as ArticleSort })
               }
               value={filters.sort}
             >
-              <option value='relevance'>관련도순</option>
-              <option value='latest'>최신순</option>
-            </select>
+              <NativeSelectOption value='relevance'>
+                관련도순
+              </NativeSelectOption>
+              <NativeSelectOption value='latest'>최신순</NativeSelectOption>
+            </NativeSelect>
           </div>
 
           <div className='flex flex-col gap-1'>
@@ -457,21 +463,21 @@ export function ClusterArticlesList({
             >
               언론사
             </Label>
-            <select
-              className='min-h-tap rounded-md border border-line bg-card px-2 text-body'
+            <NativeSelect
+              className='min-h-tap border-line bg-card text-body'
               id='article-source'
               onChange={(event) =>
                 updateFilters({ source: event.target.value })
               }
               value={filters.source}
             >
-              <option value=''>전체</option>
+              <NativeSelectOption value=''>전체</NativeSelectOption>
               {listSources(articles).map((source) => (
-                <option key={source} value={source}>
+                <NativeSelectOption key={source} value={source}>
                   {source}
-                </option>
+                </NativeSelectOption>
               ))}
-            </select>
+            </NativeSelect>
           </div>
 
           <div className='flex min-w-0 flex-1 flex-col gap-1'>

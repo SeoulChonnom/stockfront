@@ -10,6 +10,10 @@ import { InlineAlert } from '@/components/state';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import {
+  NativeSelect,
+  NativeSelectOption,
+} from '@/components/ui/native-select';
 import type { ThemeNodeResponse } from '@/lib/api/types';
 import { cn } from '@/lib/utils';
 
@@ -192,26 +196,29 @@ export function ArchiveSearchFilters({
             />
           </FilterField>
           <FilterField htmlFor='status' label='생성 상태'>
-            <select
-              className='flex min-h-11 w-full rounded-md border border-line-strong bg-card px-2.5 py-0 text-body text-fg outline-none transition-[border-color,box-shadow] duration-150 focus:border-[color:color-mix(in_srgb,var(--primary)_45%,transparent)] focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--primary)_16%,transparent)]'
+            <NativeSelect
+              className='min-h-tap border-line-strong bg-card text-body text-fg'
               {...getFieldProps('status')}
             >
               {getStatusOptions().map((option) => (
-                <option key={option.value || 'all'} value={option.value}>
+                <NativeSelectOption
+                  key={option.value || 'all'}
+                  value={option.value}
+                >
                   {option.label}
-                </option>
+                </NativeSelectOption>
               ))}
-            </select>
+            </NativeSelect>
           </FilterField>
           <FilterField htmlFor='market' label='시장'>
-            <select
-              className='flex min-h-11 w-full rounded-md border border-line-strong bg-card px-2.5 py-0 text-body text-fg outline-none transition-[border-color,box-shadow] duration-150 focus:border-[color:color-mix(in_srgb,var(--primary)_45%,transparent)] focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--primary)_16%,transparent)]'
+            <NativeSelect
+              className='min-h-tap border-line-strong bg-card text-body text-fg'
               {...getFieldProps('market')}
             >
-              <option value=''>전체 시장</option>
-              <option value='KR'>한국 (KR)</option>
-              <option value='US'>미국 (US)</option>
-            </select>
+              <NativeSelectOption value=''>전체 시장</NativeSelectOption>
+              <NativeSelectOption value='KR'>한국 (KR)</NativeSelectOption>
+              <NativeSelectOption value='US'>미국 (US)</NativeSelectOption>
+            </NativeSelect>
           </FilterField>
           <FilterField error={errors.q} htmlFor='q' label='키워드'>
             <Input

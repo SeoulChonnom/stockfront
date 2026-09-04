@@ -154,7 +154,18 @@ export function FilterField({
    * `FieldError`는 id를 스스로 만들지 않고 전달받은 값을 쓴다.
    */
   return (
-    <div className={cn('min-w-0', className)}>
+    // `[&_[data-slot=native-select-wrapper]]:w-full`: `NativeSelect`
+    // 내부 래퍼 div는 `w-fit`가 하드코딩돼 있고 `className` prop을 받지
+    // 않는다(안쪽 `<select>`에만 적용된다) — 그래서 그리드 셀을 채우던
+    // 이전 원시 `<select>`의 `w-full` 폭을 밖에서 이 데이터 훅으로
+    // 대신 강제한다. `select`가 아닌 자식(Input 등)에는 이 선택자가
+    // 매치되지 않으므로 부작용이 없다.
+    <div
+      className={cn(
+        'min-w-0 [&_[data-slot=native-select-wrapper]]:w-full',
+        className
+      )}
+    >
       <FieldLabel
         className='mb-1 block w-full text-label font-semibold text-fg-soft'
         htmlFor={htmlFor}
