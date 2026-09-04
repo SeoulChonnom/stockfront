@@ -22,8 +22,8 @@ describe('DirectionIndicator', () => {
   });
 
   it('maps each direction to its own colour token class', () => {
-    expect(directionTextClass('up')).toContain('--up');
-    expect(directionTextClass('down')).toContain('--down');
+    expect(directionTextClass('up')).toBe('text-up');
+    expect(directionTextClass('down')).toBe('text-down');
     expect(directionTextClass('none')).toContain('faint');
   });
 

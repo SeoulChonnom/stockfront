@@ -19,16 +19,16 @@ export type SurfaceTone = 'danger' | 'warning' | 'info' | 'success';
 
 /** 테두리 + 바탕. 요소 자신이 `border`와 반지름을 선언한다는 전제. */
 export const TONE_SURFACE: Readonly<Record<SurfaceTone, string>> = {
-  danger: 'border-[color:var(--danger-line)] bg-[color:var(--danger-soft)]',
-  warning: 'border-[color:var(--warning-line)] bg-[color:var(--warning-soft)]',
-  info: 'border-[color:var(--info-line)] bg-[color:var(--info-soft)]',
-  success: 'border-[color:var(--success-line)] bg-[color:var(--success-soft)]',
+  danger: 'border-danger-line bg-danger-soft',
+  warning: 'border-warning-line bg-warning-soft',
+  info: 'border-info-line bg-info-soft',
+  success: 'border-success-line bg-success-soft',
 };
 
 /** 제목·글리프용 글자색. 본문은 톤을 타지 않고 `text-fg-soft`로 둔다. */
 export const TONE_ACCENT: Readonly<Record<SurfaceTone, string>> = {
-  danger: 'text-[color:var(--danger)]',
-  warning: 'text-[color:var(--warning)]',
-  info: 'text-[color:var(--info)]',
-  success: 'text-[color:var(--success)]',
+  danger: 'text-danger',
+  warning: 'text-warning',
+  info: 'text-info',
+  success: 'text-success',
 };

@@ -56,7 +56,6 @@ export function isMarketSnapshotJobType(jobType: string): boolean {
 
 export const BATCH_TYPE_TONE_CLASSES: Readonly<Record<BatchTypeTone, string>> =
   {
-    info: 'text-[color:var(--info)] bg-[color:var(--info-soft)] border-[color:var(--info-line)]',
-    neutral:
-      'text-[color:var(--neutral)] bg-[color:var(--neutral-soft)] border-[color:var(--neutral-line)]',
+    info: 'border-info-line bg-info-soft text-info',
+    neutral: 'border-neutral-line bg-neutral-soft text-neutral',
   };

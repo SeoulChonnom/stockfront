@@ -3,6 +3,14 @@
 @import "./styles/base.css";
 @import "./styles/components.css";
 
+/* `dark:`를 앱의 테마 토글에 붙인다. 이 앱의 테마는 OS 설정이 아니라
+ * `setTheme`이 `<html data-theme>`에 기록하는 사용자 선택이고, `base.css`의
+ * 색 토큰도 전부 그 선택자로 교체된다. 이 선언이 없으면 shadcn 컴포넌트가
+ * 들고 온 `dark:` 유틸리티만 Tailwind 기본값인
+ * `@media (prefers-color-scheme: dark)`로 컴파일되어, OS 설정과 앱 내 선택이
+ * 어긋난 사용자에게 혼자 다른 테마로 렌더된다. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
 @theme inline {
   /* --text-* → text-{name} (font-size utilities).
    *
