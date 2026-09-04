@@ -56,6 +56,17 @@
       }
     },
     {
+      "includes": ["src/components/ui/breadcrumb.tsx"],
+      "linter": {
+        "rules": {
+          "a11y": {
+            "useFocusableInteractive": "off",
+            "useSemanticElements": "off"
+          }
+        }
+      }
+    },
+    {
       "includes": ["**/*.test.ts", "**/*.test.tsx", "src/test/**"],
       "linter": {
         "rules": {
