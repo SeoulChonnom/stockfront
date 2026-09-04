@@ -81,7 +81,6 @@ export function BatchFilters({
                 'tnum rounded-md bg-card px-3 py-0 text-body',
                 !errors.from && 'border-line-strong'
               )}
-              invalid={Boolean(errors.from)}
               type='date'
               {...getFieldProps('from')}
             />
@@ -92,7 +91,6 @@ export function BatchFilters({
                 'tnum rounded-md bg-card px-3 py-0 text-body',
                 !errors.to && 'border-line-strong'
               )}
-              invalid={Boolean(errors.to)}
               type='date'
               {...getFieldProps('to')}
             />

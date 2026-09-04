@@ -177,7 +177,6 @@ export function ArchiveSearchFilters({
                 'tnum rounded-md bg-card px-3 py-0 text-body',
                 !errors.from && 'border-line-strong'
               )}
-              invalid={Boolean(errors.from)}
               type='date'
               {...getFieldProps('from')}
             />
@@ -188,7 +187,6 @@ export function ArchiveSearchFilters({
                 'tnum rounded-md bg-card px-3 py-0 text-body',
                 !errors.to && 'border-line-strong'
               )}
-              invalid={Boolean(errors.to)}
               type='date'
               {...getFieldProps('to')}
             />
@@ -221,7 +219,6 @@ export function ArchiveSearchFilters({
                 'rounded-md bg-card px-3 py-0 text-body',
                 !errors.q && 'border-line-strong'
               )}
-              invalid={Boolean(errors.q)}
               placeholder='정확한 단어를 입력해 주세요'
               type='search'
               {...getFieldProps('q')}

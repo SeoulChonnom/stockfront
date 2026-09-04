@@ -109,6 +109,7 @@ describe('ArchiveSearchFilters', () => {
     await user.click(screen.getByRole('button', { name: '필터 적용' }));
 
     expect(onApply).toHaveBeenCalledWith({ ...applied, from: '2026-07-10' });
+    expect(screen.getByLabelText('시작일')).not.toHaveAttribute('aria-invalid');
   });
 
   it('rejects a future date with the exact product message, blocks apply, and focuses the field', async () => {
