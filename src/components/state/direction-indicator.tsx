@@ -10,8 +10,9 @@ import { cn } from '@/lib/utils';
  * ancestor here, that label's containing block becomes the document root,
  * which lets it inflate `document.documentElement.scrollWidth` when this
  * indicator sits inside a horizontally-scrollable container (e.g. a table
- * inside `TableScrollWrapper`) — the scroll wrapper's `overflow-x: auto`
- * clips it visually but does not clip its contribution to root-level
+ * inside `TableScrollWrapper`, whose child `[data-slot="table-container"]`
+ * from `ui/table` owns the `overflow-x: auto`) — that container clips the
+ * label visually but does not clip its contribution to root-level
  * scrollable overflow, since clipping follows the containing-block chain,
  * not the paint/DOM chain.
  */

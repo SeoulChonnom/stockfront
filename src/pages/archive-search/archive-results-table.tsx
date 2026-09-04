@@ -1,11 +1,4 @@
 import type { MouseEvent } from 'react';
-
-import { TableScrollWrapper } from '@/components/domain/table-scroll-wrapper';
-import {
-  buildScrollKey,
-  saveScrollPosition,
-} from '@/components/shell/scroll-restoration';
-import { StatusBadge } from '@/components/state';
 import {
   Table,
   TableBody,
@@ -13,7 +6,13 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
+} from '@/components/domain/data-table';
+import { TableScrollWrapper } from '@/components/domain/table-scroll-wrapper';
+import {
+  buildScrollKey,
+  saveScrollPosition,
+} from '@/components/shell/scroll-restoration';
+import { StatusBadge } from '@/components/state';
 
 import { buildUrl, navigate, withBasePath } from '@/lib/router';
 import type { ArchiveRecord } from '@/lib/view-models';

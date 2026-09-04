@@ -1,7 +1,5 @@
 import type { ReactNode, Ref } from 'react';
 import { BatchTypeBadge } from '@/components/domain/batch-type-badge';
-import { TableScrollWrapper } from '@/components/domain/table-scroll-wrapper';
-import { StatusBadge } from '@/components/state';
 import {
   Table,
   TableBody,
@@ -9,8 +7,11 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
+} from '@/components/domain/data-table';
+import { TableScrollWrapper } from '@/components/domain/table-scroll-wrapper';
+import { StatusBadge } from '@/components/state';
 import type { BatchRunRow } from '@/lib/query-hooks';
+import { cn } from '@/lib/utils';
 
 import { getSnapshotLabel } from '@/pages/batch-operations/format-batch';
 
@@ -83,9 +84,21 @@ function BatchHistoryRow({
 
   return (
     // Keep the row hit area while preventing the inner keyboard button from firing twice.
+    // 선택 강조는 레지스트리 기본 `data-[state=selected]:bg-muted`보다 진하게
+    // 잡아야 한다 — hover가 `bg-muted/50`이라 알파값만으로는 마스터-디테일
+    // 화면에서 선택 행이 눈에 띄지 않는다. `bg-primary-soft` + 좌측
+    // `--primary` 바로 올리고, hover에도 같은 배경을 고정해 선택 표시가
+    // 씻기지 않게 한다. danger(실패) 톤의 좌측 바는 선택 행에서는 가려야
+    // 하므로 `not-data-[state=selected]:` 가드를 명시한다 — 두 `shadow-*`
+    // 유틸의 등장 순서에 우선순위를 맡기지 않기 위함. (twMerge가 뒤에 오는
+    // `bg-primary-soft`로 레지스트리의 `bg-muted`를 덮는다.)
     <TableRow
       aria-selected={isSelected ? true : undefined}
-      className='cursor-pointer'
+      className={cn(
+        'cursor-pointer',
+        'data-[state=selected]:bg-primary-soft data-[state=selected]:shadow-[inset_3px_0_0_var(--primary)] data-[state=selected]:hover:bg-primary-soft',
+        'not-data-[state=selected]:data-[tone=danger]:shadow-[inset_3px_0_0_var(--danger)]'
+      )}
       data-state={isSelected ? 'selected' : undefined}
       data-tone={isFailed ? 'danger' : undefined}
       onClick={onSelect}

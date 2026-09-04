@@ -1,5 +1,3 @@
-import { TableScrollWrapper } from '@/components/domain/table-scroll-wrapper';
-import { DirectionIndicator, directionTextClass } from '@/components/state';
 import {
   Table,
   TableBody,
@@ -7,7 +5,9 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
+} from '@/components/domain/data-table';
+import { TableScrollWrapper } from '@/components/domain/table-scroll-wrapper';
+import { DirectionIndicator, directionTextClass } from '@/components/state';
 import { noIndexDataCopy } from '@/lib/audience-copy';
 import { cn } from '@/lib/utils';
 import type { MarketIndex } from '@/lib/view-models';
