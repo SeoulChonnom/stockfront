@@ -1,5 +1,5 @@
-import { BATCH_TYPE_TONE_CLASSES, getBatchTypeInfo } from '@/lib/batch-type';
-import { cn } from '@/lib/utils';
+import { ToneBadge } from '@/components/domain/tone-badge';
+import { getBatchTypeInfo } from '@/lib/batch-type';
 
 export type BatchTypeBadgeProps = {
   jobType: string;
@@ -10,14 +10,8 @@ export function BatchTypeBadge({ jobType, className }: BatchTypeBadgeProps) {
   const { label, tone } = getBatchTypeInfo(jobType);
 
   return (
-    <span
-      className={cn(
-        'inline-flex w-fit items-center rounded-sm border px-2 py-[3px] text-body-sm font-semibold whitespace-nowrap',
-        BATCH_TYPE_TONE_CLASSES[tone],
-        className
-      )}
-    >
+    <ToneBadge className={className} size='sm' tone={tone}>
       {label}
-    </span>
+    </ToneBadge>
   );
 }

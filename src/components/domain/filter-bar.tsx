@@ -4,6 +4,7 @@ import {
   useState,
   useSyncExternalStore,
 } from 'react';
+import { ToneBadge } from '@/components/domain/tone-badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -170,8 +171,8 @@ export function FilterDirtyBadge({ isDirty }: { isDirty: boolean }) {
   }
 
   return (
-    <span className='tnum inline-flex w-fit items-center gap-1.5 rounded-sm border border-info-line bg-info-soft px-2 py-0.5 text-body-sm font-semibold text-info'>
+    <ToneBadge className='tnum' size='compact' tone='info'>
       적용 전 변경 있음
-    </span>
+    </ToneBadge>
   );
 }

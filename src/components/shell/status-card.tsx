@@ -1,6 +1,8 @@
 import { Loader2 } from 'lucide-react';
 import type { AriaRole, ReactNode } from 'react';
 
+import { ToneBadge } from '@/components/domain/tone-badge';
+import type { SurfaceTone } from '@/components/state/tone-surface';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 
@@ -20,12 +22,7 @@ import { cn } from '@/lib/utils';
  * 이제 인페이지는 카드 폭을 다 쓰고 왼쪽 정렬하며, 설명문은
  * `measure-error`(62ch)로 읽는 폭을 잡는다 — 다른 인라인 안내와 같은 규칙이다.
  */
-export type StatusCardTone = 'info' | 'danger';
-
-const TONE_BADGE_CLASSES: Readonly<Record<StatusCardTone, string>> = {
-  info: 'border-info-line bg-info-soft text-info',
-  danger: 'border-danger-line bg-danger-soft text-danger',
-};
+export type StatusCardTone = Extract<SurfaceTone, 'info' | 'danger'>;
 
 export type StatusCardProps = {
   tone: StatusCardTone;
@@ -73,14 +70,9 @@ export function StatusCard({
         role={role}
       >
         {badge ? (
-          <span
-            className={cn(
-              'tnum inline-flex items-center gap-1.5 rounded-sm border px-2 py-0.5 text-body-sm font-semibold',
-              TONE_BADGE_CLASSES[tone]
-            )}
-          >
+          <ToneBadge className='tnum' size='compact' tone={tone}>
             {badge}
-          </span>
+          </ToneBadge>
         ) : null}
         <Heading
           className={cn(

@@ -6,7 +6,12 @@ import {
 } from '@/components/state/tone-surface';
 import { cn } from '@/lib/utils';
 
-type AlertTone = SurfaceTone;
+/**
+ * `SurfaceTone`을 그대로 재노출하지 않고 4-멤버로 좁힌다 — `neutral`은
+ * 배지 전용 톤이라, 좁히지 않으면 톤 테이블 통합만으로 `InlineAlert`의
+ * 공개 계약이 조용히 넓어진다.
+ */
+type AlertTone = Exclude<SurfaceTone, 'neutral'>;
 
 export type InlineAlertProps = {
   tone: AlertTone;
