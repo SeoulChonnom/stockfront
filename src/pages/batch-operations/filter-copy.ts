@@ -1,4 +1,4 @@
-import type { FilterErrors } from '@/components/ui/use-filter-draft';
+import type { FilterErrors } from '@/components/domain/use-filter-draft';
 import { getRelativeIso, getTodayIso, isValidIsoDate } from '@/lib/kst-date';
 
 export type BatchFilterDraft = {

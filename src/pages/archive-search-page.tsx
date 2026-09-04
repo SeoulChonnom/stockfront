@@ -1,6 +1,6 @@
 import type { RefObject } from 'react';
 import { useEffect, useRef } from 'react';
-
+import { Pagination } from '@/components/domain/pagination';
 import { useAnnounce } from '@/components/shell/use-announce';
 import {
   InlineAlert,
@@ -9,7 +9,6 @@ import {
 } from '@/components/state';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Pagination } from '@/components/ui/pagination';
 import type { ArchiveListParams } from '@/lib/api/archive';
 import { ApiError } from '@/lib/api/client';
 import type { ArchiveStatusResponse, ThemeNodeResponse } from '@/lib/api/types';

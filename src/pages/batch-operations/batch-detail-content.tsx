@@ -1,14 +1,14 @@
 import type { RefObject } from 'react';
-import { InlineAlert, StatusBadge } from '@/components/state';
-import { TONE_SURFACE } from '@/components/state/tone-surface';
-import { BatchTypeBadge } from '@/components/ui/batch-type-badge';
-import { Button } from '@/components/ui/button';
+import { BatchTypeBadge } from '@/components/domain/batch-type-badge';
 import {
   DescriptionList,
   DescriptionListItem,
-} from '@/components/ui/description-list';
-import { LogBox } from '@/components/ui/log-box';
-import { PipelineStages } from '@/components/ui/pipeline-stages';
+} from '@/components/domain/description-list';
+import { LogBox } from '@/components/domain/log-box';
+import { PipelineStages } from '@/components/domain/pipeline-stages';
+import { InlineAlert, StatusBadge } from '@/components/state';
+import { TONE_SURFACE } from '@/components/state/tone-surface';
+import { Button } from '@/components/ui/button';
 import { ApiError } from '@/lib/api/client';
 import type { AiRetryRunResponse } from '@/lib/api/types';
 import { createNavigateHandler } from '@/lib/app-state';

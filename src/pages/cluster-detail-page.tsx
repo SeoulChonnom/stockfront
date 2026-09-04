@@ -159,7 +159,7 @@ function ClusterDetailErrorState({
         {message}
       </p>
       <div className='flex flex-wrap gap-2'>
-        <Button onClick={onRetry} type='button' variant='primary'>
+        <Button onClick={onRetry} type='button' variant='default'>
           다시 시도
         </Button>
         <Button

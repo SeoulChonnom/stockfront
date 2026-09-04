@@ -5,10 +5,10 @@ import {
   FilterBar,
   FilterDirtyBadge,
   FilterField,
-} from '@/components/ui/filter-bar';
+} from '@/components/domain/filter-bar';
+import type { FilterErrors } from '@/components/domain/use-filter-draft';
+import { useFilterDraft } from '@/components/domain/use-filter-draft';
 import { Input } from '@/components/ui/input';
-import type { FilterErrors } from '@/components/ui/use-filter-draft';
-import { useFilterDraft } from '@/components/ui/use-filter-draft';
 
 type TestFilters = {
   from: string;

@@ -1,9 +1,9 @@
-import { TONE_ACCENT, TONE_SURFACE } from '@/components/state/tone-surface';
-import { Button } from '@/components/ui/button';
 import {
   DescriptionList,
   DescriptionListItem,
-} from '@/components/ui/description-list';
+} from '@/components/domain/description-list';
+import { TONE_ACCENT, TONE_SURFACE } from '@/components/state/tone-surface';
+import { Button } from '@/components/ui/button';
 import { missingDataDetailCopy, partialBannerCopy } from '@/lib/audience-copy';
 import { navigate } from '@/lib/router';
 import type { MarketSnapshot } from '@/lib/view-models';

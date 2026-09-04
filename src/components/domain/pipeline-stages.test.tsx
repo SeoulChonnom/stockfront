@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { PipelineStages } from '@/components/ui/pipeline-stages';
+import { PipelineStages } from '@/components/domain/pipeline-stages';
 import type { BatchStepRunView } from '@/lib/view-models';
 
 /**

@@ -1,12 +1,12 @@
 import {
+  DescriptionList,
+  DescriptionListItem,
+} from '@/components/domain/description-list';
+import {
   DirectionIndicator,
   directionTextClass,
   StatusBadge,
 } from '@/components/state';
-import {
-  DescriptionList,
-  DescriptionListItem,
-} from '@/components/ui/description-list';
 import type { MarketSnapshot } from '@/lib/view-models';
 
 /**

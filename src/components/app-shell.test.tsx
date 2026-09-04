@@ -341,12 +341,18 @@ describe('AppShell', () => {
     expect(within(drawer).queryByText(/·/)).not.toBeInTheDocument();
     // The drawer renders its own copy of the nav — now there should be two
     // "최신 브리프" links (rail + drawer).
-    expect(screen.getAllByRole('link', { name: '최신 브리프' }).length).toBe(2);
+    expect(
+      screen.getAllByRole('link', { name: '최신 브리프', hidden: true }).length
+    ).toBe(2);
 
     await user.keyboard('{Escape}');
 
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    expect(menuButton).toHaveFocus();
+    await waitFor(() =>
+      expect(
+        screen.queryByRole('dialog', { hidden: true })
+      ).not.toBeInTheDocument()
+    );
+    await waitFor(() => expect(menuButton).toHaveFocus());
   });
 
   it('closes the drawer when a nav item inside it is clicked', async () => {
@@ -360,7 +366,11 @@ describe('AppShell', () => {
     const archiveLink = within(drawer).getByRole('link', { name: '아카이브' });
     await user.click(archiveLink);
 
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    await waitFor(() =>
+      expect(
+        screen.queryByRole('dialog', { hidden: true })
+      ).not.toBeInTheDocument()
+    );
   });
 
   it('exposes exactly one aria-live="polite" region that clears its message on route change', () => {

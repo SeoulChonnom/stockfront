@@ -1,31 +1,38 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
-import { TableCell, TableHead } from '@/components/ui/table';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 
-describe('Table cell padding variants', () => {
-  it('applies compact padding to heads and cells while preserving caller overrides', () => {
+describe('Table', () => {
+  it('applies basic shadcn table classes', () => {
     render(
-      <table>
-        <thead>
-          <tr>
-            <TableHead data-testid='head' padding='compact'>
-              헤더
-            </TableHead>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <TableCell className='px-4' data-testid='cell' padding='compact'>
-              셀
-            </TableCell>
-          </tr>
-        </tbody>
-      </table>
+      <Table data-testid='table'>
+        <TableHeader>
+          <TableRow>
+            <TableHead data-testid='head'>헤더</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          <TableRow>
+            <TableCell data-testid='cell'>셀</TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>
     );
 
-    expect(screen.getByTestId('head')).toHaveClass('px-3', 'py-[9px]');
-    expect(screen.getByTestId('cell')).toHaveClass('px-4', 'py-[9px]');
-    expect(screen.getByTestId('cell')).not.toHaveClass('px-3');
+    expect(screen.getByTestId('table')).toHaveClass(
+      'w-full',
+      'caption-bottom',
+      'text-sm'
+    );
+    expect(screen.getByTestId('head')).toHaveClass('h-10', 'px-2', 'text-left');
+    expect(screen.getByTestId('cell')).toHaveClass('p-2', 'align-middle');
   });
 });

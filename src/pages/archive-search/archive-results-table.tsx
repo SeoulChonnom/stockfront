@@ -1,5 +1,6 @@
 import type { MouseEvent } from 'react';
 
+import { TableScrollWrapper } from '@/components/domain/table-scroll-wrapper';
 import {
   buildScrollKey,
   saveScrollPosition,
@@ -12,7 +13,6 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-  TableScrollWrapper,
 } from '@/components/ui/table';
 
 import { buildUrl, navigate, withBasePath } from '@/lib/router';
@@ -136,15 +136,8 @@ export function ArchiveResultsTable({
             <TableHead className='h-auto py-[9px] pr-3 pl-[18px]'>
               기준일
             </TableHead>
-            <TableHead className='h-auto' padding='compact'>
-              글로벌 헤드라인
-            </TableHead>
-            <TableHead
-              className='hidden h-auto sm:table-cell'
-              padding='compact'
-            >
-              상태
-            </TableHead>
+            <TableHead className='h-auto'>글로벌 헤드라인</TableHead>
+            <TableHead className='hidden h-auto sm:table-cell'>상태</TableHead>
             {/* Keep 생성 시각 left-aligned with the column content. */}
             <TableHead className='hidden h-auto py-[9px] pr-[18px] pl-3 text-left min-[1181px]:table-cell'>
               생성 시각

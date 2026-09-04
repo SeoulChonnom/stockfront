@@ -1,12 +1,12 @@
-import { useAnnounce } from '@/components/shell/use-announce';
-import { Card } from '@/components/ui/card';
 import {
   FilterBar,
   FilterDirtyBadge,
   FilterField,
-} from '@/components/ui/filter-bar';
+} from '@/components/domain/filter-bar';
+import { useFilterDraft } from '@/components/domain/use-filter-draft';
+import { useAnnounce } from '@/components/shell/use-announce';
+import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { useFilterDraft } from '@/components/ui/use-filter-draft';
 import { cn } from '@/lib/utils';
 
 import {
@@ -53,7 +53,7 @@ export function BatchFilters({
 
   return (
     <section aria-labelledby='ops-filter-heading'>
-      <Card className='flex flex-col gap-3' padding='inset'>
+      <Card className='flex flex-col gap-3 px-[18px] py-4'>
         <div className='flex flex-wrap items-center gap-2.5'>
           <h2
             className='m-0 text-label font-semibold tracking-caps text-fg-soft uppercase'

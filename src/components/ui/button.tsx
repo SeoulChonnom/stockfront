@@ -1,78 +1,90 @@
-import { Slot } from '@radix-ui/react-slot';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { Loader2 } from 'lucide-react';
-import type { ButtonHTMLAttributes } from 'react';
+import { Slot } from 'radix-ui';
+import type * as React from 'react';
 
 import { cn } from '@/lib/utils';
 
-/** Tailwind v4 compiles `scale-*` to the independent `scale` property. */
 const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-[var(--r-md)] border font-semibold transition-[scale,background-color,border-color,color] duration-(--dur-fast) ease-(--ease) active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--bg)] disabled:pointer-events-none disabled:opacity-45 [&_svg]:pointer-events-none [&_svg]:shrink-0',
+  "inline-flex shrink-0 items-center justify-center gap-2 rounded-md text-sm font-medium whitespace-nowrap transition-all outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
     variants: {
       variant: {
-        primary:
-          'border-[color:var(--primary)] bg-[color:var(--primary)] text-[color:var(--primary-fg)] hover:border-[color:color-mix(in_srgb,var(--primary)_86%,var(--text))] hover:bg-[color:color-mix(in_srgb,var(--primary)_86%,var(--text))]',
-        secondary:
-          'border-[color:var(--line-strong)] bg-[color:color-mix(in_srgb,var(--surface)_92%,transparent)] text-fg hover:bg-[color:var(--surface-2)]',
-        ghost:
-          'border-line bg-transparent text-fg-soft hover:bg-[color:var(--surface-2)] hover:text-fg',
+        default: 'bg-primary text-primary-foreground hover:bg-primary/90',
+        primary: 'bg-primary text-primary-foreground hover:bg-primary/90',
+        destructive:
+          'bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:bg-destructive/60 dark:focus-visible:ring-destructive/40',
         danger:
-          'border-[color:var(--danger-line)] bg-[color:var(--danger-soft)] text-[color:var(--danger)] hover:border-[color:var(--danger)]',
+          'bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:bg-destructive/60 dark:focus-visible:ring-destructive/40',
+        outline:
+          'border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50',
+        secondary:
+          'bg-secondary text-secondary-foreground hover:bg-secondary/80',
+        ghost:
+          'hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50',
+        link: 'text-primary underline-offset-4 hover:underline',
       },
       size: {
-        default: 'min-h-tap px-[18px] text-body',
-        sm: 'min-h-tap px-3.5 text-body-sm',
-        lg: 'min-h-12 px-[18px] text-body',
-        icon: 'size-tap',
+        default: 'h-9 px-4 py-2 has-[>svg]:px-3',
+        xs: "h-6 gap-1 rounded-md px-2 text-xs has-[>svg]:px-1.5 [&_svg:not([class*='size-'])]:size-3",
+        sm: 'h-8 gap-1.5 rounded-md px-3 has-[>svg]:px-2.5',
+        lg: 'h-10 rounded-md px-6 has-[>svg]:px-4',
+        icon: 'size-9',
+        'icon-xs': "size-6 rounded-md [&_svg:not([class*='size-'])]:size-3",
+        'icon-sm': 'size-8',
+        'icon-lg': 'size-10',
       },
     },
     defaultVariants: {
-      variant: 'primary',
+      variant: 'default',
       size: 'default',
     },
   }
 );
 
 export interface ButtonProps
-  extends ButtonHTMLAttributes<HTMLButtonElement>,
+  extends React.ComponentProps<'button'>,
     VariantProps<typeof buttonVariants> {
   asChild?: boolean;
   loading?: boolean;
 }
 
-export function Button({
+function Button({
   className,
-  variant,
-  size,
+  variant = 'default',
+  size = 'default',
   asChild = false,
   loading = false,
   disabled,
   children,
   ...props
 }: ButtonProps) {
-  const Comp = asChild ? Slot : 'button';
+  const Comp = asChild ? Slot.Root : 'button';
 
-  // Slot requires one child; keep the spinner on the plain button path only.
   const content = asChild ? (
     children
   ) : (
     <>
-      {loading ? (
+      {loading && (
         <Loader2 aria-hidden='true' className='size-4 animate-spin' />
-      ) : null}
+      )}
       {children}
     </>
   );
 
   return (
     <Comp
+      data-slot='button'
+      data-variant={variant}
+      data-size={size}
       aria-busy={loading || undefined}
-      className={cn(buttonVariants({ variant, size }), className)}
       disabled={disabled || loading}
+      className={cn(buttonVariants({ variant, size, className }))}
       {...props}
     >
       {content}
     </Comp>
   );
 }
+
+export { Button, buttonVariants };

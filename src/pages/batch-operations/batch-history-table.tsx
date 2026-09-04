@@ -1,7 +1,7 @@
 import type { ReactNode, Ref } from 'react';
-
+import { BatchTypeBadge } from '@/components/domain/batch-type-badge';
+import { TableScrollWrapper } from '@/components/domain/table-scroll-wrapper';
 import { StatusBadge } from '@/components/state';
-import { BatchTypeBadge } from '@/components/ui/batch-type-badge';
 import {
   Table,
   TableBody,
@@ -9,7 +9,6 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-  TableScrollWrapper,
 } from '@/components/ui/table';
 import type { BatchRunRow } from '@/lib/query-hooks';
 
@@ -34,24 +33,17 @@ export function BatchHistoryTable({
 }: BatchHistoryTableProps) {
   return (
     <TableScrollWrapper label='배치 실행 이력 표'>
-      <Table aria-busy={isLoading} minWidth={520}>
+      <Table aria-busy={isLoading} style={{ minWidth: 520 }}>
         <TableHeader>
           <TableRow>
             <TableHead className='h-auto py-[9px] pl-4 sm:pl-[18px]'>
               작업 · 기준일
             </TableHead>
-            <TableHead
-              className='hidden h-auto min-[641px]:table-cell'
-              padding='compact'
-            >
+            <TableHead className='hidden h-auto min-[641px]:table-cell'>
               타입
             </TableHead>
-            <TableHead className='h-auto' padding='compact'>
-              상태
-            </TableHead>
-            <TableHead className='h-auto text-right' padding='compact'>
-              소요
-            </TableHead>
+            <TableHead className='h-auto'>상태</TableHead>
+            <TableHead className='h-auto text-right'>소요</TableHead>
             <TableHead className='hidden h-auto py-[9px] pr-4 text-right whitespace-nowrap min-[1181px]:table-cell sm:pr-[18px]'>
               원문/정제/이슈
             </TableHead>
@@ -87,16 +79,13 @@ function BatchHistoryRow({
   isSelected: boolean;
   onSelect: () => void;
 }) {
-  const isFailed = row.rawStatus.trim().toUpperCase() === 'FAILED';
-
   return (
     // Keep the row hit area while preventing the inner keyboard button from firing twice.
     <TableRow
-      aria-selected={isSelected}
+      aria-selected={isSelected ? true : undefined}
       className='cursor-pointer'
       onClick={onSelect}
-      selected={isSelected}
-      tone={isFailed ? 'danger' : undefined}
+      data-state={isSelected ? 'selected' : undefined}
     >
       <TableCell className='py-2.5 pl-4 align-top sm:pl-[18px]'>
         <button

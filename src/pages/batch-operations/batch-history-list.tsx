@@ -1,9 +1,8 @@
 import { useEffect, useRef } from 'react';
-
+import { Pagination } from '@/components/domain/pagination';
 import { InlineAlert } from '@/components/state';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Pagination } from '@/components/ui/pagination';
 import { formatRelativeFreshness } from '@/lib/formatters';
 import type { BatchRunRow } from '@/lib/query-hooks';
 import { cn, computeTotalPages } from '@/lib/utils';

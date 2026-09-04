@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
-import { Pagination } from '@/components/ui/pagination';
+import { Pagination } from '@/components/domain/pagination';
 
 describe('Pagination', () => {
   it('renders a 5-number window centred on the current page', () => {

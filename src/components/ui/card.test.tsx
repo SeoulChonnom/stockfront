@@ -4,23 +4,20 @@ import { describe, expect, it } from 'vitest';
 import { Card } from '@/components/ui/card';
 
 describe('Card', () => {
-  it('exposes the inset padding variant and lets caller classes override it', () => {
-    const { rerender } = render(
-      <Card data-testid='card' padding='inset'>
+  it('applies basic shadcn card classes', () => {
+    render(
+      <Card data-testid='card' className='px-[18px] py-4'>
         내용
       </Card>
     );
 
     const card = screen.getByTestId('card');
-    expect(card).toHaveClass('px-[18px]', 'py-4');
-
-    rerender(
-      <Card className='px-4' data-testid='card' padding='inset'>
-        내용
-      </Card>
+    expect(card).toHaveClass(
+      'rounded-xl',
+      'border',
+      'bg-card',
+      'text-card-foreground'
     );
-
-    expect(card).toHaveClass('px-4', 'py-4');
-    expect(card).not.toHaveClass('px-[18px]');
+    expect(card).toHaveClass('px-[18px]', 'py-4');
   });
 });

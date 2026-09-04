@@ -27,7 +27,7 @@ export function NotFoundPage() {
   return (
     <StatusCard
       actions={
-        <Button asChild variant='primary'>
+        <Button asChild variant='default'>
           <a
             href={withBasePath('/market/latest')}
             onClick={createNavigateHandler('/market/latest')}

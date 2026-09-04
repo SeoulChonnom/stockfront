@@ -1,16 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
-
-import { useAnnounce } from '@/components/shell/use-announce';
-import { InlineAlert } from '@/components/state';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import {
   FilterBar,
   FilterDirtyBadge,
   FilterField,
-} from '@/components/ui/filter-bar';
+} from '@/components/domain/filter-bar';
+import { useFilterDraft } from '@/components/domain/use-filter-draft';
+import { useAnnounce } from '@/components/shell/use-announce';
+import { InlineAlert } from '@/components/state';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { useFilterDraft } from '@/components/ui/use-filter-draft';
 import type { ThemeNodeResponse } from '@/lib/api/types';
 import { cn } from '@/lib/utils';
 
@@ -144,7 +143,7 @@ export function ArchiveSearchFilters({
   return (
     <section aria-labelledby='archive-filter-heading'>
       {/* Use 16px vertical and 18px horizontal card padding at all widths. */}
-      <Card className='flex flex-col gap-3' padding='inset'>
+      <Card className='flex flex-col gap-3 px-[18px] py-4'>
         {/* Keep the heading and applied summary in one wrapping row. */}
         <div className='flex flex-wrap items-center gap-2.5'>
           <h2

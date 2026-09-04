@@ -1,30 +1,26 @@
-import type { InputHTMLAttributes } from 'react';
+import type * as React from 'react';
 
 import { cn } from '@/lib/utils';
 
-export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
-  /** 유효하지 않은 값. `aria-invalid`를 설정하고 danger 톤 border로 표시한다. */
+export interface InputProps extends React.ComponentProps<'input'> {
   invalid?: boolean;
 }
 
-export function Input({
-  className,
-  type,
-  invalid,
-  'aria-invalid': ariaInvalidProp,
-  ...props
-}: InputProps) {
+function Input({ className, type, invalid, ...props }: InputProps) {
   return (
     <input
-      aria-invalid={ariaInvalidProp ?? invalid ?? undefined}
+      type={type}
+      data-slot='input'
+      aria-invalid={invalid ? 'true' : undefined}
       className={cn(
-        'flex min-h-11 w-full rounded-[14px] border border-line bg-[color:var(--surface-2)] px-3.5 py-2 text-fg outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-faint focus:border-[color:color-mix(in_srgb,var(--primary)_45%,transparent)] focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--primary)_16%,transparent)] disabled:cursor-not-allowed disabled:opacity-50',
-        invalid &&
-          'border-[color:var(--danger-line)] focus:border-[color:var(--danger)] focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--danger)_16%,transparent)]',
+        'h-9 w-full min-w-0 rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none selection:bg-primary selection:text-primary-foreground file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm dark:bg-input/30',
+        'focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50',
+        'aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40',
         className
       )}
-      type={type}
       {...props}
     />
   );
 }
+
+export { Input };

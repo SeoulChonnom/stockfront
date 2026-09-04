@@ -52,7 +52,7 @@ export function ClusterRepresentativeAside({
       </div>
       <div className='flex flex-wrap gap-2'>
         {originalUrl ? (
-          <Button asChild className='w-auto' variant='primary'>
+          <Button asChild className='w-auto' variant='default'>
             <a href={originalUrl} rel='noopener noreferrer' target='_blank'>
               원문 보기
               <ExternalLink aria-hidden='true' size={14} />
