@@ -37,10 +37,6 @@
         "rules": {
           "style": {
             "useComponentExportOnlyModules": "off"
-          },
-          "suspicious": {
-            "noDoubleEquals": "off",
-            "noArrayIndexKey": "off"
           }
         }
       }
@@ -51,6 +47,10 @@
         "rules": {
           "a11y": {
             "useSemanticElements": "off"
+          },
+          "suspicious": {
+            "noDoubleEquals": "off",
+            "noArrayIndexKey": "off"
           }
         }
       }
