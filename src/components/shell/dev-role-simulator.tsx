@@ -15,7 +15,7 @@ export function DevRoleSimulator() {
         onClick={() => setRoleOverride('user')}
         size='sm'
         type='button'
-        variant={role === 'user' ? 'primary' : 'ghost'}
+        variant={role === 'user' ? 'default' : 'ghost'}
       >
         User
       </Button>
@@ -24,7 +24,7 @@ export function DevRoleSimulator() {
         onClick={() => setRoleOverride('admin')}
         size='sm'
         type='button'
-        variant={role === 'admin' ? 'primary' : 'ghost'}
+        variant={role === 'admin' ? 'default' : 'ghost'}
       >
         Admin
       </Button>

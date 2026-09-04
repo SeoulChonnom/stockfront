@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { AsyncButton } from '@/components/domain/async-button';
 import { Pagination } from '@/components/domain/pagination';
 import { InlineAlert } from '@/components/state';
 import { Button } from '@/components/ui/button';
@@ -114,7 +115,7 @@ export function BatchHistoryList({
                 {`마지막 갱신 ${relativeUpdatedAt ?? '-'}`}
               </time>
             </span>
-            <Button
+            <AsyncButton
               aria-label='실행 이력 새로고침'
               loading={isFetching}
               onClick={() => retry(onRefresh)}
@@ -123,7 +124,7 @@ export function BatchHistoryList({
               variant='ghost'
             >
               새로고침
-            </Button>
+            </AsyncButton>
             {hasAppliedFilter ? (
               <Button
                 onClick={clearFilters}

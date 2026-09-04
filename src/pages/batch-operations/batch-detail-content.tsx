@@ -1,4 +1,5 @@
 import type { RefObject } from 'react';
+import { AsyncButton } from '@/components/domain/async-button';
 import { BatchTypeBadge } from '@/components/domain/batch-type-badge';
 import {
   DescriptionList,
@@ -8,7 +9,6 @@ import { LogBox } from '@/components/domain/log-box';
 import { PipelineStages } from '@/components/domain/pipeline-stages';
 import { InlineAlert, StatusBadge } from '@/components/state';
 import { TONE_SURFACE } from '@/components/state/tone-surface';
-import { Button } from '@/components/ui/button';
 import { ApiError } from '@/lib/api/client';
 import type { AiRetryRunResponse } from '@/lib/api/types';
 import { createNavigateHandler } from '@/lib/app-state';
@@ -262,8 +262,7 @@ export function BatchDetailContent({
           </a>
         ) : null}
         {canRetryAi && run.rawStatus === 'PARTIAL' ? (
-          <Button
-            disabled={isRetryPendingForRun}
+          <AsyncButton
             loading={isRetryPendingForRun}
             onClick={handleRetryAi}
             size='sm'
@@ -271,7 +270,7 @@ export function BatchDetailContent({
             variant='secondary'
           >
             AI 요약만 재시도
-          </Button>
+          </AsyncButton>
         ) : null}
       </div>
     </div>
