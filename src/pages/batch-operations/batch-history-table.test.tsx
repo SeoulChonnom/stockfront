@@ -90,4 +90,25 @@ describe('BatchHistoryTable', () => {
       screen.getByRole('button', { name: 'job 202 상세 선택' })
     );
   });
+
+  it('FAILED 행에 danger 톤을 표시한다', () => {
+    render(
+      <BatchHistoryTable
+        isLoading={false}
+        onSelectRow={vi.fn()}
+        rows={[
+          createRow({ rawStatus: 'FAILED', status: 'FAILED' }),
+          createRow({ id: 202, rawStatus: 'SUCCESS' }),
+        ]}
+        selectedJobId={null}
+      />
+    );
+
+    expect(
+      screen.getByRole('button', { name: 'job 101 상세 선택' }).closest('tr')
+    ).toHaveAttribute('data-tone', 'danger');
+    expect(
+      screen.getByRole('button', { name: 'job 202 상세 선택' }).closest('tr')
+    ).not.toHaveAttribute('data-tone');
+  });
 });

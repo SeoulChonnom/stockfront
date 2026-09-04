@@ -54,6 +54,9 @@
   --color-faint: var(--text-faint);
   --color-line: var(--line);
 
+  /* --spacing-* → min-h-{name} / size-{name} (touch targets). */
+  --spacing-tap: var(--tap-min);
+
   /* shadcn/ui variables mapping */
   --color-background: var(--bg);
   --color-foreground: var(--text);

@@ -79,13 +79,16 @@ function BatchHistoryRow({
   isSelected: boolean;
   onSelect: () => void;
 }) {
+  const isFailed = row.rawStatus.trim().toUpperCase() === 'FAILED';
+
   return (
     // Keep the row hit area while preventing the inner keyboard button from firing twice.
     <TableRow
       aria-selected={isSelected ? true : undefined}
       className='cursor-pointer'
-      onClick={onSelect}
       data-state={isSelected ? 'selected' : undefined}
+      data-tone={isFailed ? 'danger' : undefined}
+      onClick={onSelect}
     >
       <TableCell className='py-2.5 pl-4 align-top sm:pl-[18px]'>
         <button
