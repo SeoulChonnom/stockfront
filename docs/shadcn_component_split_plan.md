@@ -1,5 +1,13 @@
 # Shadcn/UI Component Split Plan
 
+> **폐기됨 (2026-09-05).** 이 문서는 shadcn/ui가 아직 설치되지 않았고 앱 코드가 Vite 기본 샘플이던
+> 시점에 쓰였다("현재 코드베이스 상태: shadcn/ui 미설치, Tailwind 설정 미구성"). 이후 실제 구현은
+> 여기 적힌 구조(`AppSidebar`/`AppTopbar` 셸, `features/` 디렉터리, `--positive`/`--negative` 토큰,
+> Manrope/Inter 폰트)와 다르게 갔다. 라우팅 규칙과 아이콘 정책 정도만 유효하다.
+>
+> 현재 기준 문서는 **`docs/shadcn-cli-conformance-plan.md`**이며, 운영 규칙은 `AGENTS.md`의
+> "shadcn/ui" 절에 있다. 이 문서는 초기 설계 의도의 기록으로만 남긴다.
+
 ## Scope
 
 이 문서는 현재 정리된 HTML 디자인 자산을 기준으로, React + Vite 환경에서 `shadcn/ui` 중심 구조로 분리하기 위한 구현 계획이다.
