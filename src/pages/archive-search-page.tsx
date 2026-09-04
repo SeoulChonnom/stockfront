@@ -394,12 +394,12 @@ export function ArchiveSearchPage({
               다시 시도
             </Button>
           }
-          className='bg-[color:var(--surface)] px-[18px] py-4 [&_h3]:mb-1.5 [&_h3]:text-card-heading [&_h3]:text-fg'
+          className='bg-card px-[18px] py-4 [&_h3]:mb-1.5 [&_h3]:text-card-heading [&_h3]:text-fg'
           title={
             <span className='flex flex-wrap items-center gap-2.5'>
               <span>{errorPresentation.title}</span>
               {errorPresentation.code ? (
-                <span className='mono rounded-[var(--r-sm)] border border-[color:var(--danger-line)] bg-[color:var(--danger-soft)] px-2 py-0.5 text-body-sm font-semibold text-[color:var(--danger)]'>
+                <span className='mono rounded-sm border border-danger-line bg-danger-soft px-2 py-0.5 text-body-sm font-semibold text-danger'>
                   {errorPresentation.code}
                 </span>
               ) : null}

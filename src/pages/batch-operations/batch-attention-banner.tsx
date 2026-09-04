@@ -14,7 +14,7 @@ export function BatchAttentionBanner({
 }) {
   return (
     <div
-      className={`flex min-w-0 flex-wrap items-center gap-2.5 rounded-[var(--r-lg)] border px-4 py-3 ${TONE_SURFACE.danger}`}
+      className={`flex min-w-0 flex-wrap items-center gap-2.5 rounded-lg border px-4 py-3 ${TONE_SURFACE.danger}`}
     >
       <p className='wrap-anywhere m-0 text-body font-semibold text-fg'>
         {failedCount}건 실패, {partialCount}건 부분 실패 — 확인이 필요합니다.

@@ -154,7 +154,7 @@ export function FilterField({
       {children}
       {error ? (
         <p
-          className='wrap-anywhere m-0 mt-1 text-body-sm text-[color:var(--danger)]'
+          className='wrap-anywhere m-0 mt-1 text-body-sm text-danger'
           id={`${htmlFor}-error`}
         >
           {error}
@@ -170,7 +170,7 @@ export function FilterDirtyBadge({ isDirty }: { isDirty: boolean }) {
   }
 
   return (
-    <span className='tnum inline-flex w-fit items-center gap-1.5 rounded-[var(--r-sm)] border border-[color:var(--info-line)] bg-[color:var(--info-soft)] px-2 py-0.5 text-body-sm font-semibold text-[color:var(--info)]'>
+    <span className='tnum inline-flex w-fit items-center gap-1.5 rounded-sm border border-info-line bg-info-soft px-2 py-0.5 text-body-sm font-semibold text-info'>
       적용 전 변경 있음
     </span>
   );

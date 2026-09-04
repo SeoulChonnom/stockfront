@@ -54,7 +54,7 @@ export function PipelineStages({ steps, className }: PipelineStagesProps) {
 
             return (
               <li
-                className='flex min-w-0 items-center gap-2 rounded-[var(--r-sm)] px-2 py-1.5'
+                className='flex min-w-0 items-center gap-2 rounded-sm px-2 py-1.5'
                 // biome-ignore lint/suspicious/noArrayIndexKey: repeated stepCode retries are valid; API exposes no stepRunId/seq
                 key={`${step.stepCode}-${index}`}
               >

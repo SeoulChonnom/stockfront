@@ -91,7 +91,7 @@ describe('Table', () => {
       );
 
       expect(screen.getByTestId('row')).toHaveClass(
-        'data-[state=selected]:bg-[color:var(--primary-soft)]',
+        'data-[state=selected]:bg-primary-soft',
         'data-[state=selected]:shadow-[inset_3px_0_0_var(--primary)]'
       );
     });

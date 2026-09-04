@@ -57,7 +57,7 @@ export function InlineAlert({
     <div
       aria-live={ariaLive}
       className={cn(
-        'min-w-0 rounded-[var(--r-md)] border',
+        'min-w-0 rounded-md border',
         isInfo ? 'flex gap-2.5 py-3 px-4' : 'p-4',
         TONE_SURFACE[tone],
         className
@@ -65,10 +65,7 @@ export function InlineAlert({
       role={resolvedRole}
     >
       {isInfo ? (
-        <span
-          aria-hidden='true'
-          className='shrink-0 font-bold text-[color:var(--info)]'
-        >
+        <span aria-hidden='true' className='shrink-0 font-bold text-info'>
           i
         </span>
       ) : null}

@@ -121,12 +121,7 @@ export function ArchiveResultsTable({
           `sm` 아래에서는 상태 열이 기준일 칸 안의 배지로 내려가 열이 둘만
           남는다. 그때까지 520px를 유지하면 남지도 않은 열 때문에 가로
           스크롤이 생기고, "그날 브리프가 온전했는가"라는 이 표의 핵심 정보가
-          화면 밖으로 밀려난다.
-
-          `min-w-0`을 함께 걸지 말 것. `base.css`의 `.min-w-0`은 레이어 밖에
-          선언되어 있어서 `@layer utilities` 안의 Tailwind 유틸리티를 전부
-          이긴다 — `sm:min-w-[520px]`이 생성되어 있어도 계산값은 0px로 남는다.
-          기본값 `auto`면 충분하고, 실제로 그래야 이 분기가 동작한다. */}
+          화면 밖으로 밀려난다. */}
       <Table
         aria-labelledby='archive-results-heading'
         className='sm:min-w-[520px]'
@@ -157,7 +152,7 @@ export function ArchiveResultsTable({
                     /* 표 하한 폭이 `sm` 아래에서 풀리므로 기준일 칸이 내용에
                        맞춰 좁아진다. ISO 날짜는 한 덩어리로 읽히는 값이라
                        "2026-07-" / "26"으로 끊기면 세로로 훑는 동작이 깨진다. */
-                    className='tap-target tnum justify-start whitespace-nowrap text-body font-semibold text-fg underline-offset-2 hover:text-[color:var(--primary)] hover:underline'
+                    className='tap-target tnum justify-start whitespace-nowrap text-body font-semibold text-fg underline-offset-2 hover:text-primary hover:underline'
                     href={withBasePath(href)}
                     onClick={onOpen}
                   >
@@ -180,7 +175,7 @@ export function ArchiveResultsTable({
                 </TableCell>
                 <TableCell className='py-3 px-3 align-top'>
                   <a
-                    className='tap-target-text wrap-anywhere text-pretty font-normal text-fg underline-offset-2 hover:text-[color:var(--primary)] hover:underline'
+                    className='tap-target-text wrap-anywhere text-pretty font-normal text-fg underline-offset-2 hover:text-primary hover:underline'
                     href={withBasePath(href)}
                     onClick={onOpen}
                   >

@@ -45,7 +45,7 @@ export function MarketIndexTable({
 
   return (
     <TableScrollWrapper label='대표 지수 표'>
-      <Table className='border-collapse text-body' style={{ minWidth: 380 }}>
+      <Table className='min-w-[380px] border-collapse text-body'>
         <TableHeader>
           <TableRow>
             <TableHead className='h-auto px-[18px] py-2 text-label'>

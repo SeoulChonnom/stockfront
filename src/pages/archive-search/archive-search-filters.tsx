@@ -174,8 +174,8 @@ export function ArchiveSearchFilters({
           <FilterField error={errors.from} htmlFor='from' label='시작일'>
             <Input
               className={cn(
-                'tnum rounded-[var(--r-md)] bg-[color:var(--surface)] px-3 py-0 text-body',
-                !errors.from && 'border-[color:var(--line-strong)]'
+                'tnum rounded-md bg-card px-3 py-0 text-body',
+                !errors.from && 'border-line-strong'
               )}
               invalid={Boolean(errors.from)}
               type='date'
@@ -185,8 +185,8 @@ export function ArchiveSearchFilters({
           <FilterField error={errors.to} htmlFor='to' label='종료일'>
             <Input
               className={cn(
-                'tnum rounded-[var(--r-md)] bg-[color:var(--surface)] px-3 py-0 text-body',
-                !errors.to && 'border-[color:var(--line-strong)]'
+                'tnum rounded-md bg-card px-3 py-0 text-body',
+                !errors.to && 'border-line-strong'
               )}
               invalid={Boolean(errors.to)}
               type='date'
@@ -195,7 +195,7 @@ export function ArchiveSearchFilters({
           </FilterField>
           <FilterField htmlFor='status' label='생성 상태'>
             <select
-              className='flex min-h-11 w-full rounded-[var(--r-md)] border border-[color:var(--line-strong)] bg-[color:var(--surface)] px-2.5 py-0 text-body text-fg outline-none transition-[border-color,box-shadow] duration-150 focus:border-[color:color-mix(in_srgb,var(--primary)_45%,transparent)] focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--primary)_16%,transparent)]'
+              className='flex min-h-11 w-full rounded-md border border-line-strong bg-card px-2.5 py-0 text-body text-fg outline-none transition-[border-color,box-shadow] duration-150 focus:border-[color:color-mix(in_srgb,var(--primary)_45%,transparent)] focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--primary)_16%,transparent)]'
               {...getFieldProps('status')}
             >
               {getStatusOptions().map((option) => (
@@ -207,7 +207,7 @@ export function ArchiveSearchFilters({
           </FilterField>
           <FilterField htmlFor='market' label='시장'>
             <select
-              className='flex min-h-11 w-full rounded-[var(--r-md)] border border-[color:var(--line-strong)] bg-[color:var(--surface)] px-2.5 py-0 text-body text-fg outline-none transition-[border-color,box-shadow] duration-150 focus:border-[color:color-mix(in_srgb,var(--primary)_45%,transparent)] focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--primary)_16%,transparent)]'
+              className='flex min-h-11 w-full rounded-md border border-line-strong bg-card px-2.5 py-0 text-body text-fg outline-none transition-[border-color,box-shadow] duration-150 focus:border-[color:color-mix(in_srgb,var(--primary)_45%,transparent)] focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--primary)_16%,transparent)]'
               {...getFieldProps('market')}
             >
               <option value=''>전체 시장</option>
@@ -218,8 +218,8 @@ export function ArchiveSearchFilters({
           <FilterField error={errors.q} htmlFor='q' label='키워드'>
             <Input
               className={cn(
-                'rounded-[var(--r-md)] bg-[color:var(--surface)] px-3 py-0 text-body',
-                !errors.q && 'border-[color:var(--line-strong)]'
+                'rounded-md bg-card px-3 py-0 text-body',
+                !errors.q && 'border-line-strong'
               )}
               invalid={Boolean(errors.q)}
               placeholder='정확한 단어를 입력해 주세요'
@@ -246,7 +246,7 @@ export function ArchiveSearchFilters({
             </p>
             {themeCatalogLoading ? (
               <div
-                className='rounded-[var(--r-md)] bg-[color:var(--surface-2)] px-3 py-3 text-body-sm text-faint'
+                className='rounded-md bg-surface-2 px-3 py-3 text-body-sm text-faint'
                 role='status'
               >
                 테마 목록을 불러오는 중입니다.
@@ -263,7 +263,7 @@ export function ArchiveSearchFilters({
                     테마 다시 시도
                   </Button>
                 }
-                className='bg-[color:var(--surface)]'
+                className='bg-card'
                 ariaLive='polite'
                 role='status'
                 title='테마 목록을 불러오지 못했습니다.'
@@ -273,11 +273,11 @@ export function ArchiveSearchFilters({
                 사용할 수 있습니다.
               </InlineAlert>
             ) : catalog.length === 0 ? (
-              <p className='m-0 rounded-[var(--r-md)] bg-[color:var(--surface-2)] px-3 py-3 text-body-sm text-faint'>
+              <p className='m-0 rounded-md bg-surface-2 px-3 py-3 text-body-sm text-faint'>
                 선택할 수 있는 테마가 없습니다.
               </p>
             ) : (
-              <div className='rounded-[var(--r-md)] border border-[color:var(--line-strong)] bg-[color:var(--surface)] px-3 py-2.5'>
+              <div className='rounded-md border border-line-strong bg-card px-3 py-2.5'>
                 <ArchiveThemeTree
                   nodes={catalog}
                   onChange={setSelectedThemes}

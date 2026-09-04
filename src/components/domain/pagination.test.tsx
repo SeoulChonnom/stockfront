@@ -33,12 +33,12 @@ describe('Pagination', () => {
     render(<Pagination onPageChange={vi.fn()} page={5} totalPages={10} />);
 
     const current = screen.getByRole('button', { name: '5' });
-    expect(current.className).toContain('bg-[color:var(--primary-soft)]');
-    expect(current.className).toContain('text-[color:var(--primary)]');
-    expect(current.className).toContain('border-[color:var(--primary-line)]');
+    expect(current.className).toContain('bg-primary-soft');
+    expect(current.className).toContain('text-primary');
+    expect(current.className).toContain('border-primary-line');
 
     const other = screen.getByRole('button', { name: '4' });
-    expect(other.className).not.toContain('bg-[color:var(--primary-soft)]');
+    expect(other.className).not.toContain('bg-primary-soft');
   });
 
   it('disables 이전 on the first page and 다음 on the last page', () => {

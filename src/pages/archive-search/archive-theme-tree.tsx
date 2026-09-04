@@ -60,7 +60,7 @@ function ThemeNode({
           aria-describedby={descriptionId}
           aria-label={accessiblePath}
           checked={selectedCodes.includes(node.code)}
-          className='tap-check mt-1 size-4 shrink-0 accent-[var(--primary)]'
+          className='tap-check mt-1 size-4 shrink-0 accent-primary'
           id={inputId}
           onChange={() => onToggle(node.code)}
           type='checkbox'
@@ -140,7 +140,7 @@ export function ArchiveThemeTree({
       {limitReached ? (
         <p
           aria-live='polite'
-          className='wrap-anywhere m-0 mt-2 text-body-sm font-semibold text-[color:var(--warning)]'
+          className='wrap-anywhere m-0 mt-2 text-body-sm font-semibold text-warning'
           role='status'
         >
           {THEME_LIMIT_MESSAGE}

@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 /** Layout-preserving, aria-hidden placeholders; the parent owns aria-busy. */
 
 const SHIMMER_CLASSES =
-  'animate-[skeleton-shimmer_var(--dur-shimmer)_linear_infinite] rounded-[var(--r-md)] bg-[color:var(--surface-3)] bg-[length:200%_100%] [background-image:linear-gradient(100deg,var(--surface-3)_30%,var(--surface-2)_50%,var(--surface-3)_70%)]';
+  'animate-[skeleton-shimmer_var(--dur-shimmer)_linear_infinite] rounded-md bg-surface-3 bg-[length:200%_100%] [background-image:linear-gradient(100deg,var(--surface-3)_30%,var(--surface-2)_50%,var(--surface-3)_70%)]';
 
 export type SkeletonProps = {
   className?: string;

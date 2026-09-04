@@ -158,7 +158,7 @@ function ClusterArticleRow({
   return (
     <li
       className={`min-w-0 scroll-mt-24 border-b border-line px-[18px] py-3 ${
-        isGroupMember ? 'bg-[color:var(--surface-2)] ps-7' : ''
+        isGroupMember ? 'bg-surface-2 ps-7' : ''
       }`}
       data-article-id={article.id}
       id={domId}
@@ -183,13 +183,13 @@ function ClusterArticleRow({
             — the title itself links to the original source; this badge
             labels that destination in words (not color-only), distinct
             from the 네이버 미러 link below. */}
-        <span className='rounded-[var(--r-sm)] border border-[color:var(--line-strong)] px-1.5 py-0.5 text-body-sm font-semibold text-faint'>
+        <span className='rounded-sm border border-line-strong px-1.5 py-0.5 text-body-sm font-semibold text-faint'>
           원문
         </span>
         {/* B-4 (A-5 "표시 규칙"): only shown when > 0 — never a "0건"
             badge, and never the similar-group's other-article count. */}
         {article.exactDuplicateCount > 0 ? (
-          <span className='rounded-[var(--r-sm)] border border-line px-1.5 py-0.5 text-body-sm text-faint'>
+          <span className='rounded-sm border border-line px-1.5 py-0.5 text-body-sm text-faint'>
             원문 중복 {article.exactDuplicateCount}건
           </span>
         ) : null}
@@ -199,7 +199,7 @@ function ClusterArticleRow({
         {mirrorUrl ? (
           <a
             aria-label={`${title} 네이버 미러 (새 창)`}
-            className='tap-target rounded-[var(--r-sm)] border border-line px-1.5 py-0.5 text-fg-soft no-underline'
+            className='tap-target rounded-sm border border-line px-1.5 py-0.5 text-fg-soft no-underline'
             href={mirrorUrl}
             rel='noopener noreferrer'
             target='_blank'
@@ -210,7 +210,7 @@ function ClusterArticleRow({
         {groupToggle ? (
           <button
             aria-expanded={groupToggle.expanded}
-            className='tap-target ms-auto rounded-[var(--r-sm)] border border-[color:var(--line-strong)] bg-[color:var(--surface)] px-2 py-0.5 text-body-sm font-semibold text-fg-soft'
+            className='tap-target ms-auto rounded-sm border border-line-strong bg-card px-2 py-0.5 text-body-sm font-semibold text-fg-soft'
             onClick={groupToggle.onToggle}
             type='button'
           >
@@ -401,7 +401,7 @@ export function ClusterArticlesList({
     // Header, body, and pager own their padding.
     <section
       aria-labelledby='cluster-articles-heading'
-      className='flex min-w-0 flex-col overflow-hidden rounded-[var(--r-lg)] border border-line bg-[color:var(--surface)]'
+      className='flex min-w-0 flex-col overflow-hidden rounded-lg border border-line bg-card'
     >
       <div className='flex flex-wrap items-center gap-2.5 border-b border-line px-[18px] py-3.5'>
         <h2
@@ -434,7 +434,7 @@ export function ClusterArticlesList({
               정렬
             </label>
             <select
-              className='min-h-tap rounded-[var(--r-md)] border border-line bg-[color:var(--surface)] px-2 text-body'
+              className='min-h-tap rounded-md border border-line bg-card px-2 text-body'
               id='article-sort'
               onChange={(event) =>
                 updateFilters({ sort: event.target.value as ArticleSort })
@@ -451,7 +451,7 @@ export function ClusterArticlesList({
               언론사
             </label>
             <select
-              className='min-h-tap rounded-[var(--r-md)] border border-line bg-[color:var(--surface)] px-2 text-body'
+              className='min-h-tap rounded-md border border-line bg-card px-2 text-body'
               id='article-source'
               onChange={(event) =>
                 updateFilters({ source: event.target.value })
@@ -472,7 +472,7 @@ export function ClusterArticlesList({
               제목 검색
             </label>
             <input
-              className='min-h-tap min-w-0 rounded-[var(--r-md)] border border-line bg-[color:var(--surface)] px-2 text-body'
+              className='min-h-tap min-w-0 rounded-md border border-line bg-card px-2 text-body'
               id='article-query'
               onChange={(event) => updateFilters({ query: event.target.value })}
               type='search'

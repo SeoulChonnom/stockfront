@@ -25,19 +25,15 @@ const STATUS_TONES: Readonly<Record<string, BadgeTone>> = {
 };
 
 const TONE_CLASSES: Readonly<Record<BadgeTone, string>> = {
-  success:
-    'text-[color:var(--success)] bg-[color:var(--success-soft)] border-[color:var(--success-line)]',
-  warning:
-    'text-[color:var(--warning)] bg-[color:var(--warning-soft)] border-[color:var(--warning-line)]',
-  danger:
-    'text-[color:var(--danger)] bg-[color:var(--danger-soft)] border-[color:var(--danger-line)]',
-  info: 'text-[color:var(--info)] bg-[color:var(--info-soft)] border-[color:var(--info-line)]',
-  neutral:
-    'text-[color:var(--neutral)] bg-[color:var(--neutral-soft)] border-[color:var(--neutral-line)]',
+  success: 'text-success bg-success-soft border-success-line',
+  warning: 'text-warning bg-warning-soft border-warning-line',
+  danger: 'text-danger bg-danger-soft border-danger-line',
+  info: 'text-info bg-info-soft border-info-line',
+  neutral: 'text-neutral bg-neutral-soft border-neutral-line',
 };
 
 const BADGE_BASE_CLASSES =
-  'inline-flex items-center gap-1.5 rounded-[var(--r-sm)] border px-[9px] py-1 text-label font-semibold whitespace-nowrap';
+  'inline-flex items-center gap-1.5 rounded-sm border px-[9px] py-1 text-label font-semibold whitespace-nowrap';
 
 const BADGE_SM_CLASSES = 'gap-[5px] px-2 py-[3px] text-body-sm';
 

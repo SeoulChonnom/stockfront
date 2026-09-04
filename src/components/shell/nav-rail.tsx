@@ -31,7 +31,7 @@ export function NavRail({
   const userName = useAuthUserName();
 
   return (
-    <aside className='sticky top-0 hidden h-screen w-[248px] shrink-0 flex-col border-r border-line bg-[color:var(--surface)] min-[1025px]:flex'>
+    <aside className='sticky top-0 hidden h-screen w-[248px] shrink-0 flex-col border-r border-line bg-card min-[1025px]:flex'>
       <div className='px-5 pt-6 pb-4'>
         {/* Keep the wordmark on the foreground token rather than the primary accent. */}
         <p className='m-0 text-h2 font-bold text-fg'>Market Brief</p>
@@ -53,7 +53,7 @@ export function NavRail({
 
       <div className='flex flex-col gap-2 border-t border-line p-3'>
         <div className='flex items-center gap-2.5 px-1'>
-          <span className='flex size-[26px] shrink-0 items-center justify-center rounded-full border border-[color:var(--primary-line)] bg-[color:var(--primary-soft)] text-[color:var(--primary)]'>
+          <span className='flex size-[26px] shrink-0 items-center justify-center rounded-full border border-primary-line bg-primary-soft text-primary'>
             <CircleUserRound aria-hidden='true' size={16} />
           </span>
           {/* 이름이 없으면 그 줄을 지우고 역할만 남긴다 — 자리표시자를

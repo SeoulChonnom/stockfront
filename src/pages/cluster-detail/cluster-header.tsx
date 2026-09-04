@@ -41,7 +41,7 @@ export function ClusterHeader({
   return (
     <Card className='flex min-w-0 flex-col gap-3.5 p-5'>
       <div className='tnum flex flex-wrap items-center gap-x-2 gap-y-1 text-body-sm text-fg-soft'>
-        <span className='rounded-[var(--r-sm)] border border-[color:var(--line-strong)] px-2 py-0.5 text-label font-semibold tracking-caps text-faint uppercase'>
+        <span className='rounded-sm border border-line-strong px-2 py-0.5 text-label font-semibold tracking-caps text-faint uppercase'>
           {detail.marketLabel}
         </span>
         <span className='text-faint'>기준일</span>
@@ -72,7 +72,7 @@ export function ClusterHeader({
           {detail.tags.map((tag) => (
             <span
               // Preserve the measured 3px/9px chip padding.
-              className='rounded-[var(--r-sm)] border border-line bg-[color:var(--surface-2)] px-[9px] py-[3px] text-label text-fg-soft'
+              className='rounded-sm border border-line bg-surface-2 px-[9px] py-[3px] text-label text-fg-soft'
               key={tag}
             >
               {tag}

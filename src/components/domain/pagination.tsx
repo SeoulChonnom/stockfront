@@ -56,7 +56,7 @@ export function Pagination({
     <div className={cn('flex flex-wrap items-center gap-2', className)}>
       <nav aria-label={navLabel} className='flex flex-wrap items-center gap-2'>
         <Button
-          className='min-h-10 min-w-11 border-[color:var(--line-strong)] bg-[color:var(--surface)] px-3 text-body-sm font-normal text-fg'
+          className='min-h-10 min-w-11 border-line-strong bg-card px-3 text-body-sm font-normal text-fg'
           disabled={page <= 1}
           onClick={() => goTo(page - 1)}
           size='sm'
@@ -69,9 +69,9 @@ export function Pagination({
           <Button
             aria-current={candidate === page ? 'page' : undefined}
             className={cn(
-              'tnum min-h-10 min-w-11 bg-[color:var(--surface)] px-2.5 text-body-sm text-fg-soft',
+              'tnum min-h-10 min-w-11 bg-card px-2.5 text-body-sm text-fg-soft',
               candidate === page &&
-                'border-[color:var(--primary-line)] bg-[color:var(--primary-soft)] text-[color:var(--primary)]'
+                'border-primary-line bg-primary-soft text-primary'
             )}
             key={candidate}
             onClick={() => goTo(candidate)}
@@ -83,7 +83,7 @@ export function Pagination({
           </Button>
         ))}
         <Button
-          className='min-h-10 min-w-11 border-[color:var(--line-strong)] bg-[color:var(--surface)] px-3 text-body-sm font-normal text-fg'
+          className='min-h-10 min-w-11 border-line-strong bg-card px-3 text-body-sm font-normal text-fg'
           disabled={page >= safeTotalPages}
           onClick={() => goTo(page + 1)}
           size='sm'

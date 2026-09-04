@@ -38,7 +38,7 @@ function FailedCountBadge({ count }: { count: number }) {
   return (
     <span
       aria-label='최근 7일 실패'
-      className='tnum ml-auto inline-flex min-w-[20px] items-center justify-center rounded-full border border-[color:var(--danger-line)] bg-[color:var(--danger-soft)] px-1.5 py-0.5 text-label font-semibold text-[color:var(--danger)]'
+      className='tnum ml-auto inline-flex min-w-[20px] items-center justify-center rounded-full border border-danger-line bg-danger-soft px-1.5 py-0.5 text-label font-semibold text-danger'
       data-testid='ops-failed-count-badge'
       role='status'
       title='최근 7일 실패'
@@ -75,10 +75,10 @@ function NavLink({
     <a
       aria-current={active ? 'page' : undefined}
       className={cn(
-        'flex items-center gap-2.5 rounded-[8px] border border-transparent px-2.5 text-body font-medium text-fg-soft transition-[background-color,color] duration-(--dur-fast) ease-(--ease) hover:bg-[color:var(--surface-2)] hover:text-fg',
+        'flex items-center gap-2.5 rounded-[8px] border border-transparent px-2.5 text-body font-medium text-fg-soft transition-[background-color,color] duration-(--dur-fast) ease-(--ease) hover:bg-surface-2 hover:text-fg',
         minHeightClass,
         active &&
-          'border-[color:var(--primary-line)] bg-[color:var(--primary-soft)] text-[color:var(--primary)] hover:bg-[color:var(--primary-soft)] hover:text-[color:var(--primary)]'
+          'border-primary-line bg-primary-soft text-primary hover:bg-primary-soft hover:text-primary'
       )}
       href={withBasePath(href)}
       onClick={handleClick}

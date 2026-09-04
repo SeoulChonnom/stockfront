@@ -80,7 +80,7 @@
     box-shadow var(--dur-theme) var(--ease);
 }
 
-/* Keyframes used by the skeleton shimmer and drawer entrance utilities. */
+/* Keyframe used by the skeleton shimmer utility. */
 
 @keyframes skeleton-shimmer {
   0% {
@@ -88,24 +88,5 @@
   }
   100% {
     background-position: -200% 0;
-  }
-}
-
-@keyframes drawer-slide-in {
-  from {
-    transform: translateX(-100%);
-  }
-  to {
-    transform: translateX(0);
-  }
-}
-
-/* The overlay settles before the drawer finishes entering. */
-@keyframes overlay-fade-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
   }
 }

@@ -23,9 +23,8 @@ import { cn } from '@/lib/utils';
 export type StatusCardTone = 'info' | 'danger';
 
 const TONE_BADGE_CLASSES: Readonly<Record<StatusCardTone, string>> = {
-  info: 'border-[color:var(--info-line)] bg-[color:var(--info-soft)] text-[color:var(--info)]',
-  danger:
-    'border-[color:var(--danger-line)] bg-[color:var(--danger-soft)] text-[color:var(--danger)]',
+  info: 'border-info-line bg-info-soft text-info',
+  danger: 'border-danger-line bg-danger-soft text-danger',
 };
 
 export type StatusCardProps = {
@@ -62,7 +61,7 @@ export function StatusCard({
     <div
       className={cn(
         fullScreen &&
-          'flex min-h-screen items-center justify-center bg-[color:var(--bg)] px-4 py-10'
+          'flex min-h-screen items-center justify-center bg-background px-4 py-10'
       )}
     >
       <Card
@@ -76,7 +75,7 @@ export function StatusCard({
         {badge ? (
           <span
             className={cn(
-              'tnum inline-flex items-center gap-1.5 rounded-[var(--r-sm)] border px-2 py-0.5 text-body-sm font-semibold',
+              'tnum inline-flex items-center gap-1.5 rounded-sm border px-2 py-0.5 text-body-sm font-semibold',
               TONE_BADGE_CLASSES[tone]
             )}
           >
@@ -105,7 +104,7 @@ export function StatusCard({
           <Loader2
             aria-hidden='true'
             className={cn(
-              'mb-5 size-6 animate-[spin_var(--dur-spinner)_linear_infinite] text-[color:var(--info)]',
+              'mb-5 size-6 animate-[spin_var(--dur-spinner)_linear_infinite] text-info',
               fullScreen && 'mx-auto'
             )}
           />

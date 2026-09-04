@@ -59,7 +59,7 @@ export function PartialBanner({
   return (
     <section
       aria-labelledby='partial-banner-heading'
-      className={`rounded-[var(--r-lg)] border px-[18px] py-4 ${TONE_SURFACE.warning}`}
+      className={`rounded-lg border px-[18px] py-4 ${TONE_SURFACE.warning}`}
     >
       <div className='flex items-start gap-2'>
         <span aria-hidden='true' className={`font-bold ${TONE_ACCENT.warning}`}>

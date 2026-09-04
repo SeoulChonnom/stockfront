@@ -33,7 +33,7 @@ export function BatchHistoryTable({
 }: BatchHistoryTableProps) {
   return (
     <TableScrollWrapper label='배치 실행 이력 표'>
-      <Table aria-busy={isLoading} style={{ minWidth: 520 }}>
+      <Table aria-busy={isLoading} className='min-w-[520px]'>
         <TableHeader>
           <TableRow>
             <TableHead className='h-auto py-[9px] pl-4 sm:pl-[18px]'>
@@ -93,7 +93,7 @@ function BatchHistoryRow({
       <TableCell className='py-2.5 pl-4 align-top sm:pl-[18px]'>
         <button
           aria-label={`job ${row.id} 상세 선택`}
-          className='tap-target tnum min-w-0 justify-start rounded-[var(--r-sm)] text-left text-body font-semibold text-fg outline-none hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--focus)]'
+          className='tap-target tnum min-w-0 justify-start rounded-sm text-left text-body font-semibold text-fg outline-none hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring'
           ref={buttonRef}
           onClick={(event) => {
             event.stopPropagation();

@@ -42,7 +42,7 @@ export function MarketCompareBand({
   return (
     <section
       aria-labelledby='market-compare-band-title'
-      className='flex min-w-0 flex-col overflow-hidden rounded-[var(--r-lg)] border border-line bg-[color:var(--surface)]'
+      className='flex min-w-0 flex-col overflow-hidden rounded-lg border border-line bg-card'
     >
       <h2
         className='m-0 border-b border-line px-[18px] py-3 text-h2 font-semibold'
@@ -84,13 +84,13 @@ function BandRow({
       // 이 행은 아래 해당 시장 섹션으로 가는 이동 수단이다. 제목을 다시
       // 읽히지 않도록 섹션 제목 id로 이름을 빌려 온다.
       aria-describedby={marketHeadingId(index)}
-      className='flex w-full min-w-0 flex-wrap items-center gap-x-4 gap-y-2 px-[18px] py-3 text-left transition-colors duration-(--dur-fast) hover:bg-[color:var(--surface-2)] focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[color:var(--focus)]'
+      className='flex w-full min-w-0 flex-wrap items-center gap-x-4 gap-y-2 px-[18px] py-3 text-left transition-colors duration-(--dur-fast) hover:bg-surface-2 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring'
       onClick={onSelect}
       type='button'
     >
       <span className='flex min-w-0 shrink-0 items-center gap-2'>
         {market.marketType ? (
-          <span className='tnum rounded-[var(--r-sm)] border border-[color:var(--line-strong)] px-1.75 py-0.5 text-label font-semibold tracking-caps text-fg-soft'>
+          <span className='tnum rounded-sm border border-line-strong px-1.75 py-0.5 text-label font-semibold tracking-caps text-fg-soft'>
             {market.marketType}
           </span>
         ) : null}

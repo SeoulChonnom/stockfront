@@ -1,7 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "./styles/base.css";
-@import "./styles/app-shell.css";
 @import "./styles/components.css";
 
 @theme inline {
@@ -53,6 +52,40 @@
   --color-fg-soft: var(--text-soft);
   --color-faint: var(--text-faint);
   --color-line: var(--line);
+
+  /* 역할 색 브리지: `bg-[color:var(--surface)]` 같은 임의값 유틸리티를
+   * 없애기 위한 다리다. 위의 --text-* 다리와 같은 이유로 역할을 빠짐없이
+   * 노출해야 한다 — 하나라도 빠지면 그 자리만 임의값으로 되돌아간다. */
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-line-strong: var(--line-strong);
+
+  --color-primary-soft: var(--primary-soft);
+  --color-primary-line: var(--primary-line);
+  --color-primary-fg: var(--primary-fg);
+
+  --color-up: var(--up);
+  --color-down: var(--down);
+
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-success-line: var(--success-line);
+
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-warning-line: var(--warning-line);
+
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-danger-line: var(--danger-line);
+
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --color-info-line: var(--info-line);
+
+  --color-neutral: var(--neutral);
+  --color-neutral-soft: var(--neutral-soft);
+  --color-neutral-line: var(--neutral-line);
 
   /* --spacing-* → min-h-{name} / size-{name} (touch targets). */
   --spacing-tap: var(--tap-min);

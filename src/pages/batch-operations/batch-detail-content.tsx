@@ -149,7 +149,7 @@ export function BatchDetailContent({
       {/* Use an 8px row gap and 10px column gap between wrapped metadata. */}
       <div className='-mx-[18px] -mt-4 flex flex-wrap items-center gap-x-[10px] gap-y-2 border-b border-line px-[18px] py-[14px]'>
         <h2
-          className='m-0 text-h2 font-semibold text-fg outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--focus)]'
+          className='m-0 text-h2 font-semibold text-fg outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring'
           ref={detailHeadingRef}
           tabIndex={-1}
         >
@@ -199,11 +199,9 @@ export function BatchDetailContent({
       ) : null}
 
       {hasError ? (
-        <div
-          className={`min-w-0 rounded-[var(--r-md)] border p-3 ${TONE_SURFACE.danger}`}
-        >
+        <div className={`min-w-0 rounded-md border p-3 ${TONE_SURFACE.danger}`}>
           {run.errorCode ? (
-            <p className='mono m-0 font-semibold text-[color:var(--danger)]'>
+            <p className='mono m-0 font-semibold text-danger'>
               {run.errorCode}
             </p>
           ) : null}
@@ -256,7 +254,7 @@ export function BatchDetailContent({
       <div className='flex flex-wrap items-center gap-2 pt-1'>
         {snapshotHref ? (
           <a
-            className='inline-flex min-h-10 items-center rounded-[var(--r-md)] border border-[color:var(--line-strong)] px-3.5 text-body font-semibold text-fg transition-[scale,background-color] duration-(--dur-fast) ease-(--ease) hover:bg-[color:var(--surface-2)] active:scale-[0.98]'
+            className='inline-flex min-h-10 items-center rounded-md border border-line-strong px-3.5 text-body font-semibold text-fg transition-[scale,background-color] duration-(--dur-fast) ease-(--ease) hover:bg-surface-2 active:scale-[0.98]'
             href={withBasePath(snapshotHref)}
             onClick={createNavigateHandler(snapshotHref)}
           >

@@ -29,7 +29,7 @@ export function ClusterRepresentativeAside({
     <aside
       aria-labelledby='cluster-representative-heading'
       // Per-element margins keep heading spacing independent from the card gap.
-      className='flex min-w-0 flex-col rounded-[var(--r-lg)] border border-line bg-[color:var(--surface)] p-[18px] min-[1181px]:sticky min-[1181px]:top-5'
+      className='flex min-w-0 flex-col rounded-lg border border-line bg-card p-[18px] min-[1181px]:sticky min-[1181px]:top-5'
     >
       {/* The h2 is the accessible section label; the article title follows. */}
       <h2

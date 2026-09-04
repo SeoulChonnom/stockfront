@@ -42,7 +42,7 @@ export function EmptyState({
   return (
     <div
       className={cn(
-        'min-w-0 rounded-[var(--r-lg)] border border-dashed border-[color:var(--line-strong)] p-4',
+        'min-w-0 rounded-lg border border-dashed border-line-strong p-4',
         className
       )}
     >

@@ -77,9 +77,9 @@ export function ArchiveModeBand({
       // 색·모양이 겹쳤고, 그러면 "과거를 보는 중"과 "데이터가 빠졌다"가
       // 한 신호로 읽힌다. PRODUCT.md에서 아카이브는 예외 상태가 아니라
       // 정식 모드이므로 경고색을 쓸 이유도 없다.
-      className={`flex flex-wrap items-center gap-x-3.5 gap-y-2.5 rounded-[var(--r-lg)] border px-4 py-3 ${TONE_SURFACE.info}`}
+      className={`flex flex-wrap items-center gap-x-3.5 gap-y-2.5 rounded-lg border px-4 py-3 ${TONE_SURFACE.info}`}
     >
-      <span className='text-body-sm font-bold tracking-caps text-[color:var(--info)] uppercase'>
+      <span className='text-body-sm font-bold tracking-caps text-info uppercase'>
         아카이브 스냅샷
       </span>
       <span className='tnum text-body font-semibold'>{businessDate}</span>
