@@ -1,10 +1,17 @@
 import type { CSSProperties } from 'react';
 
+import { Skeleton as SkeletonPrimitive } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
 
 /** Layout-preserving, aria-hidden placeholders; the parent owns aria-busy. */
 
+/**
+ * Cancels the registry default (`animate-pulse bg-accent`) with the shimmer
+ * look this app uses. tailwind-merge resolves both pairs to the same class
+ * group (animate, background-color), so passing this as `className` wins
+ * over the primitive's own defaults regardless of arg order.
+ */
 const SHIMMER_CLASSES =
   'animate-[skeleton-shimmer_var(--dur-shimmer)_linear_infinite] rounded-md bg-surface-3 bg-[length:200%_100%] [background-image:linear-gradient(100deg,var(--surface-3)_30%,var(--surface-2)_50%,var(--surface-3)_70%)]';
 
@@ -15,7 +22,7 @@ export type SkeletonProps = {
 
 export function Skeleton({ className, style }: SkeletonProps) {
   return (
-    <div
+    <SkeletonPrimitive
       aria-hidden='true'
       className={cn(SHIMMER_CLASSES, className)}
       style={style}
