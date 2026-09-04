@@ -1,6 +1,7 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { NavRail } from '@/components/shell/nav-rail';
+import { ProfileMenu } from '@/components/shell/profile-menu';
 import {
   resetRoleOverrideForTesting,
   setRoleOverride,
@@ -17,24 +18,12 @@ vi.mock('@/lib/auth-user', () => ({
   useAuthUserName: mockUseAuthUserName,
 }));
 
-/** 신원 블록의 문단만 고른다(역할 시뮬레이터 버튼과 라벨이 겹친다). */
-function roleParagraphs(label: string) {
-  return screen
-    .getAllByText(label)
-    .filter((element) => element.tagName === 'P');
-}
+async function openProfileMenu() {
+  const user = userEvent.setup();
+  render(<ProfileMenu onToggleTheme={() => undefined} theme='light' />);
+  await user.click(screen.getByRole('button', { name: /계정 메뉴/ }));
 
-function renderRail() {
-  return render(
-    <NavRail
-      currentRouteKey='market-latest'
-      failedCount={null}
-      onToggleTheme={() => undefined}
-      pathname='/market/latest'
-      searchParams={new URLSearchParams()}
-      theme='light'
-    />
-  );
+  return screen.getByRole('menu');
 }
 
 afterEach(() => {
@@ -43,27 +32,36 @@ afterEach(() => {
 });
 
 describe('shell user identity', () => {
-  it('renders the name from the token response, not a hardcoded literal', () => {
+  it('renders the name from the token response, not a hardcoded literal', async () => {
     setRoleOverride('admin');
     mockUseAuthUserName.mockReturnValue('류지호');
 
-    renderRail();
+    const menu = await openProfileMenu();
 
-    expect(screen.getByText('류지호')).toBeInTheDocument();
-    // DEV 전용 `DevRoleSimulator`가 같은 라벨의 버튼을 그리므로 신원 블록의
-    // 문단만 센다.
-    expect(roleParagraphs('Admin')).toHaveLength(1);
+    expect(within(menu).getByText('류지호')).toBeInTheDocument();
+    expect(within(menu).getByText('Admin')).toBeInTheDocument();
     expect(screen.queryByText('ops.analyst')).not.toBeInTheDocument();
   });
 
-  it('drops the name line entirely when the token carries no name', () => {
+  it('drops the name line entirely when the token carries no name', async () => {
     setRoleOverride('user');
     mockUseAuthUserName.mockReturnValue(null);
 
-    renderRail();
+    const menu = await openProfileMenu();
 
     // 역할만 남는다. 빈 줄도, 자리표시자도 남기지 않는다.
-    expect(roleParagraphs('User')).toHaveLength(1);
+    expect(within(menu).getByText('User')).toBeInTheDocument();
     expect(screen.queryByText('ops.analyst')).not.toBeInTheDocument();
+  });
+
+  it('names the trigger with the signed-in user so an avatar-only header is still readable', async () => {
+    setRoleOverride('admin');
+    mockUseAuthUserName.mockReturnValue('류지호');
+
+    render(<ProfileMenu onToggleTheme={() => undefined} theme='light' />);
+
+    expect(
+      screen.getByRole('button', { name: '계정 메뉴 · 류지호' })
+    ).toBeInTheDocument();
   });
 });

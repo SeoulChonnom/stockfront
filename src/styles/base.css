@@ -112,7 +112,8 @@
   /* 사용자 테마 전환에만 적용되는 크로스페이드 시간이다. */
   --dur-theme: 220ms;
 
-  --topbar-height: 64px;
+  /* 상단 고정 헤더의 높이. 얇게 유지한다 — 본문이 주인공이다. */
+  --header-height: 52px;
 
   --z-sticky: 40;
   --z-skip: 90;
@@ -201,6 +202,13 @@ html,
 body,
 #root {
   min-height: 100vh;
+}
+
+/* 헤더가 항상 상단에 떠 있으므로 앵커 이동과 `scrollIntoView({block:'start'})`가
+   목적지를 헤더 밑에 밀어 넣지 않도록 문서 단위로 오프셋을 준다. 요소마다
+   `scroll-mt-*`를 붙이면 새로 추가되는 목적지에서 매번 잊는다. */
+html {
+  scroll-padding-top: calc(var(--header-height) + 8px);
 }
 
 /* Keep app body sizing on #root; changing html would alter the rem basis. */

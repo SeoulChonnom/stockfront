@@ -51,8 +51,7 @@ export function MarketSection({
   return (
     <section
       aria-labelledby={marketHeadingId(index)}
-      // 모바일 상단 헤더가 앵커 이동 시 제목을 가리지 않도록 오프셋을 준다.
-      className='flex min-w-0 scroll-mt-[calc(var(--topbar-height)+8px)] flex-col overflow-hidden rounded-lg border border-line bg-card'
+      className='flex min-w-0 flex-col overflow-hidden rounded-lg border border-line bg-card'
       id={marketSectionId(index)}
     >
       {/* 착지 표시는 카드 전체가 아니라 이 헤더 띠가 받는다

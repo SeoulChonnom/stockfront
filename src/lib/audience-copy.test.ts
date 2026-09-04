@@ -9,7 +9,6 @@ import {
   noNarrativeCopy,
   partialBannerCopy,
   rawErrorMessageCopy,
-  serviceTagline,
   unknownErrorMessageCopy,
 } from '@/lib/audience-copy';
 
@@ -29,11 +28,6 @@ const OPS_TERMS = [
 ];
 
 describe('audience-copy', () => {
-  it('drops the operations console wording for regular users', () => {
-    expect(serviceTagline(user)).toBe('AI 시장 브리프');
-    expect(serviceTagline(operator)).toContain('운영 콘솔');
-  });
-
   it('never leaks operator vocabulary into regular-user copy', () => {
     // A raw backend message deliberately stuffed with every forbidden term,
     // to prove the user-facing error copy discards it entirely rather than
