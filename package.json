@@ -10,6 +10,7 @@
     "lint:fix": "biome check --write",
     "test": "vitest run",
     "contrast": "node scripts/contrast-audit.mjs",
+    "shadcn:drift": "node scripts/shadcn-drift.mjs",
     "preview": "vite preview",
     "e2e": "playwright test",
     "knip": "knip"
