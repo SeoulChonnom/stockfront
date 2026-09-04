@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 
 import { EmptyState, InlineAlert } from '@/components/state';
 import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
 import { markArrival } from '@/lib/arrival-mark';
 
 import type { ArticleGrouping, ClusterArticle } from '@/lib/view-models';
@@ -430,9 +431,12 @@ export function ClusterArticlesList({
       {articles.length > 0 ? (
         <div className='flex flex-wrap items-end gap-3 border-b border-line px-[18px] py-3'>
           <div className='flex flex-col gap-1'>
-            <label className='text-label text-faint' htmlFor='article-sort'>
+            <Label
+              className='text-label text-faint font-normal'
+              htmlFor='article-sort'
+            >
               정렬
-            </label>
+            </Label>
             <select
               className='min-h-tap rounded-md border border-line bg-card px-2 text-body'
               id='article-sort'
@@ -447,9 +451,12 @@ export function ClusterArticlesList({
           </div>
 
           <div className='flex flex-col gap-1'>
-            <label className='text-label text-faint' htmlFor='article-source'>
+            <Label
+              className='text-label text-faint font-normal'
+              htmlFor='article-source'
+            >
               언론사
-            </label>
+            </Label>
             <select
               className='min-h-tap rounded-md border border-line bg-card px-2 text-body'
               id='article-source'
@@ -468,9 +475,12 @@ export function ClusterArticlesList({
           </div>
 
           <div className='flex min-w-0 flex-1 flex-col gap-1'>
-            <label className='text-label text-faint' htmlFor='article-query'>
+            <Label
+              className='text-label text-faint font-normal'
+              htmlFor='article-query'
+            >
               제목 검색
-            </label>
+            </Label>
             <input
               className='min-h-tap min-w-0 rounded-md border border-line bg-card px-2 text-body'
               id='article-query'

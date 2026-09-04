@@ -6,6 +6,7 @@ import {
 } from 'react';
 import { ToneBadge } from '@/components/domain/tone-badge';
 import { Button } from '@/components/ui/button';
+import { FieldError, FieldLabel } from '@/components/ui/field';
 import { cn } from '@/lib/utils';
 
 /** Presentational form shell; callers own field controls and validation. */
@@ -144,22 +145,30 @@ export function FilterField({
   children,
   className,
 }: FilterFieldProps) {
+  /**
+   * `FieldLabel`/`FieldError`만 쓴다 — 전체 `Field`(role="group" wrapper,
+   * flex-col gap-3 등)를 씌우면 이 컴포넌트가 지금까지 갖지 않던 레이아웃과
+   * 시맨틱스가 끼어든다. `getFieldProps`(`use-filter-draft.ts`)가 이미
+   * `aria-describedby`를 `${name}-error`로 스스로 배선해 두므로, 여기서는
+   * 그 값과 일치하는 `id`를 `FieldError`에 그대로 넘기기만 하면 된다 —
+   * `FieldError`는 id를 스스로 만들지 않고 전달받은 값을 쓴다.
+   */
   return (
     <div className={cn('min-w-0', className)}>
-      <label
-        className='mb-1 block text-label font-semibold text-fg-soft'
+      <FieldLabel
+        className='mb-1 block w-full text-label font-semibold text-fg-soft'
         htmlFor={htmlFor}
       >
         {label}
-      </label>
+      </FieldLabel>
       {children}
       {error ? (
-        <p
+        <FieldError
           className='wrap-anywhere m-0 mt-1 text-body-sm text-danger'
           id={`${htmlFor}-error`}
         >
           {error}
-        </p>
+        </FieldError>
       ) : null}
     </div>
   );
