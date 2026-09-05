@@ -1,6 +1,6 @@
 import { ChevronDownIcon } from 'lucide-react';
-import { useEffect, useState } from 'react';
-
+import { type KeyboardEvent, useEffect, useRef, useState } from 'react';
+import { useIsWide } from '@/components/domain/use-is-wide';
 import { InlineAlert } from '@/components/state';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -87,6 +87,7 @@ function ThemeSelectPicker({
       <div className='shrink-0 px-3 py-2'>
         <Input
           aria-label='테마 이름으로 좁히기'
+          className='tap-control'
           onChange={(event) => onQueryChange(event.target.value)}
           onKeyDown={(event) => {
             // 팝오버 안에서 Enter가 폼 제출 등 의도치 않은 동작으로 새지 않게 막는다.
@@ -115,6 +116,7 @@ function ThemeSelectPicker({
               {formatInteger(selectedCodes.length)}개 선택됨
             </span>
             <Button
+              className='tap-control'
               onClick={() => onChange([])}
               size='sm'
               type='button'
@@ -182,6 +184,31 @@ function ArchiveThemeSelectBody({
   );
 }
 
+/**
+ * 팝오버(넓은 화면)와 인라인 패널(좁은 화면)이 공유하는 몸통이다 — 도움말
+ * 문구부터 스크롤 트리, 상한 경고까지 여기서만 정의해서 두 경로가 서로
+ * 갈라지지 않게 한다. `ArchiveThemeSelectBody`의 로딩/에러/빈 카탈로그
+ * 분기와 `ThemeSelectPicker`의 스크롤 컨테이너·푸터 배치는 그대로 재사용한다.
+ */
+function ThemePickerContent(
+  props: ArchiveThemeSelectProps & {
+    query: string;
+    onQueryChange: (next: string) => void;
+  }
+) {
+  return (
+    <>
+      <div className='shrink-0 border-b border-line px-3 py-2.5'>
+        <p className='m-0 text-body-sm text-faint'>{THEME_HELP_TEXT}</p>
+      </div>
+      <ArchiveThemeSelectBody {...props} />
+    </>
+  );
+}
+
+const TRIGGER_CLASS_NAME =
+  'tap-control min-h-tap w-full justify-between border border-line-strong bg-card px-3 text-body font-normal text-fg';
+
 export function ArchiveThemeSelect({
   catalog,
   selectedCodes,
@@ -191,52 +218,125 @@ export function ArchiveThemeSelect({
   onRetry,
   triggerId = DEFAULT_TRIGGER_ID,
 }: ArchiveThemeSelectProps) {
+  const isWide = useIsWide();
   const [query, setQuery] = useState('');
+  const [isNarrowOpen, setIsNarrowOpen] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const panelId = `${triggerId}-panel`;
+  const triggerLabel = getTriggerLabel(selectedCodes.length);
 
-  return (
-    <Popover
-      onOpenChange={(open) => {
-        // 다음에 열었을 때 이전 검색어가 남아 결과를 미리 좁혀 두지 않도록 초기화한다.
-        if (!open) {
-          setQuery('');
-        }
-      }}
-    >
-      <PopoverTrigger asChild>
-        <Button
-          className='min-h-tap w-full justify-between border border-line-strong bg-card px-3 text-body font-normal text-fg'
-          id={triggerId}
-          type='button'
-          variant='secondary'
-        >
-          {getTriggerLabel(selectedCodes.length)}
-          <ChevronDownIcon className='size-4 shrink-0 text-faint' />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent
-        align='start'
-        aria-label='테마 선택'
-        /* 카탈로그가 50개를 넘으면 팝오버 전체가 뷰포트보다 길어져 푸터의
-           상한 경고가 화면 밖으로 잘렸다. Radix가 재는 가용 높이로 상자를
-           묶고 안을 flex 컬럼으로 만들어, 넘칠 때 줄어드는 쪽이 트리
-           스크롤 영역이 되도록 한다 — 푸터는 항상 화면 안에 남는다. */
-        className='flex max-h-(--radix-popover-content-available-height) w-[320px] max-w-[calc(100vw-2rem)] flex-col p-0'
-        collisionPadding={16}
+  const bodyProps = {
+    catalog,
+    error,
+    isLoading,
+    onChange,
+    onQueryChange: setQuery,
+    onRetry,
+    query,
+    selectedCodes,
+  };
+
+  function closeNarrowPanel() {
+    setIsNarrowOpen(false);
+    // 팝오버 쪽과 같은 규칙: 다음에 열었을 때 이전 검색어가 결과를 미리
+    // 좁혀 두지 않도록 닫힐 때 초기화한다.
+    setQuery('');
+  }
+
+  function handleNarrowTriggerClick() {
+    if (isNarrowOpen) {
+      closeNarrowPanel();
+      return;
+    }
+
+    setIsNarrowOpen(true);
+  }
+
+  /*
+   * 트리거와 패널을 함께 감싼 래퍼에서 받는다. 패널에만 걸어 두면 열자마자
+   * 포커스가 머무는 트리거에서 누른 Esc가 아무 일도 하지 않아, 같은 키가
+   * 넓은 화면(Radix 팝오버는 트리거에서도 닫힌다)과 다르게 동작했다.
+   */
+  function handleDisclosureKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    if (!isNarrowOpen || event.key !== 'Escape') {
+      return;
+    }
+
+    event.preventDefault();
+    closeNarrowPanel();
+    triggerRef.current?.focus();
+  }
+
+  if (isWide) {
+    return (
+      <Popover
+        onOpenChange={(open) => {
+          // 다음에 열었을 때 이전 검색어가 남아 결과를 미리 좁혀 두지 않도록 초기화한다.
+          if (!open) {
+            setQuery('');
+          }
+        }}
       >
-        <div className='shrink-0 border-b border-line px-3 py-2.5'>
-          <p className='m-0 text-body-sm text-faint'>{THEME_HELP_TEXT}</p>
+        <PopoverTrigger asChild>
+          <Button
+            className={TRIGGER_CLASS_NAME}
+            id={triggerId}
+            type='button'
+            variant='secondary'
+          >
+            {triggerLabel}
+            <ChevronDownIcon className='size-4 shrink-0 text-faint' />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent
+          align='start'
+          aria-label='테마 선택'
+          /* 카탈로그가 50개를 넘으면 팝오버 전체가 뷰포트보다 길어져 푸터의
+             상한 경고가 화면 밖으로 잘렸다. Radix가 재는 가용 높이로 상자를
+             묶고 안을 flex 컬럼으로 만들어, 넘칠 때 줄어드는 쪽이 트리
+             스크롤 영역이 되도록 한다 — 푸터는 항상 화면 안에 남는다. */
+          className='flex max-h-(--radix-popover-content-available-height) w-[320px] max-w-[calc(100vw-2rem)] flex-col p-0'
+          collisionPadding={16}
+        >
+          <ThemePickerContent {...bodyProps} />
+        </PopoverContent>
+      </Popover>
+    );
+  }
+
+  /*
+   * 좁은 화면에는 오버레이가 아예 없다 — 트리거 바로 아래, 폼의 정상 흐름
+   * 안에 같은 몸통을 편다. 트리거가 y≈753인 851px 뷰포트에서 Radix가
+   * 팝오버를 위로 뒤집어(`data-side="top"`) `to`/`status`/`market`/`q`
+   * 필드를 가리는 문제가 있었다 — 겹칠 대상 자체가 없으면 그 문제도 없다.
+   */
+  return (
+    // biome-ignore lint/a11y/noStaticElementInteractions: Esc는 이 공개 영역 전체(트리거+패널)에서 받아야 하고, 래퍼 자체는 상호작용 대상이 아니라 두 자식의 키 이벤트를 모으는 경계일 뿐이다.
+    <div className='min-w-0' onKeyDown={handleDisclosureKeyDown}>
+      <Button
+        aria-controls={panelId}
+        aria-expanded={isNarrowOpen}
+        className={TRIGGER_CLASS_NAME}
+        id={triggerId}
+        onClick={handleNarrowTriggerClick}
+        ref={triggerRef}
+        type='button'
+        variant='secondary'
+      >
+        {triggerLabel}
+        <ChevronDownIcon className='size-4 shrink-0 text-faint' />
+      </Button>
+      {isNarrowOpen ? (
+        // biome-ignore lint/a11y/useSemanticElements: Biome suggests <fieldset>, but this panel isn't a set of form controls submitted together — it's a disclosure region that also needs Escape-to-close, which <fieldset> doesn't model any better than role="group".
+        <div
+          aria-label='테마 선택'
+          className='mt-2 flex max-h-[420px] flex-col rounded-md border border-line bg-card'
+          id={panelId}
+          role='group'
+        >
+          <ThemePickerContent {...bodyProps} />
         </div>
-        <ArchiveThemeSelectBody
-          catalog={catalog}
-          error={error}
-          isLoading={isLoading}
-          onChange={onChange}
-          onQueryChange={setQuery}
-          onRetry={onRetry}
-          query={query}
-          selectedCodes={selectedCodes}
-        />
-      </PopoverContent>
-    </Popover>
+      ) : null}
+    </div>
   );
 }

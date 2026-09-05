@@ -508,3 +508,72 @@ test.describe('live region (Archive Search)', () => {
     );
   });
 });
+
+test.describe('mobile theme picker (< 641px)', () => {
+  // Pixel 5 관측치(393×851)와 같은 폭 — `useIsWide`의 641px 경계 아래라
+  // FilterBar가 접힘으로 시작하고, ArchiveThemeSelect는 팝오버 대신
+  // 인라인 패널로 펼쳐진다.
+  test('opening the theme picker leaves 종료일/생성 상태/시장/키워드 visible and unobstructed', async ({
+    page,
+  }) => {
+    await installMockApi(page, { scenario: 'ready' });
+    await page.setViewportSize({ width: 393, height: 851 });
+    await page.goto('market/archive/search');
+
+    await page.getByRole('button', { name: '조건 바꾸기' }).click();
+
+    const themeTrigger = page.getByRole('button', {
+      name: /^테마 (전체|\d+개 선택)$/,
+    });
+    await expect(themeTrigger).toHaveAttribute('aria-expanded', 'false');
+    await themeTrigger.click();
+    await expect(themeTrigger).toHaveAttribute('aria-expanded', 'true');
+
+    // 팝오버(오버레이)라면 아래 필드를 덮어 이 상호작용들이 실패했을
+    // 것이다 — Playwright의 액션 대기는 대상이 다른 요소에 가려지면
+    // (pointer-events 수신 검사) 그 지점에서 멈춘다.
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+    await page.locator('#to').fill('2026-07-20');
+    await expect(page.locator('#to')).toHaveValue('2026-07-20');
+    await page.getByLabel('생성 상태', { exact: true }).selectOption('READY');
+    await expect(page.getByLabel('생성 상태', { exact: true })).toHaveValue(
+      'READY'
+    );
+    await page.getByLabel('시장', { exact: true }).selectOption('KR');
+    await expect(page.getByLabel('시장', { exact: true })).toHaveValue('KR');
+    await page.getByLabel('키워드', { exact: true }).fill('rate');
+    await expect(page.getByLabel('키워드', { exact: true })).toHaveValue(
+      'rate'
+    );
+
+    // The four fields are still on-screen while the panel is open.
+    await expect(page.locator('#to')).toBeVisible();
+    await expect(page.getByLabel('생성 상태', { exact: true })).toBeVisible();
+    await expect(page.getByLabel('시장', { exact: true })).toBeVisible();
+    await expect(page.getByLabel('키워드', { exact: true })).toBeVisible();
+  });
+
+  test('Escape closes the inline panel and returns focus to the trigger', async ({
+    page,
+  }) => {
+    await installMockApi(page, { scenario: 'ready' });
+    await page.setViewportSize({ width: 393, height: 851 });
+    await page.goto('market/archive/search');
+
+    await page.getByRole('button', { name: '조건 바꾸기' }).click();
+    const themeTrigger = page.getByRole('button', {
+      name: /^테마 (전체|\d+개 선택)$/,
+    });
+    await themeTrigger.click();
+
+    const searchInput = page.getByRole('searchbox', {
+      name: '테마 이름으로 좁히기',
+    });
+    await searchInput.focus();
+    await page.keyboard.press('Escape');
+
+    await expect(themeTrigger).toHaveAttribute('aria-expanded', 'false');
+    await expect(searchInput).toHaveCount(0);
+    await expect(themeTrigger).toBeFocused();
+  });
+});

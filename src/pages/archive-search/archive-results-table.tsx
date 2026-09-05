@@ -197,7 +197,7 @@ function MonthGroupHeaderRow({
         <div className='flex items-baseline justify-between gap-2'>
           <button
             aria-label={`${Number(year)}년 ${Number(month)}월만 보기`}
-            className='tap-target-text justify-start underline-offset-2 hover:text-primary hover:underline'
+            className='tap-control justify-start underline-offset-2 hover:text-primary hover:underline'
             onClick={() => onSelectMonth?.(getMonthRange(year, month))}
             type='button'
           >

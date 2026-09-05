@@ -97,7 +97,7 @@ function RangePresetRow({
         <Button
           aria-pressed={preset.id === activePresetId}
           className={cn(
-            'tnum',
+            'tap-control tnum',
             preset.id === activePresetId &&
               'border-primary-line bg-primary-soft text-primary'
           )}
@@ -227,7 +227,7 @@ export function ArchiveSearchFilters({
           >
             <Input
               className={cn(
-                'tnum rounded-md bg-card px-3 py-0 text-body',
+                'tap-control tnum rounded-md bg-card px-3 py-0 text-body',
                 !errors.from && 'border-line-strong'
               )}
               type='date'
@@ -246,7 +246,7 @@ export function ArchiveSearchFilters({
           >
             <Input
               className={cn(
-                'tnum rounded-md bg-card px-3 py-0 text-body',
+                'tap-control tnum rounded-md bg-card px-3 py-0 text-body',
                 !errors.to && 'border-line-strong'
               )}
               type='date'
@@ -295,7 +295,7 @@ export function ArchiveSearchFilters({
           >
             <Input
               className={cn(
-                'rounded-md bg-card px-3 py-0 text-body',
+                'tap-control rounded-md bg-card px-3 py-0 text-body',
                 !errors.q && 'border-line-strong'
               )}
               placeholder='예: 반도체, 금리'

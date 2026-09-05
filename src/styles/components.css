@@ -48,6 +48,17 @@
   }
 }
 
+/** Form and pager controls keep their compact size for a mouse and grow to the touch floor. */
+.tap-control {
+  /* Fine pointer: no change from the control's own size classes. */
+}
+
+@media (pointer: coarse) {
+  .tap-control {
+    min-height: var(--tap-min);
+  }
+}
+
 /** Inset shadows preserve each target's original background after the mark fades. */
 @keyframes arrival-mark {
   0%,

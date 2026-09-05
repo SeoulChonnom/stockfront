@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { ThemeNodeResponse } from '@/lib/api/types';
 
@@ -93,6 +93,15 @@ describe('ArchiveThemeSelect', () => {
     expect(
       screen.getByRole('checkbox', { name: '업종 / 반도체' })
     ).toBeInTheDocument();
+  });
+
+  it('renders the picker inside a dialog on the wide (default jsdom) branch', async () => {
+    const user = userEvent.setup();
+    render(<ControlledSelect />);
+
+    await user.click(screen.getByRole('button', { name: /테마 전체/ }));
+
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
   });
 
   it('narrows the visible checkboxes as the search input changes', async () => {
@@ -254,5 +263,119 @@ describe('ArchiveThemeSelect', () => {
     expect(
       screen.getByText('선택할 수 있는 테마가 없습니다.')
     ).toBeInTheDocument();
+  });
+
+  // `useIsWide`(`(min-width: 641px)`)가 없는 matchMedia에서 넓은 화면으로
+  // 친다 — 좁은 branch를 테스트하려면 해당 쿼리가 `matches: false`를
+  // 돌려주도록 직접 스텁해야 한다. `App.test.tsx`가 쓰는 것과 같은
+  // `vi.stubGlobal('matchMedia', ...)` 방식을 그대로 따른다.
+  describe('narrow branch (< 641px)', () => {
+    function mockNarrowViewport() {
+      vi.stubGlobal(
+        'matchMedia',
+        vi.fn().mockImplementation((query: string) => ({
+          matches: false,
+          media: query,
+          onchange: null,
+          addEventListener: vi.fn(),
+          removeEventListener: vi.fn(),
+          addListener: vi.fn(),
+          removeListener: vi.fn(),
+          dispatchEvent: vi.fn(),
+        }))
+      );
+    }
+
+    afterEach(() => {
+      vi.unstubAllGlobals();
+    });
+
+    it('renders the trigger with aria-expanded=false and no dialog until opened', () => {
+      mockNarrowViewport();
+      render(<ControlledSelect />);
+
+      const trigger = screen.getByRole('button', { name: /테마 전체/ });
+      expect(trigger).toHaveAttribute('aria-expanded', 'false');
+      expect(trigger).toHaveAttribute('aria-controls');
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+
+    it('opens the picker inline (no dialog) and toggles aria-expanded', async () => {
+      const user = userEvent.setup();
+      mockNarrowViewport();
+      render(<ControlledSelect />);
+
+      const trigger = screen.getByRole('button', { name: /테마 전체/ });
+      await user.click(trigger);
+
+      expect(trigger).toHaveAttribute('aria-expanded', 'true');
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(
+        screen.getByRole('checkbox', { name: '업종' })
+      ).toBeInTheDocument();
+    });
+
+    it('Escape while focus is inside the panel closes it and returns focus to the trigger', async () => {
+      const user = userEvent.setup();
+      mockNarrowViewport();
+      render(<ControlledSelect />);
+
+      const trigger = screen.getByRole('button', { name: /테마 전체/ });
+      await user.click(trigger);
+
+      const searchInput = screen.getByRole('searchbox', {
+        name: '테마 이름으로 좁히기',
+      });
+      searchInput.focus();
+
+      await user.keyboard('{Escape}');
+
+      expect(trigger).toHaveAttribute('aria-expanded', 'false');
+      expect(
+        screen.queryByRole('searchbox', { name: '테마 이름으로 좁히기' })
+      ).not.toBeInTheDocument();
+      expect(trigger).toHaveFocus();
+    });
+
+    it('still shows the 10-item cap warning in the footer, outside the scrollable tree', async () => {
+      const user = userEvent.setup();
+      mockNarrowViewport();
+
+      const manyThemes = Array.from({ length: 11 }, (_, index) => ({
+        code: `THEME_${index}`,
+        label: `테마 ${index}`,
+        description: `설명 ${index}`,
+        children: [],
+      })) satisfies ThemeNodeResponse[];
+      const LIMIT_MESSAGE =
+        '테마는 최대 10개까지 선택할 수 있습니다. 선택한 테마를 해제한 뒤 다시 시도해 주세요.';
+
+      function ControlledManySelect() {
+        const [selected, setSelected] = useState(
+          manyThemes.slice(0, 10).map((node) => node.code)
+        );
+        return (
+          <ArchiveThemeSelect
+            catalog={manyThemes}
+            onChange={setSelected}
+            selectedCodes={selected}
+          />
+        );
+      }
+
+      render(<ControlledManySelect />);
+
+      await user.click(screen.getByRole('button', { name: '테마 10개 선택' }));
+      await user.click(screen.getByRole('checkbox', { name: '테마 10' }));
+
+      const message = screen.getByText(LIMIT_MESSAGE);
+      expect(message).toBeInTheDocument();
+
+      const scrollContainer = document.querySelector(
+        '[class*="overflow-y-auto"]'
+      );
+      expect(scrollContainer).not.toBeNull();
+      expect(scrollContainer?.contains(message)).toBe(false);
+    });
   });
 });

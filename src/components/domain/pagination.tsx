@@ -87,7 +87,7 @@ export function Pagination({
         <PaginationContent className='flex-wrap gap-2'>
           <PaginationItem>
             <Button
-              className='min-h-10 min-w-11 border-line-strong bg-card px-3 text-body-sm font-normal text-fg'
+              className='tap-control min-h-10 min-w-11 border-line-strong bg-card px-3 text-body-sm font-normal text-fg'
               disabled={safePage <= 1}
               onClick={() => goTo(safePage - 1)}
               size='sm'
@@ -102,7 +102,7 @@ export function Pagination({
               <Button
                 aria-current={candidate === safePage ? 'page' : undefined}
                 className={cn(
-                  'tnum min-h-10 min-w-11 bg-card px-2.5 text-body-sm text-fg-soft',
+                  'tap-control tnum min-h-10 min-w-11 bg-card px-2.5 text-body-sm text-fg-soft',
                   candidate === safePage &&
                     'border-primary-line bg-primary-soft text-primary'
                 )}
@@ -117,7 +117,7 @@ export function Pagination({
           ))}
           <PaginationItem>
             <Button
-              className='min-h-10 min-w-11 border-line-strong bg-card px-3 text-body-sm font-normal text-fg'
+              className='tap-control min-h-10 min-w-11 border-line-strong bg-card px-3 text-body-sm font-normal text-fg'
               disabled={safePage >= safeTotalPages}
               onClick={() => goTo(safePage + 1)}
               size='sm'
