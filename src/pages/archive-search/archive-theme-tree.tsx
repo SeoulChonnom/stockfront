@@ -1,13 +1,9 @@
-import { useEffect, useId, useState } from 'react';
+import { useId } from 'react';
 
 import { Checkbox } from '@/components/ui/checkbox';
 import type { ThemeNodeResponse } from '@/lib/api/types';
+import { MAX_ARCHIVE_THEME_SELECTIONS } from '@/pages/archive-search/theme-limit';
 import { filterThemeNodes } from '@/pages/archive-search/theme-node-filter';
-
-const MAX_ARCHIVE_THEME_SELECTIONS = 10;
-
-const THEME_LIMIT_MESSAGE =
-  '테마는 최대 10개까지 선택할 수 있습니다. 선택한 테마를 해제한 뒤 다시 시도해 주세요.';
 
 const NO_MATCH_MESSAGE = '일치하는 테마가 없습니다.';
 
@@ -17,6 +13,13 @@ type ArchiveThemeTreeProps = {
   onChange: (selectedCodes: string[]) => void;
   maxSelections?: number;
   query?: string;
+  /**
+   * 상한(기본 10개)에 걸려 토글이 막혔을 때 호출된다. 메시지 자체는 더
+   * 이상 이 컴포넌트가 그리지 않는다 — 스크롤 컨테이너 안에 있어서 사용자가
+   * 막 그 지점까지 스크롤해 온 상태라면 화면 밖으로 밀려날 수 있다.
+   * `ThemeSelectPicker`가 항상 보이는 하단 바에서 대신 그린다.
+   */
+  onLimitBlocked?: () => void;
 };
 
 function getInputId(code: string, fallback: string) {
@@ -110,24 +113,18 @@ export function ArchiveThemeTree({
   onChange,
   maxSelections = MAX_ARCHIVE_THEME_SELECTIONS,
   query,
+  onLimitBlocked,
 }: ArchiveThemeTreeProps) {
-  const [limitReached, setLimitReached] = useState(false);
   const trimmedQuery = query?.trim() ?? '';
   const visibleNodes = trimmedQuery
     ? filterThemeNodes(nodes, trimmedQuery, selectedCodes)
     : nodes;
   const showNoMatch = trimmedQuery.length > 0 && visibleNodes.length === 0;
 
-  useEffect(() => {
-    if (selectedCodes.length < maxSelections) {
-      setLimitReached(false);
-    }
-  }, [maxSelections, selectedCodes.length]);
-
   function handleToggle(code: string) {
     const result = toggleCode(selectedCodes, code, maxSelections);
     if (result.blocked) {
-      setLimitReached(true);
+      onLimitBlocked?.();
       return;
     }
 
@@ -153,15 +150,6 @@ export function ArchiveThemeTree({
           ))}
         </ul>
       )}
-      {limitReached ? (
-        <p
-          aria-live='polite'
-          className='wrap-anywhere m-0 mt-2 text-body-sm font-semibold text-warning'
-          role='status'
-        >
-          {THEME_LIMIT_MESSAGE}
-        </p>
-      ) : null}
     </div>
   );
 }

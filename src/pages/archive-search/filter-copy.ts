@@ -51,6 +51,46 @@ export function getMarketSummaryLabel(value: string): string {
   );
 }
 
+export type ArchiveRangePresetId = '7d' | '30d' | '90d' | 'ytd';
+
+export type ArchiveRangePreset = {
+  id: ArchiveRangePresetId;
+  label: string;
+  from: string;
+  to: string;
+};
+
+/**
+ * 회고 사용자는 "지난달에 뭐 있었지"처럼 기간 단위로 스캔한다 — 매번 두
+ * 날짜 입력을 손으로 고치는 대신 자주 쓰는 폭을 버튼 한 번으로 채운다.
+ * `from`/`to`는 호출 시점에 계산한다(모듈 로드 시 한 번만 계산하면 오래
+ * 열어 둔 탭에서 "오늘"이 굳어 버린다). `올해`는 `new Date().getFullYear()`
+ * 대신 `getTodayIso()`의 앞 4자리로 연도를 뽑는다 — 전자는 브라우저 로컬
+ * 시간대를 쓰므로 KST 자정 부근에서 실제 KST 연도와 어긋날 수 있다.
+ */
+export function getArchiveRangePresets(): ArchiveRangePreset[] {
+  const today = getTodayIso();
+  const yearOfToday = today.slice(0, 4);
+
+  return [
+    { id: '7d', label: '지난 7일', from: getRelativeIso(7), to: today },
+    { id: '30d', label: '지난 30일', from: getRelativeIso(30), to: today },
+    { id: '90d', label: '지난 90일', from: getRelativeIso(90), to: today },
+    { id: 'ytd', label: '올해', from: `${yearOfToday}-01-01`, to: today },
+  ];
+}
+
+/** `from`/`to`가 프리셋 하나와 정확히 일치할 때만 그 id를, 아니면 `null`을 돌려준다. */
+export function matchArchiveRangePreset(range: {
+  from: string;
+  to: string;
+}): ArchiveRangePresetId | null {
+  const match = getArchiveRangePresets().find(
+    (preset) => preset.from === range.from && preset.to === range.to
+  );
+  return match?.id ?? null;
+}
+
 export function getDefaultArchiveFilters(): ArchiveFilterDraft {
   return {
     from: getRelativeIso(14),

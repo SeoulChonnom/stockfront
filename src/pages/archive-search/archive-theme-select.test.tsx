@@ -186,6 +186,63 @@ describe('ArchiveThemeSelect', () => {
     expect(onRetry).toHaveBeenCalledTimes(1);
   });
 
+  describe('theme cap warning placement', () => {
+    const manyThemes = Array.from({ length: 11 }, (_, index) => ({
+      code: `THEME_${index}`,
+      label: `테마 ${index}`,
+      description: `설명 ${index}`,
+      children: [],
+    })) satisfies ThemeNodeResponse[];
+
+    const LIMIT_MESSAGE =
+      '테마는 최대 10개까지 선택할 수 있습니다. 선택한 테마를 해제한 뒤 다시 시도해 주세요.';
+
+    it('surfaces the cap message in the always-visible footer, outside the scrollable tree container, and clears it once the selection drops below the cap', async () => {
+      const user = userEvent.setup();
+
+      function ControlledManySelect() {
+        const [selected, setSelected] = useState(
+          manyThemes.slice(0, 10).map((node) => node.code)
+        );
+        return (
+          <ArchiveThemeSelect
+            catalog={manyThemes}
+            onChange={setSelected}
+            selectedCodes={selected}
+          />
+        );
+      }
+
+      render(<ControlledManySelect />);
+
+      await user.click(screen.getByRole('button', { name: '테마 10개 선택' }));
+
+      const eleventh = screen.getByRole('checkbox', { name: '테마 10' });
+      await user.click(eleventh);
+
+      const message = screen.getByText(LIMIT_MESSAGE);
+      expect(message).toBeInTheDocument();
+      expect(message).toHaveAttribute('role', 'status');
+
+      // The footer (선택 해제/count row) is outside the scrollable tree
+      // container (`max-h-[300px] overflow-y-auto`), while the message
+      // must sit in that same footer, not inside the scroll container.
+      const scrollContainer = document.querySelector(
+        '[class*="overflow-y-auto"]'
+      );
+      expect(scrollContainer).not.toBeNull();
+      expect(scrollContainer?.contains(message)).toBe(false);
+      const footer = screen
+        .getByText('10개 선택됨')
+        .closest('div')?.parentElement;
+      expect(footer?.contains(message)).toBe(true);
+
+      // Clear one selection (drop below the cap) — the message must clear.
+      await user.click(screen.getByRole('checkbox', { name: '테마 0' }));
+      expect(screen.queryByText(LIMIT_MESSAGE)).not.toBeInTheDocument();
+    });
+  });
+
   it('renders the empty-catalog copy when there are no themes to pick', async () => {
     const user = userEvent.setup();
     render(

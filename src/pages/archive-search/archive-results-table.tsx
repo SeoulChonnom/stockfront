@@ -14,8 +14,11 @@ import {
 } from '@/components/shell/scroll-restoration';
 import { StatusBadge } from '@/components/state';
 
+import { getTodayIso } from '@/lib/kst-date';
 import { buildUrl, navigate, withBasePath } from '@/lib/router';
 import type { ArchiveRecord } from '@/lib/view-models';
+
+export type MonthRange = { from: string; to: string };
 
 export type ArchiveRowFilters = {
   from: string;
@@ -144,20 +147,45 @@ function GeneratedAtSubline({ record }: { record: ArchiveRecord }) {
   );
 }
 
+/** UTC 계산만 쓴다 — 위 요일 헬퍼와 같은 이유로, `Date` 생성자가 로컬/UTC로 달을 바꿔치기하는 걸 피한다. */
+function getLastDayOfMonth(year: number, month: number): number {
+  return new Date(Date.UTC(year, month, 0)).getUTCDate();
+}
+
+/**
+ * 월 헤더를 눌렀을 때 검색할 범위. 이번 달처럼 아직 끝나지 않은 달은
+ * 자연스러운 말일(예: 31일)이 미래 날짜가 되어 `validateArchiveFilters`가
+ * 거부하므로, `getTodayIso()`로 클램프한다.
+ */
+function getMonthRange(year: string, month: string): MonthRange {
+  const today = getTodayIso();
+  const from = `${year}-${month}-01`;
+  const lastDay = getLastDayOfMonth(Number(year), Number(month));
+  const naturalTo = `${year}-${month}-${String(lastDay).padStart(2, '0')}`;
+  return { from, to: naturalTo > today ? today : naturalTo };
+}
+
 /**
  * 페이지 하나가 한두 달에 걸치므로, 그룹이 하나뿐이어도 헤더는 그대로
  * 낸다 — 건수 자체가 정보이고, 조건부로 숨기면 "이 페이지가 몇 달치인지"
  * 매번 다시 파악해야 한다. `scope='colgroup'`은 아래 데이터 행들이 이
  * 헤더에 종속된 그룹임을 스크린리더에 알린다.
+ *
+ * 이 헤더는 결과 영역 안이라 클릭하면 바로 이동한다(필터 카드 안의
+ * 프리셋과 반대) — `ArchiveFilterChips`의 칩과 같은 규칙이다. 건수는
+ * 접근 이름에 넣지 않는다: 이 건수는 "이 페이지 안에서"의 건수라 좁힌
+ * 뒤의 전체 결과 수와 달라서, 이름에 넣으면 곧 거짓말이 된다.
  */
 function MonthGroupHeaderRow({
   year,
   month,
   count,
+  onSelectMonth,
 }: {
   year: string;
   month: string;
   count: number;
+  onSelectMonth?: (range: MonthRange) => void;
 }) {
   return (
     <TableRow>
@@ -167,9 +195,14 @@ function MonthGroupHeaderRow({
         scope='colgroup'
       >
         <div className='flex items-baseline justify-between gap-2'>
-          <span>
+          <button
+            aria-label={`${Number(year)}년 ${Number(month)}월만 보기`}
+            className='tap-target-text justify-start underline-offset-2 hover:text-primary hover:underline'
+            onClick={() => onSelectMonth?.(getMonthRange(year, month))}
+            type='button'
+          >
             {Number(year)}년 {Number(month)}월
-          </span>
+          </button>
           <span className='tnum font-normal text-faint'>{count}건</span>
         </div>
       </TableHead>
@@ -261,11 +294,13 @@ export function ArchiveResultsTable({
   filters,
   scrollSearch,
   canViewOps,
+  onSelectMonth,
 }: {
   rows: ArchiveRecord[];
   filters: ArchiveRowFilters;
   scrollSearch: string;
   canViewOps: boolean;
+  onSelectMonth?: (range: MonthRange) => void;
 }) {
   const groups = groupRowsByMonth(rows);
 
@@ -305,6 +340,7 @@ export function ArchiveResultsTable({
             <MonthGroupHeaderRow
               count={group.records.length}
               month={group.month}
+              onSelectMonth={onSelectMonth}
               year={group.year}
             />
             {group.records.map((record) => (

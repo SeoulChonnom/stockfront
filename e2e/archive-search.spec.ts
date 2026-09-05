@@ -150,6 +150,60 @@ test.describe('filter apply / reset', () => {
   });
 });
 
+test.describe('range presets', () => {
+  test('clicking a preset only fills the date inputs — URL stays put until 필터 적용, then reflects the preset range', async ({
+    page,
+  }) => {
+    await installMockApi(page, { scenario: 'ready' });
+    await page.clock.setFixedTime(new Date(`${TODAY}T08:24:31+09:00`));
+    await page.goto('market/archive/search');
+
+    const urlBeforeClick = page.url();
+    await page.getByRole('button', { name: '지난 30일' }).click();
+
+    expect(page.url(), '프리셋 클릭은 draft만 바꾼다').toBe(urlBeforeClick);
+    await expect(page.locator('#from')).toHaveValue(shiftDate(TODAY, -30));
+    await expect(page.locator('#to')).toHaveValue(TODAY);
+    await expect(
+      page.getByRole('button', { name: '지난 30일' })
+    ).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.locator('[aria-live="polite"]')).toContainText(
+      '기간을 지난 30일로 바꿨습니다. 필터 적용을 눌러 검색하세요.'
+    );
+
+    await page.getByRole('button', { name: '필터 적용' }).click();
+    await expect(page).toHaveURL(new RegExp(`from=${shiftDate(TODAY, -30)}`));
+    await expect(page).toHaveURL(new RegExp(`to=${TODAY}`));
+  });
+});
+
+test.describe('month group header', () => {
+  test('clicking a month group header navigates immediately to that month, resets to page=1, and keeps other filters', async ({
+    page,
+  }) => {
+    await installMockApi(page, { scenario: 'ready' });
+    await page.clock.setFixedTime(new Date(`${TODAY}T08:24:31+09:00`));
+    await page.goto('market/archive/search');
+
+    await page.getByLabel('시장', { exact: true }).selectOption('KR');
+    await page.getByRole('button', { name: '필터 적용' }).click();
+    await expect(page).toHaveURL(/market=KR/);
+
+    // 기본 14일 범위(2026-07-13~2026-07-27)의 20개 행은 전부 7월이라 한
+    // 그룹뿐이다. 7월은 아직 끝나지 않은 "이번 달"이라 말일(31일) 대신
+    // 오늘(TODAY=2026-07-27)로 클램프된 범위를 기대한다.
+    await page.getByRole('button', { name: '2026년 7월만 보기' }).click();
+
+    await expect(page).toHaveURL(/from=2026-07-01/);
+    await expect(page).toHaveURL(new RegExp(`to=${TODAY}`));
+    await expect(page).toHaveURL(/market=KR/);
+    await expect(page).toHaveURL(/page=1/);
+    await expect(page.locator('[aria-live="polite"]')).toContainText(
+      '기간을 2026년 7월로 좁혔습니다.'
+    );
+  });
+});
+
 test.describe('filter chips', () => {
   test('removing a filter via its chip drops only that filter and keeps the date range', async ({
     page,

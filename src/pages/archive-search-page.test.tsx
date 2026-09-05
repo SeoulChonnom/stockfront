@@ -697,6 +697,37 @@ describe('ArchiveSearchPage', () => {
     expect(window.location.search).toContain('page=3');
   });
 
+  it('clicking a month group header navigates with the month range, preserves market/q, and resets page to 1', () => {
+    // July 2026 must read as a fully-past month here so the row's month
+    // header resolves to July's natural last day (31st), not today's
+    // clamp — that clamp path is covered in archive-results-table.test.tsx.
+    // `fireEvent.click` (not `userEvent`) avoids mixing fake timers with
+    // userEvent's internal real-timer waits.
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-08-15T00:00:00+09:00'));
+
+    try {
+      mockUseArchiveList.mockReturnValue(ready());
+
+      renderPage(
+        new URLSearchParams(
+          'from=2026-07-13&to=2026-07-27&page=3&market=US&q=rate'
+        )
+      );
+
+      fireEvent.click(
+        screen.getByRole('button', { name: '2026년 7월만 보기' })
+      );
+
+      expect(window.location.search).toBe(
+        '?from=2026-07-01&to=2026-07-31&market=US&q=rate&page=1'
+      );
+      expect(getLiveRegionText()).toBe('기간을 2026년 7월로 좁혔습니다.');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('does not render the results card shell when the first load errors with no prior data', () => {
     mockUseArchiveList.mockReturnValue({
       data: undefined,

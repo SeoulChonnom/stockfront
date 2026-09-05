@@ -30,7 +30,10 @@ import { useArchiveList, useArchiveThemes } from '@/lib/query-hooks';
 import { buildUrl, navigate } from '@/lib/router';
 import type { ArchiveListView } from '@/lib/view-models';
 import { ArchiveFilterChips } from '@/pages/archive-search/archive-filter-chips';
-import { ArchiveResultsTable } from '@/pages/archive-search/archive-results-table';
+import {
+  ArchiveResultsTable,
+  type MonthRange,
+} from '@/pages/archive-search/archive-results-table';
 import { ArchiveSearchFilters } from '@/pages/archive-search/archive-search-filters';
 import {
   ARCHIVE_SEARCH_STATUSES,
@@ -403,6 +406,17 @@ export function ArchiveSearchPage({
     navigate('/market/archive/search');
   }
 
+  // 결과 영역 안의 컨트롤이라 필터 카드의 프리셋과 달리 즉시 이동한다 —
+  // `ArchiveFilterChips`의 칩 해제와 같은 규칙. 연·월은 이동 대상인
+  // `range.from`(항상 `YYYY-MM-01`)에서 뽑아 안내 문구에 쓴다.
+  function handleSelectMonth(range: MonthRange) {
+    const year = range.from.slice(0, 4);
+    const month = Number(range.from.slice(5, 7));
+    focusAndScrollToResults();
+    navigate(buildFilterRemovalUrl(applied, range));
+    announce(`기간을 ${year}년 ${month}월로 좁혔습니다.`);
+  }
+
   function handlePageChange(page: number) {
     focusAndScrollToResults();
     navigate(
@@ -540,6 +554,7 @@ export function ArchiveSearchPage({
           onRemoveTheme={handleRemoveTheme}
           onReset={handleReset}
           onResetAllFilters={handleResetAllFilters}
+          onSelectMonth={handleSelectMonth}
           resultsHeadingRef={resultsHeadingRef}
           searchParams={searchParams}
           themeCatalog={archiveThemesQuery.data ?? []}
@@ -562,6 +577,7 @@ function ArchiveResultsCard({
   onRemoveTheme,
   onReset,
   onResetAllFilters,
+  onSelectMonth,
   resultsHeadingRef,
   searchParams,
   themeCatalog,
@@ -578,6 +594,7 @@ function ArchiveResultsCard({
   onRemoveTheme: (code: string) => void;
   onReset: () => void;
   onResetAllFilters: () => void;
+  onSelectMonth: (range: MonthRange) => void;
   resultsHeadingRef: RefObject<HTMLHeadingElement | null>;
   searchParams: URLSearchParams;
   themeCatalog: readonly ThemeNodeResponse[];
@@ -659,6 +676,7 @@ function ArchiveResultsCard({
         <ArchiveResultsTable
           canViewOps={canViewOps}
           filters={applied}
+          onSelectMonth={onSelectMonth}
           rows={rows}
           scrollSearch={searchParams.toString()}
         />

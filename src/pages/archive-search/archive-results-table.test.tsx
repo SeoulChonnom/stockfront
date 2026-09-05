@@ -1,5 +1,5 @@
-import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
 
 import { withBasePath } from '@/lib/router';
 import { ArchiveResultsTable } from '@/pages/archive-search/archive-results-table';
@@ -283,5 +283,88 @@ describe('ArchiveResultsTable', () => {
     expect(
       screen.queryByText('지수 provider 응답이 지연되었습니다.')
     ).not.toBeInTheDocument();
+  });
+
+  describe('month group header', () => {
+    it('exposes a button named "2026년 7월만 보기" (count excluded) and invokes onSelectMonth with the month range', () => {
+      const onSelectMonth = vi.fn();
+      // A past month: the natural last day (2026-07-31) is not in the
+      // future, so no clamping applies here.
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date('2026-09-06T00:00:00+09:00'));
+
+      try {
+        render(
+          <ArchiveResultsTable
+            canViewOps={false}
+            filters={filters}
+            onSelectMonth={onSelectMonth}
+            rows={[
+              {
+                pageId: 90,
+                businessDate: '2026-07-15',
+                headline: 'jul row',
+                status: 'READY',
+                generatedAt: '2026-07-15 06:00 KST',
+                detail: null,
+              },
+            ]}
+            scrollSearch=''
+          />
+        );
+
+        const button = screen.getByRole('button', {
+          name: '2026년 7월만 보기',
+        });
+        expect(button).not.toHaveTextContent('건');
+
+        fireEvent.click(button);
+
+        expect(onSelectMonth).toHaveBeenCalledWith({
+          from: '2026-07-01',
+          to: '2026-07-31',
+        });
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it("clamps a current-month group's `to` to today instead of the month's natural last day", () => {
+      const onSelectMonth = vi.fn();
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date('2026-09-06T00:00:00+09:00'));
+
+      try {
+        render(
+          <ArchiveResultsTable
+            canViewOps={false}
+            filters={filters}
+            onSelectMonth={onSelectMonth}
+            rows={[
+              {
+                pageId: 91,
+                businessDate: '2026-09-01',
+                headline: 'sep row',
+                status: 'READY',
+                generatedAt: '2026-09-01 06:00 KST',
+                detail: null,
+              },
+            ]}
+            scrollSearch=''
+          />
+        );
+
+        fireEvent.click(
+          screen.getByRole('button', { name: '2026년 9월만 보기' })
+        );
+
+        expect(onSelectMonth).toHaveBeenCalledWith({
+          from: '2026-09-01',
+          to: '2026-09-06',
+        });
+      } finally {
+        vi.useRealTimers();
+      }
+    });
   });
 });

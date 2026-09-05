@@ -8,7 +8,10 @@ import type { ThemeNodeResponse } from '@/lib/api/types';
 import { getTodayIso } from '@/lib/kst-date';
 
 import { ArchiveSearchFilters } from '@/pages/archive-search/archive-search-filters';
-import type { ArchiveFilterDraft } from '@/pages/archive-search/filter-copy';
+import {
+  type ArchiveFilterDraft,
+  getArchiveRangePresets,
+} from '@/pages/archive-search/filter-copy';
 
 function renderWithAnnounce(ui: ReactNode) {
   return render(<AnnounceProvider pathname='/test'>{ui}</AnnounceProvider>);
@@ -343,6 +346,65 @@ describe('ArchiveSearchFilters', () => {
     expect(document.getElementById('from-hint')).toHaveTextContent(
       '2026-07-27'
     );
+  });
+
+  describe('기간 프리셋', () => {
+    it('clicking a preset fills the date inputs but does not call onApply', async () => {
+      const user = userEvent.setup();
+      const onApply = vi.fn();
+      renderWithAnnounce(
+        <ArchiveSearchFilters
+          applied={applied}
+          onApply={onApply}
+          onReset={vi.fn()}
+          themeCatalog={catalog}
+        />
+      );
+
+      const preset = getArchiveRangePresets().find((p) => p.id === '30d');
+      if (!preset) {
+        throw new Error('30d preset missing');
+      }
+
+      await user.click(screen.getByRole('button', { name: preset.label }));
+
+      expect(screen.getByLabelText('시작일')).toHaveValue(preset.from);
+      expect(screen.getByLabelText('종료일')).toHaveValue(preset.to);
+      expect(onApply).not.toHaveBeenCalled();
+      expect(getLiveRegionText()).toBe(
+        `기간을 ${preset.label}로 바꿨습니다. 필터 적용을 눌러 검색하세요.`
+      );
+    });
+
+    it('marks only the preset matching the current draft as aria-pressed', async () => {
+      const user = userEvent.setup();
+      renderFilters();
+
+      const presets = getArchiveRangePresets();
+      const target = presets.find((p) => p.id === '90d');
+      if (!target) {
+        throw new Error('90d preset missing');
+      }
+
+      await user.click(screen.getByRole('button', { name: target.label }));
+
+      for (const preset of presets) {
+        const expectedPressed = preset.id === target.id ? 'true' : 'false';
+        expect(
+          screen.getByRole('button', { name: preset.label })
+        ).toHaveAttribute('aria-pressed', expectedPressed);
+      }
+    });
+
+    it('has no preset pressed at the default (non-preset) 14-day range', () => {
+      renderFilters();
+
+      for (const preset of getArchiveRangePresets()) {
+        expect(
+          screen.getByRole('button', { name: preset.label })
+        ).toHaveAttribute('aria-pressed', 'false');
+      }
+    });
   });
 
   it('shows the 2자 이상 length hint on the keyword field before any submission', () => {

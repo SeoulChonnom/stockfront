@@ -36,13 +36,14 @@ function TestHarness({
   onApply: (next: TestFilters) => void;
   onReset: () => void;
 }) {
-  const { errors, isDirty, apply, reset, getFieldProps } = useFilterDraft({
-    applied,
-    defaultValues,
-    onApply,
-    onReset,
-    validate,
-  });
+  const { errors, isDirty, apply, reset, getFieldProps, setFields } =
+    useFilterDraft({
+      applied,
+      defaultValues,
+      onApply,
+      onReset,
+      validate,
+    });
 
   return (
     <FilterBar
@@ -58,6 +59,12 @@ function TestHarness({
       <FilterField error={errors.to} htmlFor='to' label='종료일'>
         <Input {...getFieldProps('to')} />
       </FilterField>
+      <button
+        onClick={() => setFields({ from: '2026-07-05', to: '2026-07-20' })}
+        type='button'
+      >
+        프리셋 적용
+      </button>
     </FilterBar>
   );
 }
@@ -202,6 +209,64 @@ describe('FilterBar / useFilterDraft', () => {
 
     expect(onReset).toHaveBeenCalledTimes(1);
     expect(fromInput).toHaveValue(defaultValues.from);
+  });
+
+  it('setFields updates several draft fields atomically in one call, and isDirty reflects the result', async () => {
+    const user = userEvent.setup();
+    const onApply = vi.fn();
+
+    render(
+      <TestHarness
+        applied={defaultValues}
+        onApply={onApply}
+        onReset={vi.fn()}
+      />
+    );
+
+    expect(screen.queryByText('적용 전 변경 있음')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: '프리셋 적용' }));
+
+    expect(screen.getByLabelText('시작일')).toHaveValue('2026-07-05');
+    expect(screen.getByLabelText('종료일')).toHaveValue('2026-07-20');
+    expect(screen.getByText('적용 전 변경 있음')).toBeInTheDocument();
+    expect(onApply).not.toHaveBeenCalled();
+
+    await user.click(screen.getByRole('button', { name: '필터 적용' }));
+    expect(onApply).toHaveBeenCalledWith({
+      from: '2026-07-05',
+      to: '2026-07-20',
+    });
+  });
+
+  it('renders beforeFields above the field grid when provided, and nothing extra when omitted', () => {
+    const { rerender } = render(
+      <FilterBar
+        beforeFields={<div data-testid='before-fields'>프리셋</div>}
+        onReset={vi.fn()}
+        onSubmit={vi.fn()}
+      >
+        <div data-testid='field-grid-child'>필드</div>
+      </FilterBar>
+    );
+
+    const beforeFields = screen.getByTestId('before-fields');
+    const fieldGrid = document.querySelector('[data-filter-grid]');
+    expect(beforeFields).toBeInTheDocument();
+    expect(fieldGrid).toBeInTheDocument();
+    // `beforeFields`는 그리드 위, 형제 순서상 앞에 온다.
+    expect(
+      beforeFields.compareDocumentPosition(fieldGrid as Node) &
+        Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy();
+
+    rerender(
+      <FilterBar onReset={vi.fn()} onSubmit={vi.fn()}>
+        <div data-testid='field-grid-child'>필드</div>
+      </FilterBar>
+    );
+
+    expect(screen.queryByTestId('before-fields')).not.toBeInTheDocument();
   });
 
   it('FilterField renders no hint element when hint is omitted', () => {

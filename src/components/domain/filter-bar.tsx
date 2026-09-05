@@ -58,6 +58,8 @@ export type FilterBarProps = {
   applyLabel?: string;
   resetLabel?: string;
   summary?: ReactNode;
+  /** 필드 그리드 바로 위, 전체 폭으로 렌더된다(예: 기간 프리셋 버튼 줄). */
+  beforeFields?: ReactNode;
   children: ReactNode;
   className?: string;
 };
@@ -68,6 +70,7 @@ export function FilterBar({
   applyLabel = '필터 적용',
   resetLabel = '초기화',
   summary,
+  beforeFields,
   children,
   className,
 }: FilterBarProps) {
@@ -107,6 +110,7 @@ export function FilterBar({
       )}
       {isOpen ? (
         <>
+          {beforeFields}
           {/* `data-filter-grid`는 호출부가 열 구성을 덮어쓸 때 잡는 손잡이다.
               예전에는 `[&>div:first-child]`라는 위치 선택자로 잡았는데, 위에
               토글이 하나 끼는 순간 조용히 빗나간다. */}

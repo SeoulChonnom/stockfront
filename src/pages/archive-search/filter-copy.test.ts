@@ -2,9 +2,11 @@ import { describe, expect, it, vi } from 'vitest';
 
 import {
   type ArchiveFilterDraft,
+  getArchiveRangePresets,
   getDefaultArchiveFilters,
   getMarketSummaryLabel,
   getStatusOptions,
+  matchArchiveRangePreset,
   validateArchiveFilters,
 } from '@/pages/archive-search/filter-copy';
 
@@ -62,6 +64,90 @@ describe('getMarketSummaryLabel', () => {
   it('falls back to 전체 시장 for empty or unknown values', () => {
     expect(getMarketSummaryLabel('')).toBe('전체 시장');
     expect(getMarketSummaryLabel('EU')).toBe('전체 시장');
+  });
+});
+
+describe('getArchiveRangePresets', () => {
+  it('computes each documented range off the KST today value', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-07-27T00:30:00Z'));
+
+    try {
+      expect(getArchiveRangePresets()).toEqual([
+        { id: '7d', label: '지난 7일', from: '2026-07-20', to: '2026-07-27' },
+        { id: '30d', label: '지난 30일', from: '2026-06-27', to: '2026-07-27' },
+        { id: '90d', label: '지난 90일', from: '2026-04-28', to: '2026-07-27' },
+        { id: 'ytd', label: '올해', from: '2026-01-01', to: '2026-07-27' },
+      ]);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  // KST 자정 부근(00:30 KST == 전날 15:30 UTC)에서 `new Date().getFullYear()`를
+  // 썼다면 여기서 2026 대신 브라우저 로컬 연도가 나왔을 것이다 —
+  // `getDefaultArchiveFilters`의 KST 경계 테스트와 같은 계약을 지킨다.
+  it("derives 올해's year from getTodayIso(), not the host's local year", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-01-01T00:30:00Z')); // 2026-01-01T09:30 KST
+
+    try {
+      const ytd = getArchiveRangePresets().find(
+        (preset) => preset.id === 'ytd'
+      );
+      expect(ytd).toEqual({
+        id: 'ytd',
+        label: '올해',
+        from: '2026-01-01',
+        to: '2026-01-01',
+      });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
+describe('matchArchiveRangePreset', () => {
+  it('returns the matching preset id for an exact from/to match', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-07-27T00:30:00Z'));
+
+    try {
+      expect(
+        matchArchiveRangePreset({ from: '2026-07-20', to: '2026-07-27' })
+      ).toBe('7d');
+      expect(
+        matchArchiveRangePreset({ from: '2026-01-01', to: '2026-07-27' })
+      ).toBe('ytd');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('returns null for the default 14-day range, which matches no preset', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-07-27T00:30:00Z'));
+
+    try {
+      expect(
+        matchArchiveRangePreset({ from: '2026-07-13', to: '2026-07-27' })
+      ).toBeNull();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('returns null for a partial match (same from, different to)', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-07-27T00:30:00Z'));
+
+    try {
+      expect(
+        matchArchiveRangePreset({ from: '2026-07-20', to: '2026-07-26' })
+      ).toBeNull();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
 

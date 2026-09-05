@@ -6,6 +6,7 @@ import {
 } from '@/components/domain/filter-bar';
 import { useFilterDraft } from '@/components/domain/use-filter-draft';
 import { useAnnounce } from '@/components/shell/use-announce';
+import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import {
@@ -19,9 +20,12 @@ import { cn } from '@/lib/utils';
 import { ArchiveThemeSelect } from '@/pages/archive-search/archive-theme-select';
 import {
   type ArchiveFilterDraft,
+  type ArchiveRangePreset,
+  getArchiveRangePresets,
   getDefaultArchiveFilters,
   getMarketOptions,
   getStatusOptions,
+  matchArchiveRangePreset,
   validateArchiveFilters,
 } from '@/pages/archive-search/filter-copy';
 
@@ -73,6 +77,43 @@ function sameValues(left: readonly string[], right: readonly string[]) {
   );
 }
 
+/**
+ * 결과 표 영역의 칩·월 헤더와 달리, 이 줄은 필터 카드 **안**이라서 클릭해도
+ * 바로 검색하지 않는다 — draft의 `from`/`to`만 바꾸고 `필터 적용`을
+ * 기다린다. 그래야 다른 필드를 함께 고치는 중에도 커밋 시점이 하나로
+ * 유지되고, `FilterDirtyBadge`가 거짓말하지 않는다.
+ */
+function RangePresetRow({
+  activePresetId,
+  onSelect,
+}: {
+  activePresetId: string | null;
+  onSelect: (preset: ArchiveRangePreset) => void;
+}) {
+  return (
+    // biome-ignore lint/a11y/useSemanticElements: Biome suggests <fieldset>, but these buttons pick a value directly, not grouped form controls to submit.
+    <div aria-label='기간 프리셋' className='flex flex-wrap gap-2' role='group'>
+      {getArchiveRangePresets().map((preset) => (
+        <Button
+          aria-pressed={preset.id === activePresetId}
+          className={cn(
+            'tnum',
+            preset.id === activePresetId &&
+              'border-primary-line bg-primary-soft text-primary'
+          )}
+          key={preset.id}
+          onClick={() => onSelect(preset)}
+          size='sm'
+          type='button'
+          variant='secondary'
+        >
+          {preset.label}
+        </Button>
+      ))}
+    </div>
+  );
+}
+
 export function ArchiveSearchFilters({
   applied,
   onApply,
@@ -97,6 +138,7 @@ export function ArchiveSearchFilters({
     apply,
     reset,
     getFieldProps,
+    setFields,
   } = useFilterDraft<ArchiveTextFilterDraft>({
     applied: toTextDraft(applied),
     defaultValues,
@@ -118,6 +160,18 @@ export function ArchiveSearchFilters({
   const themesAreDirty = !sameValues(selectedThemes, applied.themes);
   const isDirty = textIsDirty || themesAreDirty;
   const catalog = themeCatalog ?? [];
+
+  const activePresetId = matchArchiveRangePreset({
+    from: draft.from,
+    to: draft.to,
+  });
+
+  function handlePresetSelect(preset: ArchiveRangePreset) {
+    setFields({ from: preset.from, to: preset.to });
+    announce(
+      `기간을 ${preset.label}로 바꿨습니다. 필터 적용을 눌러 검색하세요.`
+    );
+  }
 
   function handleSubmit() {
     const validationErrors = validateArchiveFilters({
@@ -151,6 +205,12 @@ export function ArchiveSearchFilters({
         </div>
 
         <FilterBar
+          beforeFields={
+            <RangePresetRow
+              activePresetId={activePresetId}
+              onSelect={handlePresetSelect}
+            />
+          }
           className='gap-3 [&_label]:mb-[5px]'
           onReset={reset}
           onSubmit={handleSubmit}

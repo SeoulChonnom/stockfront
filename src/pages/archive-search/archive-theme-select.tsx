@@ -1,5 +1,5 @@
 import { ChevronDownIcon } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { InlineAlert } from '@/components/state';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,10 @@ import type { ThemeNodeResponse } from '@/lib/api/types';
 import { formatInteger } from '@/lib/formatters';
 
 import { ArchiveThemeTree } from '@/pages/archive-search/archive-theme-tree';
+import {
+  MAX_ARCHIVE_THEME_SELECTIONS,
+  THEME_LIMIT_MESSAGE,
+} from '@/pages/archive-search/theme-limit';
 
 const DEFAULT_TRIGGER_ID = 'archive-theme-trigger';
 
@@ -66,9 +70,21 @@ function ThemeSelectPicker({
   query: string;
   onQueryChange: (next: string) => void;
 }) {
+  // 트리(`ArchiveThemeTree`) 자신은 더 이상 이 상태를 갖지 않는다 — 트리는
+  // `max-h-[300px] overflow-y-auto` 스크롤 컨테이너 안에 있어서, 50개가
+  // 넘는 카탈로그를 스크롤하다 상한에 걸린 사용자에게는 그 안의 메시지가
+  // 화면 밖일 수 있다. 이 푸터는 스크롤 컨테이너 밖이라 항상 보인다.
+  const [limitReached, setLimitReached] = useState(false);
+
+  useEffect(() => {
+    if (selectedCodes.length < MAX_ARCHIVE_THEME_SELECTIONS) {
+      setLimitReached(false);
+    }
+  }, [selectedCodes.length]);
+
   return (
     <>
-      <div className='px-3 py-2'>
+      <div className='shrink-0 px-3 py-2'>
         <Input
           aria-label='테마 이름으로 좁히기'
           onChange={(event) => onQueryChange(event.target.value)}
@@ -83,27 +99,39 @@ function ThemeSelectPicker({
           value={query}
         />
       </div>
-      <div className='max-h-[300px] overflow-y-auto px-3 py-2'>
+      <div className='max-h-[300px] min-h-0 flex-1 overflow-y-auto px-3 py-2'>
         <ArchiveThemeTree
           nodes={catalog}
           onChange={onChange}
+          onLimitBlocked={() => setLimitReached(true)}
           query={query}
           selectedCodes={selectedCodes}
         />
       </div>
       {selectedCodes.length > 0 ? (
-        <div className='flex items-center justify-between border-t border-line px-3 py-2'>
-          <span className='text-body-sm text-faint'>
-            {formatInteger(selectedCodes.length)}개 선택됨
-          </span>
-          <Button
-            onClick={() => onChange([])}
-            size='sm'
-            type='button'
-            variant='secondary'
-          >
-            선택 해제
-          </Button>
+        <div className='flex shrink-0 flex-col gap-2 border-t border-line px-3 py-2'>
+          <div className='flex items-center justify-between'>
+            <span className='text-body-sm text-faint'>
+              {formatInteger(selectedCodes.length)}개 선택됨
+            </span>
+            <Button
+              onClick={() => onChange([])}
+              size='sm'
+              type='button'
+              variant='secondary'
+            >
+              선택 해제
+            </Button>
+          </div>
+          {limitReached ? (
+            <p
+              aria-live='polite'
+              className='wrap-anywhere m-0 text-body-sm font-semibold text-warning'
+              role='status'
+            >
+              {THEME_LIMIT_MESSAGE}
+            </p>
+          ) : null}
         </div>
       ) : null}
     </>
@@ -188,9 +216,14 @@ export function ArchiveThemeSelect({
       <PopoverContent
         align='start'
         aria-label='테마 선택'
-        className='w-[320px] max-w-[calc(100vw-2rem)] p-0'
+        /* 카탈로그가 50개를 넘으면 팝오버 전체가 뷰포트보다 길어져 푸터의
+           상한 경고가 화면 밖으로 잘렸다. Radix가 재는 가용 높이로 상자를
+           묶고 안을 flex 컬럼으로 만들어, 넘칠 때 줄어드는 쪽이 트리
+           스크롤 영역이 되도록 한다 — 푸터는 항상 화면 안에 남는다. */
+        className='flex max-h-(--radix-popover-content-available-height) w-[320px] max-w-[calc(100vw-2rem)] flex-col p-0'
+        collisionPadding={16}
       >
-        <div className='border-b border-line px-3 py-2.5'>
+        <div className='shrink-0 border-b border-line px-3 py-2.5'>
           <p className='m-0 text-body-sm text-faint'>{THEME_HELP_TEXT}</p>
         </div>
         <ArchiveThemeSelectBody

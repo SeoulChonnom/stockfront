@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import type { ThemeNodeResponse } from '@/lib/api/types';
 
@@ -105,18 +105,24 @@ describe('ArchiveThemeTree', () => {
     expect(child).toBeChecked();
   });
 
-  it('blocks the eleventh selection and explains the ten-selection limit', async () => {
+  // 상한 메시지 자체는 이제 `ArchiveThemeTree`가 그리지 않는다 — 스크롤
+  // 컨테이너 밖의 `ThemeSelectPicker` 푸터가 그 역할을 넘겨받았다
+  // (`archive-theme-select.test.tsx` 참고). 이 트리는 토글이 막혔다는
+  // 사실만 `onLimitBlocked`로 위에 보고하면 된다.
+  it('blocks the eleventh selection and reports the block via onLimitBlocked, without rendering the limit message itself', async () => {
     const user = userEvent.setup();
+    const onLimitBlocked = vi.fn();
     const nodes = Array.from({ length: 11 }, (_, index) => ({
       code: `THEME_${index}`,
       label: `테마 ${index}`,
       description: `설명 ${index}`,
       children: [],
     })) satisfies ThemeNodeResponse[];
-    const { rerender } = render(
+    render(
       <ArchiveThemeTree
         nodes={nodes}
         onChange={() => undefined}
+        onLimitBlocked={onLimitBlocked}
         selectedCodes={nodes.slice(0, 10).map((node) => node.code)}
       />
     );
@@ -126,19 +132,7 @@ describe('ArchiveThemeTree', () => {
     await user.click(eleventh);
 
     expect(eleventh).not.toBeChecked();
-    expect(
-      screen.getByText(
-        '테마는 최대 10개까지 선택할 수 있습니다. 선택한 테마를 해제한 뒤 다시 시도해 주세요.'
-      )
-    ).toBeInTheDocument();
-
-    rerender(
-      <ArchiveThemeTree
-        nodes={nodes}
-        onChange={() => undefined}
-        selectedCodes={nodes.slice(0, 9).map((node) => node.code)}
-      />
-    );
+    expect(onLimitBlocked).toHaveBeenCalledTimes(1);
     expect(
       screen.queryByText(
         '테마는 최대 10개까지 선택할 수 있습니다. 선택한 테마를 해제한 뒤 다시 시도해 주세요.'
