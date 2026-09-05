@@ -13,15 +13,36 @@ import {
   NativeSelectOption,
 } from '@/components/ui/native-select';
 import type { ThemeNodeResponse } from '@/lib/api/types';
+import { isValidIsoDate } from '@/lib/kst-date';
 import { cn } from '@/lib/utils';
 
 import { ArchiveThemeSelect } from '@/pages/archive-search/archive-theme-select';
 import {
   type ArchiveFilterDraft,
   getDefaultArchiveFilters,
+  getMarketOptions,
   getStatusOptions,
   validateArchiveFilters,
 } from '@/pages/archive-search/filter-copy';
+
+/**
+ * `<input type="date">`는 브라우저 로캘로 렌더된다(예: `08/23/2026`) —
+ * 이 화면의 다른 모든 날짜(칩, 요약, URL)는 ISO라서 `09/06`처럼 월/일이
+ * 헷갈리는 값은 한국어 사용자에게 실제로 모호하다. 아직 입력 중인 값을
+ * ISO로 다시 보여줘 그 모호함을 없앤다 — 값이 비었거나 완전한 ISO 날짜가
+ * 아니면(입력 중 중간 상태) 힌트를 아예 띄우지 않는다.
+ */
+function getIsoDateHint(value: string): string | undefined {
+  return isValidIsoDate(value) ? value : undefined;
+}
+
+/** `aria-describedby`를 에러 id·힌트 id 조합으로 만든다. 두 값 다 없으면 `undefined`. */
+function describedBy(
+  ...ids: Array<string | undefined | false>
+): string | undefined {
+  const joined = ids.filter(Boolean).join(' ');
+  return joined.length > 0 ? joined : undefined;
+}
 
 type ArchiveTextFilterDraft = Omit<ArchiveFilterDraft, 'themes'>;
 
@@ -138,7 +159,12 @@ export function ArchiveSearchFilters({
               constraint-violating value makes the browser (and jsdom)
               silently block the form's `submit` event before it ever
               reaches `handleSubmit`. */}
-          <FilterField error={errors.from} htmlFor='from' label='시작일'>
+          <FilterField
+            error={errors.from}
+            hint={getIsoDateHint(draft.from)}
+            htmlFor='from'
+            label='시작일'
+          >
             <Input
               className={cn(
                 'tnum rounded-md bg-card px-3 py-0 text-body',
@@ -146,9 +172,18 @@ export function ArchiveSearchFilters({
               )}
               type='date'
               {...getFieldProps('from')}
+              aria-describedby={describedBy(
+                errors.from && 'from-error',
+                getIsoDateHint(draft.from) && 'from-hint'
+              )}
             />
           </FilterField>
-          <FilterField error={errors.to} htmlFor='to' label='종료일'>
+          <FilterField
+            error={errors.to}
+            hint={getIsoDateHint(draft.to)}
+            htmlFor='to'
+            label='종료일'
+          >
             <Input
               className={cn(
                 'tnum rounded-md bg-card px-3 py-0 text-body',
@@ -156,6 +191,10 @@ export function ArchiveSearchFilters({
               )}
               type='date'
               {...getFieldProps('to')}
+              aria-describedby={describedBy(
+                errors.to && 'to-error',
+                getIsoDateHint(draft.to) && 'to-hint'
+              )}
             />
           </FilterField>
           <FilterField htmlFor='status' label='생성 상태'>
@@ -178,20 +217,31 @@ export function ArchiveSearchFilters({
               className='min-h-tap border-line-strong bg-card text-body text-fg'
               {...getFieldProps('market')}
             >
-              <NativeSelectOption value=''>전체 시장</NativeSelectOption>
-              <NativeSelectOption value='KR'>한국 (KR)</NativeSelectOption>
-              <NativeSelectOption value='US'>미국 (US)</NativeSelectOption>
+              {getMarketOptions().map((option) => (
+                <NativeSelectOption
+                  key={option.value || 'all'}
+                  value={option.value}
+                >
+                  {option.label}
+                </NativeSelectOption>
+              ))}
             </NativeSelect>
           </FilterField>
-          <FilterField error={errors.q} htmlFor='q' label='키워드'>
+          <FilterField
+            error={errors.q}
+            hint='2자 이상'
+            htmlFor='q'
+            label='키워드'
+          >
             <Input
               className={cn(
                 'rounded-md bg-card px-3 py-0 text-body',
                 !errors.q && 'border-line-strong'
               )}
-              placeholder='정확한 단어를 입력해 주세요'
+              placeholder='예: 반도체, 금리'
               type='search'
               {...getFieldProps('q')}
+              aria-describedby={describedBy(errors.q && 'q-error', 'q-hint')}
             />
           </FilterField>
           {/* 테마는 이제 트리를 항상 펼치지 않는다 — 팝오버 트리거 하나가

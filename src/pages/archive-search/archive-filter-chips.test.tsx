@@ -67,10 +67,25 @@ describe('ArchiveFilterChips', () => {
       },
     });
 
-    expect(screen.getByText('READY · 준비 완료')).toBeInTheDocument();
-    expect(screen.getByText('시장 KR')).toBeInTheDocument();
+    expect(screen.getByText('준비 완료')).toBeInTheDocument();
+    expect(screen.getByText('시장 한국')).toBeInTheDocument();
     expect(screen.getByText('테마 업종')).toBeInTheDocument();
     expect(screen.getByText('검색어 "반도체"')).toBeInTheDocument();
+  });
+
+  it('renders an applied KR market as 시장 한국, with the remove button accessible name matching', async () => {
+    const user = userEvent.setup();
+    const { onRemoveMarket } = renderChips({
+      applied: { ...baseApplied, market: 'KR' },
+    });
+
+    expect(screen.getByText('시장 한국')).toBeInTheDocument();
+    expect(screen.queryByText(/시장 KR/)).not.toBeInTheDocument();
+
+    await user.click(
+      screen.getByRole('button', { name: '시장 한국 필터 해제' })
+    );
+    expect(onRemoveMarket).toHaveBeenCalledTimes(1);
   });
 
   it('omits removable chips for unset filters', () => {
@@ -107,11 +122,13 @@ describe('ArchiveFilterChips', () => {
       });
 
     await user.click(
-      screen.getByRole('button', { name: 'PARTIAL · 부분 생성 필터 해제' })
+      screen.getByRole('button', { name: '부분 생성 필터 해제' })
     );
     expect(onRemoveStatus).toHaveBeenCalledTimes(1);
 
-    await user.click(screen.getByRole('button', { name: '시장 US 필터 해제' }));
+    await user.click(
+      screen.getByRole('button', { name: '시장 미국 필터 해제' })
+    );
     expect(onRemoveMarket).toHaveBeenCalledTimes(1);
 
     await user.click(

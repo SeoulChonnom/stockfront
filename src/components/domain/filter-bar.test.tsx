@@ -203,4 +203,14 @@ describe('FilterBar / useFilterDraft', () => {
     expect(onReset).toHaveBeenCalledTimes(1);
     expect(fromInput).toHaveValue(defaultValues.from);
   });
+
+  it('FilterField renders no hint element when hint is omitted', () => {
+    render(
+      <FilterField htmlFor='from' label='시작일'>
+        <Input id='from' />
+      </FilterField>
+    );
+
+    expect(document.getElementById('from-hint')).not.toBeInTheDocument();
+  });
 });

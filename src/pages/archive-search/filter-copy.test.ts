@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   type ArchiveFilterDraft,
   getDefaultArchiveFilters,
+  getMarketSummaryLabel,
   getStatusOptions,
   validateArchiveFilters,
 } from '@/pages/archive-search/filter-copy';
@@ -42,6 +43,26 @@ describe('getStatusOptions', () => {
       'FAILED · 생성 실패'
     );
   });
+
+  it('labels carry no backend enum — only the Korean text `StatusBadge` also shows', () => {
+    expect(getStatusOptions().map((option) => option.label)).toEqual([
+      '전체 상태',
+      '준비 완료',
+      '부분 생성',
+    ]);
+  });
+});
+
+describe('getMarketSummaryLabel', () => {
+  it('maps KR and US to their Korean names, with no market code in the label', () => {
+    expect(getMarketSummaryLabel('KR')).toBe('한국');
+    expect(getMarketSummaryLabel('US')).toBe('미국');
+  });
+
+  it('falls back to 전체 시장 for empty or unknown values', () => {
+    expect(getMarketSummaryLabel('')).toBe('전체 시장');
+    expect(getMarketSummaryLabel('EU')).toBe('전체 시장');
+  });
 });
 
 describe('validateArchiveFilters', () => {
@@ -71,7 +92,7 @@ describe('validateArchiveFilters', () => {
     }
   });
 
-  it('rejects a date with an impossible calendar day as a format error', () => {
+  it('rejects a date with an impossible calendar day by asking the user to pick one', () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2024-03-01T00:00:00+09:00'));
 
@@ -83,7 +104,7 @@ describe('validateArchiveFilters', () => {
           to: '2024-03-01',
         })
       ).toEqual({
-        from: '날짜 형식이 올바르지 않습니다. YYYY-MM-DD 형식으로 입력해 주세요.',
+        from: '기준일을 선택해 주세요.',
       });
     } finally {
       vi.useRealTimers();

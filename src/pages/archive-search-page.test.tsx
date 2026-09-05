@@ -215,7 +215,7 @@ describe('ArchiveSearchPage', () => {
     renderPage(new URLSearchParams('market=KR&theme=SECTOR&q=rate&page=1'));
 
     expect(
-      screen.getByText(/적용 필터\(.*시장 KR.*테마 업종.*검색어 rate/)
+      screen.getByText(/적용 필터\(.*시장 한국.*테마 업종.*검색어 rate/)
     ).toBeInTheDocument();
   });
 
@@ -299,7 +299,9 @@ describe('ArchiveSearchPage', () => {
       )
     );
 
-    await user.click(screen.getByRole('button', { name: '시장 US 필터 해제' }));
+    await user.click(
+      screen.getByRole('button', { name: '시장 미국 필터 해제' })
+    );
 
     expect(window.location.search).toBe(
       '?from=2026-07-13&to=2026-07-27&theme=SECTOR&q=rate&page=1'

@@ -145,7 +145,7 @@ test.describe('filter apply / reset', () => {
 
     await expect(page.getByText('조건에 맞는 스냅샷이 없습니다')).toBeVisible();
     await expect(
-      page.getByText(/적용 필터\(.*시장 KR.*테마 업종.*검색어 rate/)
+      page.getByText(/적용 필터\(.*시장 한국.*테마 업종.*검색어 rate/)
     ).toBeVisible();
   });
 });
@@ -159,9 +159,9 @@ test.describe('filter chips', () => {
       'market/archive/search?from=2026-07-13&to=2026-07-27&market=KR&theme=SECTOR&q=rate'
     );
 
-    await expect(page.getByText('시장 KR')).toBeVisible();
+    await expect(page.getByText('시장 한국')).toBeVisible();
 
-    await page.getByRole('button', { name: '시장 KR 필터 해제' }).click();
+    await page.getByRole('button', { name: '시장 한국 필터 해제' }).click();
 
     await expect(page).toHaveURL(/from=2026-07-13/);
     await expect(page).toHaveURL(/to=2026-07-27/);
@@ -226,7 +226,7 @@ test.describe('validation', () => {
     await expect(page.locator('#from')).toBeFocused();
   });
 
-  test('bad format (cleared field): URL unchanged, format message shown, focus on it', async ({
+  test('missing date (cleared field): URL unchanged, selection message shown, focus on it', async ({
     page,
   }) => {
     await installMockApi(page, { scenario: 'ready' });
@@ -238,7 +238,7 @@ test.describe('validation', () => {
 
     expect(page.url()).toBe(urlBefore);
     await expect(page.locator('#to-error')).toContainText(
-      '날짜 형식이 올바르지 않습니다'
+      '기준일을 선택해 주세요.'
     );
     await expect(page.locator('#to')).toBeFocused();
   });

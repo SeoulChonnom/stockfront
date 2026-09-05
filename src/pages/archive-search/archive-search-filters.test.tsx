@@ -185,11 +185,7 @@ describe('ArchiveSearchFilters', () => {
       (option) => option.textContent
     );
 
-    expect(labels).toEqual([
-      '전체 상태',
-      'READY · 준비 완료',
-      'PARTIAL · 부분 생성',
-    ]);
+    expect(labels).toEqual(['전체 상태', '준비 완료', '부분 생성']);
   });
 
   it('submits market, q, and independently selected themes in stable selection order', async () => {
@@ -302,5 +298,58 @@ describe('ArchiveSearchFilters', () => {
     );
     await user.click(screen.getByRole('button', { name: '테마 다시 시도' }));
     expect(retry).toHaveBeenCalledTimes(1);
+  });
+
+  /*
+   * `<input type="date">`는 브라우저 로캘로 렌더돼(`08/23/2026` 등) 이 화면의
+   * 다른 모든 날짜(칩, 요약, URL)가 쓰는 ISO와 다르다. 힌트가 편집 중에도
+   * 실제로 적용될 ISO 값을 보여주는지, 그리고 스크린 리더가 그 힌트를
+   * 필드의 설명으로 실제로 읽는지(문자열 일치가 아니라 DOM 연결) 확인한다.
+   */
+  it("shows each date field's current draft value in ISO as a hint, wired via aria-describedby", () => {
+    renderFilters();
+
+    const fromInput = screen.getByLabelText('시작일');
+    const fromDescribedBy = fromInput.getAttribute('aria-describedby');
+    expect(fromDescribedBy).toBe('from-hint');
+    expect(
+      document.getElementById(fromDescribedBy as string)
+    ).toHaveTextContent('2026-07-13');
+
+    const toInput = screen.getByLabelText('종료일');
+    const toDescribedBy = toInput.getAttribute('aria-describedby');
+    expect(toDescribedBy).toBe('to-hint');
+    expect(document.getElementById(toDescribedBy as string)).toHaveTextContent(
+      '2026-07-27'
+    );
+  });
+
+  it('names both the error and the hint in aria-describedby when a date field has an error', async () => {
+    const user = userEvent.setup();
+    renderFilters();
+
+    setDateValue(screen.getByLabelText('시작일'), '2026-07-27');
+    setDateValue(screen.getByLabelText('종료일'), '2026-07-13');
+    await user.click(screen.getByRole('button', { name: '필터 적용' }));
+
+    const fromInput = screen.getByLabelText('시작일');
+    expect(fromInput).toHaveAttribute(
+      'aria-describedby',
+      'from-error from-hint'
+    );
+    expect(document.getElementById('from-error')).toHaveTextContent(
+      '시작일이 종료일보다 늦습니다.'
+    );
+    expect(document.getElementById('from-hint')).toHaveTextContent(
+      '2026-07-27'
+    );
+  });
+
+  it('shows the 2자 이상 length hint on the keyword field before any submission', () => {
+    renderFilters();
+
+    const keywordInput = screen.getByLabelText('키워드');
+    expect(keywordInput).toHaveAttribute('aria-describedby', 'q-hint');
+    expect(screen.getByText('2자 이상')).toBeInTheDocument();
   });
 });

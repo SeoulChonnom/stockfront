@@ -4,7 +4,10 @@ import { ToneBadge } from '@/components/domain/tone-badge';
 import { Button } from '@/components/ui/button';
 import type { ThemeNodeResponse } from '@/lib/api/types';
 
-import { getStatusSummaryLabel } from '@/pages/archive-search/filter-copy';
+import {
+  getMarketSummaryLabel,
+  getStatusSummaryLabel,
+} from '@/pages/archive-search/filter-copy';
 
 function findThemeLabel(
   nodes: readonly ThemeNodeResponse[],
@@ -106,9 +109,9 @@ export function ArchiveFilterChips({
       ) : null}
       {applied.market ? (
         <RemovableChip
-          label={`시장 ${applied.market}`}
+          label={`시장 ${getMarketSummaryLabel(applied.market)}`}
           onRemove={onRemoveMarket}
-          removeLabel={`시장 ${applied.market} 필터 해제`}
+          removeLabel={`시장 ${getMarketSummaryLabel(applied.market)} 필터 해제`}
         />
       ) : null}
       {applied.themes.map((code) => {

@@ -35,6 +35,7 @@ import { ArchiveSearchFilters } from '@/pages/archive-search/archive-search-filt
 import {
   ARCHIVE_SEARCH_STATUSES,
   type ArchiveFilterDraft,
+  getMarketSummaryLabel,
   getStatusSummaryLabel,
 } from '@/pages/archive-search/filter-copy';
 import { useLastGoodData } from '@/pages/archive-search/use-last-good-data';
@@ -164,7 +165,12 @@ function getAppliedFilterSummary(
   const parts = [
     `${filters.from} ~ ${filters.to}`,
     getStatusSummaryLabel(filters.status),
-    filters.market ? `시장 ${filters.market}` : '시장 전체',
+    // 칩(`ArchiveFilterChips`)과 같은 라벨 맵을 쓴다 — 여기만 원시 코드를
+    // 붙이던 탓에 같은 필터가 칩에서는 "시장 한국", 빈 상태 문구에서는
+    // "시장 KR"로 갈라져 보였다.
+    filters.market
+      ? `시장 ${getMarketSummaryLabel(filters.market)}`
+      : '시장 전체',
   ];
 
   if (filters.themes.length > 0) {

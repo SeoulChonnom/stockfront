@@ -134,6 +134,7 @@ export type FilterFieldProps = {
   label: string;
   htmlFor: string;
   error?: string;
+  hint?: ReactNode;
   children: ReactNode;
   className?: string;
 };
@@ -142,6 +143,7 @@ export function FilterField({
   label,
   htmlFor,
   error,
+  hint,
   children,
   className,
 }: FilterFieldProps) {
@@ -152,6 +154,10 @@ export function FilterField({
    * `aria-describedby`를 `${name}-error`로 스스로 배선해 두므로, 여기서는
    * 그 값과 일치하는 `id`를 `FieldError`에 그대로 넘기기만 하면 된다 —
    * `FieldError`는 id를 스스로 만들지 않고 전달받은 값을 쓴다.
+   *
+   * `hint`는 `getFieldProps`가 모르는 값이라 자동으로 배선되지 않는다 —
+   * 힌트를 쓰는 호출부가 `{...getFieldProps(name)}` 뒤에 명시적
+   * `aria-describedby`를 덧붙여 `${htmlFor}-hint`를 연결해야 한다.
    */
   return (
     // `[&_[data-slot=native-select-wrapper]]:w-full`: `NativeSelect`
@@ -173,6 +179,14 @@ export function FilterField({
         {label}
       </FieldLabel>
       {children}
+      {hint ? (
+        <p
+          className='wrap-anywhere m-0 mt-1 text-label text-faint'
+          id={`${htmlFor}-hint`}
+        >
+          {hint}
+        </p>
+      ) : null}
       {error ? (
         <FieldError
           className='wrap-anywhere m-0 mt-1 text-body-sm text-danger'

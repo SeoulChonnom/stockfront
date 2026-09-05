@@ -16,8 +16,11 @@ import { ArchiveThemeTree } from '@/pages/archive-search/archive-theme-tree';
 
 const DEFAULT_TRIGGER_ID = 'archive-theme-trigger';
 
+// "URL에 자동으로 추가하지 않습니다"는 URL 직렬화라는 구현 얘기였다 — 그
+// 아래에 있는 실제로 쓸모 있는 사실(부모를 골라도 자식이 함께 선택되지
+// 않는다는 동작)만 남기고 내부 표현은 뺀다.
 const THEME_HELP_TEXT =
-  '부모와 자식 테마를 각각 선택할 수 있습니다. 선택한 테마는 최대 10개이며, 선택한 부모의 하위 테마를 URL에 자동으로 추가하지 않습니다.';
+  '상위 테마를 선택해도 하위 테마는 함께 선택되지 않습니다. 최대 10개까지 고를 수 있습니다.';
 
 export type ArchiveThemeSelectProps = {
   catalog: readonly ThemeNodeResponse[];
