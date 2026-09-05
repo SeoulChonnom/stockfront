@@ -1,7 +1,5 @@
 import type { ReactNode, Ref } from 'react';
-
-import { StatusBadge } from '@/components/state';
-import { BatchTypeBadge } from '@/components/ui/batch-type-badge';
+import { BatchTypeBadge } from '@/components/domain/batch-type-badge';
 import {
   Table,
   TableBody,
@@ -9,9 +7,11 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-  TableScrollWrapper,
-} from '@/components/ui/table';
+} from '@/components/domain/data-table';
+import { TableScrollWrapper } from '@/components/domain/table-scroll-wrapper';
+import { StatusBadge } from '@/components/state';
 import type { BatchRunRow } from '@/lib/query-hooks';
+import { cn } from '@/lib/utils';
 
 import { getSnapshotLabel } from '@/pages/batch-operations/format-batch';
 
@@ -34,24 +34,17 @@ export function BatchHistoryTable({
 }: BatchHistoryTableProps) {
   return (
     <TableScrollWrapper label='배치 실행 이력 표'>
-      <Table aria-busy={isLoading} minWidth={520}>
+      <Table aria-busy={isLoading} className='min-w-[520px]'>
         <TableHeader>
           <TableRow>
             <TableHead className='h-auto py-[9px] pl-4 sm:pl-[18px]'>
               작업 · 기준일
             </TableHead>
-            <TableHead
-              className='hidden h-auto min-[641px]:table-cell'
-              padding='compact'
-            >
+            <TableHead className='hidden h-auto min-[641px]:table-cell'>
               타입
             </TableHead>
-            <TableHead className='h-auto' padding='compact'>
-              상태
-            </TableHead>
-            <TableHead className='h-auto text-right' padding='compact'>
-              소요
-            </TableHead>
+            <TableHead className='h-auto'>상태</TableHead>
+            <TableHead className='h-auto text-right'>소요</TableHead>
             <TableHead className='hidden h-auto py-[9px] pr-4 text-right whitespace-nowrap min-[1181px]:table-cell sm:pr-[18px]'>
               원문/정제/이슈
             </TableHead>
@@ -91,17 +84,29 @@ function BatchHistoryRow({
 
   return (
     // Keep the row hit area while preventing the inner keyboard button from firing twice.
+    // 선택 강조는 레지스트리 기본 `data-[state=selected]:bg-muted`보다 진하게
+    // 잡아야 한다 — hover가 `bg-muted/50`이라 알파값만으로는 마스터-디테일
+    // 화면에서 선택 행이 눈에 띄지 않는다. `bg-primary-soft` + 좌측
+    // `--primary` 바로 올리고, hover에도 같은 배경을 고정해 선택 표시가
+    // 씻기지 않게 한다. danger(실패) 톤의 좌측 바는 선택 행에서는 가려야
+    // 하므로 `not-data-[state=selected]:` 가드를 명시한다 — 두 `shadow-*`
+    // 유틸의 등장 순서에 우선순위를 맡기지 않기 위함. (twMerge가 뒤에 오는
+    // `bg-primary-soft`로 레지스트리의 `bg-muted`를 덮는다.)
     <TableRow
-      aria-selected={isSelected}
-      className='cursor-pointer'
+      aria-selected={isSelected ? true : undefined}
+      className={cn(
+        'cursor-pointer',
+        'data-[state=selected]:bg-primary-soft data-[state=selected]:shadow-[inset_3px_0_0_var(--primary)] data-[state=selected]:hover:bg-primary-soft',
+        'not-data-[state=selected]:data-[tone=danger]:shadow-[inset_3px_0_0_var(--danger)]'
+      )}
+      data-state={isSelected ? 'selected' : undefined}
+      data-tone={isFailed ? 'danger' : undefined}
       onClick={onSelect}
-      selected={isSelected}
-      tone={isFailed ? 'danger' : undefined}
     >
       <TableCell className='py-2.5 pl-4 align-top sm:pl-[18px]'>
         <button
           aria-label={`job ${row.id} 상세 선택`}
-          className='tap-target tnum min-w-0 justify-start rounded-[var(--r-sm)] text-left text-body font-semibold text-fg outline-none hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--focus)]'
+          className='tap-target tnum min-w-0 justify-start rounded-sm text-left text-body font-semibold text-fg outline-none hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring'
           ref={buttonRef}
           onClick={(event) => {
             event.stopPropagation();

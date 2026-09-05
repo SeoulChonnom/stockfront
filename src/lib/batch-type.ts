@@ -1,6 +1,14 @@
 /** Shared API job-type catalog for badges, plus step-code display labels. */
 
-export type BatchTypeTone = 'info' | 'neutral';
+import type { SurfaceTone } from '@/components/state/tone-surface';
+
+/**
+ * 더는 export하지 않는다 — 예전엔 `BATCH_TYPE_TONE_CLASSES`(제거됨)가 이
+ * 타입으로 직접 typed 되어 외부에서 참조 가능했지만, 지금은 `getBatchTypeInfo`의
+ * 반환값 구조로만 흘러나가므로 이름으로 import하는 곳이 없다 — knip이 잡는
+ * 죽은 export였다.
+ */
+type BatchTypeTone = Extract<SurfaceTone, 'info' | 'neutral'>;
 
 export type BatchTypeInfo = {
   label: string;
@@ -53,10 +61,3 @@ export function getBatchStepLabel(stepCode: string): string {
 export function isMarketSnapshotJobType(jobType: string): boolean {
   return jobType === 'MARKET_SNAPSHOT';
 }
-
-export const BATCH_TYPE_TONE_CLASSES: Readonly<Record<BatchTypeTone, string>> =
-  {
-    info: 'text-[color:var(--info)] bg-[color:var(--info-soft)] border-[color:var(--info-line)]',
-    neutral:
-      'text-[color:var(--neutral)] bg-[color:var(--neutral-soft)] border-[color:var(--neutral-line)]',
-  };

@@ -1,12 +1,12 @@
 import {
+  DescriptionList,
+  DescriptionListItem,
+} from '@/components/domain/description-list';
+import {
   DirectionIndicator,
   directionTextClass,
   StatusBadge,
 } from '@/components/state';
-import {
-  DescriptionList,
-  DescriptionListItem,
-} from '@/components/ui/description-list';
 import type { MarketSnapshot } from '@/lib/view-models';
 
 /**
@@ -40,7 +40,7 @@ export function PageDataDetails({
   const hasDataRow = canViewOps || Boolean(lastUpdatedAt);
 
   return (
-    <details className='rounded-[var(--r-lg)] border border-line bg-[color:var(--surface)] px-[18px] py-3'>
+    <details className='rounded-lg border border-line bg-card px-[18px] py-3'>
       <summary className='flex min-h-tap cursor-pointer items-center text-body font-semibold text-fg-soft'>
         표기와 데이터 정보
       </summary>

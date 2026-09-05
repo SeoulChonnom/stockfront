@@ -10,12 +10,12 @@ const DIRECTION_META: Record<
   KeyPointDirection,
   { word: string; glyph: string; toneClass: string }
 > = {
-  UP: { word: '상승', glyph: '▲', toneClass: 'text-[color:var(--up)]' },
-  DOWN: { word: '하락', glyph: '▼', toneClass: 'text-[color:var(--down)]' },
+  UP: { word: '상승', glyph: '▲', toneClass: 'text-up' },
+  DOWN: { word: '하락', glyph: '▼', toneClass: 'text-down' },
   MIXED: {
     word: '혼조',
     glyph: '◆',
-    toneClass: 'text-[color:var(--warning)]',
+    toneClass: 'text-warning',
   },
   FLAT: { word: '보합', glyph: '■', toneClass: 'text-faint' },
 };

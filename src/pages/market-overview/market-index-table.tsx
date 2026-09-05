@@ -1,4 +1,3 @@
-import { DirectionIndicator, directionTextClass } from '@/components/state';
 import {
   Table,
   TableBody,
@@ -6,8 +5,9 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-  TableScrollWrapper,
-} from '@/components/ui/table';
+} from '@/components/domain/data-table';
+import { TableScrollWrapper } from '@/components/domain/table-scroll-wrapper';
+import { DirectionIndicator, directionTextClass } from '@/components/state';
 import { noIndexDataCopy } from '@/lib/audience-copy';
 import { cn } from '@/lib/utils';
 import type { MarketIndex } from '@/lib/view-models';
@@ -45,7 +45,7 @@ export function MarketIndexTable({
 
   return (
     <TableScrollWrapper label='대표 지수 표'>
-      <Table className='border-collapse text-body' minWidth={380}>
+      <Table className='min-w-[380px] border-collapse text-body'>
         <TableHeader>
           <TableRow>
             <TableHead className='h-auto px-[18px] py-2 text-label'>
@@ -98,11 +98,7 @@ function IndexRow({ item }: { item: MarketIndex }) {
     return (
       <TableRow>
         {labelCell}
-        <TableCell
-          className='text-body-sm text-faint'
-          colSpan={5}
-          padding='compact'
-        >
+        <TableCell className='text-body-sm text-faint' colSpan={5}>
           데이터 없음
         </TableCell>
       </TableRow>
@@ -112,7 +108,7 @@ function IndexRow({ item }: { item: MarketIndex }) {
   return (
     <TableRow>
       {labelCell}
-      <TableCell className='tnum text-right font-semibold' padding='compact'>
+      <TableCell className='tnum text-right font-semibold'>
         {item.value}
         {item.high === NO_VALUE && item.low === NO_VALUE ? null : (
           <div className='text-body-sm font-normal whitespace-nowrap text-faint sm:hidden'>
@@ -125,7 +121,6 @@ function IndexRow({ item }: { item: MarketIndex }) {
           'tnum text-right font-semibold',
           directionTextClass(item.direction)
         )}
-        padding='compact'
       >
         <span className='inline-flex items-center justify-end gap-1'>
           <DirectionIndicator direction={item.direction} />
@@ -137,14 +132,10 @@ function IndexRow({ item }: { item: MarketIndex }) {
           'tnum text-right font-semibold',
           directionTextClass(item.direction)
         )}
-        padding='compact'
       >
         {item.changeRate}
       </TableCell>
-      <TableCell
-        className='tnum hidden text-right text-fg-soft sm:table-cell'
-        padding='compact'
-      >
+      <TableCell className='tnum hidden text-right text-fg-soft sm:table-cell'>
         {item.high}
       </TableCell>
       <TableCell className='tnum hidden px-[18px] py-[9px] text-right text-fg-soft sm:table-cell'>

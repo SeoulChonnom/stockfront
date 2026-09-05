@@ -89,24 +89,13 @@
   --measure-analysis: 74ch;
 
   --pad: 32px;
-  --pad-dense: 20px;
   --gap: 20px;
-  --gap-dense: 14px;
-
-  --pad-card-header: 18px;
-  --pad-card-body: 16px;
-  --pad-cell-y: 10px;
-  --pad-cell-x: 14px;
 
   --tap-min: 44px;
 
   --r-sm: 4px;
   --r-md: 8px;
   --r-lg: 12px;
-  --r-pill: 999px;
-
-  /* 드로어와 다이얼로그만 사용하는 단일 elevation 단계다. */
-  --sh3: 0 24px 56px rgba(15, 39, 67, 0.2);
 
   /* Edge shading for scoped scroll containers. Darkening (not a surface-
      coloured wash) so the affordance survives a selected or tinted table
@@ -123,13 +112,10 @@
   /* 사용자 테마 전환에만 적용되는 크로스페이드 시간이다. */
   --dur-theme: 220ms;
 
-  --topbar-height: 64px;
+  /* 상단 고정 헤더의 높이. 얇게 유지한다 — 본문이 주인공이다. */
+  --header-height: 52px;
 
   --z-sticky: 40;
-  --z-drawer-overlay: 60;
-  --z-drawer: 61;
-  --z-dialog-overlay: 80;
-  --z-dialog: 81;
   --z-skip: 90;
 
   font-family: var(--font-sans);
@@ -184,8 +170,6 @@
 
   --ls-ambient: 0.006em;
 
-  --sh3: 0 24px 56px rgba(0, 0, 0, 0.55);
-
   background: var(--bg);
 }
 
@@ -218,6 +202,13 @@ html,
 body,
 #root {
   min-height: 100vh;
+}
+
+/* 헤더가 항상 상단에 떠 있으므로 앵커 이동과 `scrollIntoView({block:'start'})`가
+   목적지를 헤더 밑에 밀어 넣지 않도록 문서 단위로 오프셋을 준다. 요소마다
+   `scroll-mt-*`를 붙이면 새로 추가되는 목적지에서 매번 잊는다. */
+html {
+  scroll-padding-top: calc(var(--header-height) + 8px);
 }
 
 /* Keep app body sizing on #root; changing html would alter the rem basis. */
@@ -288,24 +279,6 @@ img {
 
 .measure-analysis {
   max-width: var(--measure-analysis);
-}
-
-.min-w-0 {
-  min-width: 0;
-}
-
-/* Visually hidden but exposed to assistive technology. Used to pair a
-   direction glyph with the words 상승/하락 so state is never color-only. */
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-  border: 0;
 }
 
 /* 한 줄에 못 담는 토큰(URL·에러 토큰·로그 한 줄)을 잘라서라도 담는다.

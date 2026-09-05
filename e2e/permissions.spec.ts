@@ -14,21 +14,26 @@ import { installMockApi } from './fixtures/mock-api';
  */
 
 test.describe('non-admin user permissions', () => {
-  test('the ops nav item is absent from the DOM (desktop rail and mobile drawer)', async ({
+  test('the ops nav item is absent from the DOM, at both viewports', async ({
     page,
   }) => {
     await installMockApi(page, { scenario: 'ready', role: 'user' });
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto('market/latest');
 
+    await expect(
+      page.getByRole('navigation', { name: '주요 메뉴' })
+    ).toBeVisible();
     await expect(page.getByRole('link', { name: '배치 운영' })).toHaveCount(0);
     await expect(page.getByText('운영', { exact: true })).toHaveCount(0);
 
-    // Mobile drawer renders the SAME nav-items module — assert there too.
+    // 좁은 화면도 같은 버튼 그룹 하나를 쓴다 — 드로어는 사라졌다. 그래도
+    // 렌더 경로가 정말 하나인지 여기서 확인한다.
     await page.setViewportSize({ width: 390, height: 844 });
     await page.reload();
-    await page.getByRole('button', { name: '주요 메뉴 열기' }).click();
-    await expect(page.getByRole('dialog')).toBeVisible();
+    await expect(
+      page.getByRole('navigation', { name: '주요 메뉴' })
+    ).toBeVisible();
     await expect(page.getByRole('link', { name: '배치 운영' })).toHaveCount(0);
   });
 

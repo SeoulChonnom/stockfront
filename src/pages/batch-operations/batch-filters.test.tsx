@@ -71,6 +71,9 @@ describe('BatchFilters', () => {
       status: 'FAILED',
       type: 'MARKET_SNAPSHOT',
     });
+    expect(screen.getByLabelText('기준일 시작')).not.toHaveAttribute(
+      'aria-invalid'
+    );
   });
 
   it('rejects a future date with the product message, blocks apply, focuses the field, and announces the exact batch-screen error copy', async () => {

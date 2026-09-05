@@ -1,16 +1,19 @@
 import { useEffect, useMemo, useState } from 'react';
-
-import { useAnnounce } from '@/components/shell/use-announce';
-import { InlineAlert } from '@/components/state';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import {
   FilterBar,
   FilterDirtyBadge,
   FilterField,
-} from '@/components/ui/filter-bar';
+} from '@/components/domain/filter-bar';
+import { useFilterDraft } from '@/components/domain/use-filter-draft';
+import { useAnnounce } from '@/components/shell/use-announce';
+import { InlineAlert } from '@/components/state';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { useFilterDraft } from '@/components/ui/use-filter-draft';
+import {
+  NativeSelect,
+  NativeSelectOption,
+} from '@/components/ui/native-select';
 import type { ThemeNodeResponse } from '@/lib/api/types';
 import { cn } from '@/lib/utils';
 
@@ -144,7 +147,7 @@ export function ArchiveSearchFilters({
   return (
     <section aria-labelledby='archive-filter-heading'>
       {/* Use 16px vertical and 18px horizontal card padding at all widths. */}
-      <Card className='flex flex-col gap-3' padding='inset'>
+      <Card className='flex flex-col gap-3 px-[18px] py-4'>
         {/* Keep the heading and applied summary in one wrapping row. */}
         <div className='flex flex-wrap items-center gap-2.5'>
           <h2
@@ -175,10 +178,9 @@ export function ArchiveSearchFilters({
           <FilterField error={errors.from} htmlFor='from' label='시작일'>
             <Input
               className={cn(
-                'tnum rounded-[var(--r-md)] bg-[color:var(--surface)] px-3 py-0 text-body',
-                !errors.from && 'border-[color:var(--line-strong)]'
+                'tnum rounded-md bg-card px-3 py-0 text-body',
+                !errors.from && 'border-line-strong'
               )}
-              invalid={Boolean(errors.from)}
               type='date'
               {...getFieldProps('from')}
             />
@@ -186,43 +188,44 @@ export function ArchiveSearchFilters({
           <FilterField error={errors.to} htmlFor='to' label='종료일'>
             <Input
               className={cn(
-                'tnum rounded-[var(--r-md)] bg-[color:var(--surface)] px-3 py-0 text-body',
-                !errors.to && 'border-[color:var(--line-strong)]'
+                'tnum rounded-md bg-card px-3 py-0 text-body',
+                !errors.to && 'border-line-strong'
               )}
-              invalid={Boolean(errors.to)}
               type='date'
               {...getFieldProps('to')}
             />
           </FilterField>
           <FilterField htmlFor='status' label='생성 상태'>
-            <select
-              className='flex min-h-11 w-full rounded-[var(--r-md)] border border-[color:var(--line-strong)] bg-[color:var(--surface)] px-2.5 py-0 text-body text-fg outline-none transition-[border-color,box-shadow] duration-150 focus:border-[color:color-mix(in_srgb,var(--primary)_45%,transparent)] focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--primary)_16%,transparent)]'
+            <NativeSelect
+              className='min-h-tap border-line-strong bg-card text-body text-fg'
               {...getFieldProps('status')}
             >
               {getStatusOptions().map((option) => (
-                <option key={option.value || 'all'} value={option.value}>
+                <NativeSelectOption
+                  key={option.value || 'all'}
+                  value={option.value}
+                >
                   {option.label}
-                </option>
+                </NativeSelectOption>
               ))}
-            </select>
+            </NativeSelect>
           </FilterField>
           <FilterField htmlFor='market' label='시장'>
-            <select
-              className='flex min-h-11 w-full rounded-[var(--r-md)] border border-[color:var(--line-strong)] bg-[color:var(--surface)] px-2.5 py-0 text-body text-fg outline-none transition-[border-color,box-shadow] duration-150 focus:border-[color:color-mix(in_srgb,var(--primary)_45%,transparent)] focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--primary)_16%,transparent)]'
+            <NativeSelect
+              className='min-h-tap border-line-strong bg-card text-body text-fg'
               {...getFieldProps('market')}
             >
-              <option value=''>전체 시장</option>
-              <option value='KR'>한국 (KR)</option>
-              <option value='US'>미국 (US)</option>
-            </select>
+              <NativeSelectOption value=''>전체 시장</NativeSelectOption>
+              <NativeSelectOption value='KR'>한국 (KR)</NativeSelectOption>
+              <NativeSelectOption value='US'>미국 (US)</NativeSelectOption>
+            </NativeSelect>
           </FilterField>
           <FilterField error={errors.q} htmlFor='q' label='키워드'>
             <Input
               className={cn(
-                'rounded-[var(--r-md)] bg-[color:var(--surface)] px-3 py-0 text-body',
-                !errors.q && 'border-[color:var(--line-strong)]'
+                'rounded-md bg-card px-3 py-0 text-body',
+                !errors.q && 'border-line-strong'
               )}
-              invalid={Boolean(errors.q)}
               placeholder='정확한 단어를 입력해 주세요'
               type='search'
               {...getFieldProps('q')}
@@ -247,7 +250,7 @@ export function ArchiveSearchFilters({
             </p>
             {themeCatalogLoading ? (
               <div
-                className='rounded-[var(--r-md)] bg-[color:var(--surface-2)] px-3 py-3 text-body-sm text-faint'
+                className='rounded-md bg-surface-2 px-3 py-3 text-body-sm text-faint'
                 role='status'
               >
                 테마 목록을 불러오는 중입니다.
@@ -264,7 +267,7 @@ export function ArchiveSearchFilters({
                     테마 다시 시도
                   </Button>
                 }
-                className='bg-[color:var(--surface)]'
+                className='bg-card'
                 ariaLive='polite'
                 role='status'
                 title='테마 목록을 불러오지 못했습니다.'
@@ -274,11 +277,11 @@ export function ArchiveSearchFilters({
                 사용할 수 있습니다.
               </InlineAlert>
             ) : catalog.length === 0 ? (
-              <p className='m-0 rounded-[var(--r-md)] bg-[color:var(--surface-2)] px-3 py-3 text-body-sm text-faint'>
+              <p className='m-0 rounded-md bg-surface-2 px-3 py-3 text-body-sm text-faint'>
                 선택할 수 있는 테마가 없습니다.
               </p>
             ) : (
-              <div className='rounded-[var(--r-md)] border border-[color:var(--line-strong)] bg-[color:var(--surface)] px-3 py-2.5'>
+              <div className='rounded-md border border-line-strong bg-card px-3 py-2.5'>
                 <ArchiveThemeTree
                   nodes={catalog}
                   onChange={setSelectedThemes}

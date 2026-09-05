@@ -90,4 +90,49 @@ describe('BatchHistoryTable', () => {
       screen.getByRole('button', { name: 'job 202 상세 선택' })
     );
   });
+
+  it('FAILED 행에 danger 톤을 표시한다', () => {
+    render(
+      <BatchHistoryTable
+        isLoading={false}
+        onSelectRow={vi.fn()}
+        rows={[
+          createRow({ rawStatus: 'FAILED', status: 'FAILED' }),
+          createRow({ id: 202, rawStatus: 'SUCCESS' }),
+        ]}
+        selectedJobId={null}
+      />
+    );
+
+    expect(
+      screen.getByRole('button', { name: 'job 101 상세 선택' }).closest('tr')
+    ).toHaveAttribute('data-tone', 'danger');
+    expect(
+      screen.getByRole('button', { name: 'job 202 상세 선택' }).closest('tr')
+    ).not.toHaveAttribute('data-tone');
+  });
+
+  // 선택/danger 강조 클래스는 ui/table에서 이 컴포넌트로 옮겨왔다 — 표준
+  // shadcn `data-[state=selected]:bg-muted`로는 hover(`bg-muted/50`)와
+  // 알파값 차이만 나서 마스터-디테일 화면에서 선택 행이 구분되지 않는다.
+  it('선택 행은 primary 배경/좌측 바 클래스를, danger 행은 좌측 danger 바 클래스를 갖는다', () => {
+    render(
+      <BatchHistoryTable
+        isLoading={false}
+        onSelectRow={vi.fn()}
+        rows={[createRow({ rawStatus: 'FAILED', status: 'FAILED' })]}
+        selectedJobId={101}
+      />
+    );
+
+    const row = screen
+      .getByRole('button', { name: 'job 101 상세 선택' })
+      .closest('tr');
+
+    expect(row).toHaveClass(
+      'data-[state=selected]:bg-primary-soft',
+      'data-[state=selected]:shadow-[inset_3px_0_0_var(--primary)]',
+      'not-data-[state=selected]:data-[tone=danger]:shadow-[inset_3px_0_0_var(--danger)]'
+    );
+  });
 });

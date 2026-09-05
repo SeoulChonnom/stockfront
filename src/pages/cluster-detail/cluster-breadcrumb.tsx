@@ -1,4 +1,12 @@
 import { InlineAlert } from '@/components/state';
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb';
 
 import { createNavigateHandler } from '@/lib/app-state';
 import { withBasePath } from '@/lib/router';
@@ -26,26 +34,33 @@ export function ClusterBreadcrumb({
 
   return (
     <div className='flex min-w-0 flex-col gap-3'>
-      <nav
-        aria-label='위치'
-        className='flex flex-wrap items-center gap-1.5 text-body-sm text-faint'
-      >
-        <a
-          className='tap-target text-fg-soft underline-offset-2 hover:underline'
-          href={withBasePath(href)}
-          onClick={createNavigateHandler(href)}
-        >
-          {label}
-        </a>
-        {/* Breadcrumb separators are plain slashes, not chevron icons. */}
-        <span aria-hidden='true'>/</span>
-        <span className='wrap-anywhere'>{marketLabel}</span>
-        {/* Keep the same separator for every breadcrumb level. */}
-        <span aria-hidden='true'>/</span>
-        <span aria-current='page' className='font-semibold text-fg-soft'>
-          이슈 상세
-        </span>
-      </nav>
+      <Breadcrumb aria-label='위치'>
+        <BreadcrumbList className='gap-1.5 text-body-sm text-faint sm:gap-1.5'>
+          <BreadcrumbItem>
+            <BreadcrumbLink asChild>
+              <a
+                className='tap-target text-fg-soft underline-offset-2 hover:underline'
+                href={withBasePath(href)}
+                onClick={createNavigateHandler(href)}
+              >
+                {label}
+              </a>
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          {/* Breadcrumb separators are plain slashes, not chevron icons. */}
+          <BreadcrumbSeparator>/</BreadcrumbSeparator>
+          <BreadcrumbItem>
+            <span className='wrap-anywhere'>{marketLabel}</span>
+          </BreadcrumbItem>
+          {/* Keep the same separator for every breadcrumb level. */}
+          <BreadcrumbSeparator>/</BreadcrumbSeparator>
+          <BreadcrumbItem>
+            <BreadcrumbPage className='font-semibold text-fg-soft'>
+              이슈 상세
+            </BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
       {origin === null ? (
         <InlineAlert tone='info'>
           진입 경로 정보가 없어 이 이슈의 기준일({businessDate}) 브리프로

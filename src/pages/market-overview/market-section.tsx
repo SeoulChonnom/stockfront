@@ -51,8 +51,7 @@ export function MarketSection({
   return (
     <section
       aria-labelledby={marketHeadingId(index)}
-      // 모바일 상단 헤더가 앵커 이동 시 제목을 가리지 않도록 오프셋을 준다.
-      className='flex min-w-0 scroll-mt-[calc(var(--topbar-height)+8px)] flex-col overflow-hidden rounded-[var(--r-lg)] border border-line bg-[color:var(--surface)]'
+      className='flex min-w-0 flex-col overflow-hidden rounded-lg border border-line bg-card'
       id={marketSectionId(index)}
     >
       {/* 착지 표시는 카드 전체가 아니라 이 헤더 띠가 받는다
@@ -64,12 +63,12 @@ export function MarketSection({
       >
         {/* Show the market scope before its name. */}
         {market.marketType ? (
-          <span className='tnum rounded-[var(--r-sm)] border border-[color:var(--line-strong)] px-1.75 py-0.5 text-label font-semibold tracking-caps text-fg-soft'>
+          <span className='tnum rounded-sm border border-line-strong px-1.75 py-0.5 text-label font-semibold tracking-caps text-fg-soft'>
             {market.marketType}
           </span>
         ) : null}
         <h2
-          className='m-0 text-h2 font-semibold outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--focus)]'
+          className='m-0 text-h2 font-semibold outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring'
           id={marketHeadingId(index)}
           tabIndex={-1}
         >
@@ -83,11 +82,8 @@ export function MarketSection({
       </div>
 
       {metadata?.partialMessage ? (
-        <div className='flex gap-2.5 border-b border-[color:var(--warning-line)] bg-[color:var(--warning-soft)] px-[18px] py-3'>
-          <span
-            aria-hidden='true'
-            className='font-bold text-[color:var(--warning)]'
-          >
+        <div className='flex gap-2.5 border-b border-warning-line bg-warning-soft px-[18px] py-3'>
+          <span aria-hidden='true' className='font-bold text-warning'>
             !
           </span>
           <p className='measure-error m-0 text-body text-fg'>
@@ -105,13 +101,13 @@ export function MarketSection({
         ) : null}
         <MarketAnalysisBlock analysis={market.analysis} />
         {hasNarrative ? null : (
-          <p className='measure-error m-0 rounded-[var(--r-md)] border border-dashed border-[color:var(--line-strong)] px-3.5 py-3 text-body text-faint'>
+          <p className='measure-error m-0 rounded-md border border-dashed border-line-strong px-3.5 py-3 text-body text-faint'>
             {noNarrativeCopy(audience)}
           </p>
         )}
       </div>
 
-      <div className='flex items-baseline gap-2.5 border-t border-line bg-[color:var(--surface-2)] px-[18px] py-3'>
+      <div className='flex items-baseline gap-2.5 border-t border-line bg-surface-2 px-[18px] py-3'>
         <h3 className='m-0 text-card-heading font-semibold'>대표 지수</h3>
         <span className='tnum text-body-sm text-faint'>
           {market.indices.length}종
@@ -130,7 +126,7 @@ export function MarketSection({
         )}
       </div>
 
-      <div className='flex items-baseline gap-2.5 border-t border-line bg-[color:var(--surface-2)] px-[18px] py-3'>
+      <div className='flex items-baseline gap-2.5 border-t border-line bg-surface-2 px-[18px] py-3'>
         <h3 className='m-0 text-card-heading font-semibold'>핵심 이슈</h3>
         <span className='tnum text-body-sm text-faint'>
           {market.clusters.length}건

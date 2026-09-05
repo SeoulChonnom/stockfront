@@ -1,8 +1,15 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "./styles/base.css";
-@import "./styles/app-shell.css";
 @import "./styles/components.css";
+
+/* `dark:`를 앱의 테마 토글에 붙인다. 이 앱의 테마는 OS 설정이 아니라
+ * `setTheme`이 `<html data-theme>`에 기록하는 사용자 선택이고, `base.css`의
+ * 색 토큰도 전부 그 선택자로 교체된다. 이 선언이 없으면 shadcn 컴포넌트가
+ * 들고 온 `dark:` 유틸리티만 Tailwind 기본값인
+ * `@media (prefers-color-scheme: dark)`로 컴파일되어, OS 설정과 앱 내 선택이
+ * 어긋난 사용자에게 혼자 다른 테마로 렌더된다. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
 @theme inline {
   /* --text-* → text-{name} (font-size utilities).
@@ -54,6 +61,82 @@
   --color-faint: var(--text-faint);
   --color-line: var(--line);
 
+  /* 역할 색 브리지: `bg-[color:var(--surface)]` 같은 임의값 유틸리티를
+   * 없애기 위한 다리다. 위의 --text-* 다리와 같은 이유로 역할을 빠짐없이
+   * 노출해야 한다 — 하나라도 빠지면 그 자리만 임의값으로 되돌아간다. */
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-line-strong: var(--line-strong);
+
+  --color-primary-soft: var(--primary-soft);
+  --color-primary-line: var(--primary-line);
+  --color-primary-fg: var(--primary-fg);
+
+  --color-up: var(--up);
+  --color-down: var(--down);
+
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-success-line: var(--success-line);
+
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-warning-line: var(--warning-line);
+
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-danger-line: var(--danger-line);
+
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --color-info-line: var(--info-line);
+
+  --color-neutral: var(--neutral);
+  --color-neutral-soft: var(--neutral-soft);
+  --color-neutral-line: var(--neutral-line);
+
   /* --spacing-* → min-h-{name} / size-{name} (touch targets). */
   --spacing-tap: var(--tap-min);
+
+  /* shadcn/ui variables mapping */
+  --color-background: var(--bg);
+  --color-foreground: var(--text);
+
+  --color-card: var(--surface);
+  --color-card-foreground: var(--text);
+
+  --color-popover: var(--surface);
+  --color-popover-foreground: var(--text);
+
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-fg);
+
+  --color-secondary: var(--surface-2);
+  --color-secondary-foreground: var(--text);
+
+  --color-muted: var(--surface-2);
+  --color-muted-foreground: var(--text-soft);
+
+  --color-accent: var(--surface-2);
+  --color-accent-foreground: var(--text);
+
+  --color-destructive: var(--danger);
+  --color-destructive-foreground: var(--surface);
+
+  --color-border: var(--line);
+  --color-input: var(--line);
+  --color-ring: var(--focus);
+
+  --radius-lg: var(--r-lg);
+  --radius-md: var(--r-md);
+  --radius-sm: var(--r-sm);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
 }

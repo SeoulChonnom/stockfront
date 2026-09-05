@@ -1,3 +1,4 @@
+import { ToneBadge } from '@/components/domain/tone-badge';
 import { Button } from '@/components/ui/button';
 import { errorCodeCopy } from '@/lib/audience-copy';
 import { useCapabilities } from '@/lib/capabilities';
@@ -48,9 +49,9 @@ export function PermissionState({
   return (
     <div className={cn('py-8', className)}>
       {badge ? (
-        <span className='inline-flex items-center gap-1.5 rounded-[var(--r-sm)] border border-[color:var(--danger-line)] bg-[color:var(--danger-soft)] px-2 py-0.5 text-body-sm font-semibold text-[color:var(--danger)]'>
+        <ToneBadge size='compact' tone='danger'>
           {badge}
-        </span>
+        </ToneBadge>
       ) : null}
       <Heading
         className={cn(

@@ -11,11 +11,11 @@ export type Direction = 'up' | 'down' | 'none';
 
 export function directionTextClass(direction: Direction): string {
   if (direction === 'up') {
-    return 'text-[color:var(--up)]';
+    return 'text-up';
   }
 
   if (direction === 'down') {
-    return 'text-[color:var(--down)]';
+    return 'text-down';
   }
 
   return 'text-faint';

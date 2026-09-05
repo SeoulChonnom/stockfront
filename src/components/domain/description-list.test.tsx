@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import {
   DescriptionList,
   DescriptionListItem,
-} from '@/components/ui/description-list';
+} from '@/components/domain/description-list';
 
 describe('DescriptionList', () => {
   it('renders labels and values with definition-list semantics and responsive layout', () => {

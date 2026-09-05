@@ -54,7 +54,7 @@ export function ClusterAnalysis({
   return (
     <section
       aria-labelledby='cluster-analysis-heading'
-      className='min-w-0 rounded-[var(--r-lg)] border border-line bg-[color:var(--surface)] p-[18px]'
+      className='min-w-0 rounded-lg border border-line bg-card p-[18px]'
     >
       <div className='mb-3 flex flex-wrap items-center gap-x-3 gap-y-1'>
         <h2
@@ -69,7 +69,7 @@ export function ClusterAnalysis({
           </span>
         ) : null}
         {conflictStatus === 'FOUND' ? (
-          <span className='inline-flex items-center rounded-[var(--r-sm)] border border-[color:var(--info-line)] bg-[color:var(--info-soft)] px-1.5 py-0.5 text-body-sm font-semibold text-[color:var(--info)]'>
+          <span className='inline-flex items-center rounded-sm border border-info-line bg-info-soft px-1.5 py-0.5 text-body-sm font-semibold text-info'>
             상충하는 보도가 있음
           </span>
         ) : null}
@@ -146,7 +146,7 @@ function AnalysisSectionBlock({
       <h3 className='m-0 mb-2 text-label font-semibold tracking-caps text-faint uppercase'>
         {section.title}
       </h3>
-      <div className='flex flex-col gap-3 border-l-2 border-[color:var(--line-strong)] pl-3'>
+      <div className='flex flex-col gap-3 border-l-2 border-line-strong pl-3'>
         {section.paragraphs.map((paragraph, index) => (
           <ParagraphBlock
             articleLookup={articleLookup}
@@ -242,8 +242,8 @@ function ConflictDetail({
   articleLookup: Map<string, ClusterArticle>;
 }) {
   return (
-    <div className='rounded-[var(--r-md)] border border-[color:var(--info-line)] bg-[color:var(--info-soft)] p-3'>
-      <p className='m-0 mb-2 flex items-center gap-1.5 text-[color:var(--info)] text-body-sm font-semibold'>
+    <div className='rounded-md border border-info-line bg-info-soft p-3'>
+      <p className='m-0 mb-2 flex items-center gap-1.5 text-info text-body-sm font-semibold'>
         <span aria-hidden='true'>i</span>
         상충하는 보도가 있음
       </p>
@@ -334,10 +334,10 @@ function CitationButton({
     <button
       aria-label={`근거 기사로 이동: ${articleTitle}`}
       className={cn(
-        'tap-target-inline ms-1 rounded-[var(--r-sm)] border px-1.5 py-0.5 align-middle text-label font-medium leading-none first:ms-0',
+        'tap-target-inline ms-1 rounded-sm border px-1.5 py-0.5 align-middle text-label font-medium leading-none first:ms-0',
         tone === 'conflict'
-          ? 'border-[color:var(--info-line)] bg-[color:var(--surface)] text-[color:var(--info)]'
-          : 'border-[color:var(--line-strong)] bg-[color:var(--surface-2)] text-fg-soft hover:bg-[color:var(--surface-3)]'
+          ? 'border-info-line bg-card text-info'
+          : 'border-line-strong bg-surface-2 text-fg-soft hover:bg-surface-3'
       )}
       onClick={() => focusArticleRow(articleId)}
       type='button'

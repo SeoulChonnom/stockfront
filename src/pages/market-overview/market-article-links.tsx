@@ -29,7 +29,7 @@ export function MarketArticleLinks({ links }: { links: ArticleLink[] }) {
         {needsToggle ? (
           <button
             aria-expanded={expanded}
-            className='ml-auto min-h-8.5 rounded-[var(--r-md)] border border-[color:var(--line-strong)] bg-[color:var(--surface)] px-3 text-body-sm text-fg-soft'
+            className='ml-auto min-h-8.5 rounded-md border border-line-strong bg-card px-3 text-body-sm text-fg-soft'
             onClick={() => setExpanded((current) => !current)}
             type='button'
           >
@@ -55,7 +55,7 @@ function ArticleLinkRow({ link }: { link: ArticleLink }) {
     <li className='flex min-w-0 flex-wrap items-center gap-x-2.5 gap-y-1.5 border-b border-line pb-2'>
       {originalUrl ? (
         <a
-          className='wrap-anywhere text-body font-medium text-fg no-underline hover:text-[color:var(--primary)] hover:underline'
+          className='wrap-anywhere text-body font-medium text-fg no-underline hover:text-primary hover:underline'
           href={originalUrl}
           rel='noopener noreferrer'
           target='_blank'
@@ -75,7 +75,7 @@ function ArticleLinkRow({ link }: { link: ArticleLink }) {
           collapse UI at all (cluster-detail only), only the duplicate
           badge. */}
       {link.exactDuplicateCount > 0 ? (
-        <span className='rounded-[var(--r-sm)] border border-line px-1.5 py-0.5 text-body-sm text-faint'>
+        <span className='rounded-sm border border-line px-1.5 py-0.5 text-body-sm text-faint'>
           원문 중복 {link.exactDuplicateCount}건
         </span>
       ) : null}

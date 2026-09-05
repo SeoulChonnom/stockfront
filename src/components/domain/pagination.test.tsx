@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
-import { Pagination } from '@/components/ui/pagination';
+import { Pagination } from '@/components/domain/pagination';
 
 describe('Pagination', () => {
   it('renders a 5-number window centred on the current page', () => {
@@ -33,12 +33,12 @@ describe('Pagination', () => {
     render(<Pagination onPageChange={vi.fn()} page={5} totalPages={10} />);
 
     const current = screen.getByRole('button', { name: '5' });
-    expect(current.className).toContain('bg-[color:var(--primary-soft)]');
-    expect(current.className).toContain('text-[color:var(--primary)]');
-    expect(current.className).toContain('border-[color:var(--primary-line)]');
+    expect(current.className).toContain('bg-primary-soft');
+    expect(current.className).toContain('text-primary');
+    expect(current.className).toContain('border-primary-line');
 
     const other = screen.getByRole('button', { name: '4' });
-    expect(other.className).not.toContain('bg-[color:var(--primary-soft)]');
+    expect(other.className).not.toContain('bg-primary-soft');
   });
 
   it('disables 이전 on the first page and 다음 on the last page', () => {
@@ -96,6 +96,14 @@ describe('Pagination', () => {
 
     expect(screen.getByRole('navigation')).toHaveAttribute('aria-label');
     expect(document.querySelector('[aria-live]')).not.toBeInTheDocument();
+  });
+
+  it('renders the page items as a list inside the nav', () => {
+    render(<Pagination onPageChange={vi.fn()} page={2} totalPages={5} />);
+
+    expect(screen.getByRole('list')).toBeInTheDocument();
+    // 이전 + candidates 1-5 + 다음
+    expect(screen.getAllByRole('listitem')).toHaveLength(7);
   });
 
   it('uses the reference target size and subdued page indicator typography', () => {

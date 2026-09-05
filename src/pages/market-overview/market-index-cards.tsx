@@ -15,7 +15,7 @@ export function MarketIndexCards({ indices }: { indices: MarketIndex[] }) {
     <ul className='m-0 flex list-none flex-col gap-2 p-[18px]'>
       {orderIndices(indices).map((item, position) => (
         <li
-          className='min-w-0 rounded-[var(--r-md)] border border-line bg-[color:var(--surface-2)] p-3'
+          className='min-w-0 rounded-md border border-line bg-surface-2 p-3'
           // biome-ignore lint/suspicious/noArrayIndexKey: code is nullable and label isn't guaranteed unique — see market-index-table.tsx
           key={`${item.code ?? item.label}-${position}`}
         >

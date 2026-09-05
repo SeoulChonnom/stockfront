@@ -121,7 +121,7 @@ function IssueRow({
     >
       <div className='flex min-w-0 flex-col gap-[7px]'>
         <a
-          className='inline-flex min-h-tap text-pretty wrap-anywhere items-center text-body font-semibold text-fg no-underline hover:text-[color:var(--primary)] hover:underline'
+          className='inline-flex min-h-tap text-pretty wrap-anywhere items-center text-body font-semibold text-fg no-underline hover:text-primary hover:underline'
           href={withBasePath(href)}
           onClick={onOpen}
         >
@@ -136,7 +136,7 @@ function IssueRow({
           <div className='flex flex-wrap gap-1.5'>
             {tags.map((tag) => (
               <span
-                className='rounded-[var(--r-sm)] border border-line bg-[color:var(--surface-2)] px-1.75 py-0.5 text-body-sm text-fg-soft'
+                className='rounded-sm border border-line bg-surface-2 px-1.75 py-0.5 text-body-sm text-fg-soft'
                 key={tag}
               >
                 {tag}
@@ -149,7 +149,7 @@ function IssueRow({
           {originalUrl ? (
             <a
               aria-label={`${representativeTitle} 원문 (새 창)`}
-              className='tap-target underline underline-offset-2 hover:text-[color:var(--primary)]'
+              className='tap-target underline underline-offset-2 hover:text-primary'
               href={originalUrl}
               rel='noopener noreferrer'
               target='_blank'
@@ -160,7 +160,7 @@ function IssueRow({
           {mirrorUrl ? (
             <a
               aria-label={`${representativeTitle} 네이버 미러 (새 창)`}
-              className='tap-target underline underline-offset-2 hover:text-[color:var(--primary)]'
+              className='tap-target underline underline-offset-2 hover:text-primary'
               href={mirrorUrl}
               rel='noopener noreferrer'
               target='_blank'

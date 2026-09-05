@@ -16,8 +16,8 @@ type TileTone = 'danger' | 'warning' | 'neutral';
  * 관용구가 갈린다. 톤은 숫자 색이 그대로 전한다.
  */
 const TILE_NUMBER_CLASSES: Readonly<Record<TileTone, string>> = {
-  danger: 'text-[color:var(--danger)]',
-  warning: 'text-[color:var(--warning)]',
+  danger: 'text-danger',
+  warning: 'text-warning',
   neutral: 'text-fg',
 };
 

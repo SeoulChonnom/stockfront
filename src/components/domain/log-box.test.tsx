@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { LogBox } from '@/components/ui/log-box';
+import { LogBox } from '@/components/domain/log-box';
 
 describe('LogBox', () => {
   it('does not render a toggle for short content', () => {

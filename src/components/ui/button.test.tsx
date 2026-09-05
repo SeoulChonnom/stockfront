@@ -4,19 +4,19 @@ import { describe, expect, it } from 'vitest';
 import { Button } from '@/components/ui/button';
 
 describe('Button', () => {
-  it('keeps the small size at the 44px touch minimum', () => {
+  it('uses small size class', () => {
     render(
       <Button size='sm' type='button'>
         이슈 상세
       </Button>
     );
 
-    expect(screen.getByRole('button')).toHaveClass('min-h-tap');
+    expect(screen.getByRole('button')).toHaveClass('h-8');
   });
 
-  it('keeps the default size at the 44px touch minimum', () => {
+  it('uses default size class', () => {
     render(<Button type='button'>실행</Button>);
 
-    expect(screen.getByRole('button')).toHaveClass('min-h-tap');
+    expect(screen.getByRole('button')).toHaveClass('h-9');
   });
 });

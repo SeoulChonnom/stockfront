@@ -10,5 +10,9 @@
     ".agent/**",
     ".agents/skills/!(pixel-perfect-react-ui)/**",
     ".claude/**"
-  ]
+  ],
+  "rules": {
+    "exports": "warn",
+    "types": "warn"
+  }
 }

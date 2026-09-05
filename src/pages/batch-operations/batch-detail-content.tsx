@@ -1,14 +1,14 @@
 import type { RefObject } from 'react';
-import { InlineAlert, StatusBadge } from '@/components/state';
-import { TONE_SURFACE } from '@/components/state/tone-surface';
-import { BatchTypeBadge } from '@/components/ui/batch-type-badge';
-import { Button } from '@/components/ui/button';
+import { AsyncButton } from '@/components/domain/async-button';
+import { BatchTypeBadge } from '@/components/domain/batch-type-badge';
 import {
   DescriptionList,
   DescriptionListItem,
-} from '@/components/ui/description-list';
-import { LogBox } from '@/components/ui/log-box';
-import { PipelineStages } from '@/components/ui/pipeline-stages';
+} from '@/components/domain/description-list';
+import { LogBox } from '@/components/domain/log-box';
+import { PipelineStages } from '@/components/domain/pipeline-stages';
+import { InlineAlert, StatusBadge } from '@/components/state';
+import { TONE_SURFACE } from '@/components/state/tone-surface';
 import { ApiError } from '@/lib/api/client';
 import type { AiRetryRunResponse } from '@/lib/api/types';
 import { createNavigateHandler } from '@/lib/app-state';
@@ -149,7 +149,7 @@ export function BatchDetailContent({
       {/* Use an 8px row gap and 10px column gap between wrapped metadata. */}
       <div className='-mx-[18px] -mt-4 flex flex-wrap items-center gap-x-[10px] gap-y-2 border-b border-line px-[18px] py-[14px]'>
         <h2
-          className='m-0 text-h2 font-semibold text-fg outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--focus)]'
+          className='m-0 text-h2 font-semibold text-fg outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring'
           ref={detailHeadingRef}
           tabIndex={-1}
         >
@@ -199,11 +199,9 @@ export function BatchDetailContent({
       ) : null}
 
       {hasError ? (
-        <div
-          className={`min-w-0 rounded-[var(--r-md)] border p-3 ${TONE_SURFACE.danger}`}
-        >
+        <div className={`min-w-0 rounded-md border p-3 ${TONE_SURFACE.danger}`}>
           {run.errorCode ? (
-            <p className='mono m-0 font-semibold text-[color:var(--danger)]'>
+            <p className='mono m-0 font-semibold text-danger'>
               {run.errorCode}
             </p>
           ) : null}
@@ -256,7 +254,7 @@ export function BatchDetailContent({
       <div className='flex flex-wrap items-center gap-2 pt-1'>
         {snapshotHref ? (
           <a
-            className='inline-flex min-h-10 items-center rounded-[var(--r-md)] border border-[color:var(--line-strong)] px-3.5 text-body font-semibold text-fg transition-[scale,background-color] duration-(--dur-fast) ease-(--ease) hover:bg-[color:var(--surface-2)] active:scale-[0.98]'
+            className='inline-flex min-h-10 items-center rounded-md border border-line-strong px-3.5 text-body font-semibold text-fg transition-[scale,background-color] duration-(--dur-fast) ease-(--ease) hover:bg-surface-2 active:scale-[0.98]'
             href={withBasePath(snapshotHref)}
             onClick={createNavigateHandler(snapshotHref)}
           >
@@ -264,8 +262,7 @@ export function BatchDetailContent({
           </a>
         ) : null}
         {canRetryAi && run.rawStatus === 'PARTIAL' ? (
-          <Button
-            disabled={isRetryPendingForRun}
+          <AsyncButton
             loading={isRetryPendingForRun}
             onClick={handleRetryAi}
             size='sm'
@@ -273,7 +270,7 @@ export function BatchDetailContent({
             variant='secondary'
           >
             AI 요약만 재시도
-          </Button>
+          </AsyncButton>
         ) : null}
       </div>
     </div>

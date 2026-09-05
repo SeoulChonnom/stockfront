@@ -25,16 +25,19 @@ vi.mock('@/lib/api/batch', () => ({
 }));
 
 /**
- * `AppShell` is the single-nav rail/mobile-header/drawer shell. These tests
- * replace the old single "topbar search is disabled"
- * assertion (`placeholder` no longer exists as a prop — the whole topbar
- * search field was deliberately removed) with coverage for the
- * current shell requirements: exactly one primary nav, the
- * admin-only 운영 group is genuinely absent from the DOM for a non-admin
- * user (not just hidden), the skip link, the mobile drawer's
- * open/close/focus-return behaviour, and the single live region clearing on
- * route change.
+ * `AppShell`은 상단 고정 헤더 하나로 이루어진 셸이다. 좌측 레일과 모바일
+ * 드로어는 사라졌고, 데스크톱·모바일 모두 헤더 중앙의 사이트맵 버튼 그룹
+ * 하나만 쓴다. 목적지는 열고 닫는 것 없이 항상 화면에 있다.
+ *
+ * 여기서 고정하는 계약: 스킵 링크, 정확히 하나인 `주요 메뉴` 랜드마크,
+ * 활성 목적지의 `aria-current`, `ops.view`가 없는 사용자에게 운영 목적지가
+ * 숨겨지는 게 아니라 DOM에 아예 없다는 것, 실패 배지, 그리고 라우트가 바뀔 때
+ * 비워지는 단 하나의 라이브 리전.
  */
+
+function getNav() {
+  return screen.getByRole('navigation', { name: '주요 메뉴' });
+}
 
 function renderShell(props: Partial<Parameters<typeof AppShell>[0]> = {}) {
   return render(
@@ -82,78 +85,96 @@ describe('AppShell', () => {
     expect(skipLink).toHaveAttribute('href', '#main-content');
   });
 
+  it('keeps the header pinned to the top and points the wordmark at 최신 브리프', () => {
+    renderShell();
+
+    const header = screen.getByRole('banner');
+    expect(header.className).toContain('sticky');
+    expect(header.className).toContain('top-0');
+    expect(
+      within(header).getByRole('link', { name: 'Market Brief' })
+    ).toHaveAttribute('href', '/market/latest');
+  });
+
   it('renders exactly one primary nav landmark with the two always-on items', () => {
     setRoleOverride('user');
     renderShell();
 
-    // The drawer is closed by default, so its <nav> copy isn't mounted yet —
-    // exactly one nav landmark, one of each item, should exist.
     expect(
       screen.getAllByRole('navigation', { name: '주요 메뉴' })
     ).toHaveLength(1);
-    expect(screen.getAllByRole('link', { name: '최신 브리프' })).toHaveLength(
-      1
-    );
-    expect(screen.getAllByRole('link', { name: '아카이브' })).toHaveLength(1);
+    expect(
+      within(getNav()).getAllByRole('link', { name: '최신 브리프' })
+    ).toHaveLength(1);
+    expect(
+      within(getNav()).getAllByRole('link', { name: '아카이브' })
+    ).toHaveLength(1);
   });
 
   it('marks the current route with aria-current="page"', () => {
     renderShell({ pathname: '/market/latest' });
 
-    const active = screen.getAllByRole('link', { name: '최신 브리프' })[0];
-    expect(active).toHaveAttribute('aria-current', 'page');
-
-    const inactive = screen.getAllByRole('link', { name: '아카이브' })[0];
-    expect(inactive).not.toHaveAttribute('aria-current');
+    // 레일이 사라진 뒤 "지금 어디"를 말하는 자리는 여기뿐이다 — 브리프
+    // 화면의 <h1>은 목적지 이름이 아니라 그날의 헤드라인이다.
+    expect(
+      within(getNav()).getByRole('link', { name: '최신 브리프' })
+    ).toHaveAttribute('aria-current', 'page');
+    expect(
+      within(getNav()).getByRole('link', { name: '아카이브' })
+    ).not.toHaveAttribute('aria-current');
   });
 
-  it('keeps the rail and mobile theme controls icon-only', async () => {
+  it('keeps every destination reachable without opening anything', () => {
+    setRoleOverride('admin');
+    renderShell();
+
+    // 버튼 그룹은 접히지 않는다. 좁은 화면에서 라벨만 시각적으로 접히고
+    // 접근 가능한 이름은 그대로 남는다.
+    expect(within(getNav()).getAllByRole('link')).toHaveLength(3);
+  });
+
+  it('offers the theme toggle inside the profile menu, named for the theme it switches to', async () => {
     const user = userEvent.setup();
     const onToggleTheme = vi.fn();
     renderShell({ onToggleTheme, theme: 'dark' });
 
-    const railToggle = within(screen.getByRole('complementary')).getByRole(
-      'button',
-      { name: '라이트 테마로 전환' }
-    );
-    expect(railToggle).not.toHaveTextContent('라이트 테마로 전환');
+    await user.click(screen.getByRole('button', { name: /계정 메뉴/ }));
 
-    const mobileToggle = within(screen.getByRole('banner')).getByRole(
-      'button',
-      { name: '라이트 테마로 전환' }
-    );
-    expect(mobileToggle).not.toHaveTextContent('라이트 테마로 전환');
-
-    await user.click(railToggle);
-    await user.click(mobileToggle);
-    expect(onToggleTheme).toHaveBeenCalledTimes(2);
+    const toggle = screen.getByRole('menuitem', {
+      name: '라이트 테마로 전환',
+    });
+    await user.click(toggle);
+    expect(onToggleTheme).toHaveBeenCalledTimes(1);
   });
 
-  it('uses the next theme in the accessible toggle copy', () => {
+  it('uses the next theme in the toggle copy', async () => {
+    const user = userEvent.setup();
     renderShell({ theme: 'light' });
 
+    await user.click(screen.getByRole('button', { name: /계정 메뉴/ }));
+
     expect(
-      screen.getAllByRole('button', { name: '다크 테마로 전환' })
-    ).toHaveLength(2);
+      screen.getByRole('menuitem', { name: '다크 테마로 전환' })
+    ).toBeInTheDocument();
   });
 
-  it('never renders the 운영 nav group for a non-admin user — not even hidden', () => {
+  it('never renders the 운영 destination for a non-admin user — not even hidden', () => {
     setRoleOverride('user');
-    const { container } = renderShell();
+    const { baseElement } = renderShell();
 
     expect(
       screen.queryByRole('link', { name: '배치 운영' })
     ).not.toBeInTheDocument();
-    expect(container.innerHTML).not.toContain('배치 운영');
+    expect(baseElement.innerHTML).not.toContain('배치 운영');
   });
 
-  it('renders the 운영 nav group with 배치 운영 for an admin', () => {
+  it('renders the 배치 운영 destination for an admin', () => {
     setRoleOverride('admin');
     renderShell({ pathname: '/ops/batches' });
 
-    const opsLinks = screen.getAllByRole('link', { name: '배치 운영' });
-    expect(opsLinks.length).toBeGreaterThan(0);
-    expect(opsLinks[0]).toHaveAttribute('aria-current', 'page');
+    expect(
+      within(getNav()).getByRole('link', { name: '배치 운영' })
+    ).toHaveAttribute('aria-current', 'page');
   });
 
   it('renders the failed-count badge from the live seven-day summary query', async () => {
@@ -177,12 +198,17 @@ describe('AppShell', () => {
       </QueryClientProvider>
     );
 
+    // 배지는 배치 운영 버튼 위에 그대로 붙는다 — 운영자가 무엇을 열지 않아도
+    // 실패가 보여야 신호다.
     await waitFor(() => {
-      const badge = screen.getAllByTestId('ops-failed-count-badge')[0];
+      const badge = screen.getByTestId('ops-failed-count-badge');
       expect(badge).toHaveTextContent('2');
       expect(badge).toHaveAttribute('title', '최근 7일 실패');
       expect(badge).toHaveAttribute('aria-label', '최근 7일 실패');
     });
+    expect(
+      within(getNav()).getByRole('link', { name: /배치 운영/ })
+    ).toBeInTheDocument();
 
     expect(mockGetBatchJobs).toHaveBeenCalledTimes(1);
     const [params] = mockGetBatchJobs.mock.calls[0] as [
@@ -310,9 +336,9 @@ describe('AppShell', () => {
     );
 
     await waitFor(() => {
-      expect(
-        screen.getAllByTestId('ops-failed-count-badge')[0]
-      ).toHaveTextContent('2');
+      expect(screen.getByTestId('ops-failed-count-badge')).toHaveTextContent(
+        '2'
+      );
     });
 
     await queryClient.refetchQueries({
@@ -320,47 +346,19 @@ describe('AppShell', () => {
     });
 
     expect(mockGetBatchJobs).toHaveBeenCalledTimes(2);
-    expect(
-      screen.getAllByTestId('ops-failed-count-badge')[0]
-    ).toHaveTextContent('2');
+    expect(screen.getByTestId('ops-failed-count-badge')).toHaveTextContent('2');
   });
 
-  it('opens the mobile drawer from the menu button, and Escape closes it and returns focus to the menu button', async () => {
+  it('shows the role alone in the profile menu when the token carries no name', async () => {
     const user = userEvent.setup();
     setRoleOverride('admin');
     renderShell();
 
-    const menuButton = screen.getByRole('button', { name: '주요 메뉴 열기' });
-    await user.click(menuButton);
-
-    const drawer = screen.getByRole('dialog', { name: 'Market Brief' });
-    expect(drawer).toBeInTheDocument();
     // 토큰이 없는 렌더(테스트/개발 우회)에서는 이름이 없다. 그때는 역할만
     // 남기고 자리표시자를 지어내지 않는다 — `useAuthUserName` 참고.
-    expect(within(drawer).getByText('Admin')).toBeInTheDocument();
-    expect(within(drawer).queryByText(/·/)).not.toBeInTheDocument();
-    // The drawer renders its own copy of the nav — now there should be two
-    // "최신 브리프" links (rail + drawer).
-    expect(screen.getAllByRole('link', { name: '최신 브리프' }).length).toBe(2);
-
-    await user.keyboard('{Escape}');
-
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    expect(menuButton).toHaveFocus();
-  });
-
-  it('closes the drawer when a nav item inside it is clicked', async () => {
-    const user = userEvent.setup();
-    renderShell();
-
-    await user.click(screen.getByRole('button', { name: '주요 메뉴 열기' }));
-    expect(screen.getByRole('dialog')).toBeInTheDocument();
-
-    const drawer = screen.getByRole('dialog');
-    const archiveLink = within(drawer).getByRole('link', { name: '아카이브' });
-    await user.click(archiveLink);
-
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: '계정 메뉴' }));
+    const menu = screen.getByRole('menu');
+    expect(within(menu).getByText('Admin')).toBeInTheDocument();
   });
 
   it('exposes exactly one aria-live="polite" region that clears its message on route change', () => {

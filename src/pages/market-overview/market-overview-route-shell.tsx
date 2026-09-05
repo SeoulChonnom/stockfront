@@ -45,7 +45,7 @@ export function MarketOverviewRouteShell({
 
       <section
         aria-labelledby='page-title'
-        className='flex flex-col gap-3 rounded-[var(--r-lg)] border border-line bg-[color:var(--surface)] p-5'
+        className='flex flex-col gap-3 rounded-lg border border-line bg-card p-5'
       >
         <div className='flex flex-wrap items-center gap-x-3 gap-y-2'>
           <span className='text-body-sm font-semibold text-faint'>

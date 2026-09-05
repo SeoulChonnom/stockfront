@@ -3,12 +3,6 @@ import type { MarketSnapshot } from '@/lib/view-models';
 
 export type Audience = { canViewOps: boolean };
 
-export function serviceTagline(audience: Audience): string {
-  return audience.canViewOps
-    ? '일간 시장 브리프 · 운영 콘솔'
-    : 'AI 시장 브리프';
-}
-
 /** 시장 섹션이 없으면 아래 데이터를 안내하지 않고 빈 상태에 설명을 맡긴다. */
 export function noHeadlineCopy(
   audience: Audience,

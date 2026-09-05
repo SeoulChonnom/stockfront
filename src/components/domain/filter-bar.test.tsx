@@ -5,10 +5,10 @@ import {
   FilterBar,
   FilterDirtyBadge,
   FilterField,
-} from '@/components/ui/filter-bar';
+} from '@/components/domain/filter-bar';
+import type { FilterErrors } from '@/components/domain/use-filter-draft';
+import { useFilterDraft } from '@/components/domain/use-filter-draft';
 import { Input } from '@/components/ui/input';
-import type { FilterErrors } from '@/components/ui/use-filter-draft';
-import { useFilterDraft } from '@/components/ui/use-filter-draft';
 
 type TestFilters = {
   from: string;
@@ -151,6 +151,35 @@ describe('FilterBar / useFilterDraft', () => {
       screen.getByText('시작일이 종료일보다 늦습니다.')
     ).toBeInTheDocument();
     expect(fromInput).toHaveFocus();
+  });
+
+  it('wires aria-describedby to the id of the actually-rendered error element (not just a matching string)', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <TestHarness
+        applied={defaultValues}
+        onApply={vi.fn()}
+        onReset={vi.fn()}
+      />
+    );
+
+    const fromInput = screen.getByLabelText('시작일');
+    await user.clear(fromInput);
+    await user.type(fromInput, '2026-07-30'); // after `to`, invalid
+
+    await user.click(screen.getByRole('button', { name: '필터 적용' }));
+
+    const describedById = fromInput.getAttribute('aria-describedby');
+    expect(describedById).toBe('from-error');
+
+    // The linkage is only real if some element actually carries that id —
+    // `getFieldProps` and `FilterField`'s `FieldError` id are wired
+    // independently, so a matching string on the input alone doesn't prove
+    // the two are actually connected in the DOM.
+    const errorElement = document.getElementById(describedById as string);
+    expect(errorElement).not.toBeNull();
+    expect(errorElement).toHaveTextContent('시작일이 종료일보다 늦습니다.');
   });
 
   it('reset calls onReset and restores default values in the draft', async () => {

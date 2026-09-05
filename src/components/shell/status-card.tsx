@@ -1,6 +1,8 @@
 import { Loader2 } from 'lucide-react';
 import type { AriaRole, ReactNode } from 'react';
 
+import { ToneBadge } from '@/components/domain/tone-badge';
+import type { SurfaceTone } from '@/components/state/tone-surface';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 
@@ -20,13 +22,7 @@ import { cn } from '@/lib/utils';
  * 이제 인페이지는 카드 폭을 다 쓰고 왼쪽 정렬하며, 설명문은
  * `measure-error`(62ch)로 읽는 폭을 잡는다 — 다른 인라인 안내와 같은 규칙이다.
  */
-export type StatusCardTone = 'info' | 'danger';
-
-const TONE_BADGE_CLASSES: Readonly<Record<StatusCardTone, string>> = {
-  info: 'border-[color:var(--info-line)] bg-[color:var(--info-soft)] text-[color:var(--info)]',
-  danger:
-    'border-[color:var(--danger-line)] bg-[color:var(--danger-soft)] text-[color:var(--danger)]',
-};
+export type StatusCardTone = Extract<SurfaceTone, 'info' | 'danger'>;
 
 export type StatusCardProps = {
   tone: StatusCardTone;
@@ -62,7 +58,7 @@ export function StatusCard({
     <div
       className={cn(
         fullScreen &&
-          'flex min-h-screen items-center justify-center bg-[color:var(--bg)] px-4 py-10'
+          'flex min-h-screen items-center justify-center bg-background px-4 py-10'
       )}
     >
       <Card
@@ -74,14 +70,9 @@ export function StatusCard({
         role={role}
       >
         {badge ? (
-          <span
-            className={cn(
-              'tnum inline-flex items-center gap-1.5 rounded-[var(--r-sm)] border px-2 py-0.5 text-body-sm font-semibold',
-              TONE_BADGE_CLASSES[tone]
-            )}
-          >
+          <ToneBadge className='tnum' size='compact' tone={tone}>
             {badge}
-          </span>
+          </ToneBadge>
         ) : null}
         <Heading
           className={cn(
@@ -105,7 +96,7 @@ export function StatusCard({
           <Loader2
             aria-hidden='true'
             className={cn(
-              'mb-5 size-6 animate-[spin_var(--dur-spinner)_linear_infinite] text-[color:var(--info)]',
+              'mb-5 size-6 animate-[spin_var(--dur-spinner)_linear_infinite] text-info',
               fullScreen && 'mx-auto'
             )}
           />

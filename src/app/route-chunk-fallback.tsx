@@ -16,7 +16,7 @@ import { Skeleton } from '@/components/state';
 export function RouteChunkFallback() {
   return (
     <div aria-busy='true' className='flex flex-col gap-4'>
-      <div className='flex flex-col gap-3 rounded-[var(--r-lg)] border border-line bg-[color:var(--surface)] px-[18px] py-4'>
+      <div className='flex flex-col gap-3 rounded-lg border border-line bg-card px-[18px] py-4'>
         <Skeleton className='h-6 w-1/3' />
         <Skeleton className='h-4 w-2/3' />
         <Skeleton className='h-4 w-1/2' />

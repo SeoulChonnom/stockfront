@@ -76,7 +76,7 @@ export function DecisionHeaderCard({
   return (
     <section
       aria-labelledby='page-title'
-      className='flex flex-col gap-4 rounded-[var(--r-lg)] border border-line bg-[color:var(--surface)] p-5'
+      className='flex flex-col gap-4 rounded-lg border border-line bg-card p-5'
     >
       {/* 라벨과 값은 한 덩어리로 감싼다. 예전에는 `기준일`·날짜·`생성`·시각이
           모두 이 flex의 형제였고, 390px에서 줄바꿈이 `생성`과 그 시각 사이에
@@ -92,7 +92,7 @@ export function DecisionHeaderCard({
           </span>
         </span>
         <span className='inline-flex flex-wrap items-baseline gap-x-1.5 gap-y-1'>
-          <span aria-hidden='true' className='text-[color:var(--line-strong)]'>
+          <span aria-hidden='true' className='text-line-strong'>
             |
           </span>
           <span className='text-body-sm text-faint'>생성</span>

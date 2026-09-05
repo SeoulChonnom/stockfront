@@ -138,11 +138,11 @@ function ClusterDetailErrorState({
   return (
     <section
       aria-labelledby='page-title'
-      className={`min-w-0 rounded-[var(--r-lg)] border p-5 ${TONE_SURFACE.danger}`}
+      className={`min-w-0 rounded-lg border p-5 ${TONE_SURFACE.danger}`}
       role='alert'
     >
       {badge ? (
-        <span className='mono inline-flex rounded-[var(--r-sm)] border border-[color:var(--danger-line)] bg-[color:var(--danger-soft)] px-2 py-0.5 text-body-sm font-semibold text-[color:var(--danger)]'>
+        <span className='mono inline-flex rounded-sm border border-danger-line bg-danger-soft px-2 py-0.5 text-body-sm font-semibold text-danger'>
           {badge}
         </span>
       ) : null}
@@ -159,7 +159,7 @@ function ClusterDetailErrorState({
         {message}
       </p>
       <div className='flex flex-wrap gap-2'>
-        <Button onClick={onRetry} type='button' variant='primary'>
+        <Button onClick={onRetry} type='button' variant='default'>
           다시 시도
         </Button>
         <Button

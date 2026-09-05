@@ -1,12 +1,16 @@
-import { useAnnounce } from '@/components/shell/use-announce';
-import { Card } from '@/components/ui/card';
 import {
   FilterBar,
   FilterDirtyBadge,
   FilterField,
-} from '@/components/ui/filter-bar';
+} from '@/components/domain/filter-bar';
+import { useFilterDraft } from '@/components/domain/use-filter-draft';
+import { useAnnounce } from '@/components/shell/use-announce';
+import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { useFilterDraft } from '@/components/ui/use-filter-draft';
+import {
+  NativeSelect,
+  NativeSelectOption,
+} from '@/components/ui/native-select';
 import { cn } from '@/lib/utils';
 
 import {
@@ -53,7 +57,7 @@ export function BatchFilters({
 
   return (
     <section aria-labelledby='ops-filter-heading'>
-      <Card className='flex flex-col gap-3' padding='inset'>
+      <Card className='flex flex-col gap-3 px-[18px] py-4'>
         <div className='flex flex-wrap items-center gap-2.5'>
           <h2
             className='m-0 text-label font-semibold tracking-caps text-fg-soft uppercase'
@@ -78,10 +82,9 @@ export function BatchFilters({
           <FilterField error={errors.from} htmlFor='from' label='기준일 시작'>
             <Input
               className={cn(
-                'tnum rounded-[var(--r-md)] bg-[color:var(--surface)] px-3 py-0 text-body',
-                !errors.from && 'border-[color:var(--line-strong)]'
+                'tnum rounded-md bg-card px-3 py-0 text-body',
+                !errors.from && 'border-line-strong'
               )}
-              invalid={Boolean(errors.from)}
               type='date'
               {...getFieldProps('from')}
             />
@@ -89,37 +92,42 @@ export function BatchFilters({
           <FilterField error={errors.to} htmlFor='to' label='기준일 종료'>
             <Input
               className={cn(
-                'tnum rounded-[var(--r-md)] bg-[color:var(--surface)] px-3 py-0 text-body',
-                !errors.to && 'border-[color:var(--line-strong)]'
+                'tnum rounded-md bg-card px-3 py-0 text-body',
+                !errors.to && 'border-line-strong'
               )}
-              invalid={Boolean(errors.to)}
               type='date'
               {...getFieldProps('to')}
             />
           </FilterField>
           <FilterField htmlFor='status' label='실행 상태'>
-            <select
-              className='flex min-h-11 w-full rounded-[var(--r-md)] border border-[color:var(--line-strong)] bg-[color:var(--surface)] px-2.5 py-0 text-body text-fg outline-none transition-[border-color,box-shadow] duration-150 focus:border-[color:color-mix(in_srgb,var(--primary)_45%,transparent)] focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--primary)_16%,transparent)]'
+            <NativeSelect
+              className='min-h-tap border-line-strong bg-card text-body text-fg'
               {...getFieldProps('status')}
             >
               {getBatchStatusOptions().map((option) => (
-                <option key={option.value || 'all'} value={option.value}>
+                <NativeSelectOption
+                  key={option.value || 'all'}
+                  value={option.value}
+                >
                   {option.label}
-                </option>
+                </NativeSelectOption>
               ))}
-            </select>
+            </NativeSelect>
           </FilterField>
           <FilterField htmlFor='type' label='배치 타입'>
-            <select
-              className='flex min-h-11 w-full rounded-[var(--r-md)] border border-[color:var(--line-strong)] bg-[color:var(--surface)] px-2.5 py-0 text-body text-fg outline-none transition-[border-color,box-shadow] duration-150 focus:border-[color:color-mix(in_srgb,var(--primary)_45%,transparent)] focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--primary)_16%,transparent)]'
+            <NativeSelect
+              className='min-h-tap border-line-strong bg-card text-body text-fg'
               {...getFieldProps('type')}
             >
               {getBatchTypeOptions().map((option) => (
-                <option key={option.value || 'all'} value={option.value}>
+                <NativeSelectOption
+                  key={option.value || 'all'}
+                  value={option.value}
+                >
                   {option.label}
-                </option>
+                </NativeSelectOption>
               ))}
-            </select>
+            </NativeSelect>
           </FilterField>
         </FilterBar>
       </Card>

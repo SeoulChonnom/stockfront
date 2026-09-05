@@ -228,6 +228,29 @@ describe('ClusterDetailPage', () => {
     expect(screen.queryByText(/진입 경로 정보가 없어/)).not.toBeInTheDocument();
   });
 
+  it('breadcrumb keeps the Korean aria-label and plain-slash separators (not chevron icons)', () => {
+    setLocation('?origin=latest');
+    mockReady(baseDetail());
+
+    render(<ClusterDetailPage clusterId='cluster-1' />);
+
+    const nav = screen.getByRole('navigation', { name: '위치' });
+    expect(nav).not.toHaveAttribute('aria-label', 'breadcrumb');
+
+    const separators = nav.querySelectorAll('[aria-hidden="true"]');
+    expect(separators).toHaveLength(2);
+    for (const separator of separators) {
+      expect(separator).toHaveTextContent('/');
+      expect(separator.querySelector('svg')).not.toBeInTheDocument();
+    }
+
+    expect(screen.getAllByText('이슈 상세')[0]).toHaveAttribute(
+      'aria-current',
+      'page'
+    );
+    expect(nav.querySelectorAll('[aria-current="page"]')).toHaveLength(1);
+  });
+
   it('breadcrumb shows 아카이브 YYYY-MM-DD for an archive-date origin', () => {
     setLocation('?origin=2026-07-06');
     mockReady(baseDetail());
