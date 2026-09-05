@@ -33,15 +33,45 @@ describe('ArchiveResultsTable', () => {
     // Use an ISO date rather than the ko-KR dotted format ("2026. 03. 31").
     // 2026-03-31 is a Tuesday (화) — the weekday suffix rides in the same
     // link, right after the ISO date.
-    expect(
-      screen.getByRole('link', { name: '2026-03-31 (화)' })
-    ).toHaveAttribute('href', expectedHref);
-    expect(screen.getByRole('link', { name: 'newer version' })).toHaveAttribute(
-      'href',
-      expectedHref
-    );
+    const dateLink = screen.getByRole('link', { name: '2026-03-31 (화)' });
+    const headlineLink = screen.getByRole('link', { name: 'newer version' });
+    expect(dateLink).toHaveAttribute('href', expectedHref);
+    expect(headlineLink).toHaveAttribute('href', expectedHref);
     // `pageId`는 내부 식별자다 — 운영자에게만 보인다.
     expect(screen.queryByText('pageId 42')).not.toBeInTheDocument();
+  });
+
+  it('takes the date link out of the tab order while keeping the headline link tabbable — both still point at the same href', () => {
+    render(
+      <ArchiveResultsTable
+        canViewOps={false}
+        filters={filters}
+        rows={[
+          {
+            pageId: 42,
+            businessDate: '2026-03-31',
+            headline: 'newer version',
+            status: 'READY',
+            generatedAt: '2026-03-31 06:20 KST',
+            detail: null,
+          },
+        ]}
+        scrollSearch='from=2026-03-01&to=2026-03-31'
+      />
+    );
+
+    const expectedHref = withBasePath(
+      '/market/archive/2026-03-31?pageId=42&from=2026-03-01&to=2026-03-31&page=1'
+    );
+    const dateLink = screen.getByRole('link', { name: '2026-03-31 (화)' });
+    const headlineLink = screen.getByRole('link', { name: 'newer version' });
+
+    // 같은 href를 가리키는 두 링크가 둘 다 탭 순서에 있으면 한 행에
+    // 탭 두 번이 든다 — 날짜 링크만 탭 순서에서 뺀다.
+    expect(dateLink).toHaveAttribute('tabIndex', '-1');
+    expect(headlineLink).not.toHaveAttribute('tabIndex');
+    expect(dateLink).toHaveAttribute('href', expectedHref);
+    expect(headlineLink).toHaveAttribute('href', expectedHref);
   });
 
   it('marks FAILED rows with the danger tone and shows the failure reason as a subline to an operator', () => {

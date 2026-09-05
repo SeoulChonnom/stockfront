@@ -38,8 +38,6 @@ import { ArchiveSearchFilters } from '@/pages/archive-search/archive-search-filt
 import {
   ARCHIVE_SEARCH_STATUSES,
   type ArchiveFilterDraft,
-  getMarketSummaryLabel,
-  getStatusSummaryLabel,
 } from '@/pages/archive-search/filter-copy';
 import { useLastGoodData } from '@/pages/archive-search/use-last-good-data';
 
@@ -159,36 +157,6 @@ function findThemeLabel(
   }
 
   return null;
-}
-
-function getAppliedFilterSummary(
-  filters: ArchiveSearchUrlState,
-  themeCatalog: readonly ThemeNodeResponse[]
-) {
-  const parts = [
-    `${filters.from} ~ ${filters.to}`,
-    getStatusSummaryLabel(filters.status),
-    // 칩(`ArchiveFilterChips`)과 같은 라벨 맵을 쓴다 — 여기만 원시 코드를
-    // 붙이던 탓에 같은 필터가 칩에서는 "시장 한국", 빈 상태 문구에서는
-    // "시장 KR"로 갈라져 보였다.
-    filters.market
-      ? `시장 ${getMarketSummaryLabel(filters.market)}`
-      : '시장 전체',
-  ];
-
-  if (filters.themes.length > 0) {
-    parts.push(
-      `테마 ${filters.themes
-        .map((code) => findThemeLabel(themeCatalog, code) ?? code)
-        .join(', ')}`
-    );
-  }
-
-  if (filters.q) {
-    parts.push(`검색어 ${filters.q}`);
-  }
-
-  return parts.join(' · ');
 }
 
 function isInvalidThemeError(error: Error) {
@@ -687,11 +655,7 @@ function ArchiveResultsCard({
           </h3>
           <p className='measure-error wrap-anywhere m-0 mb-3.5 text-body text-fg-soft'>
             선택한 기간에 생성된 브리프가 없거나, 상태 필터가 결과를 모두
-            제외했습니다.
-            {applied.market || applied.themes.length > 0 || applied.q
-              ? ` 적용 필터(${getAppliedFilterSummary(applied, themeCatalog)})를 확인하고`
-              : ''}{' '}
-            기간을 넓히거나 상태 필터를 해제해 보세요.
+            제외했습니다. 기간을 넓히거나 상태 필터를 해제해 보세요.
           </p>
           <Button
             className='px-4 text-body-sm'

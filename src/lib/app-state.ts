@@ -16,7 +16,7 @@ export type ListFilters = {
   page: number;
 };
 
-const MAX_ARCHIVE_THEME_SELECTIONS = 10;
+export const MAX_ARCHIVE_THEME_SELECTIONS = 10;
 
 type ParseListFiltersOptions = {
   allowedStatuses?: string[];

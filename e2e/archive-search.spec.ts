@@ -132,7 +132,7 @@ test.describe('filter apply / reset', () => {
     );
   });
 
-  test('empty results explain the applied market, theme, and keyword filters', async ({
+  test('empty results show the plain explanation once, with the applied market, theme, and keyword filters only in the chips row above', async ({
     page,
   }) => {
     await installMockApi(page, {
@@ -144,8 +144,20 @@ test.describe('filter apply / reset', () => {
     );
 
     await expect(page.getByText('조건에 맞는 스냅샷이 없습니다')).toBeVisible();
+    await expect(page.getByText(/적용 필터\(/)).toHaveCount(0);
     await expect(
-      page.getByText(/적용 필터\(.*시장 한국.*테마 업종.*검색어 rate/)
+      page.getByText(
+        '선택한 기간에 생성된 브리프가 없거나, 상태 필터가 결과를 모두 제외했습니다. 기간을 넓히거나 상태 필터를 해제해 보세요.'
+      )
+    ).toBeVisible();
+    await expect(
+      page.getByRole('list', { name: '적용된 필터' }).getByText('시장 한국')
+    ).toBeVisible();
+    await expect(
+      page.getByRole('list', { name: '적용된 필터' }).getByText('테마 업종')
+    ).toBeVisible();
+    await expect(
+      page.getByRole('list', { name: '적용된 필터' }).getByText('검색어 "rate"')
     ).toBeVisible();
   });
 });

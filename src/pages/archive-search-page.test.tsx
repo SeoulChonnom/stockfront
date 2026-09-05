@@ -207,16 +207,24 @@ describe('ArchiveSearchPage', () => {
     expect(window.location.search).not.toContain('SECTOR_SEMICONDUCTORS');
   });
 
-  it('shows the selected advanced filters in an empty-results explanation', () => {
+  it('does not repeat the applied-filter summary in the empty-results explanation — the filter chips above are the only summary', () => {
     mockUseArchiveList.mockReturnValue(
       ready({ rows: [], totalCount: 0, totalPages: 1 })
     );
 
     renderPage(new URLSearchParams('market=KR&theme=SECTOR&q=rate&page=1'));
 
+    expect(screen.queryByText(/적용 필터\(/)).not.toBeInTheDocument();
     expect(
-      screen.getByText(/적용 필터\(.*시장 한국.*테마 업종.*검색어 rate/)
+      screen.getByText(
+        '선택한 기간에 생성된 브리프가 없거나, 상태 필터가 결과를 모두 제외했습니다. 기간을 넓히거나 상태 필터를 해제해 보세요.'
+      )
     ).toBeInTheDocument();
+    // The chips row above the empty state remains the single source of
+    // "what is applied".
+    expect(screen.getByText('시장 한국')).toBeInTheDocument();
+    expect(screen.getByText('테마 업종')).toBeInTheDocument();
+    expect(screen.getByText('검색어 "rate"')).toBeInTheDocument();
   });
 
   it('renders an INVALID_THEME panel without exposing the raw server message', () => {

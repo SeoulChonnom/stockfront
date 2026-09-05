@@ -241,6 +241,12 @@ function ArchiveDataRow({
           className='tap-target tnum justify-start whitespace-nowrap text-body font-semibold text-fg underline-offset-2 hover:text-primary hover:underline group-hover:text-primary group-hover:underline'
           href={withBasePath(href)}
           onClick={onOpen}
+          /* 이 링크와 헤드라인 링크는 같은 href를 가리킨다 — 둘 다 탭
+             순서에 두면 목적지 20개에 도달하는 데 한 페이지당 40번
+             탭해야 한다. 헤드라인 쪽이 더 풍부한 접근 이름을 갖고 있으니
+             그쪽만 탭 순서에 남기고 이 링크는 뺀다. 마우스 클릭·가운데
+             클릭·우클릭은 href가 그대로라 여기서도 계속 동작한다. */
+          tabIndex={-1}
         >
           {/* Render the business date in monospaced ISO format. */}
           {record.businessDate}{' '}
