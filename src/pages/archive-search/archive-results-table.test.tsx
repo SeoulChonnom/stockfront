@@ -31,10 +31,11 @@ describe('ArchiveResultsTable', () => {
     );
 
     // Use an ISO date rather than the ko-KR dotted format ("2026. 03. 31").
-    expect(screen.getByRole('link', { name: '2026-03-31' })).toHaveAttribute(
-      'href',
-      expectedHref
-    );
+    // 2026-03-31 is a Tuesday (화) — the weekday suffix rides in the same
+    // link, right after the ISO date.
+    expect(
+      screen.getByRole('link', { name: '2026-03-31 (화)' })
+    ).toHaveAttribute('href', expectedHref);
     expect(screen.getByRole('link', { name: 'newer version' })).toHaveAttribute(
       'href',
       expectedHref
@@ -126,5 +127,161 @@ describe('ArchiveResultsTable', () => {
     expect(subline).toBeInTheDocument();
     expect(subline).not.toHaveAttribute('hidden');
     expect(subline.closest('[aria-hidden="true"]')).not.toBeInTheDocument();
+  });
+
+  it('splits a page that spans a month boundary into two groups with correct counts, in arrival order', () => {
+    render(
+      <ArchiveResultsTable
+        canViewOps={false}
+        filters={filters}
+        rows={[
+          {
+            pageId: 50,
+            businessDate: '2026-08-05',
+            headline: 'aug row 2',
+            status: 'READY',
+            generatedAt: '2026-08-05 06:00 KST',
+            detail: null,
+          },
+          {
+            pageId: 49,
+            businessDate: '2026-08-01',
+            headline: 'aug row 1',
+            status: 'READY',
+            generatedAt: '2026-08-01 06:00 KST',
+            detail: null,
+          },
+          {
+            pageId: 48,
+            businessDate: '2026-07-31',
+            headline: 'jul row',
+            status: 'READY',
+            generatedAt: '2026-07-31 06:00 KST',
+            detail: null,
+          },
+        ]}
+        scrollSearch=''
+      />
+    );
+
+    // `th[scope='colgroup']` maps to the `columnheader` role — this is the
+    // selector another agent would reach for from e2e.
+    const groupHeaders = screen.getAllByRole('columnheader', {
+      name: /년 \d+월/,
+    });
+    expect(groupHeaders).toHaveLength(2);
+    expect(groupHeaders[0]).toHaveTextContent('2026년 8월');
+    expect(groupHeaders[0]).toHaveTextContent('2건');
+    expect(groupHeaders[0]).toHaveAttribute('scope', 'colgroup');
+    expect(groupHeaders[1]).toHaveTextContent('2026년 7월');
+    expect(groupHeaders[1]).toHaveTextContent('1건');
+
+    // Rows stay in arrival (businessDate-descending) order within and
+    // across groups — grouping must not re-sort.
+    const rows = screen.getAllByRole('row');
+    const rowTexts = rows.map((row) => row.textContent ?? '');
+    expect(
+      rowTexts.findIndex((text) => text.includes('2026년 8월'))
+    ).toBeLessThan(rowTexts.findIndex((text) => text.includes('aug row 2')));
+    expect(
+      rowTexts.findIndex((text) => text.includes('aug row 2'))
+    ).toBeLessThan(rowTexts.findIndex((text) => text.includes('aug row 1')));
+    expect(
+      rowTexts.findIndex((text) => text.includes('aug row 1'))
+    ).toBeLessThan(rowTexts.findIndex((text) => text.includes('2026년 7월')));
+    expect(
+      rowTexts.findIndex((text) => text.includes('2026년 7월'))
+    ).toBeLessThan(rowTexts.findIndex((text) => text.includes('jul row')));
+  });
+
+  it('still renders a group header when a page has only one month — the count is useful on its own', () => {
+    render(
+      <ArchiveResultsTable
+        canViewOps={false}
+        filters={filters}
+        rows={[
+          {
+            pageId: 60,
+            businessDate: '2026-05-10',
+            headline: 'only row',
+            status: 'READY',
+            generatedAt: '2026-05-10 06:00 KST',
+            detail: null,
+          },
+        ]}
+        scrollSearch=''
+      />
+    );
+
+    const groupHeader = screen.getByRole('columnheader', {
+      name: /년 \d+월/,
+    });
+    expect(groupHeader).toHaveTextContent('2026년 5월');
+    expect(groupHeader).toHaveTextContent('1건');
+  });
+
+  it('suffixes the date link with the correct KST weekday, with no off-by-one at a month boundary', () => {
+    render(
+      <ArchiveResultsTable
+        canViewOps={false}
+        filters={filters}
+        rows={[
+          {
+            pageId: 70,
+            businessDate: '2026-08-01',
+            headline: 'month-boundary row',
+            status: 'READY',
+            generatedAt: '2026-08-01 06:00 KST',
+            detail: null,
+          },
+        ]}
+        scrollSearch=''
+      />
+    );
+
+    // 2026-08-01 is a Saturday (토). Parsing this as a naive local/UTC
+    // `Date` at the wrong offset would drift to Friday (금) or Sunday (일).
+    expect(
+      screen.getByRole('link', { name: 'month-boundary row' })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('link', { name: '2026-08-01 (토)' })
+    ).toBeInTheDocument();
+  });
+
+  it('keeps pageId and the failure-reason subline out of the DOM for a regular user even across grouped months', () => {
+    render(
+      <ArchiveResultsTable
+        canViewOps={false}
+        filters={filters}
+        rows={[
+          {
+            pageId: 81,
+            businessDate: '2026-08-01',
+            headline: 'aug row',
+            status: 'FAILED',
+            generatedAt: '2026-08-01 06:00 KST',
+            detail: '뉴스 수집 단계에서 provider 타임아웃이 발생했습니다.',
+          },
+          {
+            pageId: 80,
+            businessDate: '2026-07-30',
+            headline: 'jul row',
+            status: 'FAILED',
+            generatedAt: '2026-07-30 06:00 KST',
+            detail: '지수 provider 응답이 지연되었습니다.',
+          },
+        ]}
+        scrollSearch=''
+      />
+    );
+
+    expect(screen.queryByText(/pageId \d+/)).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('뉴스 수집 단계에서 provider 타임아웃이 발생했습니다.')
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('지수 provider 응답이 지연되었습니다.')
+    ).not.toBeInTheDocument();
   });
 });

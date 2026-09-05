@@ -36,8 +36,12 @@ test.describe('filter apply / reset', () => {
     await installMockApi(page, { scenario: 'ready' });
     await page.goto('market/archive/search');
 
-    await page.getByLabel('시장').selectOption('KR');
-    await page.getByLabel('키워드').fill('rate');
+    await page.getByLabel('시장', { exact: true }).selectOption('KR');
+    await page.getByLabel('키워드', { exact: true }).fill('rate');
+    // 테마 체크박스는 이제 `테마 전체` 트리거가 여는 팝오버 안에 있다.
+    await page
+      .getByRole('button', { name: /^테마 (전체|\d+개 선택)$/ })
+      .click();
     await page.getByRole('checkbox', { name: '업종', exact: true }).check();
     await page
       .getByRole('checkbox', { name: '투자자 수급', exact: true })
@@ -68,8 +72,15 @@ test.describe('filter apply / reset', () => {
       'SECTOR',
       'MARKET_FLOW_INVESTOR',
     ]);
-    await expect(page.getByLabel('시장')).toHaveValue('KR');
-    await expect(page.getByLabel('키워드')).toHaveValue('rate');
+    await expect(page.getByLabel('시장', { exact: true })).toHaveValue('KR');
+    await expect(page.getByLabel('키워드', { exact: true })).toHaveValue(
+      'rate'
+    );
+    // 적용 뒤 트리거 바깥을 클릭한 제출 동작이 팝오버를 닫으므로, 체크
+    // 상태를 다시 보려면 팝오버를 다시 연다.
+    await page
+      .getByRole('button', { name: /^테마 (전체|\d+개 선택)$/ })
+      .click();
     await expect(
       page.getByRole('checkbox', { name: '업종', exact: true })
     ).toBeChecked();
@@ -86,8 +97,11 @@ test.describe('filter apply / reset', () => {
     consoleGuard.allowFailedRequest(/pages\/archive/);
     await page.goto('market/archive/search');
 
-    await page.getByLabel('시장').selectOption('US');
-    await page.getByLabel('키워드').fill('macro');
+    await page.getByLabel('시장', { exact: true }).selectOption('US');
+    await page.getByLabel('키워드', { exact: true }).fill('macro');
+    await page
+      .getByRole('button', { name: /^테마 (전체|\d+개 선택)$/ })
+      .click();
     await page
       .getByRole('checkbox', { name: '업종 / 반도체', exact: true })
       .check();
@@ -99,16 +113,23 @@ test.describe('filter apply / reset', () => {
     await expect(page).toHaveURL(/page=2/);
     await page.goBack();
     await expect(page).toHaveURL(/page=1/);
-    await expect(page.getByLabel('시장')).toHaveValue('US');
-    await expect(page.getByLabel('키워드')).toHaveValue('macro');
+    await expect(page.getByLabel('시장', { exact: true })).toHaveValue('US');
+    await expect(page.getByLabel('키워드', { exact: true })).toHaveValue(
+      'macro'
+    );
+    await page
+      .getByRole('button', { name: /^테마 (전체|\d+개 선택)$/ })
+      .click();
     await expect(
       page.getByRole('checkbox', { name: '업종 / 반도체', exact: true })
     ).toBeChecked();
 
     await page.goForward();
     await expect(page).toHaveURL(/page=2/);
-    await expect(page.getByLabel('시장')).toHaveValue('US');
-    await expect(page.getByLabel('키워드')).toHaveValue('macro');
+    await expect(page.getByLabel('시장', { exact: true })).toHaveValue('US');
+    await expect(page.getByLabel('키워드', { exact: true })).toHaveValue(
+      'macro'
+    );
   });
 
   test('empty results explain the applied market, theme, and keyword filters', async ({
@@ -126,6 +147,41 @@ test.describe('filter apply / reset', () => {
     await expect(
       page.getByText(/적용 필터\(.*시장 KR.*테마 업종.*검색어 rate/)
     ).toBeVisible();
+  });
+});
+
+test.describe('filter chips', () => {
+  test('removing a filter via its chip drops only that filter and keeps the date range', async ({
+    page,
+  }) => {
+    await installMockApi(page, { scenario: 'ready' });
+    await page.goto(
+      'market/archive/search?from=2026-07-13&to=2026-07-27&market=KR&theme=SECTOR&q=rate'
+    );
+
+    await expect(page.getByText('시장 KR')).toBeVisible();
+
+    await page.getByRole('button', { name: '시장 KR 필터 해제' }).click();
+
+    await expect(page).toHaveURL(/from=2026-07-13/);
+    await expect(page).toHaveURL(/to=2026-07-27/);
+    await expect(page).not.toHaveURL(/market=KR/);
+    await expect(page).toHaveURL(/theme=SECTOR/);
+    await expect(page).toHaveURL(/q=rate/);
+    await expect(page).toHaveURL(/page=1/);
+    await expect(page.locator('[aria-live="polite"]')).toContainText(
+      '시장 필터를 해제했습니다.'
+    );
+
+    await page.getByRole('button', { name: '전체 해제' }).click();
+
+    await expect(page).toHaveURL(/from=2026-07-13/);
+    await expect(page).toHaveURL(/to=2026-07-27/);
+    await expect(page).not.toHaveURL(/theme=SECTOR/);
+    await expect(page).not.toHaveURL(/q=rate/);
+    await expect(page.locator('[aria-live="polite"]')).toContainText(
+      '모든 필터를 해제했습니다.'
+    );
   });
 });
 
@@ -218,13 +274,19 @@ test.describe('browser Back (Archive Search)', () => {
     await page.getByRole('button', { name: '다음' }).click(); // page=2
     await expect(page).toHaveURL(/page=2/);
 
+    // 표는 이제 월별로 묶인다 — 각 월 밴드가 그룹 헤더(columnheader)로
+    // 노출되는지 여기서 함께 확인한다.
+    await expect(
+      page.getByRole('columnheader', { name: /년 \d+월/ }).first()
+    ).toBeVisible();
+
     await page.evaluate(() => window.scrollTo(0, 500));
     await page.waitForTimeout(50);
     const scrollYBeforeNavigation = await page.evaluate(() => window.scrollY);
     expect(scrollYBeforeNavigation).toBeGreaterThan(0);
 
     const firstRowLink = page
-      .locator('table tbody tr')
+      .locator('table tbody tr:has(td)')
       .first()
       .locator('a')
       .first();
@@ -282,12 +344,12 @@ test.describe('Retry (Archive Search)', () => {
   }) => {
     await installMockApi(page, { scenario: 'ready' });
     await page.goto('market/archive/search?status=READY&page=1');
-    await expect(page.locator('table tbody tr').first()).toBeVisible();
+    await expect(page.locator('table tbody tr:has(td)').first()).toBeVisible();
     // Just the pageId subline — robust against the responsive collapse of
     // the "생성 시각" column into a subline at narrower widths, unlike a
     // whole-row text comparison.
     const firstPageIdBefore = await page
-      .locator('table tbody tr')
+      .locator('table tbody tr:has(td)')
       .first()
       .getByText(/pageId \d+/)
       .innerText();
@@ -324,7 +386,7 @@ test.describe('Retry (Archive Search)', () => {
     // Filters and previous rows stay visible through a failed refresh.
     await expect(
       page
-        .locator('table tbody tr')
+        .locator('table tbody tr:has(td)')
         .first()
         .getByText(/pageId \d+/)
     ).toHaveText(firstPageIdBefore);
@@ -336,7 +398,7 @@ test.describe('Retry (Archive Search)', () => {
     await expect(
       page.getByText('데이터를 불러오지 못했습니다')
     ).not.toBeVisible();
-    await expect(page.locator('table tbody tr').first()).toBeVisible();
+    await expect(page.locator('table tbody tr:has(td)').first()).toBeVisible();
   });
 });
 

@@ -195,6 +195,9 @@ describe('ArchiveSearchPage', () => {
 
     await user.selectOptions(screen.getByLabelText('시장'), 'KR');
     await user.type(screen.getByLabelText('키워드'), 'rate');
+    await user.click(
+      screen.getByRole('button', { name: /^테마 (전체|\d+개 선택)$/ })
+    );
     await user.click(screen.getByRole('checkbox', { name: '업종' }));
     await user.click(screen.getByRole('button', { name: '필터 적용' }));
 
@@ -241,7 +244,8 @@ describe('ArchiveSearchPage', () => {
     expect(alert).not.toHaveTextContent('internal theme detail');
   });
 
-  it('shows a catalog error state while keeping non-theme archive search usable', () => {
+  it('shows a catalog error state while keeping non-theme archive search usable', async () => {
+    const user = userEvent.setup();
     mockUseArchiveThemes.mockReturnValue({
       data: undefined,
       error: new Error('catalog down'),
@@ -252,6 +256,9 @@ describe('ArchiveSearchPage', () => {
     mockUseArchiveList.mockReturnValue(ready());
 
     renderPage();
+    await user.click(
+      screen.getByRole('button', { name: /^테마 (전체|\d+개 선택)$/ })
+    );
 
     expect(screen.getByRole('status')).toHaveTextContent(
       '테마 목록을 불러오지 못했습니다.'
@@ -280,6 +287,42 @@ describe('ArchiveSearchPage', () => {
     expect(window.location.search).toBe(
       '?from=2026-07-10&to=2026-07-27&market=US&theme=SECTOR&theme=CORPORATE_EVENT&q=rate&page=1'
     );
+  });
+
+  it('removing a filter via its chip keeps the date range, resets page, and announces the removal', async () => {
+    const user = userEvent.setup();
+    mockUseArchiveList.mockReturnValue(ready());
+
+    renderPage(
+      new URLSearchParams(
+        'from=2026-07-13&to=2026-07-27&page=3&market=US&theme=SECTOR&q=rate'
+      )
+    );
+
+    await user.click(screen.getByRole('button', { name: '시장 US 필터 해제' }));
+
+    expect(window.location.search).toBe(
+      '?from=2026-07-13&to=2026-07-27&theme=SECTOR&q=rate&page=1'
+    );
+    expect(getLiveRegionText()).toBe('시장 필터를 해제했습니다.');
+  });
+
+  it('전체 해제 clears every non-date filter but keeps the date range', async () => {
+    const user = userEvent.setup();
+    mockUseArchiveList.mockReturnValue(ready());
+
+    renderPage(
+      new URLSearchParams(
+        'from=2026-07-13&to=2026-07-27&page=3&market=US&theme=SECTOR&q=rate'
+      )
+    );
+
+    await user.click(screen.getByRole('button', { name: '전체 해제' }));
+
+    expect(window.location.search).toBe(
+      '?from=2026-07-13&to=2026-07-27&page=1'
+    );
+    expect(getLiveRegionText()).toBe('모든 필터를 해제했습니다.');
   });
 
   it('removes inactive URL theme codes once after the catalog has loaded', () => {

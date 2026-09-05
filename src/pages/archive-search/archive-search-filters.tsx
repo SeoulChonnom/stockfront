@@ -6,8 +6,6 @@ import {
 } from '@/components/domain/filter-bar';
 import { useFilterDraft } from '@/components/domain/use-filter-draft';
 import { useAnnounce } from '@/components/shell/use-announce';
-import { InlineAlert } from '@/components/state';
-import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import {
@@ -17,12 +15,11 @@ import {
 import type { ThemeNodeResponse } from '@/lib/api/types';
 import { cn } from '@/lib/utils';
 
-import { ArchiveThemeTree } from '@/pages/archive-search/archive-theme-tree';
+import { ArchiveThemeSelect } from '@/pages/archive-search/archive-theme-select';
 import {
   type ArchiveFilterDraft,
   getDefaultArchiveFilters,
   getStatusOptions,
-  getStatusSummaryLabel,
   validateArchiveFilters,
 } from '@/pages/archive-search/filter-copy';
 
@@ -53,24 +50,6 @@ function sameValues(left: readonly string[], right: readonly string[]) {
     left.length === right.length &&
     left.every((value, index) => value === right[index])
   );
-}
-
-function findThemeLabel(
-  nodes: readonly ThemeNodeResponse[],
-  code: string
-): string | null {
-  for (const node of nodes) {
-    if (node.code === code) {
-      return node.label;
-    }
-
-    const childLabel = findThemeLabel(node.children, code);
-    if (childLabel) {
-      return childLabel;
-    }
-  }
-
-  return null;
 }
 
 export function ArchiveSearchFilters({
@@ -134,21 +113,12 @@ export function ArchiveSearchFilters({
     }
   }
 
-  function getAppliedThemeSummary() {
-    if (applied.themes.length === 0) {
-      return '테마 전체';
-    }
-
-    return `테마 ${applied.themes
-      .map((code) => findThemeLabel(catalog, code) ?? code)
-      .join(', ')}`;
-  }
-
   return (
     <section aria-labelledby='archive-filter-heading'>
       {/* Use 16px vertical and 18px horizontal card padding at all widths. */}
-      <Card className='flex flex-col gap-3 px-[18px] py-4'>
-        {/* Keep the heading and applied summary in one wrapping row. */}
+      <Card className='flex flex-col gap-2.5 px-[18px] py-4'>
+        {/* 적용 필터 요약은 이제 결과 카드 위의 칩 한 줄이 유일한 출처다 —
+            여기는 "필터"라는 제목과 미적용 변경 배지만 남긴다. */}
         <div className='flex flex-wrap items-center gap-2.5'>
           <h2
             className='m-0 text-label font-semibold tracking-caps text-fg-soft uppercase'
@@ -156,21 +126,14 @@ export function ArchiveSearchFilters({
           >
             필터
           </h2>
-          <span className='tnum wrap-anywhere text-body-sm text-faint'>
-            적용됨 · {applied.from} ~ {applied.to} ·{' '}
-            {getStatusSummaryLabel(applied.status)}
-          </span>
-          {applied.market || applied.themes.length > 0 || applied.q ? (
-            <span className='tnum wrap-anywhere text-body-sm text-faint'>
-              {applied.market ? `시장 ${applied.market}` : '시장 전체'} ·{' '}
-              {getAppliedThemeSummary()}
-              {applied.q ? ` · 검색어 ${applied.q}` : ''}
-            </span>
-          ) : null}
           <FilterDirtyBadge isDirty={isDirty} />
         </div>
 
-        <FilterBar className='gap-3.5' onReset={reset} onSubmit={handleSubmit}>
+        <FilterBar
+          className='gap-3 [&_label]:mb-[5px]'
+          onReset={reset}
+          onSubmit={handleSubmit}
+        >
           {/* No native `max`/`min` here on purpose: an HTML5
               constraint-violating value makes the browser (and jsdom)
               silently block the form's `submit` event before it ever
@@ -231,65 +194,35 @@ export function ArchiveSearchFilters({
               {...getFieldProps('q')}
             />
           </FilterField>
-          {/* 테마도 다른 필드와 같은 문법을 쓴다: 라벨이 위에 서고, 그 아래
-              컨트롤이 `--line-strong` 테두리를 두른다. 예전에는 이 필드만
-              `<legend>`이 테두리에 파여 들어간 fieldset 박스여서, 같은 폼
-              안에서 혼자 다른 종족처럼 보였다. `<fieldset>`/`<legend>` 자체는
-              체크박스 묶음의 접근성 그룹이라 유지하고, 테두리만 옮긴다. */}
-          <fieldset className='min-w-0 min-[1181px]:col-span-3'>
-            <legend className='mb-1 block text-label font-semibold text-fg-soft'>
-              테마
-            </legend>
-            <p
-              className='measure-error m-0 mb-2 text-body-sm text-faint'
-              id='archive-theme-help'
+          {/* 테마는 이제 트리를 항상 펼치지 않는다 — 팝오버 트리거 하나가
+              다른 필드와 같은 그리드 셀을 차지한다. 로딩/에러/빈 카탈로그
+              분기와 도움말 문구는 `ArchiveThemeSelect` 팝오버 안으로
+              옮겨갔다.
+
+              이 칸만 `FilterField`를 쓰지 않는다. 트리거는 `<input>`이
+              아니라 `<button>`이고, `<button>`은 labelable 요소라서
+              `<label for>`가 붙는 순간 그 라벨이 버튼의 접근 이름을
+              **덮어쓴다**. 그러면 눈으로는 "테마 3개 선택"을 보는데
+              스크린 리더는 "테마"만 읽어 현재 선택이 사라진다. 그래서
+              시각 라벨은 정렬을 위해 남기되 `aria-hidden`으로 접근성
+              트리에서 빼고, 이름은 버튼 자신의 문구가 갖게 한다. */}
+          <div className='min-w-0'>
+            <span
+              aria-hidden='true'
+              className='mb-[5px] block text-label font-semibold text-fg-soft'
             >
-              부모와 자식 테마를 각각 선택할 수 있습니다. 선택한 테마는 최대
-              10개이며, 선택한 부모의 하위 테마를 URL에 자동으로 추가하지
-              않습니다.
-            </p>
-            {themeCatalogLoading ? (
-              <div
-                className='rounded-md bg-surface-2 px-3 py-3 text-body-sm text-faint'
-                role='status'
-              >
-                테마 목록을 불러오는 중입니다.
-              </div>
-            ) : themeCatalogError ? (
-              <InlineAlert
-                actions={
-                  <Button
-                    onClick={onRetryThemeCatalog}
-                    size='sm'
-                    type='button'
-                    variant='secondary'
-                  >
-                    테마 다시 시도
-                  </Button>
-                }
-                className='bg-card'
-                ariaLive='polite'
-                role='status'
-                title='테마 목록을 불러오지 못했습니다.'
-                tone='danger'
-              >
-                잠시 후 다시 시도해 주세요. 테마를 선택하지 않은 검색은 계속
-                사용할 수 있습니다.
-              </InlineAlert>
-            ) : catalog.length === 0 ? (
-              <p className='m-0 rounded-md bg-surface-2 px-3 py-3 text-body-sm text-faint'>
-                선택할 수 있는 테마가 없습니다.
-              </p>
-            ) : (
-              <div className='rounded-md border border-line-strong bg-card px-3 py-2.5'>
-                <ArchiveThemeTree
-                  nodes={catalog}
-                  onChange={setSelectedThemes}
-                  selectedCodes={selectedThemes}
-                />
-              </div>
-            )}
-          </fieldset>
+              테마
+            </span>
+            <ArchiveThemeSelect
+              catalog={catalog}
+              error={themeCatalogError}
+              isLoading={themeCatalogLoading}
+              onChange={setSelectedThemes}
+              onRetry={onRetryThemeCatalog}
+              selectedCodes={selectedThemes}
+              triggerId='archive-theme-trigger'
+            />
+          </div>
         </FilterBar>
       </Card>
     </section>

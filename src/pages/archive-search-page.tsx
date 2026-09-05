@@ -29,6 +29,7 @@ import { formatInteger } from '@/lib/formatters';
 import { useArchiveList, useArchiveThemes } from '@/lib/query-hooks';
 import { buildUrl, navigate } from '@/lib/router';
 import type { ArchiveListView } from '@/lib/view-models';
+import { ArchiveFilterChips } from '@/pages/archive-search/archive-filter-chips';
 import { ArchiveResultsTable } from '@/pages/archive-search/archive-results-table';
 import { ArchiveSearchFilters } from '@/pages/archive-search/archive-search-filters';
 import {
@@ -124,6 +125,14 @@ function buildArchiveSearchUrl(filters: ArchiveSearchUrlState) {
 
 function buildFiltersKey(filters: ArchiveSearchUrlState) {
   return `${filters.from}:${filters.to}:${filters.status}:${filters.market}:${filters.themes.join(',')}:${filters.q}:${filters.page}`;
+}
+
+/** 칩 해제는 항상 같은 기준일 범위를 들고 page=1로 되돌아간다. */
+function buildFilterRemovalUrl(
+  current: ArchiveSearchUrlState,
+  overrides: Partial<ArchiveSearchUrlState>
+) {
+  return buildArchiveSearchUrl({ ...current, page: 1, ...overrides });
 }
 
 function toArchiveStatus(value: string): ArchiveStatusResponse | undefined {
@@ -353,6 +362,52 @@ export function ArchiveSearchPage({
     );
   }
 
+  // 칩 해제는 필터 적용과 달리 결과 개수를 다시 안내하지 않는다 — "무엇을
+  // 해제했는지"가 바로 이어질 결과 변화보다 사용자에게 더 급한 정보다.
+  function handleRemoveStatus() {
+    focusAndScrollToResults();
+    navigate(buildFilterRemovalUrl(applied, { status: '' }));
+    announce('생성 상태 필터를 해제했습니다.');
+  }
+
+  function handleRemoveMarket() {
+    focusAndScrollToResults();
+    navigate(buildFilterRemovalUrl(applied, { market: '' }));
+    announce('시장 필터를 해제했습니다.');
+  }
+
+  function handleRemoveTheme(code: string) {
+    const label = findThemeLabel(archiveThemesQuery.data ?? [], code) ?? code;
+    focusAndScrollToResults();
+    navigate(
+      buildFilterRemovalUrl(applied, {
+        themes: applied.themes.filter((theme) => theme !== code),
+      })
+    );
+    announce(`테마 ${label} 필터를 해제했습니다.`);
+  }
+
+  function handleRemoveQuery() {
+    focusAndScrollToResults();
+    navigate(buildFilterRemovalUrl(applied, { q: '' }));
+    announce('검색어 필터를 해제했습니다.');
+  }
+
+  // 필터 카드의 `초기화`(handleReset)와 달리 기준일 범위는 건드리지 않는다
+  // — 칩 목록의 "전체 해제"는 날짜 밖 필터만 걷어내는 별도 동작이다.
+  function handleResetAllFilters() {
+    focusAndScrollToResults();
+    navigate(
+      buildFilterRemovalUrl(applied, {
+        status: '',
+        market: '',
+        themes: [],
+        q: '',
+      })
+    );
+    announce('모든 필터를 해제했습니다.');
+  }
+
   return (
     <div className='flex min-w-0 flex-col gap-[var(--gap)]'>
       <section className='flex flex-col gap-1.5'>
@@ -366,9 +421,8 @@ export function ArchiveSearchPage({
         {/* Keep the summary measure at 70ch rather than the shared 76ch.
             The title section's 6px flex gap replaces paragraph margin. */}
         <p className='measure-summary wrap-anywhere text-body text-fg-soft'>
-          기준일 범위와 생성 상태로 과거 스냅샷을 찾습니다. 결과를 열면 해당
-          날짜의 시장 브리프로 이동하고, 돌아올 때 필터·페이지·스크롤 위치가
-          복원됩니다.
+          기준일 범위와 생성 상태로 과거 스냅샷을 찾습니다. 결과를 열고 돌아오면
+          필터와 위치가 그대로 복원됩니다.
         </p>
       </section>
 
@@ -418,7 +472,12 @@ export function ArchiveSearchPage({
         isFetching={archiveQuery.isFetching}
         isInitialLoading={isInitialLoading}
         onPageChange={handlePageChange}
+        onRemoveMarket={handleRemoveMarket}
+        onRemoveQuery={handleRemoveQuery}
+        onRemoveStatus={handleRemoveStatus}
+        onRemoveTheme={handleRemoveTheme}
         onReset={handleReset}
+        onResetAllFilters={handleResetAllFilters}
         resultsHeadingRef={resultsHeadingRef}
         searchParams={searchParams}
         themeCatalog={archiveThemesQuery.data ?? []}
@@ -434,7 +493,12 @@ function ArchiveResultsCard({
   isFetching,
   isInitialLoading,
   onPageChange,
+  onRemoveMarket,
+  onRemoveQuery,
+  onRemoveStatus,
+  onRemoveTheme,
   onReset,
+  onResetAllFilters,
   resultsHeadingRef,
   searchParams,
   themeCatalog,
@@ -445,7 +509,12 @@ function ArchiveResultsCard({
   isFetching: boolean;
   isInitialLoading: boolean;
   onPageChange: (page: number) => void;
+  onRemoveMarket: () => void;
+  onRemoveQuery: () => void;
+  onRemoveStatus: () => void;
+  onRemoveTheme: (code: string) => void;
   onReset: () => void;
+  onResetAllFilters: () => void;
   resultsHeadingRef: RefObject<HTMLHeadingElement | null>;
   searchParams: URLSearchParams;
   themeCatalog: readonly ThemeNodeResponse[];
@@ -458,37 +527,51 @@ function ArchiveResultsCard({
       aria-busy={isInitialLoading || undefined}
       className='flex min-w-0 flex-col overflow-hidden'
     >
+      {/* 제목·건수·범위·칩이 전부 같은 줄에서 시작해 필요할 때만 접힌다.
+          별도 줄로 떼어 놓았더니 칩이 기간 하나뿐인 기본 상태에서도 한
+          줄을 통째로 먹었다 — 결과를 밀어내지 않는 것이 이 화면의 전부라
+          그 한 줄이 아깝다. */}
       <div
-        className='flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-line px-[18px] py-3.5'
+        className='flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-line px-[18px] py-3'
         data-arrival-host=''
       >
         <div className='flex flex-wrap items-center gap-x-3 gap-y-2'>
-          <h2
-            className='m-0 scroll-mt-24 text-h2 font-semibold text-fg focus:outline-none'
-            id='archive-results-heading'
-            ref={resultsHeadingRef}
-            tabIndex={-1}
-          >
-            검색 결과
-          </h2>
-          {data ? (
-            <span className='tnum text-body-sm font-semibold text-fg'>
-              {formatInteger(data.totalCount)}건
-            </span>
-          ) : null}
-          {/* The result range lives next to the heading rather than beside the pager. */}
-          {data && data.totalCount > 0 ? (
-            <span className='tnum text-body-sm text-faint'>
-              {(data.page - 1) * PAGE_SIZE + 1}–
-              {Math.min(data.page * PAGE_SIZE, data.totalCount)} /{' '}
-              {data.totalCount}
-            </span>
-          ) : null}
-          <span className='wrap-anywhere text-body-sm text-faint'>
-            {getAppliedFilterSummary(applied, themeCatalog)}
-          </span>
+          <div className='flex flex-wrap items-center gap-x-3 gap-y-2'>
+            <h2
+              className='m-0 scroll-mt-24 text-h2 font-semibold text-fg focus:outline-none'
+              id='archive-results-heading'
+              ref={resultsHeadingRef}
+              tabIndex={-1}
+            >
+              검색 결과
+            </h2>
+            {data ? (
+              <span className='tnum text-body-sm font-semibold text-fg'>
+                {formatInteger(data.totalCount)}건
+              </span>
+            ) : null}
+            {/* The result range lives next to the heading rather than beside the pager. */}
+            {data && data.totalCount > 0 ? (
+              <span className='tnum text-body-sm text-faint'>
+                {(data.page - 1) * PAGE_SIZE + 1}–
+                {Math.min(data.page * PAGE_SIZE, data.totalCount)} /{' '}
+                {data.totalCount}
+              </span>
+            ) : null}
+          </div>
+          {isFetching && !isInitialLoading ? <RefetchBadge /> : null}
         </div>
-        {isFetching && !isInitialLoading ? <RefetchBadge /> : null}
+        {/* 적용 필터의 유일한 요약처: 필터 카드·이 헤더에 흩어져 있던 세
+            군데의 문자열 요약을 여기 칩으로 합쳤다. */}
+        <ArchiveFilterChips
+          applied={applied}
+          onRemoveMarket={onRemoveMarket}
+          onRemoveQuery={onRemoveQuery}
+          onRemoveStatus={onRemoveStatus}
+          onRemoveTheme={onRemoveTheme}
+          onResetAll={onResetAllFilters}
+          themeCatalog={themeCatalog}
+        />
       </div>
 
       {isInitialLoading ? (

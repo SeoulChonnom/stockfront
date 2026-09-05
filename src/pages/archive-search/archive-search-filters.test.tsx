@@ -68,14 +68,6 @@ function renderFilters(
 }
 
 describe('ArchiveSearchFilters', () => {
-  it('renders the applied filters as a tnum summary line', () => {
-    renderFilters();
-
-    expect(
-      screen.getByText('적용됨 · 2026-07-13 ~ 2026-07-27 · 전체 상태')
-    ).toBeInTheDocument();
-  });
-
   it('does not call onApply while typing — draft/applied stay separate until submit', () => {
     const onApply = vi.fn();
     renderWithAnnounce(
@@ -214,6 +206,9 @@ describe('ArchiveSearchFilters', () => {
 
     await user.selectOptions(screen.getByLabelText('시장'), 'KR');
     await user.type(screen.getByLabelText('키워드'), 'rate');
+    await user.click(
+      screen.getByRole('button', { name: /^테마 (전체|\d+개 선택)$/ })
+    );
     await user.click(screen.getByRole('checkbox', { name: '업종' }));
     await user.click(screen.getByRole('checkbox', { name: '업종 / 반도체' }));
     await user.click(screen.getByRole('button', { name: '필터 적용' }));
@@ -228,7 +223,37 @@ describe('ArchiveSearchFilters', () => {
     });
   });
 
-  it('shows explicit loading, empty, and error states for the catalog', () => {
+  /*
+   * 트리거는 `<button>`이고 `<button>`은 labelable 요소다. 그래서 옆에
+   * `<label for>`를 붙이면 그 라벨이 버튼 자신의 문구를 덮어써서, 눈으로는
+   * "테마 2개 선택"을 보는데 스크린 리더는 "테마"만 읽게 된다. 시각 라벨을
+   * `aria-hidden`으로 뺀 이유가 이것이고, 이 테스트가 그 선택을 고정한다.
+   */
+  it('keeps the selection count in the theme trigger accessible name', async () => {
+    const user = userEvent.setup();
+    renderWithAnnounce(
+      <ArchiveSearchFilters
+        applied={applied}
+        onApply={vi.fn()}
+        onReset={vi.fn()}
+        themeCatalog={catalog}
+      />
+    );
+
+    expect(
+      screen.getByRole('button', { name: '테마 전체' })
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: '테마 전체' }));
+    await user.click(screen.getByRole('checkbox', { name: '업종' }));
+
+    expect(
+      screen.getByRole('button', { name: '테마 1개 선택' })
+    ).toBeInTheDocument();
+  });
+
+  it('shows explicit loading, empty, and error states for the catalog inside the theme popover', async () => {
+    const user = userEvent.setup();
     const { rerender } = renderWithAnnounce(
       <ArchiveSearchFilters
         applied={applied}
@@ -237,6 +262,9 @@ describe('ArchiveSearchFilters', () => {
         themeCatalog={undefined}
         themeCatalogLoading
       />
+    );
+    await user.click(
+      screen.getByRole('button', { name: /^테마 (전체|\d+개 선택)$/ })
     );
     expect(screen.getByRole('status')).toHaveTextContent(
       '테마 목록을 불러오는 중입니다.'
@@ -272,7 +300,7 @@ describe('ArchiveSearchFilters', () => {
     expect(screen.getByRole('status')).toHaveTextContent(
       '테마 목록을 불러오지 못했습니다.'
     );
-    screen.getByRole('button', { name: '테마 다시 시도' }).click();
+    await user.click(screen.getByRole('button', { name: '테마 다시 시도' }));
     expect(retry).toHaveBeenCalledTimes(1);
   });
 });
