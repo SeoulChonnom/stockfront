@@ -209,6 +209,7 @@ export function ArchiveSearchPage({
   const appliedStatus = applied.status;
   const appliedMarket = applied.market;
   const appliedQuery = applied.q;
+  const appliedPage = applied.page;
   const { can } = useCapabilities();
   const audience: Audience = { canViewOps: can('ops.view') };
   const archiveThemesQuery = useArchiveThemes(true);
@@ -230,10 +231,12 @@ export function ArchiveSearchPage({
     ...(themesForQuery.length > 0 ? { theme: themesForQuery } : {}),
     ...(applied.q ? { q: applied.q } : {}),
   };
+  const isArchiveQueryEnabled =
+    applied.themes.length === 0 ||
+    (archiveThemesQuery.isSuccess && themesMatchCatalog);
   const archiveQuery = useArchiveList(
     archiveQueryParams,
-    applied.themes.length === 0 ||
-      (archiveThemesQuery.isSuccess && themesMatchCatalog)
+    isArchiveQueryEnabled
   );
 
   useEffect(() => {
@@ -294,6 +297,53 @@ export function ArchiveSearchPage({
   const errorPresentation = archiveQuery.error
     ? getArchiveSearchErrorPresentation(archiveQuery.error, audience)
     : null;
+
+  // Self-heals a `page` the result set has outgrown — reachable by
+  // bookmarking a deep page, sharing the URL, narrowing filters after
+  // paging in, or pressing Back into a now-shorter result set. `replace`
+  // keeps the broken URL out of history. This cannot loop: the target page
+  // is `totalPages` itself, which is never greater than itself.
+  useEffect(() => {
+    // While the theme-catalog effect above still has an invalid URL theme to
+    // prune, `archiveQuery` is disabled for these filters and its `data` (if
+    // any) belongs to a stale, unrelated query — not to `appliedPage`. Wait
+    // for that correction (and the resulting re-query) before judging
+    // whether `appliedPage` is out of range.
+    if (!isArchiveQueryEnabled || !archiveQuery.data) {
+      return;
+    }
+
+    const { totalPages } = archiveQuery.data;
+    if (totalPages < 1 || appliedPage <= totalPages) {
+      return;
+    }
+
+    const themes =
+      appliedThemesKey.length > 0 ? appliedThemesKey.split('\u0000') : [];
+
+    navigate(
+      buildArchiveSearchUrl({
+        from: appliedFrom,
+        to: appliedTo,
+        status: appliedStatus,
+        market: appliedMarket,
+        themes,
+        q: appliedQuery,
+        page: totalPages,
+      }),
+      { replace: true }
+    );
+  }, [
+    appliedFrom,
+    appliedMarket,
+    appliedPage,
+    appliedQuery,
+    appliedStatus,
+    appliedThemesKey,
+    appliedTo,
+    archiveQuery.data,
+    isArchiveQueryEnabled,
+  ]);
 
   useEffect(() => {
     if (pendingApplyAnnounceKeyRef.current !== appliedKey) {
@@ -465,23 +515,30 @@ export function ArchiveSearchPage({
         </InlineAlert>
       ) : null}
 
-      <ArchiveResultsCard
-        applied={applied}
-        canViewOps={audience.canViewOps}
-        data={displayData}
-        isFetching={archiveQuery.isFetching}
-        isInitialLoading={isInitialLoading}
-        onPageChange={handlePageChange}
-        onRemoveMarket={handleRemoveMarket}
-        onRemoveQuery={handleRemoveQuery}
-        onRemoveStatus={handleRemoveStatus}
-        onRemoveTheme={handleRemoveTheme}
-        onReset={handleReset}
-        onResetAllFilters={handleResetAllFilters}
-        resultsHeadingRef={resultsHeadingRef}
-        searchParams={searchParams}
-        themeCatalog={archiveThemesQuery.data ?? []}
-      />
+      {/* A first load that errors has neither data nor a skeleton to show —
+          rendering the card then would paint an empty header strip over
+          blank space beneath the error alert above. `useLastGoodData` keeps
+          `displayData` populated across later errors, so this only
+          suppresses the genuinely empty first-load case. */}
+      {displayData !== null || isInitialLoading ? (
+        <ArchiveResultsCard
+          applied={applied}
+          canViewOps={audience.canViewOps}
+          data={displayData}
+          isFetching={archiveQuery.isFetching}
+          isInitialLoading={isInitialLoading}
+          onPageChange={handlePageChange}
+          onRemoveMarket={handleRemoveMarket}
+          onRemoveQuery={handleRemoveQuery}
+          onRemoveStatus={handleRemoveStatus}
+          onRemoveTheme={handleRemoveTheme}
+          onReset={handleReset}
+          onResetAllFilters={handleResetAllFilters}
+          resultsHeadingRef={resultsHeadingRef}
+          searchParams={searchParams}
+          themeCatalog={archiveThemesQuery.data ?? []}
+        />
+      ) : null}
     </div>
   );
 }
@@ -521,6 +578,18 @@ function ArchiveResultsCard({
 }) {
   const announce = useAnnounce();
   const rows = data?.rows ?? [];
+  // Derived from the rows actually returned (not page * PAGE_SIZE) so an
+  // out-of-range `page` — one beyond `totalPages` — can never render a
+  // reversed range like "21–4 / 4". `null` when no rows came back, since
+  // there is no truthful range to show.
+  const resultRange =
+    data && rows.length > 0
+      ? {
+          start: (data.page - 1) * PAGE_SIZE + 1,
+          end: (data.page - 1) * PAGE_SIZE + rows.length,
+          totalCount: data.totalCount,
+        }
+      : null;
 
   return (
     <Card
@@ -551,11 +620,10 @@ function ArchiveResultsCard({
               </span>
             ) : null}
             {/* The result range lives next to the heading rather than beside the pager. */}
-            {data && data.totalCount > 0 ? (
+            {resultRange ? (
               <span className='tnum text-body-sm text-faint'>
-                {(data.page - 1) * PAGE_SIZE + 1}–
-                {Math.min(data.page * PAGE_SIZE, data.totalCount)} /{' '}
-                {data.totalCount}
+                {resultRange.start}–{resultRange.end} /{' '}
+                {formatInteger(resultRange.totalCount)}
               </span>
             ) : null}
           </div>
@@ -588,7 +656,7 @@ function ArchiveResultsCard({
           rows={rows}
           scrollSearch={searchParams.toString()}
         />
-      ) : data && rows.length === 0 ? (
+      ) : data && rows.length === 0 && data.totalCount === 0 ? (
         <div className='px-5 py-8 text-left'>
           <h3 className='m-0 mb-2 text-card-heading font-semibold text-fg'>
             조건에 맞는 스냅샷이 없습니다
@@ -611,9 +679,31 @@ function ArchiveResultsCard({
             필터 초기화
           </Button>
         </div>
+      ) : data && rows.length === 0 ? (
+        // totalCount > 0이지만 이 페이지에 행이 없는 경우 — URL의 page가
+        // totalPages를 넘어선 상태다. 필터를 탓하는 위 문구는 거짓이므로,
+        // 실제 원인(페이지 번호)과 되돌아갈 방법을 안내하는 별도 상태를 쓴다.
+        <div className='px-5 py-8 text-left'>
+          <h3 className='m-0 mb-2 text-card-heading font-semibold text-fg'>
+            이 페이지에는 결과가 없습니다
+          </h3>
+          <p className='measure-error wrap-anywhere m-0 mb-3.5 text-body text-fg-soft'>
+            검색 결과 {formatInteger(data.totalCount)}건은 {data.totalPages}
+            페이지까지 있습니다.
+          </p>
+          <Button
+            className='px-4 text-body-sm'
+            onClick={() => onPageChange(data.totalPages)}
+            size='sm'
+            type='button'
+            variant='secondary'
+          >
+            {data.totalPages}페이지로 이동
+          </Button>
+        </div>
       ) : null}
 
-      {data ? (
+      {data && data.totalCount > 0 ? (
         <Pagination
           className='px-[18px] py-3'
           onAnnounce={announce}

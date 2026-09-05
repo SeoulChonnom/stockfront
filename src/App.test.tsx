@@ -161,7 +161,11 @@ describe('App routing', () => {
       data: {
         page: 2,
         rows: [],
-        totalCount: 0,
+        // `totalCount` must stay consistent with `totalPages: 3` (nonzero):
+        // the results card now hides its pager entirely when totalCount is
+        // 0 (no results to page through), which would hide the `2 / 3`
+        // indicator these routing tests assert on.
+        totalCount: 41,
         totalPages: 3,
       },
       error: null,

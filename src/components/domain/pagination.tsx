@@ -59,10 +59,14 @@ export function Pagination({
   showPageIndicator = true,
 }: PaginationProps) {
   const safeTotalPages = Math.max(1, totalPages);
-  const pageWindow = getPageWindow(page, safeTotalPages);
+  // Clamps a caller-supplied out-of-range `page` (e.g. the URL's page
+  // outliving the result set after a narrower filter is applied) so the
+  // pager never renders or acts on a page beyond what actually exists.
+  const safePage = Math.min(Math.max(1, page), safeTotalPages);
+  const pageWindow = getPageWindow(safePage, safeTotalPages);
 
   function goTo(target: number) {
-    if (target === page || target < 1 || target > safeTotalPages) {
+    if (target === safePage || target < 1 || target > safeTotalPages) {
       return;
     }
 
@@ -84,8 +88,8 @@ export function Pagination({
           <PaginationItem>
             <Button
               className='min-h-10 min-w-11 border-line-strong bg-card px-3 text-body-sm font-normal text-fg'
-              disabled={page <= 1}
-              onClick={() => goTo(page - 1)}
+              disabled={safePage <= 1}
+              onClick={() => goTo(safePage - 1)}
               size='sm'
               type='button'
               variant='ghost'
@@ -96,10 +100,10 @@ export function Pagination({
           {pageWindow.map((candidate) => (
             <PaginationItem key={candidate}>
               <Button
-                aria-current={candidate === page ? 'page' : undefined}
+                aria-current={candidate === safePage ? 'page' : undefined}
                 className={cn(
                   'tnum min-h-10 min-w-11 bg-card px-2.5 text-body-sm text-fg-soft',
-                  candidate === page &&
+                  candidate === safePage &&
                     'border-primary-line bg-primary-soft text-primary'
                 )}
                 onClick={() => goTo(candidate)}
@@ -114,8 +118,8 @@ export function Pagination({
           <PaginationItem>
             <Button
               className='min-h-10 min-w-11 border-line-strong bg-card px-3 text-body-sm font-normal text-fg'
-              disabled={page >= safeTotalPages}
-              onClick={() => goTo(page + 1)}
+              disabled={safePage >= safeTotalPages}
+              onClick={() => goTo(safePage + 1)}
               size='sm'
               type='button'
               variant='ghost'
@@ -127,7 +131,7 @@ export function Pagination({
       </PaginationRoot>
       {showPageIndicator ? (
         <span className='tnum ml-auto text-label text-faint'>
-          {page} / {safeTotalPages}
+          {safePage} / {safeTotalPages}
         </span>
       ) : null}
     </div>

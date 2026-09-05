@@ -263,6 +263,25 @@ test.describe('pagination (Archive: 46/20 -> 3 pages)', () => {
     await expect(page.getByText('3 / 3', { exact: true })).toBeVisible();
     await expect(page.getByRole('button', { name: '다음' })).toBeDisabled();
   });
+
+  test('loading an out-of-range page self-corrects the URL and never shows a reversed range', async ({
+    page,
+  }) => {
+    await installMockApi(page, { scenario: 'ready' });
+    // Only 3 pages exist for the default filters (46 rows / size 20); page=5
+    // is bookmarkable but out of range.
+    await page.goto('market/archive/search?page=5');
+
+    await expect(page).toHaveURL(/page=3/);
+    await expect(page).not.toHaveURL(/page=5/);
+    await expect(page.getByText('46건')).toBeVisible();
+    await expect(page.getByText('3 / 3', { exact: true })).toBeVisible();
+    // Page 3 of 46 rows / size 20 truthfully spans 41–46; the old
+    // `(page-1)*SIZE+1`–`min(page*SIZE, totalCount)` formula would have
+    // rendered a reversed "81–46" for the originally requested page=5.
+    await expect(page.getByText('41–46 / 46', { exact: true })).toBeVisible();
+    await expect(page.locator('table tbody tr:has(td)').first()).toBeVisible();
+  });
 });
 
 test.describe('browser Back (Archive Search)', () => {

@@ -106,6 +106,14 @@ describe('Pagination', () => {
     expect(screen.getAllByRole('listitem')).toHaveLength(7);
   });
 
+  it('clamps an out-of-range page: indicator reads 1 / 1 and both 이전/다음 are disabled', () => {
+    render(<Pagination onPageChange={vi.fn()} page={2} totalPages={1} />);
+
+    expect(screen.getByText('1 / 1')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '이전' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: '다음' })).toBeDisabled();
+  });
+
   it('uses the reference target size and subdued page indicator typography', () => {
     render(<Pagination onPageChange={vi.fn()} page={2} totalPages={3} />);
 
