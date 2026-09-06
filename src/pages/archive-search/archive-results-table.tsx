@@ -1,3 +1,4 @@
+import { FilterIcon } from 'lucide-react';
 import type { MouseEvent } from 'react';
 import {
   Table,
@@ -171,10 +172,16 @@ function getMonthRange(year: string, month: string): MonthRange {
  * 매번 다시 파악해야 한다. `scope='colgroup'`은 아래 데이터 행들이 이
  * 헤더에 종속된 그룹임을 스크린리더에 알린다.
  *
- * 이 헤더는 결과 영역 안이라 클릭하면 바로 이동한다(필터 카드 안의
- * 프리셋과 반대) — `ArchiveFilterChips`의 칩과 같은 규칙이다. 건수는
- * 접근 이름에 넣지 않는다: 이 건수는 "이 페이지 안에서"의 건수라 좁힌
- * 뒤의 전체 결과 수와 달라서, 이름에 넣으면 곧 거짓말이 된다.
+ * 이 헤더는 결과 영역 안이라 클릭하면 바로 이동한다 — `ArchiveFilterChips`의
+ * 칩, 그리고 이제 필터 카드의 기간 프리셋과도 같은 규칙이다. 건수는 접근
+ * 이름에 넣지 않는다: 이 건수는 "이 페이지 안에서"의 건수라 좁힌 뒤의 전체
+ * 결과 수와 달라서, 이름에 넣으면 곧 거짓말이 된다.
+ *
+ * 버튼 문구는 원래 호버·포커스가 있어야만 밑줄이 붙어 평시엔 그냥 텍스트로
+ * 보였다 — 필터 아이콘을 항상 붙여 결과 행과 구분되는 조작 가능한 대상임을
+ * 쉬는 상태에서도 드러낸다. 결과 표의 핵심(행 링크)보다는 조용해야 하는
+ * 보조 컨트롤이라 크기를 작게, 색을 헤더 기본 색(`text-fg-soft`)에 맞춘다.
+ * 아이콘은 `aria-hidden`이라 접근 이름(`aria-label`)에는 영향을 주지 않는다.
  */
 function MonthGroupHeaderRow({
   year,
@@ -197,10 +204,11 @@ function MonthGroupHeaderRow({
         <div className='flex items-baseline justify-between gap-2'>
           <button
             aria-label={`${Number(year)}년 ${Number(month)}월만 보기`}
-            className='tap-control justify-start underline-offset-2 hover:text-primary hover:underline'
+            className='tap-control inline-flex items-center gap-1 justify-start underline-offset-2 hover:text-primary hover:underline'
             onClick={() => onSelectMonth?.(getMonthRange(year, month))}
             type='button'
           >
+            <FilterIcon aria-hidden='true' className='size-3 shrink-0' />
             {Number(year)}년 {Number(month)}월
           </button>
           <span className='tnum font-normal text-faint'>{count}건</span>

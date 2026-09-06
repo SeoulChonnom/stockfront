@@ -38,6 +38,7 @@ import { ArchiveSearchFilters } from '@/pages/archive-search/archive-search-filt
 import {
   ARCHIVE_SEARCH_STATUSES,
   type ArchiveFilterDraft,
+  type ArchiveRangePreset,
 } from '@/pages/archive-search/filter-copy';
 import { useLastGoodData } from '@/pages/archive-search/use-last-good-data';
 
@@ -374,9 +375,22 @@ export function ArchiveSearchPage({
     navigate('/market/archive/search');
   }
 
-  // 결과 영역 안의 컨트롤이라 필터 카드의 프리셋과 달리 즉시 이동한다 —
-  // `ArchiveFilterChips`의 칩 해제와 같은 규칙. 연·월은 이동 대상인
-  // `range.from`(항상 `YYYY-MM-01`)에서 뽑아 안내 문구에 쓴다.
+  // 프리셋은 필터 카드 **안**에 있지만(제품 결정) 이 아래의 칩·월 헤더와
+  // 같은 규칙으로 즉시 이동한다 — 완결된 유효한 범위 선택이라 draft를
+  // 거치지 않는다. 현재 적용된 status/market/themes/q는 그대로 두고
+  // from/to만 덮어쓰며, page는 1로 되돌린다.
+  function handleSelectRangePreset(preset: ArchiveRangePreset) {
+    focusAndScrollToResults();
+    navigate(
+      buildFilterRemovalUrl(applied, { from: preset.from, to: preset.to })
+    );
+    announce(`기간을 ${preset.label}로 바꿔 검색했습니다.`);
+  }
+
+  // 결과 영역 안의 컨트롤이라 즉시 이동한다 — `ArchiveFilterChips`의 칩
+  // 해제, 그리고 이제 필터 카드의 기간 프리셋(바로 위)과도 같은 규칙.
+  // 연·월은 이동 대상인 `range.from`(항상 `YYYY-MM-01`)에서 뽑아 안내
+  // 문구에 쓴다.
   function handleSelectMonth(range: MonthRange) {
     const year = range.from.slice(0, 4);
     const month = Number(range.from.slice(5, 7));
@@ -469,6 +483,7 @@ export function ArchiveSearchPage({
         onApply={handleApply}
         onReset={handleReset}
         onRetryThemeCatalog={() => void archiveThemesQuery.refetch()}
+        onSelectRangePreset={handleSelectRangePreset}
         themeCatalog={archiveThemesQuery.data}
         themeCatalogError={archiveThemesQuery.error}
         themeCatalogLoading={archiveThemesQuery.isLoading}

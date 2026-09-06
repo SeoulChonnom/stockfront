@@ -54,6 +54,7 @@ type ArchiveSearchFiltersProps = {
   applied: ArchiveFilterDraft;
   onApply: (next: ArchiveFilterDraft) => void;
   onReset: () => void;
+  onSelectRangePreset: (preset: ArchiveRangePreset) => void;
   themeCatalog?: readonly ThemeNodeResponse[];
   themeCatalogLoading?: boolean;
   themeCatalogError?: Error | null;
@@ -78,10 +79,14 @@ function sameValues(left: readonly string[], right: readonly string[]) {
 }
 
 /**
- * 결과 표 영역의 칩·월 헤더와 달리, 이 줄은 필터 카드 **안**이라서 클릭해도
- * 바로 검색하지 않는다 — draft의 `from`/`to`만 바꾸고 `필터 적용`을
- * 기다린다. 그래야 다른 필드를 함께 고치는 중에도 커밋 시점이 하나로
- * 유지되고, `FilterDirtyBadge`가 거짓말하지 않는다.
+ * 이 줄은 필터 카드 **안**에 있지만, 결과 표 영역의 칩·월 헤더와 같은
+ * 규칙을 따른다 — "버튼은 바로 실행하고, 입력은 적용을 기다린다". 프리셋
+ * 클릭은 그 자체로 완결된, 항상 유효한 범위 선택이라 draft를 거치지 않고
+ * 곧장 검색한다(제품 결정). 다른 필드에 남아 있던 미적용 변경은 이 이동으로
+ * 함께 버려진다 — `useFilterDraft`가 `applied` 변경 시 draft 전체를
+ * 재동기화하기 때문이며, 칩 해제·월 헤더도 이미 같은 방식으로 동작한다.
+ * 눌린 상태는 draft가 아니라 **적용된** 범위를 반영해야 한다(아래
+ * `activePresetId`가 `applied`에서 계산되는 이유).
  */
 function RangePresetRow({
   activePresetId,
@@ -118,6 +123,7 @@ export function ArchiveSearchFilters({
   applied,
   onApply,
   onReset,
+  onSelectRangePreset,
   themeCatalog,
   themeCatalogLoading = false,
   themeCatalogError = null,
@@ -138,7 +144,6 @@ export function ArchiveSearchFilters({
     apply,
     reset,
     getFieldProps,
-    setFields,
   } = useFilterDraft<ArchiveTextFilterDraft>({
     applied: toTextDraft(applied),
     defaultValues,
@@ -162,16 +167,9 @@ export function ArchiveSearchFilters({
   const catalog = themeCatalog ?? [];
 
   const activePresetId = matchArchiveRangePreset({
-    from: draft.from,
-    to: draft.to,
+    from: applied.from,
+    to: applied.to,
   });
-
-  function handlePresetSelect(preset: ArchiveRangePreset) {
-    setFields({ from: preset.from, to: preset.to });
-    announce(
-      `기간을 ${preset.label}로 바꿨습니다. 필터 적용을 눌러 검색하세요.`
-    );
-  }
 
   function handleSubmit() {
     const validationErrors = validateArchiveFilters({
@@ -208,7 +206,7 @@ export function ArchiveSearchFilters({
           beforeFields={
             <RangePresetRow
               activePresetId={activePresetId}
-              onSelect={handlePresetSelect}
+              onSelect={onSelectRangePreset}
             />
           }
           className='gap-3 [&_label]:mb-[5px]'

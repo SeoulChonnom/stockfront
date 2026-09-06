@@ -12,6 +12,7 @@ import {
   setRoleOverride,
 } from '@/lib/capabilities';
 import { withBasePath } from '@/lib/router';
+import { getArchiveRangePresets } from '@/pages/archive-search/filter-copy';
 import { ArchiveSearchPage } from '@/pages/archive-search-page';
 
 type ArchiveListQueryResult = {
@@ -731,6 +732,39 @@ describe('ArchiveSearchPage', () => {
         '?from=2026-07-01&to=2026-07-31&market=US&q=rate&page=1'
       );
       expect(getLiveRegionText()).toBe('기간을 2026년 7월로 좁혔습니다.');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('clicking a range preset navigates immediately with the preset range, preserves status/market/themes/q, and resets page to 1', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-08-15T00:00:00+09:00'));
+
+    try {
+      mockUseArchiveList.mockReturnValue(ready());
+
+      renderPage(
+        new URLSearchParams(
+          'from=2026-07-13&to=2026-07-27&page=3&status=READY&market=US&theme=SECTOR&q=rate'
+        )
+      );
+
+      const preset = getArchiveRangePresets().find((p) => p.id === '7d');
+      if (!preset) {
+        throw new Error('7d preset missing');
+      }
+
+      // `fireEvent.click` (not `userEvent`) avoids mixing fake timers with
+      // userEvent's internal real-timer waits.
+      fireEvent.click(screen.getByRole('button', { name: preset.label }));
+
+      expect(window.location.search).toBe(
+        `?from=${preset.from}&to=${preset.to}&status=READY&market=US&theme=SECTOR&q=rate&page=1`
+      );
+      expect(getLiveRegionText()).toBe(
+        `기간을 ${preset.label}로 바꿔 검색했습니다.`
+      );
     } finally {
       vi.useRealTimers();
     }

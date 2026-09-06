@@ -26,7 +26,12 @@
   .tap-target-text {
     min-height: 0;
     min-width: 0;
-    padding-block: 11px;
+    /* 11px landed a single-line row link at 177×39 (measured) — 5px under
+       `--tap-min` (44px). 14px is the value that measures at 44px with this
+       body line-height; multi-line rows already cleared the floor
+       incidentally, this raises the single-line case to match. Also used by
+       `cluster-articles-list.tsx` — the same floor is intended there. */
+    padding-block: 14px;
   }
 }
 

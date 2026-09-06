@@ -347,6 +347,12 @@ describe('ArchiveResultsTable', () => {
           name: '2026년 7월만 보기',
         });
         expect(button).not.toHaveTextContent('건');
+        // A persistent, at-rest affordance (a small icon) marks this as a
+        // control even before hover/focus — it must stay decorative
+        // (`aria-hidden`) so the accessible name above is unaffected.
+        const icon = button.querySelector('svg');
+        expect(icon).toBeInTheDocument();
+        expect(icon).toHaveAttribute('aria-hidden', 'true');
 
         fireEvent.click(button);
 

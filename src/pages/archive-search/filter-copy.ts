@@ -1,5 +1,6 @@
 import type { FilterErrors } from '@/components/domain/use-filter-draft';
 import type { MarketTypeResponse } from '@/lib/api/types';
+import { ARCHIVE_DEFAULT_RANGE_DAYS } from '@/lib/app-state';
 import { getRelativeIso, getTodayIso, isValidIsoDate } from '@/lib/kst-date';
 
 export type ArchiveFilterDraft = {
@@ -93,7 +94,7 @@ export function matchArchiveRangePreset(range: {
 
 export function getDefaultArchiveFilters(): ArchiveFilterDraft {
   return {
-    from: getRelativeIso(14),
+    from: getRelativeIso(ARCHIVE_DEFAULT_RANGE_DAYS),
     to: getTodayIso(),
     status: '',
     market: '',

@@ -21,13 +21,33 @@ describe('getDefaultArchiveFilters', () => {
 
     try {
       expect(getDefaultArchiveFilters()).toEqual({
-        from: '2026-07-13',
+        from: '2026-06-27',
         to: '2026-07-27',
         status: '',
         market: '',
         themes: [],
         q: '',
       });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  // `ARCHIVE_DEFAULT_RANGE_DAYS`(`src/lib/app-state.ts`)와 `getArchiveRangePresets`의
+  // `30d` 프리셋이 같은 30을 쓰므로, 아무 URL도 주어지지 않은 첫 방문에서도
+  // 프리셋 행이 항상 하나는 눌린 상태로 보인다.
+  it('matches the 지난 30일 preset exactly, so the landing range is never entirely unpressed', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-07-27T00:30:00Z'));
+
+    try {
+      const defaults = getDefaultArchiveFilters();
+      const preset = getArchiveRangePresets().find((p) => p.id === '30d');
+
+      expect(preset).toBeDefined();
+      expect(defaults.from).toBe(preset?.from);
+      expect(defaults.to).toBe(preset?.to);
+      expect(matchArchiveRangePreset(defaults)).toBe('30d');
     } finally {
       vi.useRealTimers();
     }
@@ -124,7 +144,10 @@ describe('matchArchiveRangePreset', () => {
     }
   });
 
-  it('returns null for the default 14-day range, which matches no preset', () => {
+  // 2026-07-13~2026-07-27은 14일 폭이라(옛 기본값) 어떤 프리셋과도 맞지
+  // 않는다 — 지금의 기본값(30일)과는 무관한, 그냥 프리셋 목록에 없는 임의의
+  // 범위 하나를 고른 것뿐이다.
+  it('returns null for an arbitrary range that matches no preset', () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-07-27T00:30:00Z'));
 

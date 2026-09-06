@@ -18,6 +18,13 @@ export type ListFilters = {
 
 export const MAX_ARCHIVE_THEME_SELECTIONS = 10;
 
+// 30일: 프리셋 행이 제공하는 `지난 30일`과 정확히 일치해, 방문 직후에도
+// 프리셋 하나가 항상 눌린 상태로 보이게 한다. 예전 14일은 어떤 프리셋과도
+// 일치하지 않았고 그 값이어야 할 근거도 따로 없었다. URL 파서(아래
+// `parseListFilters`)와 `filter-copy.ts`의 `getDefaultArchiveFilters` 둘 다
+// 이 상수를 쓴다 — 하나만 바꾸면 `초기화`와 빈 URL 진입이 조용히 어긋난다.
+export const ARCHIVE_DEFAULT_RANGE_DAYS = 30;
+
 type ParseListFiltersOptions = {
   allowedStatuses?: string[];
 };
@@ -116,7 +123,7 @@ export function parseListFilters(
   options: ParseListFiltersOptions = {}
 ): ListFilters {
   const defaults = {
-    from: getRelativeIso(14),
+    from: getRelativeIso(ARCHIVE_DEFAULT_RANGE_DAYS),
     to: getTodayIso(),
     status: '',
     page: 1,

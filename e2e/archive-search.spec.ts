@@ -25,7 +25,7 @@ test.describe('filter apply / reset', () => {
 
     await page.getByRole('button', { name: '초기화' }).click();
     // Bare URL (no from/to/status/page) — `parseListFilters` recomputes the
-    // default 14-day range from this alone.
+    // default range (`ARCHIVE_DEFAULT_RANGE_DAYS`) from this alone.
     await expect(page).toHaveURL(/\/market\/archive\/search$/);
     await expect(page.locator('#from')).not.toHaveValue('2026-07-01');
   });
@@ -163,29 +163,32 @@ test.describe('filter apply / reset', () => {
 });
 
 test.describe('range presets', () => {
-  test('clicking a preset only fills the date inputs — URL stays put until 필터 적용, then reflects the preset range', async ({
+  test('clicking a preset navigates immediately with the preset range, keeps other filters, resets page to 1, and updates the pressed state', async ({
     page,
   }) => {
     await installMockApi(page, { scenario: 'ready' });
     await page.clock.setFixedTime(new Date(`${TODAY}T08:24:31+09:00`));
-    await page.goto('market/archive/search');
-
-    const urlBeforeClick = page.url();
-    await page.getByRole('button', { name: '지난 30일' }).click();
-
-    expect(page.url(), '프리셋 클릭은 draft만 바꾼다').toBe(urlBeforeClick);
-    await expect(page.locator('#from')).toHaveValue(shiftDate(TODAY, -30));
-    await expect(page.locator('#to')).toHaveValue(TODAY);
-    await expect(
-      page.getByRole('button', { name: '지난 30일' })
-    ).toHaveAttribute('aria-pressed', 'true');
-    await expect(page.locator('[aria-live="polite"]')).toContainText(
-      '기간을 지난 30일로 바꿨습니다. 필터 적용을 눌러 검색하세요.'
+    // 프리셋 하나(지난 30일)와 이미 겹치는 기본값 대신, 확실히 구별되는
+    // 범위·다른 필터·1이 아닌 페이지로 시작해 프리셋 클릭의 효과(범위
+    // 교체, 나머지 필터 보존, page=1 복귀)를 분명히 드러낸다.
+    await page.goto(
+      'market/archive/search?from=2026-01-01&to=2026-01-05&page=3&market=KR&q=rate'
     );
 
-    await page.getByRole('button', { name: '필터 적용' }).click();
-    await expect(page).toHaveURL(new RegExp(`from=${shiftDate(TODAY, -30)}`));
+    await page.getByRole('button', { name: '지난 7일' }).click();
+
+    await expect(page).toHaveURL(new RegExp(`from=${shiftDate(TODAY, -7)}`));
     await expect(page).toHaveURL(new RegExp(`to=${TODAY}`));
+    await expect(page).toHaveURL(/market=KR/);
+    await expect(page).toHaveURL(/q=rate/);
+    await expect(page).toHaveURL(/page=1/);
+    await expect(page).not.toHaveURL(/page=3/);
+    await expect(
+      page.getByRole('button', { name: '지난 7일' })
+    ).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.locator('[aria-live="polite"]')).toContainText(
+      '기간을 지난 7일로 바꿔 검색했습니다.'
+    );
   });
 });
 
@@ -201,9 +204,10 @@ test.describe('month group header', () => {
     await page.getByRole('button', { name: '필터 적용' }).click();
     await expect(page).toHaveURL(/market=KR/);
 
-    // 기본 14일 범위(2026-07-13~2026-07-27)의 20개 행은 전부 7월이라 한
-    // 그룹뿐이다. 7월은 아직 끝나지 않은 "이번 달"이라 말일(31일) 대신
-    // 오늘(TODAY=2026-07-27)로 클램프된 범위를 기대한다.
+    // 목(mock) 응답은 from/to로 필터링하지 않고 항상 같은 46개 행을
+    // 반환하며, 그 최신 20개 행은 전부 7월이라 한 그룹뿐이다. 7월은 아직
+    // 끝나지 않은 "이번 달"이라 말일(31일) 대신 오늘(TODAY=2026-07-27)로
+    // 클램프된 범위를 기대한다.
     await page.getByRole('button', { name: '2026년 7월만 보기' }).click();
 
     await expect(page).toHaveURL(/from=2026-07-01/);

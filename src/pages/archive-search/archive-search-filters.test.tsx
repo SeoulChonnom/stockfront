@@ -64,6 +64,7 @@ function renderFilters(
       applied={applied}
       onApply={vi.fn()}
       onReset={vi.fn()}
+      onSelectRangePreset={vi.fn()}
       themeCatalog={catalog}
       {...overrides}
     />
@@ -78,6 +79,7 @@ describe('ArchiveSearchFilters', () => {
         applied={applied}
         onApply={onApply}
         onReset={vi.fn()}
+        onSelectRangePreset={vi.fn()}
         themeCatalog={catalog}
       />
     );
@@ -96,6 +98,7 @@ describe('ArchiveSearchFilters', () => {
         applied={applied}
         onApply={onApply}
         onReset={vi.fn()}
+        onSelectRangePreset={vi.fn()}
         themeCatalog={catalog}
       />
     );
@@ -115,6 +118,7 @@ describe('ArchiveSearchFilters', () => {
         applied={applied}
         onApply={onApply}
         onReset={vi.fn()}
+        onSelectRangePreset={vi.fn()}
         themeCatalog={catalog}
       />
     );
@@ -145,6 +149,7 @@ describe('ArchiveSearchFilters', () => {
         applied={applied}
         onApply={onApply}
         onReset={vi.fn()}
+        onSelectRangePreset={vi.fn()}
         themeCatalog={catalog}
       />
     );
@@ -170,6 +175,7 @@ describe('ArchiveSearchFilters', () => {
         applied={applied}
         onApply={vi.fn()}
         onReset={onReset}
+        onSelectRangePreset={vi.fn()}
         themeCatalog={catalog}
       />
     );
@@ -199,6 +205,7 @@ describe('ArchiveSearchFilters', () => {
         applied={applied}
         onApply={onApply}
         onReset={vi.fn()}
+        onSelectRangePreset={vi.fn()}
         themeCatalog={catalog}
       />
     );
@@ -235,6 +242,7 @@ describe('ArchiveSearchFilters', () => {
         applied={applied}
         onApply={vi.fn()}
         onReset={vi.fn()}
+        onSelectRangePreset={vi.fn()}
         themeCatalog={catalog}
       />
     );
@@ -258,6 +266,7 @@ describe('ArchiveSearchFilters', () => {
         applied={applied}
         onApply={vi.fn()}
         onReset={vi.fn()}
+        onSelectRangePreset={vi.fn()}
         themeCatalog={undefined}
         themeCatalogLoading
       />
@@ -275,6 +284,7 @@ describe('ArchiveSearchFilters', () => {
           applied={applied}
           onApply={vi.fn()}
           onReset={vi.fn()}
+          onSelectRangePreset={vi.fn()}
           themeCatalog={[]}
         />
       </AnnounceProvider>
@@ -290,6 +300,7 @@ describe('ArchiveSearchFilters', () => {
           applied={applied}
           onApply={vi.fn()}
           onReset={vi.fn()}
+          onSelectRangePreset={vi.fn()}
           themeCatalog={undefined}
           themeCatalogError={new Error('catalog down')}
           onRetryThemeCatalog={retry}
@@ -349,14 +360,23 @@ describe('ArchiveSearchFilters', () => {
   });
 
   describe('기간 프리셋', () => {
-    it('clicking a preset fills the date inputs but does not call onApply', async () => {
+    /*
+     * 프리셋은 이제 "버튼은 바로 실행, 입력은 적용 대기" 규칙을 따른다 —
+     * 결과 영역의 칩·월 헤더와 같다(제품 결정). draft를 거치지 않고 부모의
+     * `onSelectRangePreset`을 곧장 호출하며, `onApply`는 전혀 관여하지
+     * 않는다. 이동·안내는 이제 부모(`ArchiveSearchPage`)의 책임이라 이
+     * 컴포넌트는 그 둘을 하지 않는다 — draft의 날짜 입력도 그대로다.
+     */
+    it('clicking a preset calls onSelectRangePreset with the preset — not onApply, and the draft inputs are left untouched', async () => {
       const user = userEvent.setup();
       const onApply = vi.fn();
+      const onSelectRangePreset = vi.fn();
       renderWithAnnounce(
         <ArchiveSearchFilters
           applied={applied}
           onApply={onApply}
           onReset={vi.fn()}
+          onSelectRangePreset={onSelectRangePreset}
           themeCatalog={catalog}
         />
       );
@@ -368,25 +388,31 @@ describe('ArchiveSearchFilters', () => {
 
       await user.click(screen.getByRole('button', { name: preset.label }));
 
-      expect(screen.getByLabelText('시작일')).toHaveValue(preset.from);
-      expect(screen.getByLabelText('종료일')).toHaveValue(preset.to);
+      expect(onSelectRangePreset).toHaveBeenCalledWith(preset);
       expect(onApply).not.toHaveBeenCalled();
-      expect(getLiveRegionText()).toBe(
-        `기간을 ${preset.label}로 바꿨습니다. 필터 적용을 눌러 검색하세요.`
-      );
+      expect(screen.getByLabelText('시작일')).toHaveValue(applied.from);
+      expect(screen.getByLabelText('종료일')).toHaveValue(applied.to);
+      // Navigation and the announcement are the parent's job now (it owns
+      // the URL) — the component itself must stay silent here.
+      expect(getLiveRegionText()).toBe('');
     });
 
-    it('marks only the preset matching the current draft as aria-pressed', async () => {
-      const user = userEvent.setup();
-      renderFilters();
-
+    it('marks the preset matching the applied range as aria-pressed, not one merely clicked', () => {
       const presets = getArchiveRangePresets();
       const target = presets.find((p) => p.id === '90d');
       if (!target) {
         throw new Error('90d preset missing');
       }
 
-      await user.click(screen.getByRole('button', { name: target.label }));
+      renderWithAnnounce(
+        <ArchiveSearchFilters
+          applied={{ ...applied, from: target.from, to: target.to }}
+          onApply={vi.fn()}
+          onReset={vi.fn()}
+          onSelectRangePreset={vi.fn()}
+          themeCatalog={catalog}
+        />
+      );
 
       for (const preset of presets) {
         const expectedPressed = preset.id === target.id ? 'true' : 'false';
@@ -396,7 +422,7 @@ describe('ArchiveSearchFilters', () => {
       }
     });
 
-    it('has no preset pressed at the default (non-preset) 14-day range', () => {
+    it('has no preset pressed when the applied range matches no preset', () => {
       renderFilters();
 
       for (const preset of getArchiveRangePresets()) {
