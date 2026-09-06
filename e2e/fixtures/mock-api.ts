@@ -2200,6 +2200,8 @@ export type InstallMockApiOptions = {
     | 'forbidden403'
     | 'error500'
     | 'offline';
+  /** Snapshot rerun (`POST /batch/market-daily`) lifecycle. Defaults to an accepted 202. */
+  snapshotRetryMode?: 'success' | 'conflict409';
 };
 
 function envelope<T>(data: T): ApiEnvelope<T> {
@@ -2271,6 +2273,7 @@ export async function installMockApi(
   const batchDetailMode =
     options.batchDetailMode ?? (scenario === 'long' ? 'longLog' : undefined);
   const retryAiMode = options.retryAiMode ?? 'success';
+  const snapshotRetryMode = options.snapshotRetryMode ?? 'success';
 
   // Exercise the real token-to-capability path; omit `roleList` for dev default.
   const roleListByOption: Record<'user' | 'admin', string[]> = {
@@ -2411,6 +2414,39 @@ export async function installMockApi(
       }
 
       await fulfillJson(route, 200, envelope(detail));
+      return;
+    }
+
+    if (method === 'POST' && pathname === '/stock/api/batch/market-daily') {
+      const payload = request.postDataJSON() as {
+        businessDate?: string;
+      } | null;
+
+      // Keep the pending state observable in browser tests.
+      await new Promise((resolve) => setTimeout(resolve, 300));
+
+      if (snapshotRetryMode === 'conflict409') {
+        await fulfillJson(route, 409, {
+          success: false,
+          error: {
+            code: 'BATCH_ALREADY_RUNNING',
+            message: '해당 기준일 배치가 이미 실행 중입니다.',
+          },
+        });
+        return;
+      }
+
+      await fulfillJson(
+        route,
+        202,
+        envelope({
+          jobId: 1101,
+          jobName: 'market_daily_batch',
+          businessDate: payload?.businessDate ?? TODAY,
+          status: 'PENDING',
+          startedAt: NOW_KST,
+        })
+      );
       return;
     }
 

@@ -366,6 +366,21 @@ export type BatchJobListResponse = {
   };
 };
 
+/** `POST /batch/market-daily` — snapshot (re)generation for one business date. */
+export type SnapshotRunRequest = {
+  businessDate: string;
+  /** A rerun needs `force`; the backend 409s when the date already has a page. */
+  force: boolean;
+};
+
+export type SnapshotRunResponse = {
+  jobId: number;
+  jobName: string;
+  businessDate: string;
+  status: string;
+  startedAt: string;
+};
+
 export type AiRetryRunResponse = {
   jobId: number;
   jobName: string;

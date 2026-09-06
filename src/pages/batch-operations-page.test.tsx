@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AnnounceProvider } from '@/components/shell/announce-context';
 import type { BatchJobsParams } from '@/lib/api/batch';
 import { ApiError } from '@/lib/api/client';
-import type { AiRetryRunResponse } from '@/lib/api/types';
+import type { AiRetryRunResponse, SnapshotRunResponse } from '@/lib/api/types';
 import {
   resetRoleOverrideForTesting,
   setRoleOverride,
@@ -64,19 +64,38 @@ type RetryAiMutationResult = {
   reset: () => void;
 };
 
-const { mockUseBatchJobs, mockUseBatchJobDetail, mockUseRetryAiMutation } =
-  vi.hoisted(() => ({
-    mockUseBatchJobs:
-      vi.fn<(params: BatchJobsParams) => BatchJobsQueryResult>(),
-    mockUseBatchJobDetail:
-      vi.fn<(jobId: number | null) => BatchJobDetailQueryResult>(),
-    mockUseRetryAiMutation: vi.fn<() => RetryAiMutationResult>(),
-  }));
+type SnapshotRetryMutationResult = {
+  data: SnapshotRunResponse | undefined;
+  error: unknown;
+  isError: boolean;
+  isPending: boolean;
+  isSuccess: boolean;
+  variables: { businessDate: string } | undefined;
+  mutate: (
+    variables: { businessDate: string },
+    options?: { onSuccess?: (data: SnapshotRunResponse) => void }
+  ) => void;
+  reset: () => void;
+};
+
+const {
+  mockUseBatchJobs,
+  mockUseBatchJobDetail,
+  mockUseRetryAiMutation,
+  mockUseSnapshotRetryMutation,
+} = vi.hoisted(() => ({
+  mockUseBatchJobs: vi.fn<(params: BatchJobsParams) => BatchJobsQueryResult>(),
+  mockUseBatchJobDetail:
+    vi.fn<(jobId: number | null) => BatchJobDetailQueryResult>(),
+  mockUseRetryAiMutation: vi.fn<() => RetryAiMutationResult>(),
+  mockUseSnapshotRetryMutation: vi.fn<() => SnapshotRetryMutationResult>(),
+}));
 
 vi.mock('@/lib/query-hooks', () => ({
   useBatchJobs: mockUseBatchJobs,
   useBatchJobDetail: mockUseBatchJobDetail,
   useRetryAiMutation: mockUseRetryAiMutation,
+  useSnapshotRetryMutation: mockUseSnapshotRetryMutation,
 }));
 
 function createRow(overrides: Partial<BatchRunRow> = {}): BatchRunRow {
@@ -170,6 +189,22 @@ function retryAiReady(
   };
 }
 
+function snapshotRetryReady(
+  overrides: Partial<SnapshotRetryMutationResult> = {}
+): SnapshotRetryMutationResult {
+  return {
+    data: undefined,
+    error: null,
+    isError: false,
+    isPending: false,
+    isSuccess: false,
+    variables: undefined,
+    mutate: vi.fn(),
+    reset: vi.fn(),
+    ...overrides,
+  };
+}
+
 function renderPage(searchParams = new URLSearchParams()) {
   return render(
     <AnnounceProvider pathname='/test'>
@@ -190,6 +225,8 @@ beforeEach(() => {
   mockUseBatchJobDetail.mockReset();
   mockUseRetryAiMutation.mockReset();
   mockUseRetryAiMutation.mockReturnValue(retryAiReady());
+  mockUseSnapshotRetryMutation.mockReset();
+  mockUseSnapshotRetryMutation.mockReturnValue(snapshotRetryReady());
 });
 
 afterEach(() => {
@@ -221,6 +258,7 @@ describe('BatchOperationsPage — non-admin user', () => {
     expect(mockUseBatchJobs).not.toHaveBeenCalled();
     expect(mockUseBatchJobDetail).not.toHaveBeenCalled();
     expect(mockUseRetryAiMutation).not.toHaveBeenCalled();
+    expect(mockUseSnapshotRetryMutation).not.toHaveBeenCalled();
   });
 
   it('never renders the trigger button, log box, or detail/summary nodes — not merely hidden', () => {
@@ -828,7 +866,7 @@ describe('BatchOperationsPage — admin', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('does not expose manual batch execution while preserving AI retry', () => {
+  it("offers only the selected job's retries, never free-form manual execution", () => {
     mockUseBatchJobs.mockReturnValue(jobsReady());
     mockUseBatchJobDetail.mockReturnValue(
       detailReady(createRow({ rawStatus: 'PARTIAL', status: 'PARTIAL' }))
@@ -836,16 +874,119 @@ describe('BatchOperationsPage — admin', () => {
 
     renderPage();
 
+    // The date/options trigger dialog stays removed; recovery is per job.
     expect(
       screen.queryByRole('button', { name: '수동 실행' })
     ).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole('button', { name: '같은 기준일 재실행' })
-    ).not.toBeInTheDocument();
-    expect(screen.queryByText(/재실행 (가능|불필요)/)).not.toBeInTheDocument();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(
       screen.getByRole('button', { name: 'AI 요약만 재시도' })
     ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: '스냅샷 생성 재시도' })
+    ).toBeInTheDocument();
+  });
+
+  it("reruns the snapshot batch for the failed job's business date", async () => {
+    const user = userEvent.setup();
+    const response: SnapshotRunResponse = {
+      jobId: 1102,
+      jobName: 'market_daily_batch',
+      businessDate: '2026-07-26',
+      status: 'PENDING',
+      startedAt: '2026-08-07T08:24:31Z',
+    };
+    let onSuccess: ((data: SnapshotRunResponse) => void) | undefined;
+    const mutate = vi.fn(
+      (
+        _variables: { businessDate: string },
+        options?: { onSuccess?: (data: SnapshotRunResponse) => void }
+      ) => {
+        onSuccess = options?.onSuccess;
+      }
+    );
+    mockUseSnapshotRetryMutation.mockReturnValue(
+      snapshotRetryReady({ mutate })
+    );
+    mockUseBatchJobs.mockReturnValue(jobsReady());
+    mockUseBatchJobDetail.mockReturnValue(
+      detailReady(createRow({ rawStatus: 'FAILED', status: 'FAILED' }))
+    );
+
+    const { rerender } = renderPage();
+
+    await user.click(
+      screen.getByRole('button', { name: '스냅샷 생성 재시도' })
+    );
+
+    expect(mutate).toHaveBeenCalledWith(
+      { businessDate: '2026-07-26' },
+      expect.anything()
+    );
+    expect(document.querySelector('[aria-live="polite"]')).toHaveTextContent(
+      '스냅샷 생성 재시도를 요청하고 있습니다.'
+    );
+
+    act(() => {
+      onSuccess?.(response);
+    });
+    expect(document.querySelector('[aria-live="polite"]')).toHaveTextContent(
+      '스냅샷 생성 재시도가 접수되었습니다.'
+    );
+
+    mockUseSnapshotRetryMutation.mockReturnValue(
+      snapshotRetryReady({
+        data: response,
+        isSuccess: true,
+        variables: { businessDate: '2026-07-26' },
+        mutate,
+      })
+    );
+    rerender(
+      <AnnounceProvider pathname='/test'>
+        <BatchOperationsPage searchParams={new URLSearchParams()} />
+      </AnnounceProvider>
+    );
+
+    expect(
+      screen.getByRole('heading', {
+        name: '스냅샷 생성 재시도가 접수되었습니다.',
+      })
+    ).toBeInTheDocument();
+    expect(screen.getByText(/job 1102 · 상태 PENDING/)).toBeInTheDocument();
+  });
+
+  it('hides 스냅샷 생성 재시도 for a healthy run and for news collection', () => {
+    mockUseBatchJobs.mockReturnValue(jobsReady());
+    mockUseBatchJobDetail.mockReturnValue(
+      detailReady(createRow({ rawStatus: 'SUCCESS', status: 'SUCCESS' }))
+    );
+
+    const { rerender } = renderPage();
+
+    expect(
+      screen.queryByRole('button', { name: '스냅샷 생성 재시도' })
+    ).not.toBeInTheDocument();
+
+    // A failed news-collection job has no snapshot to rebuild.
+    mockUseBatchJobDetail.mockReturnValue(
+      detailReady(
+        createRow({
+          jobType: 'NEWS_COLLECTION',
+          rawStatus: 'FAILED',
+          status: 'FAILED',
+        })
+      )
+    );
+    rerender(
+      <AnnounceProvider pathname='/test'>
+        <BatchOperationsPage searchParams={new URLSearchParams()} />
+      </AnnounceProvider>
+    );
+
+    expect(
+      screen.queryByRole('button', { name: '스냅샷 생성 재시도' })
+    ).not.toBeInTheDocument();
   });
 
   it('shows AI 요약만 재시도 only for a selected PARTIAL job', () => {
@@ -885,6 +1026,9 @@ describe('BatchOperationsPage — admin', () => {
 
     expect(
       screen.queryByRole('button', { name: 'AI 요약만 재시도' })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: '스냅샷 생성 재시도' })
     ).not.toBeInTheDocument();
     expect(mockUseRetryAiMutation).not.toHaveBeenCalled();
   });

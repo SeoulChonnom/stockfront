@@ -3,7 +3,8 @@ import userEvent from '@testing-library/user-event';
 import { createRef } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
-import type { AiRetryRunResponse } from '@/lib/api/types';
+import { ApiError } from '@/lib/api/client';
+import type { AiRetryRunResponse, SnapshotRunResponse } from '@/lib/api/types';
 import type { BatchRunRow } from '@/lib/query-hooks';
 
 import {
@@ -42,7 +43,7 @@ function createProps(
   overrides: Partial<BatchDetailContentProps> = {}
 ): BatchDetailContentProps {
   return {
-    canRetryAi: true,
+    canTrigger: true,
     detailHeadingRef: createRef<HTMLHeadingElement>(),
     isCurrentRetryJob: () => true,
     onAnnounce: vi.fn(),
@@ -56,6 +57,15 @@ function createProps(
       mutate: vi.fn(),
     },
     run: createRun(),
+    snapshotRetryMutation: {
+      data: undefined,
+      error: null,
+      isError: false,
+      isPending: false,
+      isSuccess: false,
+      variables: undefined,
+      mutate: vi.fn(),
+    },
     ...overrides,
   };
 }
@@ -148,6 +158,127 @@ describe('BatchDetailContent', () => {
       onSuccess?.(response);
     });
     expect(onAnnounce).toHaveBeenCalledWith('AI 요약 재시도가 접수되었습니다.');
+  });
+
+  it('requests one snapshot rerun for the FAILED job business date', async () => {
+    const user = userEvent.setup();
+    const onAnnounce = vi.fn();
+    const response: SnapshotRunResponse = {
+      jobId: 1102,
+      jobName: 'market_daily_batch',
+      businessDate: '2026-07-26',
+      status: 'PENDING',
+      startedAt: '2026-08-07T08:24:31Z',
+    };
+    let onSuccess: ((data: SnapshotRunResponse) => void) | undefined;
+    const mutate = vi.fn(
+      (
+        _variables: { businessDate: string },
+        options?: { onSuccess?: (data: SnapshotRunResponse) => void }
+      ) => {
+        onSuccess = options?.onSuccess;
+      }
+    );
+
+    render(
+      <BatchDetailContent
+        {...createProps({
+          onAnnounce,
+          run: createRun({ rawStatus: 'FAILED', status: 'FAILED' }),
+          snapshotRetryMutation: {
+            ...createProps().snapshotRetryMutation,
+            mutate,
+          },
+        })}
+      />
+    );
+
+    await user.click(
+      screen.getByRole('button', { name: '스냅샷 생성 재시도' })
+    );
+
+    expect(onAnnounce).toHaveBeenCalledWith(
+      '스냅샷 생성 재시도를 요청하고 있습니다.'
+    );
+    expect(mutate).toHaveBeenCalledWith(
+      { businessDate: '2026-07-26' },
+      expect.anything()
+    );
+
+    act(() => {
+      onSuccess?.(response);
+    });
+    expect(onAnnounce).toHaveBeenCalledWith(
+      '스냅샷 생성 재시도가 접수되었습니다.'
+    );
+  });
+
+  it('keeps the snapshot rerun disabled while its own request is pending', async () => {
+    const user = userEvent.setup();
+    const mutate = vi.fn();
+
+    render(
+      <BatchDetailContent
+        {...createProps({
+          snapshotRetryMutation: {
+            ...createProps().snapshotRetryMutation,
+            isPending: true,
+            variables: { businessDate: '2026-07-26' },
+            mutate,
+          },
+        })}
+      />
+    );
+
+    const rerunButton = screen.getByRole('button', {
+      name: '스냅샷 생성 재시도',
+    });
+    expect(rerunButton).toBeDisabled();
+    await user.click(rerunButton);
+    expect(mutate).not.toHaveBeenCalled();
+  });
+
+  it('surfaces the backend reason when a rerun conflicts with a running batch', () => {
+    render(
+      <BatchDetailContent
+        {...createProps({
+          snapshotRetryMutation: {
+            ...createProps().snapshotRetryMutation,
+            isError: true,
+            error: new ApiError('conflict', 409, {
+              error: {
+                code: 'BATCH_ALREADY_RUNNING',
+                message: '2026-07-26 배치가 이미 실행 중입니다.',
+              },
+            }),
+            variables: { businessDate: '2026-07-26' },
+          },
+        })}
+      />
+    );
+
+    expect(
+      screen.getByRole('heading', { name: '스냅샷 생성 재시도 실패' })
+    ).toBeInTheDocument();
+    expect(screen.getByText('409 · BATCH_ALREADY_RUNNING')).toBeInTheDocument();
+    expect(
+      screen.getByText('2026-07-26 배치가 이미 실행 중입니다.')
+    ).toBeInTheDocument();
+  });
+
+  it('hides the snapshot rerun without the ops.trigger capability', () => {
+    render(
+      <BatchDetailContent
+        {...createProps({
+          canTrigger: false,
+          run: createRun({ rawStatus: 'FAILED', status: 'FAILED' }),
+        })}
+      />
+    );
+
+    expect(
+      screen.queryByRole('button', { name: '스냅샷 생성 재시도' })
+    ).not.toBeInTheDocument();
   });
 
   it('renders a succeeded step run with its label and formatted duration', () => {

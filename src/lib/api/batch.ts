@@ -3,6 +3,8 @@ import type {
   AiRetryRunResponse,
   BatchJobDetailResponse,
   BatchJobListResponse,
+  SnapshotRunRequest,
+  SnapshotRunResponse,
 } from '@/lib/api/types';
 
 export type BatchJobsParams = {
@@ -39,4 +41,15 @@ export function retryAiSummary(
       headers: { 'Idempotency-Key': idempotencyKey },
     }
   );
+}
+
+export function startSnapshotRun(
+  payload: SnapshotRunRequest,
+  idempotencyKey = crypto.randomUUID()
+) {
+  return apiRequest<SnapshotRunResponse>('/stock/api/batch/market-daily', {
+    method: 'POST',
+    body: payload,
+    headers: { 'Idempotency-Key': idempotencyKey },
+  });
 }

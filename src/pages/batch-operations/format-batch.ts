@@ -6,6 +6,13 @@ export function isRunningStatus(rawStatus: string): boolean {
   return rawStatus.trim().toUpperCase() === 'RUNNING';
 }
 
+/** Only a finished-but-incomplete run can be rerun; PENDING/RUNNING/SUCCESS cannot. */
+export function isSnapshotRetryableStatus(rawStatus: string): boolean {
+  const status = rawStatus.trim().toUpperCase();
+
+  return status === 'PARTIAL' || status === 'FAILED';
+}
+
 /** Distinguishes absent snapshots from unsupported job types; unknown types stay explicit. */
 export function getSnapshotLabel(run: {
   jobType: string;

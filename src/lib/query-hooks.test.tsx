@@ -9,6 +9,7 @@ import type {
   BatchJobListResponse,
   DailyPageResponse,
   PageDateNavigationResponse,
+  SnapshotRunResponse,
 } from '@/lib/api/types';
 import {
   useArchiveList,
@@ -18,6 +19,7 @@ import {
   useBatchJobs,
   usePageNavigation,
   useRetryAiMutation,
+  useSnapshotRetryMutation,
 } from '@/lib/query-hooks';
 
 const {
@@ -30,6 +32,7 @@ const {
   mockGetBatchJobs,
   mockGetBatchJobDetail,
   mockRetryAiSummary,
+  mockStartSnapshotRun,
 } = vi.hoisted(() => ({
   mockGetArchiveList: vi.fn(),
   mockGetArchiveThemes: vi.fn(),
@@ -40,6 +43,7 @@ const {
   mockGetBatchJobs: vi.fn(),
   mockGetBatchJobDetail: vi.fn(),
   mockRetryAiSummary: vi.fn(),
+  mockStartSnapshotRun: vi.fn(),
 }));
 
 vi.mock('@/lib/api/archive', () => ({
@@ -58,6 +62,7 @@ vi.mock('@/lib/api/batch', () => ({
   getBatchJobs: mockGetBatchJobs,
   getBatchJobDetail: mockGetBatchJobDetail,
   retryAiSummary: mockRetryAiSummary,
+  startSnapshotRun: mockStartSnapshotRun,
 }));
 
 const dailyPageResponse: DailyPageResponse = {
@@ -516,6 +521,74 @@ describe('useRetryAiMutation', () => {
     });
 
     result.current.mutate({ jobId: 101 });
+    await waitFor(() => expect(result.current.isError).toBe(true));
+
+    expect(result.current.error).toBe(error);
+  });
+});
+
+describe('useSnapshotRetryMutation', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+    vi.restoreAllMocks();
+  });
+
+  it('forces the rerun of one business date and invalidates the batch lists and details', async () => {
+    const response: SnapshotRunResponse = {
+      jobId: 1102,
+      jobName: 'market_daily_batch',
+      businessDate: '2026-03-31',
+      status: 'PENDING',
+      startedAt: '2026-03-31T06:13:00Z',
+    };
+    mockStartSnapshotRun.mockResolvedValue(response);
+    vi.spyOn(crypto, 'randomUUID').mockReturnValue(
+      '33333333-3333-4333-8333-333333333333'
+    );
+    const queryClient = new QueryClient({
+      defaultOptions: {
+        queries: { retry: false },
+        mutations: { retry: false },
+      },
+    });
+    const invalidateQueries = vi
+      .spyOn(queryClient, 'invalidateQueries')
+      .mockResolvedValue(undefined);
+
+    const { result } = renderHook(() => useSnapshotRetryMutation(), {
+      wrapper: createWrapper(queryClient),
+    });
+
+    result.current.mutate({ businessDate: '2026-03-31' });
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    expect(mockStartSnapshotRun).toHaveBeenCalledWith(
+      { businessDate: '2026-03-31', force: true },
+      '33333333-3333-4333-8333-333333333333'
+    );
+    expect(invalidateQueries).toHaveBeenNthCalledWith(1, {
+      queryKey: ['batch-jobs'],
+    });
+    expect(invalidateQueries).toHaveBeenNthCalledWith(2, {
+      queryKey: ['batch-job-detail'],
+    });
+  });
+
+  it('leaves a conflicting rerun as a mutation error for the detail action to expose', async () => {
+    const error = new Error('batch already running');
+    mockStartSnapshotRun.mockRejectedValue(error);
+    const queryClient = new QueryClient({
+      defaultOptions: {
+        queries: { retry: false },
+        mutations: { retry: false },
+      },
+    });
+
+    const { result } = renderHook(() => useSnapshotRetryMutation(), {
+      wrapper: createWrapper(queryClient),
+    });
+
+    result.current.mutate({ businessDate: '2026-03-31' });
     await waitFor(() => expect(result.current.isError).toBe(true));
 
     expect(result.current.error).toBe(error);

@@ -10,6 +10,7 @@ import {
   getBatchJobDetail,
   getBatchJobs,
   retryAiSummary,
+  startSnapshotRun,
 } from '@/lib/api/batch';
 import { getClusterDetail } from '@/lib/api/news';
 import {
@@ -205,6 +206,31 @@ export function useRetryAiMutation() {
         queryClient.invalidateQueries({
           queryKey: ['batch-job-detail', jobId],
         }),
+      ]);
+    },
+  });
+}
+
+export type SnapshotRetryMutationVariables = {
+  businessDate: string;
+};
+
+/**
+ * Reruns the snapshot batch for a business date that ended PARTIAL/FAILED.
+ * `force` is always on: without it the backend rejects a date whose page
+ * already exists, which is exactly the PARTIAL case this action serves.
+ */
+export function useSnapshotRetryMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ businessDate }: SnapshotRetryMutationVariables) =>
+      startSnapshotRun({ businessDate, force: true }, crypto.randomUUID()),
+    retry: false,
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['batch-jobs'] }),
+        queryClient.invalidateQueries({ queryKey: ['batch-job-detail'] }),
       ]);
     },
   });

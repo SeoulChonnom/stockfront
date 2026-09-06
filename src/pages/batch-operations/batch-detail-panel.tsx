@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils';
 import {
   BatchDetailContent,
   type RetryAiMutationState,
+  type SnapshotRetryMutationState,
 } from '@/pages/batch-operations/batch-detail-content';
 import { useRetryAnnounce } from '@/pages/batch-operations/use-retry-announce';
 
@@ -23,9 +24,10 @@ export type BatchDetailPanelProps = {
   onRetry: () => void;
   onAnnounce: (message: string) => void;
   onBackToList: () => void;
-  canRetryAi: boolean;
+  canTrigger: boolean;
   isCurrentRetryJob: (jobId: number) => boolean;
   retryAiMutation: RetryAiMutationState;
+  snapshotRetryMutation: SnapshotRetryMutationState;
   /** Hidden below the master-detail breakpoint unless `view=detail` is active. */
   hiddenOnNarrowView: boolean;
 };
@@ -40,9 +42,10 @@ export function BatchDetailPanel({
   onRetry,
   onAnnounce,
   onBackToList,
-  canRetryAi,
+  canTrigger,
   isCurrentRetryJob,
   retryAiMutation,
+  snapshotRetryMutation,
   hiddenOnNarrowView,
 }: BatchDetailPanelProps) {
   const retry = useRetryAnnounce(isFetching, isError, onAnnounce);
@@ -127,12 +130,13 @@ export function BatchDetailPanel({
           />
         ) : (
           <BatchDetailContent
-            canRetryAi={canRetryAi}
+            canTrigger={canTrigger}
             detailHeadingRef={detailHeadingRef}
             isCurrentRetryJob={isCurrentRetryJob}
             onAnnounce={onAnnounce}
             retryAiMutation={retryAiMutation}
             run={run}
+            snapshotRetryMutation={snapshotRetryMutation}
           />
         )}
       </CardContent>

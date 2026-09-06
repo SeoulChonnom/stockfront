@@ -264,3 +264,71 @@ test.describe('AI summary retry', () => {
     );
   });
 });
+
+test.describe('snapshot rerun', () => {
+  // jobId 1032 is the seeded FAILED MARKET_SNAPSHOT job for 2026-07-21.
+  test('submits one forced rerun for a FAILED snapshot job', async ({
+    page,
+  }) => {
+    await installMockApi(page, {
+      scenario: 'ready',
+      snapshotRetryMode: 'success',
+    });
+    await page.goto('ops/batches?jobId=1032');
+
+    const rerunButton = page.getByRole('button', {
+      name: '스냅샷 생성 재시도',
+    });
+    await expect(rerunButton).toBeVisible();
+
+    const requestPromise = page.waitForRequest((request) =>
+      request.url().endsWith('/stock/api/batch/market-daily')
+    );
+    await rerunButton.click();
+    const request = await requestPromise;
+
+    expect(request.method()).toBe('POST');
+    expect(request.postDataJSON()).toEqual({
+      businessDate: '2026-07-21',
+      force: true,
+    });
+    expect(request.headers()['idempotency-key']).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+    );
+    await expect(
+      page.getByRole('heading', {
+        name: '스냅샷 생성 재시도가 접수되었습니다.',
+      })
+    ).toBeVisible();
+  });
+
+  test('renders the conflict response as an accessible detail alert', async ({
+    page,
+    consoleGuard,
+  }) => {
+    await installMockApi(page, {
+      scenario: 'ready',
+      snapshotRetryMode: 'conflict409',
+    });
+    consoleGuard.allowConsoleError(/Failed to load resource.*409/);
+    await page.goto('ops/batches?jobId=1032');
+
+    await page.getByRole('button', { name: '스냅샷 생성 재시도' }).click();
+    await expect(page.getByRole('alert')).toContainText(
+      '해당 기준일 배치가 이미 실행 중입니다.'
+    );
+  });
+
+  test('offers no rerun for a job type that owns no snapshot', async ({
+    page,
+  }) => {
+    await installMockApi(page, { scenario: 'ready' });
+    // jobId 1031 is the NEWS_COLLECTION job of the same business date.
+    await page.goto('ops/batches?jobId=1031');
+
+    await expect(page.getByRole('heading', { name: 'job 1031' })).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: '스냅샷 생성 재시도' })
+    ).toHaveCount(0);
+  });
+});

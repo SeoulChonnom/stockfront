@@ -8,6 +8,7 @@ import {
   useBatchJobDetail,
   useBatchJobs,
   useRetryAiMutation,
+  useSnapshotRetryMutation,
 } from '@/lib/query-hooks';
 import { navigate } from '@/lib/router';
 
@@ -49,17 +50,17 @@ export function BatchOperationsPage({
 
   return (
     <AdminBatchOperations
-      canTriggerAi={canDo('ops.trigger')}
+      canTrigger={canDo('ops.trigger')}
       searchParams={searchParams}
     />
   );
 }
 
 function AdminBatchOperations({
-  canTriggerAi,
+  canTrigger,
   searchParams,
 }: {
-  canTriggerAi: boolean;
+  canTrigger: boolean;
   searchParams: URLSearchParams;
 }) {
   const announce = useAnnounce();
@@ -124,6 +125,7 @@ function AdminBatchOperations({
   const detailQuery = useBatchJobDetail(selectedJobId);
 
   const retryAiMutation = useRetryAiMutation();
+  const snapshotRetryMutation = useSnapshotRetryMutation();
 
   function goTo(
     filters: Partial<{
@@ -241,7 +243,7 @@ function AdminBatchOperations({
         />
 
         <BatchDetailPanel
-          canRetryAi={canTriggerAi}
+          canTrigger={canTrigger}
           hasSelection={selectedJobId !== null}
           hiddenOnNarrowView={!isDetailView}
           isError={detailQuery.isError}
@@ -255,6 +257,7 @@ function AdminBatchOperations({
           isCurrentRetryJob={(jobId) => selectedJobIdRef.current === jobId}
           retryAiMutation={retryAiMutation}
           run={detailQuery.data ?? null}
+          snapshotRetryMutation={snapshotRetryMutation}
           selectedJobId={selectedJobId}
         />
       </div>

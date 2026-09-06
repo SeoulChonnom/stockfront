@@ -9,19 +9,27 @@ import { LogBox } from '@/components/domain/log-box';
 import { PipelineStages } from '@/components/domain/pipeline-stages';
 import { InlineAlert, StatusBadge } from '@/components/state';
 import { TONE_SURFACE } from '@/components/state/tone-surface';
-import { ApiError } from '@/lib/api/client';
-import type { AiRetryRunResponse } from '@/lib/api/types';
+import type { AiRetryRunResponse, SnapshotRunResponse } from '@/lib/api/types';
 import { createNavigateHandler } from '@/lib/app-state';
 import { isMarketSnapshotJobType } from '@/lib/batch-type';
-import type { BatchRunRow, RetryAiMutationVariables } from '@/lib/query-hooks';
+import type {
+  BatchRunRow,
+  RetryAiMutationVariables,
+  SnapshotRetryMutationVariables,
+} from '@/lib/query-hooks';
 import { buildUrl, withBasePath } from '@/lib/router';
-import { isRecord } from '@/lib/utils';
 
 import {
   deriveUserImpact,
   getSnapshotLabel,
   isRunningStatus,
+  isSnapshotRetryableStatus,
 } from '@/pages/batch-operations/format-batch';
+import {
+  type RetryErrorView,
+  toAiRetryErrorView,
+  toSnapshotRetryErrorView,
+} from '@/pages/batch-operations/retry-error';
 
 export type RetryAiMutationState = {
   data: AiRetryRunResponse | undefined;
@@ -36,68 +44,71 @@ export type RetryAiMutationState = {
   ) => void;
 };
 
+export type SnapshotRetryMutationState = {
+  data: SnapshotRunResponse | undefined;
+  error: unknown;
+  isError: boolean;
+  isPending: boolean;
+  isSuccess: boolean;
+  variables: SnapshotRetryMutationVariables | undefined;
+  mutate: (
+    variables: SnapshotRetryMutationVariables,
+    options?: { onSuccess?: (data: SnapshotRunResponse) => void }
+  ) => void;
+};
+
 export type BatchDetailContentProps = {
-  canRetryAi: boolean;
+  /** `ops.trigger`; gates both retry actions. UX only — the backend still authorizes. */
+  canTrigger: boolean;
   detailHeadingRef: RefObject<HTMLHeadingElement | null>;
   isCurrentRetryJob: (jobId: number) => boolean;
   onAnnounce: (message: string) => void;
   retryAiMutation: RetryAiMutationState;
+  snapshotRetryMutation: SnapshotRetryMutationState;
   run: BatchRunRow;
 };
 
-type AiRetryErrorView = {
-  code: string;
-  message: string;
-  status: number;
-};
+function RetryErrorAlert({
+  error,
+  title,
+}: {
+  error: RetryErrorView;
+  title: string;
+}) {
+  return (
+    <InlineAlert title={title} tone='danger'>
+      <span className='mono block text-label'>
+        {error.status > 0 ? `${error.status} · ${error.code}` : error.code}
+      </span>
+      <span>{error.message}</span>
+    </InlineAlert>
+  );
+}
 
-function toAiRetryErrorView(error: unknown): AiRetryErrorView {
-  if (!(error instanceof ApiError)) {
-    return {
-      code: 'NETWORK_ERROR',
-      message: '네트워크에 연결할 수 없습니다.',
-      status: 0,
-    };
-  }
-
-  const body = isRecord(error.body) ? error.body : null;
-  const bodyError = body && isRecord(body.error) ? body.error : null;
-  const code =
-    (bodyError && typeof bodyError.code === 'string'
-      ? bodyError.code
-      : body && typeof body.code === 'string'
-        ? body.code
-        : undefined) ??
-    (error.status === 409 ? 'AI_RETRY_IN_PROGRESS' : 'AI_RETRY_ERROR');
-  const backendMessage =
-    bodyError && typeof bodyError.message === 'string'
-      ? bodyError.message
-      : body && typeof body.message === 'string'
-        ? body.message
-        : null;
-
-  return {
-    code,
-    message:
-      backendMessage ??
-      (error.status === 409
-        ? 'AI 요약 재시도가 이미 진행 중입니다.'
-        : error.status === 403
-          ? 'AI 요약 재시도 권한이 없습니다.'
-          : error.status === 0
-            ? '네트워크에 연결할 수 없습니다.'
-            : 'AI 요약 재시도 요청을 처리하지 못했습니다.'),
-    status: error.status,
-  };
+function RetryAcceptedAlert({
+  jobId,
+  status,
+  title,
+}: {
+  jobId: number;
+  status: string;
+  title: string;
+}) {
+  return (
+    <InlineAlert title={title} tone='success'>
+      job {jobId} · 상태 {status}
+    </InlineAlert>
+  );
 }
 
 export function BatchDetailContent({
-  canRetryAi,
+  canTrigger,
   detailHeadingRef,
   isCurrentRetryJob,
   onAnnounce,
   run,
   retryAiMutation,
+  snapshotRetryMutation,
 }: BatchDetailContentProps) {
   const running = isRunningStatus(run.rawStatus);
   const impacts = deriveUserImpact({
@@ -121,9 +132,42 @@ export function BatchDetailContent({
       ? toAiRetryErrorView(retryAiMutation.error)
       : null;
   const aiRetrySuccess = isRetryForRun && retryAiMutation.isSuccess;
+  // A snapshot rerun is keyed by business date, so its result belongs to every
+  // job of that date — not just the job whose button started it.
+  const isSnapshotRetryForRun =
+    snapshotRetryMutation.variables?.businessDate === run.businessDate;
+  const isSnapshotRetryPendingForRun =
+    isSnapshotRetryForRun && snapshotRetryMutation.isPending;
+  const canRetrySnapshot =
+    canTrigger && hasSnapshot && isSnapshotRetryableStatus(run.rawStatus);
+  const snapshotRetryError =
+    isSnapshotRetryForRun && snapshotRetryMutation.isError
+      ? toSnapshotRetryErrorView(snapshotRetryMutation.error, run.businessDate)
+      : null;
+  const snapshotRetrySuccess =
+    isSnapshotRetryForRun && snapshotRetryMutation.isSuccess;
+
+  function handleRetrySnapshot() {
+    if (!canRetrySnapshot || isSnapshotRetryPendingForRun) {
+      return;
+    }
+
+    const sourceJobId = run.id;
+    onAnnounce('스냅샷 생성 재시도를 요청하고 있습니다.');
+    snapshotRetryMutation.mutate(
+      { businessDate: run.businessDate },
+      {
+        onSuccess: () => {
+          if (isCurrentRetryJob(sourceJobId)) {
+            onAnnounce('스냅샷 생성 재시도가 접수되었습니다.');
+          }
+        },
+      }
+    );
+  }
 
   function handleRetryAi() {
-    if (!canRetryAi || run.rawStatus !== 'PARTIAL' || isRetryPendingForRun) {
+    if (!canTrigger || run.rawStatus !== 'PARTIAL' || isRetryPendingForRun) {
       return;
     }
 
@@ -213,21 +257,31 @@ export function BatchDetailContent({
         </div>
       ) : null}
 
+      {snapshotRetryError ? (
+        <RetryErrorAlert
+          error={snapshotRetryError}
+          title='스냅샷 생성 재시도 실패'
+        />
+      ) : null}
+
+      {snapshotRetrySuccess && snapshotRetryMutation.data ? (
+        <RetryAcceptedAlert
+          jobId={snapshotRetryMutation.data.jobId}
+          status={snapshotRetryMutation.data.status}
+          title='스냅샷 생성 재시도가 접수되었습니다.'
+        />
+      ) : null}
+
       {aiRetryError ? (
-        <InlineAlert title='AI 요약 재시도 실패' tone='danger'>
-          <span className='mono block text-label'>
-            {aiRetryError.status > 0
-              ? `${aiRetryError.status} · ${aiRetryError.code}`
-              : aiRetryError.code}
-          </span>
-          <span>{aiRetryError.message}</span>
-        </InlineAlert>
+        <RetryErrorAlert error={aiRetryError} title='AI 요약 재시도 실패' />
       ) : null}
 
       {aiRetrySuccess && retryAiMutation.data ? (
-        <InlineAlert title='AI 요약 재시도가 접수되었습니다.' tone='success'>
-          job {retryAiMutation.data.jobId} · 상태 {retryAiMutation.data.status}
-        </InlineAlert>
+        <RetryAcceptedAlert
+          jobId={retryAiMutation.data.jobId}
+          status={retryAiMutation.data.status}
+          title='AI 요약 재시도가 접수되었습니다.'
+        />
       ) : null}
 
       <div className='min-w-0'>
@@ -261,7 +315,7 @@ export function BatchDetailContent({
             {run.businessDate} 스냅샷 열기
           </a>
         ) : null}
-        {canRetryAi && run.rawStatus === 'PARTIAL' ? (
+        {canTrigger && run.rawStatus === 'PARTIAL' ? (
           <AsyncButton
             loading={isRetryPendingForRun}
             onClick={handleRetryAi}
@@ -270,6 +324,19 @@ export function BatchDetailContent({
             variant='secondary'
           >
             AI 요약만 재시도
+          </AsyncButton>
+        ) : null}
+        {/* The heavier full rerun sits last: for a PARTIAL run the cheaper
+            AI-only retry is usually the right first move. */}
+        {canRetrySnapshot ? (
+          <AsyncButton
+            loading={isSnapshotRetryPendingForRun}
+            onClick={handleRetrySnapshot}
+            size='sm'
+            type='button'
+            variant='outline'
+          >
+            스냅샷 생성 재시도
           </AsyncButton>
         ) : null}
       </div>
