@@ -203,4 +203,44 @@ describe('FilterBar / useFilterDraft', () => {
     expect(onReset).toHaveBeenCalledTimes(1);
     expect(fromInput).toHaveValue(defaultValues.from);
   });
+
+  it('renders beforeFields above the field grid when provided, and nothing extra when omitted', () => {
+    const { rerender } = render(
+      <FilterBar
+        beforeFields={<div data-testid='before-fields'>프리셋</div>}
+        onReset={vi.fn()}
+        onSubmit={vi.fn()}
+      >
+        <div data-testid='field-grid-child'>필드</div>
+      </FilterBar>
+    );
+
+    const beforeFields = screen.getByTestId('before-fields');
+    const fieldGrid = document.querySelector('[data-filter-grid]');
+    expect(beforeFields).toBeInTheDocument();
+    expect(fieldGrid).toBeInTheDocument();
+    // `beforeFields`는 그리드 위, 형제 순서상 앞에 온다.
+    expect(
+      beforeFields.compareDocumentPosition(fieldGrid as Node) &
+        Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy();
+
+    rerender(
+      <FilterBar onReset={vi.fn()} onSubmit={vi.fn()}>
+        <div data-testid='field-grid-child'>필드</div>
+      </FilterBar>
+    );
+
+    expect(screen.queryByTestId('before-fields')).not.toBeInTheDocument();
+  });
+
+  it('FilterField renders no hint element when hint is omitted', () => {
+    render(
+      <FilterField htmlFor='from' label='시작일'>
+        <Input id='from' />
+      </FilterField>
+    );
+
+    expect(document.getElementById('from-hint')).not.toBeInTheDocument();
+  });
 });

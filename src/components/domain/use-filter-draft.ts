@@ -52,6 +52,10 @@ export function useFilterDraft<T extends Record<string, string>>({
     setDraft((current) => ({ ...current, [name]: value }));
   }, []);
 
+  // 프리셋처럼 여러 필드를 한 번에 바꿔야 하는 호출부를 위한 원자적
+  // setter다. `setField`를 두 번 잇달아 부르면 그 사이 렌더에서 draft가
+  // 반쪽짜리 상태(예: from만 바뀌고 to는 아직 이전 값)로 잠깐 노출된다.
+
   const registerField = useCallback(
     (name: keyof T) => (element: HTMLElement | null) => {
       fieldRefs.current.set(name, element);

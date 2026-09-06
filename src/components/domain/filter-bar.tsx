@@ -1,56 +1,11 @@
-import {
-  type FormEvent,
-  type ReactNode,
-  useState,
-  useSyncExternalStore,
-} from 'react';
+import { type FormEvent, type ReactNode, useState } from 'react';
 import { ToneBadge } from '@/components/domain/tone-badge';
+import { useIsWide } from '@/components/domain/use-is-wide';
 import { Button } from '@/components/ui/button';
 import { FieldError, FieldLabel } from '@/components/ui/field';
 import { cn } from '@/lib/utils';
 
 /** Presentational form shell; callers own field controls and validation. */
-
-/**
- * 필드 그리드가 2열로 펴지는 지점과 같은 값이다(`min-[641px]:grid-cols-2`).
- * 한 화면에 두 개의 반응형 경계를 두지 않는다 — 필터가 접히는 폭과 필드가
- * 한 줄로 서는 폭이 어긋나면, 그 사이 구간에서 "펼쳤는데 여전히 1열"이라는
- * 어중간한 상태가 생긴다.
- */
-const WIDE_QUERY = '(min-width: 641px)';
-
-function subscribeToWide(onChange: () => void) {
-  if (
-    typeof window === 'undefined' ||
-    typeof window.matchMedia !== 'function'
-  ) {
-    return () => {
-      // No matchMedia (jsdom): nothing to unsubscribe from.
-    };
-  }
-
-  const query = window.matchMedia(WIDE_QUERY);
-  query.addEventListener('change', onChange);
-  return () => query.removeEventListener('change', onChange);
-}
-
-/**
- * `matchMedia`가 없으면 **넓은 화면으로 친다.** jsdom 단위 테스트가 그
- * 경우인데, 여기서 `false`를 돌려주면 필드가 접힌 채 렌더되어 필터를 다루는
- * 모든 테스트가 화면에 없는 입력을 찾게 된다. 기능을 감추는 쪽보다 드러내는
- * 쪽이 안전한 기본값이다 — `theme.ts`가 `matchMedia` 부재 시 라이트로
- * 떨어지는 것과 같은 판단이다.
- */
-function getIsWide() {
-  if (
-    typeof window === 'undefined' ||
-    typeof window.matchMedia !== 'function'
-  ) {
-    return true;
-  }
-
-  return window.matchMedia(WIDE_QUERY).matches;
-}
 
 export type FilterBarProps = {
   onSubmit: () => void;
@@ -58,6 +13,8 @@ export type FilterBarProps = {
   applyLabel?: string;
   resetLabel?: string;
   summary?: ReactNode;
+  /** 필드 그리드 바로 위, 전체 폭으로 렌더된다(예: 기간 프리셋 버튼 줄). */
+  beforeFields?: ReactNode;
   children: ReactNode;
   className?: string;
 };
@@ -68,10 +25,11 @@ export function FilterBar({
   applyLabel = '필터 적용',
   resetLabel = '초기화',
   summary,
+  beforeFields,
   children,
   className,
 }: FilterBarProps) {
-  const isWide = useSyncExternalStore(subscribeToWide, getIsWide, getIsWide);
+  const isWide = useIsWide();
   const [expandedOnNarrow, setExpandedOnNarrow] = useState(false);
 
   /**
@@ -96,7 +54,7 @@ export function FilterBar({
       {isWide ? null : (
         <Button
           aria-expanded={isOpen}
-          className='w-fit'
+          className='tap-control w-fit'
           onClick={() => setExpandedOnNarrow((open) => !open)}
           size='sm'
           type='button'
@@ -107,6 +65,7 @@ export function FilterBar({
       )}
       {isOpen ? (
         <>
+          {beforeFields}
           {/* `data-filter-grid`는 호출부가 열 구성을 덮어쓸 때 잡는 손잡이다.
               예전에는 `[&>div:first-child]`라는 위치 선택자로 잡았는데, 위에
               토글이 하나 끼는 순간 조용히 빗나간다. */}
@@ -117,10 +76,15 @@ export function FilterBar({
             {children}
           </div>
           <div className='flex flex-wrap gap-2'>
-            <Button size='default' type='submit'>
+            <Button className='tap-control' size='default' type='submit'>
               {applyLabel}
             </Button>
-            <Button onClick={onReset} type='button' variant='secondary'>
+            <Button
+              className='tap-control'
+              onClick={onReset}
+              type='button'
+              variant='secondary'
+            >
               {resetLabel}
             </Button>
           </div>
@@ -134,6 +98,7 @@ export type FilterFieldProps = {
   label: string;
   htmlFor: string;
   error?: string;
+  hint?: ReactNode;
   children: ReactNode;
   className?: string;
 };
@@ -142,6 +107,7 @@ export function FilterField({
   label,
   htmlFor,
   error,
+  hint,
   children,
   className,
 }: FilterFieldProps) {
@@ -152,6 +118,10 @@ export function FilterField({
    * `aria-describedby`를 `${name}-error`로 스스로 배선해 두므로, 여기서는
    * 그 값과 일치하는 `id`를 `FieldError`에 그대로 넘기기만 하면 된다 —
    * `FieldError`는 id를 스스로 만들지 않고 전달받은 값을 쓴다.
+   *
+   * `hint`는 `getFieldProps`가 모르는 값이라 자동으로 배선되지 않는다 —
+   * 힌트를 쓰는 호출부가 `{...getFieldProps(name)}` 뒤에 명시적
+   * `aria-describedby`를 덧붙여 `${htmlFor}-hint`를 연결해야 한다.
    */
   return (
     // `[&_[data-slot=native-select-wrapper]]:w-full`: `NativeSelect`
@@ -173,6 +143,14 @@ export function FilterField({
         {label}
       </FieldLabel>
       {children}
+      {hint ? (
+        <p
+          className='wrap-anywhere m-0 mt-1 text-label text-faint'
+          id={`${htmlFor}-hint`}
+        >
+          {hint}
+        </p>
+      ) : null}
       {error ? (
         <FieldError
           className='wrap-anywhere m-0 mt-1 text-body-sm text-danger'

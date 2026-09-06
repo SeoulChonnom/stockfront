@@ -29,12 +29,16 @@ import { formatInteger } from '@/lib/formatters';
 import { useArchiveList, useArchiveThemes } from '@/lib/query-hooks';
 import { buildUrl, navigate } from '@/lib/router';
 import type { ArchiveListView } from '@/lib/view-models';
-import { ArchiveResultsTable } from '@/pages/archive-search/archive-results-table';
+import { ArchiveFilterChips } from '@/pages/archive-search/archive-filter-chips';
+import {
+  ArchiveResultsTable,
+  type MonthRange,
+} from '@/pages/archive-search/archive-results-table';
 import { ArchiveSearchFilters } from '@/pages/archive-search/archive-search-filters';
 import {
   ARCHIVE_SEARCH_STATUSES,
   type ArchiveFilterDraft,
-  getStatusSummaryLabel,
+  type ArchiveRangePreset,
 } from '@/pages/archive-search/filter-copy';
 import { useLastGoodData } from '@/pages/archive-search/use-last-good-data';
 
@@ -126,6 +130,14 @@ function buildFiltersKey(filters: ArchiveSearchUrlState) {
   return `${filters.from}:${filters.to}:${filters.status}:${filters.market}:${filters.themes.join(',')}:${filters.q}:${filters.page}`;
 }
 
+/** 칩 해제는 항상 같은 기준일 범위를 들고 page=1로 되돌아간다. */
+function buildFilterRemovalUrl(
+  current: ArchiveSearchUrlState,
+  overrides: Partial<ArchiveSearchUrlState>
+) {
+  return buildArchiveSearchUrl({ ...current, page: 1, ...overrides });
+}
+
 function toArchiveStatus(value: string): ArchiveStatusResponse | undefined {
   return value === 'READY' || value === 'PARTIAL' ? value : undefined;
 }
@@ -146,31 +158,6 @@ function findThemeLabel(
   }
 
   return null;
-}
-
-function getAppliedFilterSummary(
-  filters: ArchiveSearchUrlState,
-  themeCatalog: readonly ThemeNodeResponse[]
-) {
-  const parts = [
-    `${filters.from} ~ ${filters.to}`,
-    getStatusSummaryLabel(filters.status),
-    filters.market ? `시장 ${filters.market}` : '시장 전체',
-  ];
-
-  if (filters.themes.length > 0) {
-    parts.push(
-      `테마 ${filters.themes
-        .map((code) => findThemeLabel(themeCatalog, code) ?? code)
-        .join(', ')}`
-    );
-  }
-
-  if (filters.q) {
-    parts.push(`검색어 ${filters.q}`);
-  }
-
-  return parts.join(' · ');
 }
 
 function isInvalidThemeError(error: Error) {
@@ -200,6 +187,7 @@ export function ArchiveSearchPage({
   const appliedStatus = applied.status;
   const appliedMarket = applied.market;
   const appliedQuery = applied.q;
+  const appliedPage = applied.page;
   const { can } = useCapabilities();
   const audience: Audience = { canViewOps: can('ops.view') };
   const archiveThemesQuery = useArchiveThemes(true);
@@ -221,10 +209,12 @@ export function ArchiveSearchPage({
     ...(themesForQuery.length > 0 ? { theme: themesForQuery } : {}),
     ...(applied.q ? { q: applied.q } : {}),
   };
+  const isArchiveQueryEnabled =
+    applied.themes.length === 0 ||
+    (archiveThemesQuery.isSuccess && themesMatchCatalog);
   const archiveQuery = useArchiveList(
     archiveQueryParams,
-    applied.themes.length === 0 ||
-      (archiveThemesQuery.isSuccess && themesMatchCatalog)
+    isArchiveQueryEnabled
   );
 
   useEffect(() => {
@@ -286,6 +276,53 @@ export function ArchiveSearchPage({
     ? getArchiveSearchErrorPresentation(archiveQuery.error, audience)
     : null;
 
+  // Self-heals a `page` the result set has outgrown — reachable by
+  // bookmarking a deep page, sharing the URL, narrowing filters after
+  // paging in, or pressing Back into a now-shorter result set. `replace`
+  // keeps the broken URL out of history. This cannot loop: the target page
+  // is `totalPages` itself, which is never greater than itself.
+  useEffect(() => {
+    // While the theme-catalog effect above still has an invalid URL theme to
+    // prune, `archiveQuery` is disabled for these filters and its `data` (if
+    // any) belongs to a stale, unrelated query — not to `appliedPage`. Wait
+    // for that correction (and the resulting re-query) before judging
+    // whether `appliedPage` is out of range.
+    if (!isArchiveQueryEnabled || !archiveQuery.data) {
+      return;
+    }
+
+    const { totalPages } = archiveQuery.data;
+    if (totalPages < 1 || appliedPage <= totalPages) {
+      return;
+    }
+
+    const themes =
+      appliedThemesKey.length > 0 ? appliedThemesKey.split('\u0000') : [];
+
+    navigate(
+      buildArchiveSearchUrl({
+        from: appliedFrom,
+        to: appliedTo,
+        status: appliedStatus,
+        market: appliedMarket,
+        themes,
+        q: appliedQuery,
+        page: totalPages,
+      }),
+      { replace: true }
+    );
+  }, [
+    appliedFrom,
+    appliedMarket,
+    appliedPage,
+    appliedQuery,
+    appliedStatus,
+    appliedThemesKey,
+    appliedTo,
+    archiveQuery.data,
+    isArchiveQueryEnabled,
+  ]);
+
   useEffect(() => {
     if (pendingApplyAnnounceKeyRef.current !== appliedKey) {
       return;
@@ -338,6 +375,30 @@ export function ArchiveSearchPage({
     navigate('/market/archive/search');
   }
 
+  // 프리셋은 필터 카드 **안**에 있지만(제품 결정) 이 아래의 칩·월 헤더와
+  // 같은 규칙으로 즉시 이동한다 — 완결된 유효한 범위 선택이라 draft를
+  // 거치지 않는다. 현재 적용된 status/market/themes/q는 그대로 두고
+  // from/to만 덮어쓰며, page는 1로 되돌린다.
+  function handleSelectRangePreset(preset: ArchiveRangePreset) {
+    focusAndScrollToResults();
+    navigate(
+      buildFilterRemovalUrl(applied, { from: preset.from, to: preset.to })
+    );
+    announce(`기간을 ${preset.label}로 바꿔 검색했습니다.`);
+  }
+
+  // 결과 영역 안의 컨트롤이라 즉시 이동한다 — `ArchiveFilterChips`의 칩
+  // 해제, 그리고 이제 필터 카드의 기간 프리셋(바로 위)과도 같은 규칙.
+  // 연·월은 이동 대상인 `range.from`(항상 `YYYY-MM-01`)에서 뽑아 안내
+  // 문구에 쓴다.
+  function handleSelectMonth(range: MonthRange) {
+    const year = range.from.slice(0, 4);
+    const month = Number(range.from.slice(5, 7));
+    focusAndScrollToResults();
+    navigate(buildFilterRemovalUrl(applied, range));
+    announce(`기간을 ${year}년 ${month}월로 좁혔습니다.`);
+  }
+
   function handlePageChange(page: number) {
     focusAndScrollToResults();
     navigate(
@@ -353,6 +414,52 @@ export function ArchiveSearchPage({
     );
   }
 
+  // 칩 해제는 필터 적용과 달리 결과 개수를 다시 안내하지 않는다 — "무엇을
+  // 해제했는지"가 바로 이어질 결과 변화보다 사용자에게 더 급한 정보다.
+  function handleRemoveStatus() {
+    focusAndScrollToResults();
+    navigate(buildFilterRemovalUrl(applied, { status: '' }));
+    announce('생성 상태 필터를 해제했습니다.');
+  }
+
+  function handleRemoveMarket() {
+    focusAndScrollToResults();
+    navigate(buildFilterRemovalUrl(applied, { market: '' }));
+    announce('시장 필터를 해제했습니다.');
+  }
+
+  function handleRemoveTheme(code: string) {
+    const label = findThemeLabel(archiveThemesQuery.data ?? [], code) ?? code;
+    focusAndScrollToResults();
+    navigate(
+      buildFilterRemovalUrl(applied, {
+        themes: applied.themes.filter((theme) => theme !== code),
+      })
+    );
+    announce(`테마 ${label} 필터를 해제했습니다.`);
+  }
+
+  function handleRemoveQuery() {
+    focusAndScrollToResults();
+    navigate(buildFilterRemovalUrl(applied, { q: '' }));
+    announce('검색어 필터를 해제했습니다.');
+  }
+
+  // 필터 카드의 `초기화`(handleReset)와 달리 기준일 범위는 건드리지 않는다
+  // — 칩 목록의 "전체 해제"는 날짜 밖 필터만 걷어내는 별도 동작이다.
+  function handleResetAllFilters() {
+    focusAndScrollToResults();
+    navigate(
+      buildFilterRemovalUrl(applied, {
+        status: '',
+        market: '',
+        themes: [],
+        q: '',
+      })
+    );
+    announce('모든 필터를 해제했습니다.');
+  }
+
   return (
     <div className='flex min-w-0 flex-col gap-[var(--gap)]'>
       <section className='flex flex-col gap-1.5'>
@@ -366,9 +473,8 @@ export function ArchiveSearchPage({
         {/* Keep the summary measure at 70ch rather than the shared 76ch.
             The title section's 6px flex gap replaces paragraph margin. */}
         <p className='measure-summary wrap-anywhere text-body text-fg-soft'>
-          기준일 범위와 생성 상태로 과거 스냅샷을 찾습니다. 결과를 열면 해당
-          날짜의 시장 브리프로 이동하고, 돌아올 때 필터·페이지·스크롤 위치가
-          복원됩니다.
+          기준일 범위와 생성 상태로 과거 스냅샷을 찾습니다. 결과를 열고 돌아오면
+          필터와 위치가 그대로 복원됩니다.
         </p>
       </section>
 
@@ -377,6 +483,7 @@ export function ArchiveSearchPage({
         onApply={handleApply}
         onReset={handleReset}
         onRetryThemeCatalog={() => void archiveThemesQuery.refetch()}
+        onSelectRangePreset={handleSelectRangePreset}
         themeCatalog={archiveThemesQuery.data}
         themeCatalogError={archiveThemesQuery.error}
         themeCatalogLoading={archiveThemesQuery.isLoading}
@@ -411,18 +518,31 @@ export function ArchiveSearchPage({
         </InlineAlert>
       ) : null}
 
-      <ArchiveResultsCard
-        applied={applied}
-        canViewOps={audience.canViewOps}
-        data={displayData}
-        isFetching={archiveQuery.isFetching}
-        isInitialLoading={isInitialLoading}
-        onPageChange={handlePageChange}
-        onReset={handleReset}
-        resultsHeadingRef={resultsHeadingRef}
-        searchParams={searchParams}
-        themeCatalog={archiveThemesQuery.data ?? []}
-      />
+      {/* A first load that errors has neither data nor a skeleton to show —
+          rendering the card then would paint an empty header strip over
+          blank space beneath the error alert above. `useLastGoodData` keeps
+          `displayData` populated across later errors, so this only
+          suppresses the genuinely empty first-load case. */}
+      {displayData !== null || isInitialLoading ? (
+        <ArchiveResultsCard
+          applied={applied}
+          canViewOps={audience.canViewOps}
+          data={displayData}
+          isFetching={archiveQuery.isFetching}
+          isInitialLoading={isInitialLoading}
+          onPageChange={handlePageChange}
+          onRemoveMarket={handleRemoveMarket}
+          onRemoveQuery={handleRemoveQuery}
+          onRemoveStatus={handleRemoveStatus}
+          onRemoveTheme={handleRemoveTheme}
+          onReset={handleReset}
+          onResetAllFilters={handleResetAllFilters}
+          onSelectMonth={handleSelectMonth}
+          resultsHeadingRef={resultsHeadingRef}
+          searchParams={searchParams}
+          themeCatalog={archiveThemesQuery.data ?? []}
+        />
+      ) : null}
     </div>
   );
 }
@@ -434,7 +554,13 @@ function ArchiveResultsCard({
   isFetching,
   isInitialLoading,
   onPageChange,
+  onRemoveMarket,
+  onRemoveQuery,
+  onRemoveStatus,
+  onRemoveTheme,
   onReset,
+  onResetAllFilters,
+  onSelectMonth,
   resultsHeadingRef,
   searchParams,
   themeCatalog,
@@ -445,50 +571,81 @@ function ArchiveResultsCard({
   isFetching: boolean;
   isInitialLoading: boolean;
   onPageChange: (page: number) => void;
+  onRemoveMarket: () => void;
+  onRemoveQuery: () => void;
+  onRemoveStatus: () => void;
+  onRemoveTheme: (code: string) => void;
   onReset: () => void;
+  onResetAllFilters: () => void;
+  onSelectMonth: (range: MonthRange) => void;
   resultsHeadingRef: RefObject<HTMLHeadingElement | null>;
   searchParams: URLSearchParams;
   themeCatalog: readonly ThemeNodeResponse[];
 }) {
   const announce = useAnnounce();
   const rows = data?.rows ?? [];
+  // Derived from the rows actually returned (not page * PAGE_SIZE) so an
+  // out-of-range `page` — one beyond `totalPages` — can never render a
+  // reversed range like "21–4 / 4". `null` when no rows came back, since
+  // there is no truthful range to show.
+  const resultRange =
+    data && rows.length > 0
+      ? {
+          start: (data.page - 1) * PAGE_SIZE + 1,
+          end: (data.page - 1) * PAGE_SIZE + rows.length,
+          totalCount: data.totalCount,
+        }
+      : null;
 
   return (
     <Card
       aria-busy={isInitialLoading || undefined}
       className='flex min-w-0 flex-col overflow-hidden'
     >
+      {/* 제목·건수·범위·칩이 전부 같은 줄에서 시작해 필요할 때만 접힌다.
+          별도 줄로 떼어 놓았더니 칩이 기간 하나뿐인 기본 상태에서도 한
+          줄을 통째로 먹었다 — 결과를 밀어내지 않는 것이 이 화면의 전부라
+          그 한 줄이 아깝다. */}
       <div
-        className='flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-line px-[18px] py-3.5'
+        className='flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-line px-[18px] py-3'
         data-arrival-host=''
       >
         <div className='flex flex-wrap items-center gap-x-3 gap-y-2'>
-          <h2
-            className='m-0 scroll-mt-24 text-h2 font-semibold text-fg focus:outline-none'
-            id='archive-results-heading'
-            ref={resultsHeadingRef}
-            tabIndex={-1}
-          >
-            검색 결과
-          </h2>
-          {data ? (
-            <span className='tnum text-body-sm font-semibold text-fg'>
-              {formatInteger(data.totalCount)}건
-            </span>
-          ) : null}
-          {/* The result range lives next to the heading rather than beside the pager. */}
-          {data && data.totalCount > 0 ? (
-            <span className='tnum text-body-sm text-faint'>
-              {(data.page - 1) * PAGE_SIZE + 1}–
-              {Math.min(data.page * PAGE_SIZE, data.totalCount)} /{' '}
-              {data.totalCount}
-            </span>
-          ) : null}
-          <span className='wrap-anywhere text-body-sm text-faint'>
-            {getAppliedFilterSummary(applied, themeCatalog)}
-          </span>
+          <div className='flex flex-wrap items-center gap-x-3 gap-y-2'>
+            <h2
+              className='m-0 scroll-mt-24 text-h2 font-semibold text-fg focus:outline-none'
+              id='archive-results-heading'
+              ref={resultsHeadingRef}
+              tabIndex={-1}
+            >
+              검색 결과
+            </h2>
+            {data ? (
+              <span className='tnum text-body-sm font-semibold text-fg'>
+                {formatInteger(data.totalCount)}건
+              </span>
+            ) : null}
+            {/* The result range lives next to the heading rather than beside the pager. */}
+            {resultRange ? (
+              <span className='tnum text-body-sm text-faint'>
+                {resultRange.start}–{resultRange.end} /{' '}
+                {formatInteger(resultRange.totalCount)}
+              </span>
+            ) : null}
+          </div>
+          {isFetching && !isInitialLoading ? <RefetchBadge /> : null}
         </div>
-        {isFetching && !isInitialLoading ? <RefetchBadge /> : null}
+        {/* 적용 필터의 유일한 요약처: 필터 카드·이 헤더에 흩어져 있던 세
+            군데의 문자열 요약을 여기 칩으로 합쳤다. */}
+        <ArchiveFilterChips
+          applied={applied}
+          onRemoveMarket={onRemoveMarket}
+          onRemoveQuery={onRemoveQuery}
+          onRemoveStatus={onRemoveStatus}
+          onRemoveTheme={onRemoveTheme}
+          onResetAll={onResetAllFilters}
+          themeCatalog={themeCatalog}
+        />
       </div>
 
       {isInitialLoading ? (
@@ -502,21 +659,18 @@ function ArchiveResultsCard({
         <ArchiveResultsTable
           canViewOps={canViewOps}
           filters={applied}
+          onSelectMonth={onSelectMonth}
           rows={rows}
           scrollSearch={searchParams.toString()}
         />
-      ) : data && rows.length === 0 ? (
+      ) : data && rows.length === 0 && data.totalCount === 0 ? (
         <div className='px-5 py-8 text-left'>
           <h3 className='m-0 mb-2 text-card-heading font-semibold text-fg'>
             조건에 맞는 스냅샷이 없습니다
           </h3>
           <p className='measure-error wrap-anywhere m-0 mb-3.5 text-body text-fg-soft'>
             선택한 기간에 생성된 브리프가 없거나, 상태 필터가 결과를 모두
-            제외했습니다.
-            {applied.market || applied.themes.length > 0 || applied.q
-              ? ` 적용 필터(${getAppliedFilterSummary(applied, themeCatalog)})를 확인하고`
-              : ''}{' '}
-            기간을 넓히거나 상태 필터를 해제해 보세요.
+            제외했습니다. 기간을 넓히거나 상태 필터를 해제해 보세요.
           </p>
           <Button
             className='px-4 text-body-sm'
@@ -528,9 +682,31 @@ function ArchiveResultsCard({
             필터 초기화
           </Button>
         </div>
+      ) : data && rows.length === 0 ? (
+        // totalCount > 0이지만 이 페이지에 행이 없는 경우 — URL의 page가
+        // totalPages를 넘어선 상태다. 필터를 탓하는 위 문구는 거짓이므로,
+        // 실제 원인(페이지 번호)과 되돌아갈 방법을 안내하는 별도 상태를 쓴다.
+        <div className='px-5 py-8 text-left'>
+          <h3 className='m-0 mb-2 text-card-heading font-semibold text-fg'>
+            이 페이지에는 결과가 없습니다
+          </h3>
+          <p className='measure-error wrap-anywhere m-0 mb-3.5 text-body text-fg-soft'>
+            검색 결과 {formatInteger(data.totalCount)}건은 {data.totalPages}
+            페이지까지 있습니다.
+          </p>
+          <Button
+            className='px-4 text-body-sm'
+            onClick={() => onPageChange(data.totalPages)}
+            size='sm'
+            type='button'
+            variant='secondary'
+          >
+            {data.totalPages}페이지로 이동
+          </Button>
+        </div>
       ) : null}
 
-      {data ? (
+      {data && data.totalCount > 0 ? (
         <Pagination
           className='px-[18px] py-3'
           onAnnounce={announce}

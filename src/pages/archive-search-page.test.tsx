@@ -12,6 +12,7 @@ import {
   setRoleOverride,
 } from '@/lib/capabilities';
 import { withBasePath } from '@/lib/router';
+import { getArchiveRangePresets } from '@/pages/archive-search/filter-copy';
 import { ArchiveSearchPage } from '@/pages/archive-search-page';
 
 type ArchiveListQueryResult = {
@@ -195,6 +196,9 @@ describe('ArchiveSearchPage', () => {
 
     await user.selectOptions(screen.getByLabelText('시장'), 'KR');
     await user.type(screen.getByLabelText('키워드'), 'rate');
+    await user.click(
+      screen.getByRole('button', { name: /^테마 (전체|\d+개 선택)$/ })
+    );
     await user.click(screen.getByRole('checkbox', { name: '업종' }));
     await user.click(screen.getByRole('button', { name: '필터 적용' }));
 
@@ -204,16 +208,24 @@ describe('ArchiveSearchPage', () => {
     expect(window.location.search).not.toContain('SECTOR_SEMICONDUCTORS');
   });
 
-  it('shows the selected advanced filters in an empty-results explanation', () => {
+  it('does not repeat the applied-filter summary in the empty-results explanation — the filter chips above are the only summary', () => {
     mockUseArchiveList.mockReturnValue(
       ready({ rows: [], totalCount: 0, totalPages: 1 })
     );
 
     renderPage(new URLSearchParams('market=KR&theme=SECTOR&q=rate&page=1'));
 
+    expect(screen.queryByText(/적용 필터\(/)).not.toBeInTheDocument();
     expect(
-      screen.getByText(/적용 필터\(.*시장 KR.*테마 업종.*검색어 rate/)
+      screen.getByText(
+        '선택한 기간에 생성된 브리프가 없거나, 상태 필터가 결과를 모두 제외했습니다. 기간을 넓히거나 상태 필터를 해제해 보세요.'
+      )
     ).toBeInTheDocument();
+    // The chips row above the empty state remains the single source of
+    // "what is applied".
+    expect(screen.getByText('시장 한국')).toBeInTheDocument();
+    expect(screen.getByText('테마 업종')).toBeInTheDocument();
+    expect(screen.getByText('검색어 "rate"')).toBeInTheDocument();
   });
 
   it('renders an INVALID_THEME panel without exposing the raw server message', () => {
@@ -241,7 +253,8 @@ describe('ArchiveSearchPage', () => {
     expect(alert).not.toHaveTextContent('internal theme detail');
   });
 
-  it('shows a catalog error state while keeping non-theme archive search usable', () => {
+  it('shows a catalog error state while keeping non-theme archive search usable', async () => {
+    const user = userEvent.setup();
     mockUseArchiveThemes.mockReturnValue({
       data: undefined,
       error: new Error('catalog down'),
@@ -252,6 +265,9 @@ describe('ArchiveSearchPage', () => {
     mockUseArchiveList.mockReturnValue(ready());
 
     renderPage();
+    await user.click(
+      screen.getByRole('button', { name: /^테마 (전체|\d+개 선택)$/ })
+    );
 
     expect(screen.getByRole('status')).toHaveTextContent(
       '테마 목록을 불러오지 못했습니다.'
@@ -280,6 +296,44 @@ describe('ArchiveSearchPage', () => {
     expect(window.location.search).toBe(
       '?from=2026-07-10&to=2026-07-27&market=US&theme=SECTOR&theme=CORPORATE_EVENT&q=rate&page=1'
     );
+  });
+
+  it('removing a filter via its chip keeps the date range, resets page, and announces the removal', async () => {
+    const user = userEvent.setup();
+    mockUseArchiveList.mockReturnValue(ready());
+
+    renderPage(
+      new URLSearchParams(
+        'from=2026-07-13&to=2026-07-27&page=3&market=US&theme=SECTOR&q=rate'
+      )
+    );
+
+    await user.click(
+      screen.getByRole('button', { name: '시장 미국 필터 해제' })
+    );
+
+    expect(window.location.search).toBe(
+      '?from=2026-07-13&to=2026-07-27&theme=SECTOR&q=rate&page=1'
+    );
+    expect(getLiveRegionText()).toBe('시장 필터를 해제했습니다.');
+  });
+
+  it('전체 해제 clears every non-date filter but keeps the date range', async () => {
+    const user = userEvent.setup();
+    mockUseArchiveList.mockReturnValue(ready());
+
+    renderPage(
+      new URLSearchParams(
+        'from=2026-07-13&to=2026-07-27&page=3&market=US&theme=SECTOR&q=rate'
+      )
+    );
+
+    await user.click(screen.getByRole('button', { name: '전체 해제' }));
+
+    expect(window.location.search).toBe(
+      '?from=2026-07-13&to=2026-07-27&page=1'
+    );
+    expect(getLiveRegionText()).toBe('모든 필터를 해제했습니다.');
   });
 
   it('removes inactive URL theme codes once after the catalog has loaded', () => {
@@ -559,5 +613,175 @@ describe('ArchiveSearchPage', () => {
         '선택한 기간에 생성된 브리프가 없거나, 상태 필터가 결과를 모두 제외했습니다. 기간을 넓히거나 상태 필터를 해제해 보세요.'
       )
     ).toBeInTheDocument();
+  });
+
+  it('does not render a pager when the query resolves with zero total results', () => {
+    mockUseArchiveList.mockReturnValue(
+      ready({ rows: [], totalCount: 0, totalPages: 1 })
+    );
+
+    renderPage(new URLSearchParams());
+
+    expect(screen.queryByRole('navigation')).not.toBeInTheDocument();
+  });
+
+  it('shows a truthful, non-reversed result range derived from the returned rows', () => {
+    const rows = [0, 1, 2, 3].map((offset) => ({
+      ...baseRow,
+      pageId: baseRow.pageId + offset,
+    }));
+    mockUseArchiveList.mockReturnValue(
+      ready({ page: 1, rows, totalCount: 4, totalPages: 1 })
+    );
+
+    renderPage(new URLSearchParams());
+
+    expect(screen.getByText('1–4 / 4')).toBeInTheDocument();
+    expect(screen.queryByText(/21–4/)).not.toBeInTheDocument();
+  });
+
+  it('hides the result range entirely when the page has no rows, instead of computing a reversed range', () => {
+    // Mirrors the reported repro: totalCount=4/totalPages=1 but the requested
+    // page (2) is out of range, so the API returns no rows for it. The old
+    // `(page-1)*SIZE+1`–`min(page*SIZE, totalCount)` formula rendered the
+    // nonsensical "21–4" here; the range must not render at all.
+    mockUseArchiveList.mockReturnValue(
+      ready({ page: 2, rows: [], totalCount: 4, totalPages: 1 })
+    );
+
+    renderPage(new URLSearchParams('page=2'));
+
+    expect(screen.queryByText(/\d+–\d+ \/ \d+/)).not.toBeInTheDocument();
+  });
+
+  it('redirects an out-of-range page to the last valid page via a replace navigation', () => {
+    mockUseArchiveList.mockReturnValue(
+      ready({ page: 5, rows: [], totalCount: 46, totalPages: 3 })
+    );
+    const search = '?from=2026-07-13&to=2026-07-27&page=5';
+    window.history.replaceState(null, '', `/market/archive/search${search}`);
+    const initialLength = window.history.length;
+
+    renderPage(new URLSearchParams(search));
+
+    // `replace: true` must not push a new history entry for the broken URL.
+    expect(window.history.length).toBe(initialLength);
+    expect(window.location.search).toBe(
+      '?from=2026-07-13&to=2026-07-27&page=3'
+    );
+  });
+
+  it('does not redirect when the applied page is within range', () => {
+    mockUseArchiveList.mockReturnValue(
+      ready({ page: 2, rows: [baseRow], totalCount: 46, totalPages: 3 })
+    );
+    const search = '?page=2';
+    window.history.replaceState(null, '', `/market/archive/search${search}`);
+
+    renderPage(new URLSearchParams(search));
+
+    expect(window.location.search).toBe(search);
+  });
+
+  it('shows a distinct out-of-range explanation (not the filter-based empty state) when totalCount>0 but the page returns no rows, and its action jumps to the last page', async () => {
+    const user = userEvent.setup();
+    mockUseArchiveList.mockReturnValue(
+      ready({ page: 1, rows: [], totalCount: 44, totalPages: 3 })
+    );
+
+    renderPage(new URLSearchParams());
+
+    expect(
+      screen.getByText('이 페이지에는 결과가 없습니다')
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText('검색 결과 44건은 3페이지까지 있습니다.')
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText('조건에 맞는 스냅샷이 없습니다')
+    ).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: '3페이지로 이동' }));
+
+    expect(window.location.search).toContain('page=3');
+  });
+
+  it('clicking a month group header navigates with the month range, preserves market/q, and resets page to 1', () => {
+    // July 2026 must read as a fully-past month here so the row's month
+    // header resolves to July's natural last day (31st), not today's
+    // clamp — that clamp path is covered in archive-results-table.test.tsx.
+    // `fireEvent.click` (not `userEvent`) avoids mixing fake timers with
+    // userEvent's internal real-timer waits.
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-08-15T00:00:00+09:00'));
+
+    try {
+      mockUseArchiveList.mockReturnValue(ready());
+
+      renderPage(
+        new URLSearchParams(
+          'from=2026-07-13&to=2026-07-27&page=3&market=US&q=rate'
+        )
+      );
+
+      fireEvent.click(
+        screen.getByRole('button', { name: '2026년 7월만 보기' })
+      );
+
+      expect(window.location.search).toBe(
+        '?from=2026-07-01&to=2026-07-31&market=US&q=rate&page=1'
+      );
+      expect(getLiveRegionText()).toBe('기간을 2026년 7월로 좁혔습니다.');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('clicking a range preset navigates immediately with the preset range, preserves status/market/themes/q, and resets page to 1', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-08-15T00:00:00+09:00'));
+
+    try {
+      mockUseArchiveList.mockReturnValue(ready());
+
+      renderPage(
+        new URLSearchParams(
+          'from=2026-07-13&to=2026-07-27&page=3&status=READY&market=US&theme=SECTOR&q=rate'
+        )
+      );
+
+      const preset = getArchiveRangePresets().find((p) => p.id === '7d');
+      if (!preset) {
+        throw new Error('7d preset missing');
+      }
+
+      // `fireEvent.click` (not `userEvent`) avoids mixing fake timers with
+      // userEvent's internal real-timer waits.
+      fireEvent.click(screen.getByRole('button', { name: preset.label }));
+
+      expect(window.location.search).toBe(
+        `?from=${preset.from}&to=${preset.to}&status=READY&market=US&theme=SECTOR&q=rate&page=1`
+      );
+      expect(getLiveRegionText()).toBe(
+        `기간을 ${preset.label}로 바꿔 검색했습니다.`
+      );
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('does not render the results card shell when the first load errors with no prior data', () => {
+    mockUseArchiveList.mockReturnValue({
+      data: undefined,
+      error: new Error('network down'),
+      isLoading: false,
+      isFetching: false,
+      refetch: vi.fn(),
+    });
+
+    renderPage(new URLSearchParams());
+
+    expect(screen.getByRole('alert')).toBeInTheDocument();
+    expect(screen.queryByText('검색 결과')).not.toBeInTheDocument();
   });
 });

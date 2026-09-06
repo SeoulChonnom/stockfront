@@ -8,7 +8,10 @@ import type { ThemeNodeResponse } from '@/lib/api/types';
 import { getTodayIso } from '@/lib/kst-date';
 
 import { ArchiveSearchFilters } from '@/pages/archive-search/archive-search-filters';
-import type { ArchiveFilterDraft } from '@/pages/archive-search/filter-copy';
+import {
+  type ArchiveFilterDraft,
+  getArchiveRangePresets,
+} from '@/pages/archive-search/filter-copy';
 
 function renderWithAnnounce(ui: ReactNode) {
   return render(<AnnounceProvider pathname='/test'>{ui}</AnnounceProvider>);
@@ -61,6 +64,7 @@ function renderFilters(
       applied={applied}
       onApply={vi.fn()}
       onReset={vi.fn()}
+      onSelectRangePreset={vi.fn()}
       themeCatalog={catalog}
       {...overrides}
     />
@@ -68,14 +72,6 @@ function renderFilters(
 }
 
 describe('ArchiveSearchFilters', () => {
-  it('renders the applied filters as a tnum summary line', () => {
-    renderFilters();
-
-    expect(
-      screen.getByText('적용됨 · 2026-07-13 ~ 2026-07-27 · 전체 상태')
-    ).toBeInTheDocument();
-  });
-
   it('does not call onApply while typing — draft/applied stay separate until submit', () => {
     const onApply = vi.fn();
     renderWithAnnounce(
@@ -83,6 +79,7 @@ describe('ArchiveSearchFilters', () => {
         applied={applied}
         onApply={onApply}
         onReset={vi.fn()}
+        onSelectRangePreset={vi.fn()}
         themeCatalog={catalog}
       />
     );
@@ -101,6 +98,7 @@ describe('ArchiveSearchFilters', () => {
         applied={applied}
         onApply={onApply}
         onReset={vi.fn()}
+        onSelectRangePreset={vi.fn()}
         themeCatalog={catalog}
       />
     );
@@ -120,6 +118,7 @@ describe('ArchiveSearchFilters', () => {
         applied={applied}
         onApply={onApply}
         onReset={vi.fn()}
+        onSelectRangePreset={vi.fn()}
         themeCatalog={catalog}
       />
     );
@@ -150,6 +149,7 @@ describe('ArchiveSearchFilters', () => {
         applied={applied}
         onApply={onApply}
         onReset={vi.fn()}
+        onSelectRangePreset={vi.fn()}
         themeCatalog={catalog}
       />
     );
@@ -175,6 +175,7 @@ describe('ArchiveSearchFilters', () => {
         applied={applied}
         onApply={vi.fn()}
         onReset={onReset}
+        onSelectRangePreset={vi.fn()}
         themeCatalog={catalog}
       />
     );
@@ -193,11 +194,7 @@ describe('ArchiveSearchFilters', () => {
       (option) => option.textContent
     );
 
-    expect(labels).toEqual([
-      '전체 상태',
-      'READY · 준비 완료',
-      'PARTIAL · 부분 생성',
-    ]);
+    expect(labels).toEqual(['전체 상태', '준비 완료', '부분 생성']);
   });
 
   it('submits market, q, and independently selected themes in stable selection order', async () => {
@@ -208,12 +205,16 @@ describe('ArchiveSearchFilters', () => {
         applied={applied}
         onApply={onApply}
         onReset={vi.fn()}
+        onSelectRangePreset={vi.fn()}
         themeCatalog={catalog}
       />
     );
 
     await user.selectOptions(screen.getByLabelText('시장'), 'KR');
     await user.type(screen.getByLabelText('키워드'), 'rate');
+    await user.click(
+      screen.getByRole('button', { name: /^테마 (전체|\d+개 선택)$/ })
+    );
     await user.click(screen.getByRole('checkbox', { name: '업종' }));
     await user.click(screen.getByRole('checkbox', { name: '업종 / 반도체' }));
     await user.click(screen.getByRole('button', { name: '필터 적용' }));
@@ -228,15 +229,50 @@ describe('ArchiveSearchFilters', () => {
     });
   });
 
-  it('shows explicit loading, empty, and error states for the catalog', () => {
+  /*
+   * 트리거는 `<button>`이고 `<button>`은 labelable 요소다. 그래서 옆에
+   * `<label for>`를 붙이면 그 라벨이 버튼 자신의 문구를 덮어써서, 눈으로는
+   * "테마 2개 선택"을 보는데 스크린 리더는 "테마"만 읽게 된다. 시각 라벨을
+   * `aria-hidden`으로 뺀 이유가 이것이고, 이 테스트가 그 선택을 고정한다.
+   */
+  it('keeps the selection count in the theme trigger accessible name', async () => {
+    const user = userEvent.setup();
+    renderWithAnnounce(
+      <ArchiveSearchFilters
+        applied={applied}
+        onApply={vi.fn()}
+        onReset={vi.fn()}
+        onSelectRangePreset={vi.fn()}
+        themeCatalog={catalog}
+      />
+    );
+
+    expect(
+      screen.getByRole('button', { name: '테마 전체' })
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: '테마 전체' }));
+    await user.click(screen.getByRole('checkbox', { name: '업종' }));
+
+    expect(
+      screen.getByRole('button', { name: '테마 1개 선택' })
+    ).toBeInTheDocument();
+  });
+
+  it('shows explicit loading, empty, and error states for the catalog inside the theme popover', async () => {
+    const user = userEvent.setup();
     const { rerender } = renderWithAnnounce(
       <ArchiveSearchFilters
         applied={applied}
         onApply={vi.fn()}
         onReset={vi.fn()}
+        onSelectRangePreset={vi.fn()}
         themeCatalog={undefined}
         themeCatalogLoading
       />
+    );
+    await user.click(
+      screen.getByRole('button', { name: /^테마 (전체|\d+개 선택)$/ })
     );
     expect(screen.getByRole('status')).toHaveTextContent(
       '테마 목록을 불러오는 중입니다.'
@@ -248,6 +284,7 @@ describe('ArchiveSearchFilters', () => {
           applied={applied}
           onApply={vi.fn()}
           onReset={vi.fn()}
+          onSelectRangePreset={vi.fn()}
           themeCatalog={[]}
         />
       </AnnounceProvider>
@@ -263,6 +300,7 @@ describe('ArchiveSearchFilters', () => {
           applied={applied}
           onApply={vi.fn()}
           onReset={vi.fn()}
+          onSelectRangePreset={vi.fn()}
           themeCatalog={undefined}
           themeCatalogError={new Error('catalog down')}
           onRetryThemeCatalog={retry}
@@ -272,7 +310,134 @@ describe('ArchiveSearchFilters', () => {
     expect(screen.getByRole('status')).toHaveTextContent(
       '테마 목록을 불러오지 못했습니다.'
     );
-    screen.getByRole('button', { name: '테마 다시 시도' }).click();
+    await user.click(screen.getByRole('button', { name: '테마 다시 시도' }));
     expect(retry).toHaveBeenCalledTimes(1);
+  });
+
+  /*
+   * `<input type="date">`는 브라우저 로캘로 렌더돼(`08/23/2026` 등) 이 화면의
+   * 다른 모든 날짜(칩, 요약, URL)가 쓰는 ISO와 다르다. 힌트가 편집 중에도
+   * 실제로 적용될 ISO 값을 보여주는지, 그리고 스크린 리더가 그 힌트를
+   * 필드의 설명으로 실제로 읽는지(문자열 일치가 아니라 DOM 연결) 확인한다.
+   */
+  it("shows each date field's current draft value in ISO as a hint, wired via aria-describedby", () => {
+    renderFilters();
+
+    const fromInput = screen.getByLabelText('시작일');
+    const fromDescribedBy = fromInput.getAttribute('aria-describedby');
+    expect(fromDescribedBy).toBe('from-hint');
+    expect(
+      document.getElementById(fromDescribedBy as string)
+    ).toHaveTextContent('2026-07-13');
+
+    const toInput = screen.getByLabelText('종료일');
+    const toDescribedBy = toInput.getAttribute('aria-describedby');
+    expect(toDescribedBy).toBe('to-hint');
+    expect(document.getElementById(toDescribedBy as string)).toHaveTextContent(
+      '2026-07-27'
+    );
+  });
+
+  it('names both the error and the hint in aria-describedby when a date field has an error', async () => {
+    const user = userEvent.setup();
+    renderFilters();
+
+    setDateValue(screen.getByLabelText('시작일'), '2026-07-27');
+    setDateValue(screen.getByLabelText('종료일'), '2026-07-13');
+    await user.click(screen.getByRole('button', { name: '필터 적용' }));
+
+    const fromInput = screen.getByLabelText('시작일');
+    expect(fromInput).toHaveAttribute(
+      'aria-describedby',
+      'from-error from-hint'
+    );
+    expect(document.getElementById('from-error')).toHaveTextContent(
+      '시작일이 종료일보다 늦습니다.'
+    );
+    expect(document.getElementById('from-hint')).toHaveTextContent(
+      '2026-07-27'
+    );
+  });
+
+  describe('기간 프리셋', () => {
+    /*
+     * 프리셋은 이제 "버튼은 바로 실행, 입력은 적용 대기" 규칙을 따른다 —
+     * 결과 영역의 칩·월 헤더와 같다(제품 결정). draft를 거치지 않고 부모의
+     * `onSelectRangePreset`을 곧장 호출하며, `onApply`는 전혀 관여하지
+     * 않는다. 이동·안내는 이제 부모(`ArchiveSearchPage`)의 책임이라 이
+     * 컴포넌트는 그 둘을 하지 않는다 — draft의 날짜 입력도 그대로다.
+     */
+    it('clicking a preset calls onSelectRangePreset with the preset — not onApply, and the draft inputs are left untouched', async () => {
+      const user = userEvent.setup();
+      const onApply = vi.fn();
+      const onSelectRangePreset = vi.fn();
+      renderWithAnnounce(
+        <ArchiveSearchFilters
+          applied={applied}
+          onApply={onApply}
+          onReset={vi.fn()}
+          onSelectRangePreset={onSelectRangePreset}
+          themeCatalog={catalog}
+        />
+      );
+
+      const preset = getArchiveRangePresets().find((p) => p.id === '30d');
+      if (!preset) {
+        throw new Error('30d preset missing');
+      }
+
+      await user.click(screen.getByRole('button', { name: preset.label }));
+
+      expect(onSelectRangePreset).toHaveBeenCalledWith(preset);
+      expect(onApply).not.toHaveBeenCalled();
+      expect(screen.getByLabelText('시작일')).toHaveValue(applied.from);
+      expect(screen.getByLabelText('종료일')).toHaveValue(applied.to);
+      // Navigation and the announcement are the parent's job now (it owns
+      // the URL) — the component itself must stay silent here.
+      expect(getLiveRegionText()).toBe('');
+    });
+
+    it('marks the preset matching the applied range as aria-pressed, not one merely clicked', () => {
+      const presets = getArchiveRangePresets();
+      const target = presets.find((p) => p.id === '90d');
+      if (!target) {
+        throw new Error('90d preset missing');
+      }
+
+      renderWithAnnounce(
+        <ArchiveSearchFilters
+          applied={{ ...applied, from: target.from, to: target.to }}
+          onApply={vi.fn()}
+          onReset={vi.fn()}
+          onSelectRangePreset={vi.fn()}
+          themeCatalog={catalog}
+        />
+      );
+
+      for (const preset of presets) {
+        const expectedPressed = preset.id === target.id ? 'true' : 'false';
+        expect(
+          screen.getByRole('button', { name: preset.label })
+        ).toHaveAttribute('aria-pressed', expectedPressed);
+      }
+    });
+
+    it('has no preset pressed when the applied range matches no preset', () => {
+      renderFilters();
+
+      for (const preset of getArchiveRangePresets()) {
+        expect(
+          screen.getByRole('button', { name: preset.label })
+        ).toHaveAttribute('aria-pressed', 'false');
+      }
+    });
+  });
+
+  it('shows the 2자 이상 length hint on the keyword field before any submission', () => {
+    renderFilters();
+
+    const keywordInput = screen.getByLabelText('키워드');
+    expect(keywordInput).toHaveAttribute('aria-describedby', 'q-hint');
+    expect(screen.getByText('2자 이상')).toBeInTheDocument();
   });
 });

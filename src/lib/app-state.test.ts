@@ -57,7 +57,7 @@ describe('parseListFilters', () => {
       });
 
       expect(parseListFilters(searchParams)).toEqual({
-        from: '2026-04-08',
+        from: '2026-03-23',
         to: '2026-04-22',
         status: '',
         market: '',
@@ -84,7 +84,7 @@ describe('parseListFilters', () => {
         )
       ).toEqual({
         from: '2026-03-01',
-        to: '2026-04-08',
+        to: '2026-03-23',
         status: '',
         market: '',
         themes: [],
@@ -106,7 +106,7 @@ describe('parseListFilters', () => {
 
     try {
       expect(parseListFilters(new URLSearchParams())).toEqual({
-        from: '2026-07-13',
+        from: '2026-06-27',
         to: '2026-07-27',
         status: '',
         market: '',

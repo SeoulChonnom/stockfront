@@ -1,5 +1,6 @@
 import type { FilterErrors } from '@/components/domain/use-filter-draft';
 import type { MarketTypeResponse } from '@/lib/api/types';
+import { ARCHIVE_DEFAULT_RANGE_DAYS } from '@/lib/app-state';
 import { getRelativeIso, getTodayIso, isValidIsoDate } from '@/lib/kst-date';
 
 export type ArchiveFilterDraft = {
@@ -13,10 +14,12 @@ export type ArchiveFilterDraft = {
 
 export const ARCHIVE_SEARCH_STATUSES = ['READY', 'PARTIAL'];
 
+// 라벨은 결과 테이블의 `StatusBadge`와 같은 한국어만 노출한다 — `READY`/
+// `PARTIAL`은 API·URL 계약으로만 남고 화면 문구에는 더 이상 등장하지 않는다.
 const STATUS_OPTIONS: ReadonlyArray<{ value: string; label: string }> = [
   { value: '', label: '전체 상태' },
-  { value: 'READY', label: 'READY · 준비 완료' },
-  { value: 'PARTIAL', label: 'PARTIAL · 부분 생성' },
+  { value: 'READY', label: '준비 완료' },
+  { value: 'PARTIAL', label: '부분 생성' },
 ];
 
 export function getStatusOptions() {
@@ -30,9 +33,68 @@ export function getStatusSummaryLabel(status: string): string {
   );
 }
 
+// 시장 코드도 상태와 같은 이유로 라벨에서 뺀다 — 드롭다운과 칩이 각자
+// `KR`/`US`를 따로 붙여 그리던 것을 이 한 곳으로 합친다.
+const MARKET_OPTIONS: ReadonlyArray<{ value: string; label: string }> = [
+  { value: '', label: '전체 시장' },
+  { value: 'KR', label: '한국' },
+  { value: 'US', label: '미국' },
+];
+
+export function getMarketOptions() {
+  return MARKET_OPTIONS;
+}
+
+export function getMarketSummaryLabel(value: string): string {
+  return (
+    MARKET_OPTIONS.find((option) => option.value === value)?.label ??
+    '전체 시장'
+  );
+}
+
+export type ArchiveRangePresetId = '7d' | '30d' | '90d' | 'ytd';
+
+export type ArchiveRangePreset = {
+  id: ArchiveRangePresetId;
+  label: string;
+  from: string;
+  to: string;
+};
+
+/**
+ * 회고 사용자는 "지난달에 뭐 있었지"처럼 기간 단위로 스캔한다 — 매번 두
+ * 날짜 입력을 손으로 고치는 대신 자주 쓰는 폭을 버튼 한 번으로 채운다.
+ * `from`/`to`는 호출 시점에 계산한다(모듈 로드 시 한 번만 계산하면 오래
+ * 열어 둔 탭에서 "오늘"이 굳어 버린다). `올해`는 `new Date().getFullYear()`
+ * 대신 `getTodayIso()`의 앞 4자리로 연도를 뽑는다 — 전자는 브라우저 로컬
+ * 시간대를 쓰므로 KST 자정 부근에서 실제 KST 연도와 어긋날 수 있다.
+ */
+export function getArchiveRangePresets(): ArchiveRangePreset[] {
+  const today = getTodayIso();
+  const yearOfToday = today.slice(0, 4);
+
+  return [
+    { id: '7d', label: '지난 7일', from: getRelativeIso(7), to: today },
+    { id: '30d', label: '지난 30일', from: getRelativeIso(30), to: today },
+    { id: '90d', label: '지난 90일', from: getRelativeIso(90), to: today },
+    { id: 'ytd', label: '올해', from: `${yearOfToday}-01-01`, to: today },
+  ];
+}
+
+/** `from`/`to`가 프리셋 하나와 정확히 일치할 때만 그 id를, 아니면 `null`을 돌려준다. */
+export function matchArchiveRangePreset(range: {
+  from: string;
+  to: string;
+}): ArchiveRangePresetId | null {
+  const match = getArchiveRangePresets().find(
+    (preset) => preset.from === range.from && preset.to === range.to
+  );
+  return match?.id ?? null;
+}
+
 export function getDefaultArchiveFilters(): ArchiveFilterDraft {
   return {
-    from: getRelativeIso(14),
+    from: getRelativeIso(ARCHIVE_DEFAULT_RANGE_DAYS),
     to: getTodayIso(),
     status: '',
     market: '',
@@ -52,8 +114,11 @@ export function validateArchiveFilters(
     const value = draft[key];
 
     if (!isValidIsoDate(value)) {
-      errors[key] =
-        '날짜 형식이 올바르지 않습니다. YYYY-MM-DD 형식으로 입력해 주세요.';
+      // `<input type="date">`는 브라우저 로캘로 렌더돼(`08/23/2026` 등)
+      // `YYYY-MM-DD` 형식을 사용자에게 보여준 적도, 타이핑으로 받은 적도
+      // 없다 — 그 형식을 지시하는 메시지는 화면에 없는 입력 방법을
+      // 안내하는 셈이라 날짜 선택 자체를 요청하는 문구로 바꾼다.
+      errors[key] = '기준일을 선택해 주세요.';
       return;
     }
 

@@ -6,7 +6,6 @@ import {
 } from '@/components/domain/filter-bar';
 import { useFilterDraft } from '@/components/domain/use-filter-draft';
 import { useAnnounce } from '@/components/shell/use-announce';
-import { InlineAlert } from '@/components/state';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -15,16 +14,39 @@ import {
   NativeSelectOption,
 } from '@/components/ui/native-select';
 import type { ThemeNodeResponse } from '@/lib/api/types';
+import { isValidIsoDate } from '@/lib/kst-date';
 import { cn } from '@/lib/utils';
 
-import { ArchiveThemeTree } from '@/pages/archive-search/archive-theme-tree';
+import { ArchiveThemeSelect } from '@/pages/archive-search/archive-theme-select';
 import {
   type ArchiveFilterDraft,
+  type ArchiveRangePreset,
+  getArchiveRangePresets,
   getDefaultArchiveFilters,
+  getMarketOptions,
   getStatusOptions,
-  getStatusSummaryLabel,
+  matchArchiveRangePreset,
   validateArchiveFilters,
 } from '@/pages/archive-search/filter-copy';
+
+/**
+ * `<input type="date">`는 브라우저 로캘로 렌더된다(예: `08/23/2026`) —
+ * 이 화면의 다른 모든 날짜(칩, 요약, URL)는 ISO라서 `09/06`처럼 월/일이
+ * 헷갈리는 값은 한국어 사용자에게 실제로 모호하다. 아직 입력 중인 값을
+ * ISO로 다시 보여줘 그 모호함을 없앤다 — 값이 비었거나 완전한 ISO 날짜가
+ * 아니면(입력 중 중간 상태) 힌트를 아예 띄우지 않는다.
+ */
+function getIsoDateHint(value: string): string | undefined {
+  return isValidIsoDate(value) ? value : undefined;
+}
+
+/** `aria-describedby`를 에러 id·힌트 id 조합으로 만든다. 두 값 다 없으면 `undefined`. */
+function describedBy(
+  ...ids: Array<string | undefined | false>
+): string | undefined {
+  const joined = ids.filter(Boolean).join(' ');
+  return joined.length > 0 ? joined : undefined;
+}
 
 type ArchiveTextFilterDraft = Omit<ArchiveFilterDraft, 'themes'>;
 
@@ -32,6 +54,7 @@ type ArchiveSearchFiltersProps = {
   applied: ArchiveFilterDraft;
   onApply: (next: ArchiveFilterDraft) => void;
   onReset: () => void;
+  onSelectRangePreset: (preset: ArchiveRangePreset) => void;
   themeCatalog?: readonly ThemeNodeResponse[];
   themeCatalogLoading?: boolean;
   themeCatalogError?: Error | null;
@@ -55,28 +78,52 @@ function sameValues(left: readonly string[], right: readonly string[]) {
   );
 }
 
-function findThemeLabel(
-  nodes: readonly ThemeNodeResponse[],
-  code: string
-): string | null {
-  for (const node of nodes) {
-    if (node.code === code) {
-      return node.label;
-    }
-
-    const childLabel = findThemeLabel(node.children, code);
-    if (childLabel) {
-      return childLabel;
-    }
-  }
-
-  return null;
+/**
+ * 이 줄은 필터 카드 **안**에 있지만, 결과 표 영역의 칩·월 헤더와 같은
+ * 규칙을 따른다 — "버튼은 바로 실행하고, 입력은 적용을 기다린다". 프리셋
+ * 클릭은 그 자체로 완결된, 항상 유효한 범위 선택이라 draft를 거치지 않고
+ * 곧장 검색한다(제품 결정). 다른 필드에 남아 있던 미적용 변경은 이 이동으로
+ * 함께 버려진다 — `useFilterDraft`가 `applied` 변경 시 draft 전체를
+ * 재동기화하기 때문이며, 칩 해제·월 헤더도 이미 같은 방식으로 동작한다.
+ * 눌린 상태는 draft가 아니라 **적용된** 범위를 반영해야 한다(아래
+ * `activePresetId`가 `applied`에서 계산되는 이유).
+ */
+function RangePresetRow({
+  activePresetId,
+  onSelect,
+}: {
+  activePresetId: string | null;
+  onSelect: (preset: ArchiveRangePreset) => void;
+}) {
+  return (
+    // biome-ignore lint/a11y/useSemanticElements: Biome suggests <fieldset>, but these buttons pick a value directly, not grouped form controls to submit.
+    <div aria-label='기간 프리셋' className='flex flex-wrap gap-2' role='group'>
+      {getArchiveRangePresets().map((preset) => (
+        <Button
+          aria-pressed={preset.id === activePresetId}
+          className={cn(
+            'tap-control tnum',
+            preset.id === activePresetId &&
+              'border-primary-line bg-primary-soft text-primary'
+          )}
+          key={preset.id}
+          onClick={() => onSelect(preset)}
+          size='sm'
+          type='button'
+          variant='secondary'
+        >
+          {preset.label}
+        </Button>
+      ))}
+    </div>
+  );
 }
 
 export function ArchiveSearchFilters({
   applied,
   onApply,
   onReset,
+  onSelectRangePreset,
   themeCatalog,
   themeCatalogLoading = false,
   themeCatalogError = null,
@@ -119,6 +166,11 @@ export function ArchiveSearchFilters({
   const isDirty = textIsDirty || themesAreDirty;
   const catalog = themeCatalog ?? [];
 
+  const activePresetId = matchArchiveRangePreset({
+    from: applied.from,
+    to: applied.to,
+  });
+
   function handleSubmit() {
     const validationErrors = validateArchiveFilters({
       ...draft,
@@ -134,21 +186,12 @@ export function ArchiveSearchFilters({
     }
   }
 
-  function getAppliedThemeSummary() {
-    if (applied.themes.length === 0) {
-      return '테마 전체';
-    }
-
-    return `테마 ${applied.themes
-      .map((code) => findThemeLabel(catalog, code) ?? code)
-      .join(', ')}`;
-  }
-
   return (
     <section aria-labelledby='archive-filter-heading'>
       {/* Use 16px vertical and 18px horizontal card padding at all widths. */}
-      <Card className='flex flex-col gap-3 px-[18px] py-4'>
-        {/* Keep the heading and applied summary in one wrapping row. */}
+      <Card className='flex flex-col gap-2.5 px-[18px] py-4'>
+        {/* 적용 필터 요약은 이제 결과 카드 위의 칩 한 줄이 유일한 출처다 —
+            여기는 "필터"라는 제목과 미적용 변경 배지만 남긴다. */}
         <div className='flex flex-wrap items-center gap-2.5'>
           <h2
             className='m-0 text-label font-semibold tracking-caps text-fg-soft uppercase'
@@ -156,43 +199,60 @@ export function ArchiveSearchFilters({
           >
             필터
           </h2>
-          <span className='tnum wrap-anywhere text-body-sm text-faint'>
-            적용됨 · {applied.from} ~ {applied.to} ·{' '}
-            {getStatusSummaryLabel(applied.status)}
-          </span>
-          {applied.market || applied.themes.length > 0 || applied.q ? (
-            <span className='tnum wrap-anywhere text-body-sm text-faint'>
-              {applied.market ? `시장 ${applied.market}` : '시장 전체'} ·{' '}
-              {getAppliedThemeSummary()}
-              {applied.q ? ` · 검색어 ${applied.q}` : ''}
-            </span>
-          ) : null}
           <FilterDirtyBadge isDirty={isDirty} />
         </div>
 
-        <FilterBar className='gap-3.5' onReset={reset} onSubmit={handleSubmit}>
+        <FilterBar
+          beforeFields={
+            <RangePresetRow
+              activePresetId={activePresetId}
+              onSelect={onSelectRangePreset}
+            />
+          }
+          className='gap-3 [&_label]:mb-[5px]'
+          onReset={reset}
+          onSubmit={handleSubmit}
+        >
           {/* No native `max`/`min` here on purpose: an HTML5
               constraint-violating value makes the browser (and jsdom)
               silently block the form's `submit` event before it ever
               reaches `handleSubmit`. */}
-          <FilterField error={errors.from} htmlFor='from' label='시작일'>
+          <FilterField
+            error={errors.from}
+            hint={getIsoDateHint(draft.from)}
+            htmlFor='from'
+            label='시작일'
+          >
             <Input
               className={cn(
-                'tnum rounded-md bg-card px-3 py-0 text-body',
+                'tap-control tnum rounded-md bg-card px-3 py-0 text-body',
                 !errors.from && 'border-line-strong'
               )}
               type='date'
               {...getFieldProps('from')}
+              aria-describedby={describedBy(
+                errors.from && 'from-error',
+                getIsoDateHint(draft.from) && 'from-hint'
+              )}
             />
           </FilterField>
-          <FilterField error={errors.to} htmlFor='to' label='종료일'>
+          <FilterField
+            error={errors.to}
+            hint={getIsoDateHint(draft.to)}
+            htmlFor='to'
+            label='종료일'
+          >
             <Input
               className={cn(
-                'tnum rounded-md bg-card px-3 py-0 text-body',
+                'tap-control tnum rounded-md bg-card px-3 py-0 text-body',
                 !errors.to && 'border-line-strong'
               )}
               type='date'
               {...getFieldProps('to')}
+              aria-describedby={describedBy(
+                errors.to && 'to-error',
+                getIsoDateHint(draft.to) && 'to-hint'
+              )}
             />
           </FilterField>
           <FilterField htmlFor='status' label='생성 상태'>
@@ -215,81 +275,62 @@ export function ArchiveSearchFilters({
               className='min-h-tap border-line-strong bg-card text-body text-fg'
               {...getFieldProps('market')}
             >
-              <NativeSelectOption value=''>전체 시장</NativeSelectOption>
-              <NativeSelectOption value='KR'>한국 (KR)</NativeSelectOption>
-              <NativeSelectOption value='US'>미국 (US)</NativeSelectOption>
+              {getMarketOptions().map((option) => (
+                <NativeSelectOption
+                  key={option.value || 'all'}
+                  value={option.value}
+                >
+                  {option.label}
+                </NativeSelectOption>
+              ))}
             </NativeSelect>
           </FilterField>
-          <FilterField error={errors.q} htmlFor='q' label='키워드'>
+          <FilterField
+            error={errors.q}
+            hint='2자 이상'
+            htmlFor='q'
+            label='키워드'
+          >
             <Input
               className={cn(
-                'rounded-md bg-card px-3 py-0 text-body',
+                'tap-control rounded-md bg-card px-3 py-0 text-body',
                 !errors.q && 'border-line-strong'
               )}
-              placeholder='정확한 단어를 입력해 주세요'
+              placeholder='예: 반도체, 금리'
               type='search'
               {...getFieldProps('q')}
+              aria-describedby={describedBy(errors.q && 'q-error', 'q-hint')}
             />
           </FilterField>
-          {/* 테마도 다른 필드와 같은 문법을 쓴다: 라벨이 위에 서고, 그 아래
-              컨트롤이 `--line-strong` 테두리를 두른다. 예전에는 이 필드만
-              `<legend>`이 테두리에 파여 들어간 fieldset 박스여서, 같은 폼
-              안에서 혼자 다른 종족처럼 보였다. `<fieldset>`/`<legend>` 자체는
-              체크박스 묶음의 접근성 그룹이라 유지하고, 테두리만 옮긴다. */}
-          <fieldset className='min-w-0 min-[1181px]:col-span-3'>
-            <legend className='mb-1 block text-label font-semibold text-fg-soft'>
-              테마
-            </legend>
-            <p
-              className='measure-error m-0 mb-2 text-body-sm text-faint'
-              id='archive-theme-help'
+          {/* 테마는 이제 트리를 항상 펼치지 않는다 — 팝오버 트리거 하나가
+              다른 필드와 같은 그리드 셀을 차지한다. 로딩/에러/빈 카탈로그
+              분기와 도움말 문구는 `ArchiveThemeSelect` 팝오버 안으로
+              옮겨갔다.
+
+              이 칸만 `FilterField`를 쓰지 않는다. 트리거는 `<input>`이
+              아니라 `<button>`이고, `<button>`은 labelable 요소라서
+              `<label for>`가 붙는 순간 그 라벨이 버튼의 접근 이름을
+              **덮어쓴다**. 그러면 눈으로는 "테마 3개 선택"을 보는데
+              스크린 리더는 "테마"만 읽어 현재 선택이 사라진다. 그래서
+              시각 라벨은 정렬을 위해 남기되 `aria-hidden`으로 접근성
+              트리에서 빼고, 이름은 버튼 자신의 문구가 갖게 한다. */}
+          <div className='min-w-0'>
+            <span
+              aria-hidden='true'
+              className='mb-[5px] block text-label font-semibold text-fg-soft'
             >
-              부모와 자식 테마를 각각 선택할 수 있습니다. 선택한 테마는 최대
-              10개이며, 선택한 부모의 하위 테마를 URL에 자동으로 추가하지
-              않습니다.
-            </p>
-            {themeCatalogLoading ? (
-              <div
-                className='rounded-md bg-surface-2 px-3 py-3 text-body-sm text-faint'
-                role='status'
-              >
-                테마 목록을 불러오는 중입니다.
-              </div>
-            ) : themeCatalogError ? (
-              <InlineAlert
-                actions={
-                  <Button
-                    onClick={onRetryThemeCatalog}
-                    size='sm'
-                    type='button'
-                    variant='secondary'
-                  >
-                    테마 다시 시도
-                  </Button>
-                }
-                className='bg-card'
-                ariaLive='polite'
-                role='status'
-                title='테마 목록을 불러오지 못했습니다.'
-                tone='danger'
-              >
-                잠시 후 다시 시도해 주세요. 테마를 선택하지 않은 검색은 계속
-                사용할 수 있습니다.
-              </InlineAlert>
-            ) : catalog.length === 0 ? (
-              <p className='m-0 rounded-md bg-surface-2 px-3 py-3 text-body-sm text-faint'>
-                선택할 수 있는 테마가 없습니다.
-              </p>
-            ) : (
-              <div className='rounded-md border border-line-strong bg-card px-3 py-2.5'>
-                <ArchiveThemeTree
-                  nodes={catalog}
-                  onChange={setSelectedThemes}
-                  selectedCodes={selectedThemes}
-                />
-              </div>
-            )}
-          </fieldset>
+              테마
+            </span>
+            <ArchiveThemeSelect
+              catalog={catalog}
+              error={themeCatalogError}
+              isLoading={themeCatalogLoading}
+              onChange={setSelectedThemes}
+              onRetry={onRetryThemeCatalog}
+              selectedCodes={selectedThemes}
+              triggerId='archive-theme-trigger'
+            />
+          </div>
         </FilterBar>
       </Card>
     </section>

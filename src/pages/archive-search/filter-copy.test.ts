@@ -2,8 +2,11 @@ import { describe, expect, it, vi } from 'vitest';
 
 import {
   type ArchiveFilterDraft,
+  getArchiveRangePresets,
   getDefaultArchiveFilters,
+  getMarketSummaryLabel,
   getStatusOptions,
+  matchArchiveRangePreset,
   validateArchiveFilters,
 } from '@/pages/archive-search/filter-copy';
 
@@ -18,13 +21,33 @@ describe('getDefaultArchiveFilters', () => {
 
     try {
       expect(getDefaultArchiveFilters()).toEqual({
-        from: '2026-07-13',
+        from: '2026-06-27',
         to: '2026-07-27',
         status: '',
         market: '',
         themes: [],
         q: '',
       });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  // `ARCHIVE_DEFAULT_RANGE_DAYS`(`src/lib/app-state.ts`)와 `getArchiveRangePresets`의
+  // `30d` 프리셋이 같은 30을 쓰므로, 아무 URL도 주어지지 않은 첫 방문에서도
+  // 프리셋 행이 항상 하나는 눌린 상태로 보인다.
+  it('matches the 지난 30일 preset exactly, so the landing range is never entirely unpressed', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-07-27T00:30:00Z'));
+
+    try {
+      const defaults = getDefaultArchiveFilters();
+      const preset = getArchiveRangePresets().find((p) => p.id === '30d');
+
+      expect(preset).toBeDefined();
+      expect(defaults.from).toBe(preset?.from);
+      expect(defaults.to).toBe(preset?.to);
+      expect(matchArchiveRangePreset(defaults)).toBe('30d');
     } finally {
       vi.useRealTimers();
     }
@@ -41,6 +64,113 @@ describe('getStatusOptions', () => {
     expect(getStatusOptions().map((option) => option.label)).not.toContain(
       'FAILED · 생성 실패'
     );
+  });
+
+  it('labels carry no backend enum — only the Korean text `StatusBadge` also shows', () => {
+    expect(getStatusOptions().map((option) => option.label)).toEqual([
+      '전체 상태',
+      '준비 완료',
+      '부분 생성',
+    ]);
+  });
+});
+
+describe('getMarketSummaryLabel', () => {
+  it('maps KR and US to their Korean names, with no market code in the label', () => {
+    expect(getMarketSummaryLabel('KR')).toBe('한국');
+    expect(getMarketSummaryLabel('US')).toBe('미국');
+  });
+
+  it('falls back to 전체 시장 for empty or unknown values', () => {
+    expect(getMarketSummaryLabel('')).toBe('전체 시장');
+    expect(getMarketSummaryLabel('EU')).toBe('전체 시장');
+  });
+});
+
+describe('getArchiveRangePresets', () => {
+  it('computes each documented range off the KST today value', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-07-27T00:30:00Z'));
+
+    try {
+      expect(getArchiveRangePresets()).toEqual([
+        { id: '7d', label: '지난 7일', from: '2026-07-20', to: '2026-07-27' },
+        { id: '30d', label: '지난 30일', from: '2026-06-27', to: '2026-07-27' },
+        { id: '90d', label: '지난 90일', from: '2026-04-28', to: '2026-07-27' },
+        { id: 'ytd', label: '올해', from: '2026-01-01', to: '2026-07-27' },
+      ]);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  // KST 자정 부근(00:30 KST == 전날 15:30 UTC)에서 `new Date().getFullYear()`를
+  // 썼다면 여기서 2026 대신 브라우저 로컬 연도가 나왔을 것이다 —
+  // `getDefaultArchiveFilters`의 KST 경계 테스트와 같은 계약을 지킨다.
+  it("derives 올해's year from getTodayIso(), not the host's local year", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-01-01T00:30:00Z')); // 2026-01-01T09:30 KST
+
+    try {
+      const ytd = getArchiveRangePresets().find(
+        (preset) => preset.id === 'ytd'
+      );
+      expect(ytd).toEqual({
+        id: 'ytd',
+        label: '올해',
+        from: '2026-01-01',
+        to: '2026-01-01',
+      });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
+describe('matchArchiveRangePreset', () => {
+  it('returns the matching preset id for an exact from/to match', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-07-27T00:30:00Z'));
+
+    try {
+      expect(
+        matchArchiveRangePreset({ from: '2026-07-20', to: '2026-07-27' })
+      ).toBe('7d');
+      expect(
+        matchArchiveRangePreset({ from: '2026-01-01', to: '2026-07-27' })
+      ).toBe('ytd');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  // 2026-07-13~2026-07-27은 14일 폭이라(옛 기본값) 어떤 프리셋과도 맞지
+  // 않는다 — 지금의 기본값(30일)과는 무관한, 그냥 프리셋 목록에 없는 임의의
+  // 범위 하나를 고른 것뿐이다.
+  it('returns null for an arbitrary range that matches no preset', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-07-27T00:30:00Z'));
+
+    try {
+      expect(
+        matchArchiveRangePreset({ from: '2026-07-13', to: '2026-07-27' })
+      ).toBeNull();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('returns null for a partial match (same from, different to)', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-07-27T00:30:00Z'));
+
+    try {
+      expect(
+        matchArchiveRangePreset({ from: '2026-07-20', to: '2026-07-26' })
+      ).toBeNull();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
 
@@ -71,7 +201,7 @@ describe('validateArchiveFilters', () => {
     }
   });
 
-  it('rejects a date with an impossible calendar day as a format error', () => {
+  it('rejects a date with an impossible calendar day by asking the user to pick one', () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2024-03-01T00:00:00+09:00'));
 
@@ -83,7 +213,7 @@ describe('validateArchiveFilters', () => {
           to: '2024-03-01',
         })
       ).toEqual({
-        from: '날짜 형식이 올바르지 않습니다. YYYY-MM-DD 형식으로 입력해 주세요.',
+        from: '기준일을 선택해 주세요.',
       });
     } finally {
       vi.useRealTimers();
